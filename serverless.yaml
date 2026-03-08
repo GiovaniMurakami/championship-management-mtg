@@ -1,0 +1,75 @@
+service: championship-management-mtg
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  timeout: 29
+  environment:
+    MONGODB_URI: ${env:MONGODB_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+
+plugins:
+  # - serverless-offline
+
+custom:
+  # serverless-offline:
+  #   httpPort: 4000
+
+package:
+  patterns:
+    - "src/**"
+    - "build/**"
+
+functions:
+  usuarioCadastrar:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: usuario/cadastrar
+          method: post
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - POST
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+  usuarioLogin:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: usuario/login
+          method: post
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - POST
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+outputs:
+  usuarioCadastrar:
+    Description: "Rota de cadastro de usuários"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/cadastrar"
+
+  usuarioLogin:
+    Description: "Rota de login de usuários"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/login"

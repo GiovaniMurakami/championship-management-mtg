@@ -1,0 +1,58 @@
+import mongoose, { Schema, Document } from "mongoose";
+import { Usuario } from "../../../dominio/entidade/usuario";
+import { UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
+import { conectarMongoDB } from "../conexao";
+
+interface UsuarioDocument extends Document {
+  id: string;
+  nome: string;
+  email: string;
+  senha: string;
+  criadoEm: Date;
+}
+
+const usuarioSchema = new Schema<UsuarioDocument>({
+  id: { type: String, required: true, unique: true },
+  nome: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  senha: { type: String, required: true },
+  criadoEm: { type: Date, default: Date.now },
+});
+
+const UsuarioModel =
+  mongoose.models.Usuario ||
+  mongoose.model<UsuarioDocument>("Usuario", usuarioSchema);
+
+export class UsuarioRepositorio implements UsuarioGateway {
+  private constructor() {}
+
+  public static criar() {
+    return new UsuarioRepositorio();
+  }
+
+  public async salvar(usuario: Usuario): Promise<void> {
+    await conectarMongoDB();
+    await UsuarioModel.create({
+      id: usuario.id,
+      nome: usuario.nome,
+      email: usuario.email,
+      senha: usuario.senha,
+      criadoEm: usuario.criadoEm,
+    });
+  }
+
+  public async buscarPorEmail(email: string): Promise<Usuario | null> {
+    await conectarMongoDB();
+    const doc = await UsuarioModel.findOne({ email });
+
+    if (!doc) return null;
+
+    return new Usuario({
+      id: doc.get("id"),
+      nome: doc.get("nome"),
+      email: doc.get("email"),
+      senha: doc.get("senha"),
+      criadoEm: doc.get("criadoEm"),
+    });
+  }
+}

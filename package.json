@@ -1,0 +1,40 @@
+{
+  "name": "championship-management-mtg",
+  "version": "1.0.0",
+  "description": "API Lambda para gerenciamento de campeonatos de Magic: The Gathering",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "ts-node src/iniciarServidor.ts",
+    "lint": "eslint .",
+    "build": "node esbuild.config.js",
+    "deploy": "npm run build && serverless deploy --stage prod --region us-east-1"
+  },
+  "author": "Giovani Murakami",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "esbuild": "^0.24.0",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.0",
+    "serverless": "^4.4.6",
+    "serverless-http": "^3.2.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.7.6",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.12.0",
+    "globals": "^15.11.0",
+    "nodemon": "^3.1.7",
+    "serverless-offline": "^13.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.10.0"
+  }
+}
