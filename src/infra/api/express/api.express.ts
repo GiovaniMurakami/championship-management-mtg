@@ -1,5 +1,6 @@
 import { Api } from "../api";
 import express, { Express, Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { Rotas } from "./rotas/rotas";
 
 export class ApiExpress implements Api {
@@ -16,6 +17,7 @@ export class ApiExpress implements Api {
   }
 
   private adicionarMiddlewares(): void {
+    this.app.use(cors());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }
