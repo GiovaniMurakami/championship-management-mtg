@@ -24,13 +24,14 @@ export class ApiExpress implements Api {
     rotas.forEach((rota) => {
       const caminho = rota.getCaminho();
       const metodo = rota.getMetodo() as keyof Express;
+      const middlewares = rota.getMiddlewares ? rota.getMiddlewares() : [];
       const handler = rota.getHandler() as (
         req: Request,
         res: Response,
         next: NextFunction
       ) => void;
 
-      this.app[metodo](caminho, handler);
+      this.app[metodo](caminho, ...middlewares, handler);
     });
   }
 

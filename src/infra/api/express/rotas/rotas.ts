@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, RequestHandler } from "express";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 
@@ -18,4 +18,5 @@ export interface Rotas {
   ) => Promise<void>;
   getCaminho(): string;
   getMetodo(): HttpMethod;
+  getMiddlewares?(): RequestHandler[];
 }
