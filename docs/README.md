@@ -18,13 +18,17 @@ A documentação completa está organizada por entidade:
 - `POST /usuario/cadastrar` - Cadastrar novo usuário
 - `POST /usuario/login` - Fazer login e obter token JWT
 
+### Usuário (Autenticação Necessária)
+
+- `PUT /usuario/atualizar` - Atualizar dados do usuário (telefone, nicks MTGO/Arena)
+
 ### Decks (Autenticação Necessária)
 
 - `POST /deck/cadastrar` - Cadastrar novo deck
 - `PUT /deck/atualizar/:id` - Atualizar deck existente
 - `DELETE /deck/excluir/:id` - Excluir deck
 
-> **⚠️ Importante:** Todos os endpoints de deck requerem autenticação via token JWT no header `Authorization: Bearer {token}`
+> **⚠️ Importante:** Todos os endpoints marcados com "Autenticação Necessária" requerem token JWT no header `Authorization: Bearer {token}`
 
 ## Arquitetura
 

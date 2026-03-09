@@ -12,19 +12,25 @@ interface UsuarioProps {
   nome: string;
   email: string;
   senha: string;
+  telefone?: string;
+  nickMTGO?: string;
+  nickArena?: string;
   criadoEm?: Date;
 }
 ```
 
 ### Propriedades
 
-| Campo    | Tipo   | Obrigatório | Descrição                                            |
-| -------- | ------ | ----------- | ---------------------------------------------------- |
-| id       | string | Sim         | Identificador único UUID do usuário                  |
-| nome     | string | Sim         | Nome completo do usuário                             |
-| email    | string | Sim         | Email único do usuário (usado para login)            |
-| senha    | string | Sim         | Senha criptografada com bcrypt                       |
-| criadoEm | Date   | Não         | Data de criação do registro (gerada automaticamente) |
+| Campo     | Tipo   | Obrigatório | Descrição                                            |
+| --------- | ------ | ----------- | ---------------------------------------------------- |
+| id        | string | Sim         | Identificador único UUID do usuário                  |
+| nome      | string | Sim         | Nome completo do usuário                             |
+| email     | string | Sim         | Email único do usuário (usado para login)            |
+| senha     | string | Sim         | Senha criptografada com bcrypt                       |
+| telefone  | string | Não         | Telefone de contato do usuário                       |
+| nickMTGO  | string | Não         | Username do Magic: The Gathering Online              |
+| nickArena | string | Não         | Username do Magic: The Gathering Arena               |
+| criadoEm  | Date   | Não         | Data de criação do registro (gerada automaticamente) |
 
 ## Endpoints
 
@@ -90,6 +96,85 @@ Realiza autenticação do usuário e retorna token JWT.
 
 - `401 Unauthorized` - Email ou senha incorretos
 - `400 Bad Request` - Dados inválidos
+- `500 Internal Server Error` - Erro no servidor
+
+---
+
+### PUT /usuario/atualizar
+
+Atualiza informações do usuário autenticado.
+Campos opcionais**: telefone, nickMTGO e nickArena podem ser adicionados/atualizados posteriormente 5. **Validações\*\*:
+
+- Nome: obrigatório no cadastro, mínimo 3 caracteres
+- Email: obrigatório, formato válido, único no sistema
+- Senha: obrigatório no cadastro, mínimo 6 caracteres
+- Telefone: opcional, pode ser removido enviando string vazia
+- Nicks (MTGO/Arena): opcionais, podem ser removidos enviando string vazia
+
+## Casos de Uso
+
+- [CadastrarUsuario](../src/casosDeUso/usuario/cadastrarUsuario.ts) - Registra novo usuário
+- [LoginUsuario](../src/casosDeUso/usuario/loginUsuario.ts) - Autentica e gera token
+- [AtualizarUsuario](../src/casosDeUso/usuario/atualizarUsuario.ts) - Atualiza dados do usuário
+  **Request Body:**
+
+```json
+{
+  "nome": "João Silva Santos",
+  "telefone": "+55 11 98765-4321",
+  "nickMTGO": "joaomagic",
+  "nickArena": "JoaoMTG#12345"
+}
+```
+
+> **Nota:** Todos os campos são opcionais. Envie apenas os campos que deseja atualizar.
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "nome": "João Silva Santos",
+  "email": "joao.silva@email.com",
+  "telefone": "+55 11 98765-4321",
+  "nickMTGO": "joaomagic",
+  "nickArena": "JoaoMTG#12345",
+  "criadoEm": "2026-03-09T22:00:00.000Z"
+}
+```
+
+**Exemplos de Requisição:**
+
+Atualizar apenas o telefone:
+
+```json
+{
+  "telefone": "+55 11 98765-4321"
+}
+```
+
+Atualizar apenas nicks:
+
+```json
+{
+  "nickMTGO": "joaomagic",
+  "nickArena": "JoaoMTG#12345"
+}
+```
+
+Remover um campo (enviar string vazia):
+
+```json
+{
+  "telefone": ""
+}
+```
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token inválido ou ausente
+- `404 Not Found` - Usuário não encontrado
+- `400 Bad Request` - Dados inválidos (ex: nome com menos de 3 caracteres)
 - `500 Internal Server Error` - Erro no servidor
 
 ## Regras de Negócio
