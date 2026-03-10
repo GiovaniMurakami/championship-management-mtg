@@ -183,6 +183,61 @@ Authorization: Bearer {token}
 - `404 Not Found` - Deck não encontrado
 - `500 Internal Server Error` - Erro no servidor
 
+---
+
+### GET /deck/listar
+
+Lista todos os decks do usuário autenticado.
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+
+Array de decks do usuário:
+
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "nome": "Atraxa Superfriends",
+    "formato": "Commander",
+    "maindeck": [
+      {
+        "nome": "Atraxa, Praetors' Voice",
+        "quantidade": 1
+      },
+      {
+        "nome": "Sol Ring",
+        "quantidade": 1
+      }
+    ],
+    "sideboard": [],
+    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "criadoEm": "2026-03-09T22:00:00.000Z"
+  },
+  {
+    "id": "770e8400-e29b-41d4-a716-446655440001",
+    "nome": "Meu Deck Favorito",
+    "formato": "Modern",
+    "maindeck": [...],
+    "sideboard": [],
+    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "criadoEm": "2026-03-08T10:30:00.000Z"
+  }
+]
+```
+
+> Retorna um array vazio `[]` se o usuário não tiver decks cadastrados.
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token inválido ou ausente
+- `500 Internal Server Error` - Erro no servidor
+
 ## Regras de Negócio
 
 1. **Propriedade**: Usuário só pode manipular (atualizar/excluir) seus próprios decks
@@ -201,6 +256,7 @@ Authorization: Bearer {token}
 - [CadastrarDeck](../src/casosDeUso/deck/cadastrarDeck.ts) - Registra novo deck
 - [AtualizarDeck](../src/casosDeUso/deck/atualizarDeck.ts) - Atualiza deck existente
 - [ExcluirDeck](../src/casosDeUso/deck/excluirDeck.ts) - Remove deck
+- [ListarDecks](../src/casosDeUso/deck/listarDecks.ts) - Lista decks do usuário
 
 ## Gateway
 

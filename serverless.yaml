@@ -65,6 +65,116 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
 
+  usuarioAtualizar:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: usuario/atualizar
+          method: put
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - PUT
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+  deckCadastrar:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: deck/cadastrar
+          method: post
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - POST
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+  deckListar:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: deck/listar
+          method: get
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - GET
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+  deckAtualizar:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: deck/atualizar/{id}
+          method: put
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - PUT
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+  deckExcluir:
+    handler: src/handler.handler
+    memorySize: 512
+    timeout: 29
+    events:
+      - http:
+          path: deck/excluir/{id}
+          method: delete
+          cors:
+            origins:
+              - "*"
+            methods:
+              - OPTIONS
+              - DELETE
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
 outputs:
   usuarioCadastrar:
     Description: "Rota de cadastro de usuários"
@@ -73,3 +183,23 @@ outputs:
   usuarioLogin:
     Description: "Rota de login de usuários"
     Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/login"
+
+  usuarioAtualizar:
+    Description: "Rota de atualizar dados do usuário"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/atualizar"
+
+  deckCadastrar:
+    Description: "Rota de cadastro de decks"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/cadastrar"
+
+  deckListar:
+    Description: "Rota de listagem de decks do usuário"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/listar"
+
+  deckAtualizar:
+    Description: "Rota de atualizar deck"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/atualizar/{id}"
+
+  deckExcluir:
+    Description: "Rota de exclusão de decks"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/excluir/{id}"

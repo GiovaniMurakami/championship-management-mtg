@@ -24,6 +24,7 @@ A documentação completa está organizada por entidade:
 
 ### Decks (Autenticação Necessária)
 
+- `GET /deck/listar` - Listar todos os decks do usuário
 - `POST /deck/cadastrar` - Cadastrar novo deck
 - `PUT /deck/atualizar/:id` - Atualizar deck existente
 - `DELETE /deck/excluir/:id` - Excluir deck
