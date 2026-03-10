@@ -4,7 +4,7 @@
   "description": "API Lambda para gerenciamento de campeonatos de Magic: The Gathering",
   "main": "src/app.js",
   "scripts": {
-    "dev": "ts-node src/iniciarServidor.ts",
+    "dev": "nodemon --exec ts-node src/iniciarServidor.ts",
     "lint": "eslint .",
     "build": "node esbuild.config.js",
     "deploy": "npm run build && serverless deploy --stage prod --region us-east-1"
