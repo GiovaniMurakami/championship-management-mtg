@@ -21,130 +21,24 @@ package:
     - "build/**"
 
 functions:
-  usuarioCadastrar:
+  api:
     handler: src/handler.handler
     memorySize: 512
     timeout: 29
     events:
       - http:
-          path: usuario/cadastrar
-          method: post
-          cors:
-            origins:
-              - "*"
-            methods:
-              - OPTIONS
-              - POST
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-  usuarioLogin:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
-      - http:
-          path: usuario/login
-          method: post
-          cors:
-            origins:
-              - "*"
-            methods:
-              - OPTIONS
-              - POST
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-  usuarioAtualizar:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
-      - http:
-          path: usuario/atualizar
-          method: put
-          cors:
-            origins:
-              - "*"
-            methods:
-              - OPTIONS
-              - PUT
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-  deckCadastrar:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
-      - http:
-          path: deck/cadastrar
-          method: post
-          cors:
-            origins:
-              - "*"
-            methods:
-              - OPTIONS
-              - POST
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-  deckListar:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
-      - http:
-          path: deck/listar
-          method: get
+          path: /
+          method: any
           cors:
             origins:
               - "*"
             methods:
               - OPTIONS
               - GET
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-  deckAtualizar:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
-      - http:
-          path: deck/atualizar/{id}
-          method: put
-          cors:
-            origins:
-              - "*"
-            methods:
-              - OPTIONS
+              - POST
               - PUT
+              - PATCH
+              - DELETE
             headers:
               - Content-Type
               - X-Amz-Date
@@ -152,20 +46,18 @@ functions:
               - X-Api-Key
               - X-Amz-Security-Token
               - X-Amz-User-Agent
-
-  deckExcluir:
-    handler: src/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
       - http:
-          path: deck/excluir/{id}
-          method: delete
+          path: /{proxy+}
+          method: any
           cors:
             origins:
               - "*"
             methods:
               - OPTIONS
+              - GET
+              - POST
+              - PUT
+              - PATCH
               - DELETE
             headers:
               - Content-Type
