@@ -1,5 +1,6 @@
 import { Api } from "../api";
 import express, { Express, Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { Rotas } from "./rotas/rotas";
 
 export class ApiExpress implements Api {
@@ -16,6 +17,7 @@ export class ApiExpress implements Api {
   }
 
   private adicionarMiddlewares(): void {
+    this.app.use(cors());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }
@@ -24,13 +26,14 @@ export class ApiExpress implements Api {
     rotas.forEach((rota) => {
       const caminho = rota.getCaminho();
       const metodo = rota.getMetodo() as keyof Express;
+      const middlewares = rota.getMiddlewares ? rota.getMiddlewares() : [];
       const handler = rota.getHandler() as (
         req: Request,
         res: Response,
         next: NextFunction
       ) => void;
 
-      this.app[metodo](caminho, handler);
+      this.app[metodo](caminho, ...middlewares, handler);
     });
   }
 

@@ -5,6 +5,9 @@ export interface UsuarioProps {
   nome: string;
   email: string;
   senha: string;
+  telefone?: string;
+  nickMTGO?: string;
+  nickArena?: string;
   criadoEm?: Date;
 }
 
@@ -13,13 +16,19 @@ export class Usuario {
   public nome: string;
   public email: string;
   public senha: string;
+  public telefone?: string;
+  public nickMTGO?: string;
+  public nickArena?: string;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, telefone, nickMTGO, nickArena, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
     this.senha = senha;
+    this.telefone = telefone;
+    this.nickMTGO = nickMTGO;
+    this.nickArena = nickArena;
     this.criadoEm = criadoEm || new Date();
   }
 
@@ -27,7 +36,7 @@ export class Usuario {
     nome,
     email,
     senha,
-  }: Omit<UsuarioProps, "id" | "criadoEm">) {
+  }: Omit<UsuarioProps, "id" | "criadoEm" | "telefone" | "nickMTGO" | "nickArena">) {
     return new Usuario({
       id: uuidv4(),
       nome,
