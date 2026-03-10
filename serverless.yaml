@@ -70,28 +70,28 @@ functions:
 outputs:
   usuarioCadastrar:
     Description: "Rota de cadastro de usuários"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/cadastrar"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/usuario/cadastrar"
 
   usuarioLogin:
     Description: "Rota de login de usuários"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/login"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/usuario/login"
 
   usuarioAtualizar:
     Description: "Rota de atualizar dados do usuário"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/usuario/atualizar"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/usuario/atualizar"
 
   deckCadastrar:
     Description: "Rota de cadastro de decks"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/cadastrar"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/deck/cadastrar"
 
   deckListar:
     Description: "Rota de listagem de decks do usuário"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/listar"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/deck/listar"
 
   deckAtualizar:
     Description: "Rota de atualizar deck"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/atualizar/{id}"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/deck/atualizar/{id}"
 
   deckExcluir:
     Description: "Rota de exclusão de decks"
-    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/prod/deck/excluir/{id}"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/deck/excluir/{id}"
