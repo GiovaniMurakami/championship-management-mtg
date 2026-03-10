@@ -87,10 +87,15 @@ Realiza autenticação do usuário e retorna token JWT.
   "usuario": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "nome": "João Silva",
-    "email": "joao.silva@email.com"
+    "email": "joao.silva@email.com",
+    "telefone": "+55 11 98765-4321",
+    "nickMTGO": "joaomagic",
+    "nickArena": "JoaoMTG#12345"
   }
 }
 ```
+
+> **Nota:** Os campos `telefone`, `nickMTGO` e `nickArena` só aparecem se foram previamente cadastrados pelo usuário. Caso contrário, não estarão presentes ou terão valor `null`.
 
 **Erros Possíveis:**
 

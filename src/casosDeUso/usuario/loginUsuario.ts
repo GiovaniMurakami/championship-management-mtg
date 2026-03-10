@@ -16,6 +16,9 @@ export type LoginUsuarioOutputDto = {
     id: string;
     nome: string;
     email: string;
+    telefone?: string;
+    nickMTGO?: string;
+    nickArena?: string;
   };
 };
 
@@ -74,6 +77,9 @@ export class LoginUsuario
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        telefone: usuario.telefone,
+        nickMTGO: usuario.nickMTGO,
+        nickArena: usuario.nickArena,
       },
     };
   }
