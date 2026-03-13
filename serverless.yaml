@@ -7,6 +7,7 @@ provider:
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     JWT_SECRET: ${env:JWT_SECRET}
+    ABLY_API_KEY: ${env:ABLY_API_KEY}
 
 plugins:
   # - serverless-offline

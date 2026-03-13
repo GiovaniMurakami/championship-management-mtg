@@ -459,3 +459,97 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
 | 403    | Tentativa de operação exclusiva do dono       |
 | 403    | Deck pertence a outro usuário                 |
 | 404    | Torneio, partida ou deck não encontrado       |
+
+---
+
+## Notificações em Tempo Real (Ably)
+
+O servidor publica eventos via **Ably Pub/Sub** sempre que algo relevante acontece no torneio. O cliente assina o canal do torneio para receber atualizações automaticamente.
+
+### Variáveis de ambiente necessárias
+
+| Variável               | Onde usar                  | Descrição                        |
+| ---------------------- | -------------------------- | -------------------------------- |
+| `ABLY_API_KEY`         | Servidor (`.env` / Lambda) | Chave Root — publica eventos     |
+| Chave _Subscribe only_ | Frontend                   | Só recebe eventos, nunca publica |
+
+### Canal
+
+Cada torneio tem um canal exclusivo:
+
+```
+torneio-{torneioId}
+```
+
+### Eventos emitidos
+
+| Evento                  | Disparado quando                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `rodada_iniciada`       | `POST /torneio/:id/iniciar` ou `POST /torneio/:id/proxima-rodada` (torneio não finalizado) |
+| `torneio_finalizado`    | `POST /torneio/:id/proxima-rodada` quando última rodada encerra                            |
+| `resultado_registrado`  | `POST /torneio/partida/:id/resultado`                                                      |
+| `standings_atualizados` | Imediatamente após `resultado_registrado` com standings recalculados                       |
+
+### Payload dos eventos
+
+**`rodada_iniciada`**
+
+```json
+{
+  "torneioId": "abc123",
+  "rodadaAtual": 2,
+  "totalRodadas": 4,
+  "partidas": [{ "id": "...", "jogador1Id": "...", "jogador2Id": "..." }]
+}
+```
+
+**`resultado_registrado`**
+
+```json
+{
+  "id": "...",
+  "torneioId": "abc123",
+  "rodada": 2,
+  "jogador1Id": "...",
+  "jogador2Id": "...",
+  "vitoriasJogador1": 2,
+  "vitoriasJogador2": 1,
+  "status": "finalizada"
+}
+```
+
+**`standings_atualizados`** — mesmo payload do `GET /torneio/:id/standings`
+
+**`torneio_finalizado`**
+
+```json
+{
+  "torneioId": "abc123",
+  "classificacao": [
+    {
+      "posicao": 1,
+      "usuarioId": "...",
+      "pontosMesa": 9,
+      "omwp": 0.67,
+      "gwp": 0.72,
+      "ogwp": 0.61
+    }
+  ]
+}
+```
+
+### Integração no frontend (ably-js)
+
+```typescript
+import Ably from "ably";
+
+const ably = new Ably.Realtime("SUA_SUBSCRIBE_ONLY_KEY");
+const canal = ably.channels.get(`torneio-${torneioId}`);
+
+canal.subscribe("rodada_iniciada", (msg) => console.log(msg.data));
+canal.subscribe("resultado_registrado", (msg) => console.log(msg.data));
+canal.subscribe("standings_atualizados", (msg) => console.log(msg.data));
+canal.subscribe("torneio_finalizado", (msg) => console.log(msg.data));
+```
+
+> No Lambda (produção), a variável `ABLY_API_KEY` deve ser configurada nas variáveis de ambiente da função no console da AWS ou via `serverless.yaml`.

@@ -3,6 +3,7 @@ import { IniciarTorneio } from "../../../../../casosDeUso/torneio/iniciarTorneio
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 
 export class IniciarTorneioRota implements Rotas {
   private constructor(
@@ -36,6 +37,13 @@ export class IniciarTorneioRota implements Rotas {
         const resultado = await this.iniciarTorneioServico.executar({
           torneioId,
           donoId,
+        });
+
+        eventosTorneio.emit("rodada_iniciada", {
+          torneioId: resultado.torneioId,
+          rodadaAtual: resultado.rodadaAtual,
+          totalRodadas: resultado.totalRodadas,
+          partidas: resultado.partidas,
         });
 
         response.status(200).json(resultado);

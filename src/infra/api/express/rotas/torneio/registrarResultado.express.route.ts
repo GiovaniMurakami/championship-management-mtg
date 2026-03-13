@@ -1,21 +1,28 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { RegistrarResultado } from "../../../../../casosDeUso/torneio/registrarResultado";
+import { BuscarStandings } from "../../../../../casosDeUso/torneio/buscarStandings";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 
 export class RegistrarResultadoRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly registrarResultadoServico: RegistrarResultado
+    private readonly registrarResultadoServico: RegistrarResultado,
+    private readonly buscarStandingsServico: BuscarStandings
   ) {}
 
-  public static criar(registrarResultadoServico: RegistrarResultado) {
+  public static criar(
+    registrarResultadoServico: RegistrarResultado,
+    buscarStandingsServico: BuscarStandings
+  ) {
     return new RegistrarResultadoRota(
       "/torneio/partida/:partidaId/resultado",
       HttpMethod.POST,
-      registrarResultadoServico
+      registrarResultadoServico,
+      buscarStandingsServico
     );
   }
 
@@ -45,6 +52,16 @@ export class RegistrarResultadoRota implements Rotas {
           vitoriasJogador1: Number(vitoriasJogador1),
           vitoriasJogador2: Number(vitoriasJogador2),
         });
+
+        eventosTorneio.emit("resultado_registrado", resultado);
+
+        // Recalcula standings e emite em background
+        this.buscarStandingsServico
+          .executar({ torneioId: resultado.torneioId })
+          .then((standings) => {
+            eventosTorneio.emit("standings_atualizados", standings);
+          })
+          .catch(() => { /* não bloqueia a resposta */ });
 
         response.status(200).json(resultado);
       } catch (error) {

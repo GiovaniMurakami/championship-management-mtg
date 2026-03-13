@@ -3,6 +3,7 @@ import { IniciarProximaRodada } from "../../../../../casosDeUso/torneio/iniciarP
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 
 export class IniciarProximaRodadaRota implements Rotas {
   private constructor(
@@ -37,6 +38,19 @@ export class IniciarProximaRodadaRota implements Rotas {
           torneioId,
           donoId,
         });
+
+        if (!resultado.finalizado) {
+          eventosTorneio.emit("rodada_iniciada", {
+            torneioId,
+            rodadaAtual: resultado.rodadaAtual,
+            partidas: resultado.partidas,
+          });
+        } else {
+          eventosTorneio.emit("torneio_finalizado", {
+            torneioId,
+            classificacao: resultado.classificacao,
+          });
+        }
 
         response.status(200).json(resultado);
       } catch (error) {

@@ -16,6 +16,7 @@ import { ListarTorneios } from "./casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "./casosDeUso/torneio/buscarTorneio";
 import { BuscarStandings } from "./casosDeUso/torneio/buscarStandings";
 import { ApiExpress } from "./infra/api/express/api.express";
+import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "./infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "./infra/api/express/rotas/usuario/atualizarUsuario.express.route";
@@ -42,6 +43,7 @@ import dotenv from "dotenv";
 
 export function app() {
   dotenv.config();
+  NotificacaoAbly.iniciar();
 
   const repositorios = {
     usuario: UsuarioRepositorio.criar(),
@@ -109,7 +111,10 @@ export function app() {
   const escolherDeckTorneioRota = EscolherDeckTorneioRota.criar(escolherDeckTorneio);
   const iniciarTorneioRota = IniciarTorneioRota.criar(iniciarTorneio);
   const iniciarProximaRodadaRota = IniciarProximaRodadaRota.criar(iniciarProximaRodada);
-  const registrarResultadoRota = RegistrarResultadoRota.criar(registrarResultado);
+  const registrarResultadoRota = RegistrarResultadoRota.criar(
+    registrarResultado,
+    buscarStandings
+  );
   const listarTorneiosRota = ListarTorneiosRota.criar(listarTorneios);
   const buscarTorneioRota = BuscarTorneioRota.criar(buscarTorneio);
   const buscarStandingsRota = BuscarStandingsRota.criar(buscarStandings);
