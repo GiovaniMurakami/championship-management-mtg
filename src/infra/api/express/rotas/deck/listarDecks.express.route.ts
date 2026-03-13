@@ -1,11 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import {
   ListarDecks,
-  ListarDecksInputDto,
 } from "../../../../../casosDeUso/deck/listarDecks";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 
 export class ListarDecksRota implements Rotas {
   private constructor(
@@ -30,10 +28,6 @@ export class ListarDecksRota implements Rotas {
     return this.metodo;
   }
 
-  public getMiddlewares() {
-    return [autenticarJwt];
-  }
-
   public getHandler() {
     return async (
       request: Request,
@@ -41,17 +35,13 @@ export class ListarDecksRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const usuarioId = request.usuario?.id;
-
-        if (!usuarioId) {
-          response.status(401).json({
-            mensagem: "Usuário não autenticado.",
-          });
-          return;
-        }
+        const { usuarioId, formato, criadoApos, criadoAntes } = request.query as Record<string, string | undefined>;
 
         const resultado = await this.listarDecksServico.executar({
           usuarioId,
+          formato,
+          criadoApos,
+          criadoAntes,
         });
 
         response.status(200).json(resultado);
