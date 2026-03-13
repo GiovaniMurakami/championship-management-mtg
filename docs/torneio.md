@@ -42,8 +42,11 @@ interface InscricaoProps {
   id: string;
   torneioId: string;
   usuarioId: string;
-  deckId?: string; // definido no check-in
+  deckId?: string;
   checkIn: boolean;
+  checkInRodada: number; // -1 = sem check-in, 0 = check-in inicial, N = check-in da rodada N
+  dropped: boolean;
+  criadoEm?: Date;
 }
 ```
 
@@ -83,11 +86,14 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 
 1. **Dono** cria o torneio (`POST /torneio/criar`)
 2. **Jogadores** se inscrevem (`POST /torneio/:id/inscrever`)
-3. **Jogadores** fazem check-in com um deck (`POST /torneio/:id/checkin`)
-4. **Dono** inicia o torneio — rodada 1 gerada com sorteio aleatório (`POST /torneio/:id/iniciar`)
-5. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
-6. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
-7. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
+3. **Jogadores** escolhem o deck a qualquer momento (`POST /torneio/:id/deck`)
+4. **Jogadores** fazem check-in — disponível **1 hora antes** do `horario` do torneio (`POST /torneio/:id/checkin`)
+5. **Dono** inicia o torneio — rodada 1 gerada com sorteio aleatório (`POST /torneio/:id/iniciar`)
+6. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
+7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`)
+8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
+9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
+10. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
 
 ---
 
@@ -226,6 +232,7 @@ Inscreve o usuário autenticado no torneio. Só funciona enquanto `status = insc
   "torneioId": "uuid",
   "usuarioId": "uuid",
   "checkIn": false,
+  "dropped": false,
   "criadoEm": "2026-03-13T10:05:00.000Z"
 }
 ```
@@ -238,9 +245,9 @@ Inscreve o usuário autenticado no torneio. Só funciona enquanto `status = insc
 
 ---
 
-### POST /torneio/:torneioId/checkin
+### POST /torneio/:torneioId/deck
 
-Confirma presença e registra o deck a ser usado. Só funciona enquanto `status = inscricoes_abertas`.
+Escolhe ou troca o deck para o torneio. Pode ser feito a qualquer momento enquanto o torneio não estiver `finalizado`. O jogador precisa estar inscrito.
 
 **Request Body:**
 
@@ -257,8 +264,7 @@ Confirma presença e registra o deck a ser usado. Só funciona enquanto `status 
   "id": "uuid",
   "torneioId": "uuid",
   "usuarioId": "uuid",
-  "deckId": "uuid-do-deck",
-  "checkIn": true
+  "deckId": "uuid-do-deck"
 }
 ```
 
@@ -266,8 +272,39 @@ Confirma presença e registra o deck a ser usado. Só funciona enquanto `status 
 
 - `404` — Torneio ou deck não encontrado
 - `403` — Deck pertence a outro usuário
-- `400` — Torneio já iniciado
+- `400` — Torneio já finalizado
 - `404` — Usuário não inscrito
+
+---
+
+### POST /torneio/:torneioId/checkin
+
+Confirma presença no torneio ou em uma rodada específica.
+
+- **Pré-torneio** (`inscricoes_abertas`): só aceito a partir de **1 hora antes** do `horario`. Seta `checkIn = true`.
+- **Entre rodadas** (`em_andamento`): confirma presença para a próxima rodada. Jogadores que não fizerem check-in são excluídos dos próximos pareamentos.
+
+**Request Body:** _(sem body obrigatório)_
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid",
+  "torneioId": "uuid",
+  "usuarioId": "uuid",
+  "checkIn": true,
+  "checkInRodada": 0
+}
+```
+
+> `checkInRodada = 0` = check-in inicial. `checkInRodada = N` = confirmado para rodada N+1.
+
+**Erros:**
+
+- `404` — Torneio não encontrado ou usuário não inscrito
+- `400` — Check-in ainda não aberto (faltam mais de 1h)
+- `400` — Torneio já finalizado
 
 ---
 
@@ -305,7 +342,42 @@ Confirma presença e registra o deck a ser usado. Só funciona enquanto `status 
 
 - `403` — Não é o dono
 - `400` — Torneio já iniciado/finalizado
-- `400` — Menos de 2 jogadores com check-in
+- `400` — Menos de 2 jogadores com check-in (ativos e não dropados)
+
+---
+
+### POST /torneio/:torneioId/drop
+
+Dropa um jogador do torneio. O jogador dropado não participa dos próximos pareamentos, mas seus resultados anteriores são mantidos nos standings.
+
+- **Jogador dropa a si mesmo**: chame sem body
+- **Dono dropa outro jogador**: envie `jogadorId` no body
+
+**Request Body** _(somente quando o dono dropa outro jogador)_:
+
+```json
+{
+  "jogadorId": "uuid-do-jogador"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "inscricaoId": "uuid",
+  "torneioId": "uuid",
+  "jogadorId": "uuid",
+  "dropped": true
+}
+```
+
+**Erros:**
+
+- `404` — Torneio não encontrado ou jogador não inscrito
+- `403` — Requisitante não é o jogador nem o dono
+- `400` — Jogador já foi dropado
+- `400` — Torneio já finalizado
 
 ---
 
@@ -424,7 +496,9 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "mwp": 1.0,
       "omwp": 0.67,
       "gwp": 0.83,
-      "ogwp": 0.61
+      "ogwp": 0.61,
+      "checkInProximaRodada": true,
+      "dropped": false
     },
     {
       "posicao": 2,
@@ -436,7 +510,9 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "mwp": 1.0,
       "omwp": 0.61,
       "gwp": 0.75,
-      "ogwp": 0.58
+      "ogwp": 0.58,
+      "checkInProximaRodada": false,
+      "dropped": true
     }
   ]
 }
@@ -454,10 +530,13 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
 | Código | Situação                                      |
 | ------ | --------------------------------------------- |
 | 400    | Torneio em status incompatível com a operação |
+| 400    | Check-in antes da janela de 1h                |
 | 400    | Resultado de partida inválido                 |
 | 400    | Partidas pendentes ao tentar avançar a rodada |
+| 400    | Jogador já dropado                            |
 | 403    | Tentativa de operação exclusiva do dono       |
 | 403    | Deck pertence a outro usuário                 |
+| 403    | Drop de outro jogador sem ser o dono          |
 | 404    | Torneio, partida ou deck não encontrado       |
 
 ---

@@ -69,7 +69,7 @@ export class IniciarTorneio
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
     );
-    const comCheckIn = inscricoes.filter((i) => i.checkIn);
+    const comCheckIn = inscricoes.filter((i) => i.checkIn && !i.dropped);
 
     if (comCheckIn.length < 2) {
       throw ErroPersonalizado.criar({

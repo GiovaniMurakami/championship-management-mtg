@@ -10,6 +10,7 @@ interface InscricaoDocument extends Document {
   deckId?: string;
   checkIn: boolean;
   checkInRodada: number;
+  dropped: boolean;
   criadoEm: Date;
 }
 
@@ -20,6 +21,7 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   deckId: { type: String },
   checkIn: { type: Boolean, required: true, default: false },
   checkInRodada: { type: Number, required: true, default: -1 },
+  dropped: { type: Boolean, required: true, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -35,6 +37,7 @@ function docParaInscricao(doc: InscricaoDocument): Inscricao {
     deckId: doc.get("deckId"),
     checkIn: doc.get("checkIn"),
     checkInRodada: doc.get("checkInRodada") ?? -1,
+    dropped: doc.get("dropped") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -55,6 +58,7 @@ export class InscricaoRepositorio implements InscricaoGateway {
       deckId: inscricao.deckId,
       checkIn: inscricao.checkIn,
       checkInRodada: inscricao.checkInRodada,
+      dropped: inscricao.dropped,
       criadoEm: inscricao.criadoEm,
     });
   }
@@ -85,6 +89,7 @@ export class InscricaoRepositorio implements InscricaoGateway {
         deckId: inscricao.deckId,
         checkIn: inscricao.checkIn,
         checkInRodada: inscricao.checkInRodada,
+        dropped: inscricao.dropped,
       }
     );
   }

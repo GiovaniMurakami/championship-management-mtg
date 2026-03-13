@@ -26,7 +26,8 @@
 - Estrutura das entidades (Torneio, Inscrição, Partida)
 - Fluxo completo do torneio
 - Sistema Swiss com critérios de desempate WotC
-- Endpoints (criar, inscrever, check-in, iniciar, resultado, standings)
+- Endpoints: criar, inscrever, escolher deck, check-in, drop, iniciar, resultado, próxima rodada, standings
+- Notificações em tempo real via Ably (rodada iniciada, resultado, standings, torneio finalizado)
 
 ## Sistema
 

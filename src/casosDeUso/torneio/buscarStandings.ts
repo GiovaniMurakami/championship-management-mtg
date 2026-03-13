@@ -34,6 +34,7 @@ export type BuscarStandingsOutputDto = {
     gwp: number;
     ogwp: number;
     checkInProximaRodada: boolean;
+    dropped: boolean;
   }>;
 };
 
@@ -107,6 +108,7 @@ export class BuscarStandings
         ogwp: ogwp(s, statsMap),
         checkInProximaRodada:
           (inscricaoMap.get(s.usuarioId)?.checkInRodada ?? -1) >= torneio.rodadaAtual,
+        dropped: inscricaoMap.get(s.usuarioId)?.dropped ?? false,
       })),
     };
   }

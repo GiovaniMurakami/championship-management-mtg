@@ -12,6 +12,7 @@ import { EscolherDeckTorneio } from "./casosDeUso/torneio/escolherDeckTorneio";
 import { IniciarTorneio } from "./casosDeUso/torneio/iniciarTorneio";
 import { IniciarProximaRodada } from "./casosDeUso/torneio/iniciarProximaRodada";
 import { RegistrarResultado } from "./casosDeUso/torneio/registrarResultado";
+import { DroparJogador } from "./casosDeUso/torneio/droparJogador";
 import { ListarTorneios } from "./casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "./casosDeUso/torneio/buscarTorneio";
 import { BuscarStandings } from "./casosDeUso/torneio/buscarStandings";
@@ -31,6 +32,7 @@ import { EscolherDeckTorneioRota } from "./infra/api/express/rotas/torneio/escol
 import { IniciarTorneioRota } from "./infra/api/express/rotas/torneio/iniciarTorneio.express.route";
 import { IniciarProximaRodadaRota } from "./infra/api/express/rotas/torneio/iniciarProximaRodada.express.route";
 import { RegistrarResultadoRota } from "./infra/api/express/rotas/torneio/registrarResultado.express.route";
+import { DroparJogadorRota } from "./infra/api/express/rotas/torneio/droparJogador.express.route";
 import { ListarTorneiosRota } from "./infra/api/express/rotas/torneio/listarTorneios.express.route";
 import { BuscarTorneioRota } from "./infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarStandingsRota } from "./infra/api/express/rotas/torneio/buscarStandings.express.route";
@@ -89,6 +91,10 @@ export function app() {
     repositorios.torneio,
     repositorios.partida
   );
+  const droparJogador = DroparJogador.criar(
+    repositorios.torneio,
+    repositorios.inscricao
+  );
   const listarTorneios = ListarTorneios.criar(repositorios.torneio);
   const buscarTorneio = BuscarTorneio.criar(repositorios.torneio);
   const buscarStandings = BuscarStandings.criar(
@@ -115,6 +121,7 @@ export function app() {
     registrarResultado,
     buscarStandings
   );
+  const droparJogadorRota = DroparJogadorRota.criar(droparJogador);
   const listarTorneiosRota = ListarTorneiosRota.criar(listarTorneios);
   const buscarTorneioRota = BuscarTorneioRota.criar(buscarTorneio);
   const buscarStandingsRota = BuscarStandingsRota.criar(buscarStandings);
@@ -133,6 +140,7 @@ export function app() {
     inscreverTorneioRota,
     checkInTorneioRota,
     escolherDeckTorneioRota,
+    droparJogadorRota,
     iniciarTorneioRota,
     iniciarProximaRodadaRota,
     registrarResultadoRota,
