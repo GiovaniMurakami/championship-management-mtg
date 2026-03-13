@@ -21,6 +21,13 @@
 - Autenticação e autorização
 - Casos de uso e repositórios
 
+### [Torneio](./torneio.md)
+
+- Estrutura das entidades (Torneio, Inscrição, Partida)
+- Fluxo completo do torneio
+- Sistema Swiss com critérios de desempate WotC
+- Endpoints (criar, inscrever, check-in, iniciar, resultado, standings)
+
 ## Sistema
 
 ### [Autenticação JWT](./autenticacao.md)

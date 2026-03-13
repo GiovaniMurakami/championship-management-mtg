@@ -10,6 +10,7 @@ A documentação completa está organizada por entidade:
 
 - **[Usuário](./usuario.md)** - Autenticação, cadastro e gerenciamento de usuários
 - **[Deck](./deck.md)** - CRUD de decks de Magic: The Gathering
+- **[Torneio](./torneio.md)** - Criação e gerenciamento de torneios com sistema Swiss
 
 ## Resumo dos Endpoints
 
@@ -18,18 +19,30 @@ A documentação completa está organizada por entidade:
 - `POST /usuario/cadastrar` - Cadastrar novo usuário
 - `POST /usuario/login` - Fazer login e obter token JWT
 
-### Usuário (Autenticação Necessária)
+### Usuário (🔒 JWT obrigatório)
 
 - `PUT /usuario/atualizar` - Atualizar dados do usuário (telefone, nicks MTGO/Arena)
 
-### Decks (Autenticação Necessária)
+### Decks (🔒 JWT obrigatório)
 
 - `GET /deck/listar` - Listar todos os decks do usuário
 - `POST /deck/cadastrar` - Cadastrar novo deck
 - `PUT /deck/atualizar/:id` - Atualizar deck existente
 - `DELETE /deck/excluir/:id` - Excluir deck
 
-> **⚠️ Importante:** Todos os endpoints marcados com "Autenticação Necessária" requerem token JWT no header `Authorization: Bearer {token}`
+### Torneios (🔒 JWT obrigatório)
+
+- `POST /torneio/criar` - Criar novo torneio
+- `GET /torneio/listar` - Listar todos os torneios
+- `GET /torneio/:torneioId` - Buscar torneio por ID
+- `POST /torneio/:torneioId/inscrever` - Inscrever-se em um torneio
+- `POST /torneio/:torneioId/checkin` - Fazer check-in com um deck
+- `POST /torneio/:torneioId/iniciar` - _(dono)_ Iniciar torneio e gerar rodada 1
+- `POST /torneio/partida/:partidaId/resultado` - Registrar resultado de partida
+- `POST /torneio/:torneioId/proxima-rodada` - _(dono)_ Avançar rodada ou finalizar
+- `GET /torneio/:torneioId/standings` - Ver classificação atual
+
+> **⚠️ Importante:** Todos os endpoints marcados com 🔒 requerem token JWT no header `Authorization: Bearer {token}`
 
 ## Arquitetura
 
