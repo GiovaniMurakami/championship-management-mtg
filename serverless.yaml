@@ -7,11 +7,20 @@ provider:
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     JWT_SECRET: ${env:JWT_SECRET}
+    ABLY_API_KEY: ${env:ABLY_API_KEY}
+
+build:
+  esbuild: false
 
 plugins:
+  - serverless-esbuild
   # - serverless-offline
 
 custom:
+  esbuild:
+    external:
+      - ably
+      - aws-sdk
   # serverless-offline:
   #   httpPort: 4000
 

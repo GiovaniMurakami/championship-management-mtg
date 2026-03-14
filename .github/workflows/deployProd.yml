@@ -1,0 +1,58 @@
+name: Deploy API
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Stage para deploy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'push' && 'production' || (inputs.stage == 'prod' && 'production' || 'development') }}
+
+    env:
+      AWS_REGION: us-east-1
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      ABLY_API_KEY: ${{ secrets.ABLY_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy production on push
+        if: github.event_name == 'push'
+        run: npm run deploy:prod
+
+      - name: Deploy selected stage on manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run deploy:${{ inputs.stage }}
