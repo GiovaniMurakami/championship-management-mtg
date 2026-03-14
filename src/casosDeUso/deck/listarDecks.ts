@@ -1,9 +1,12 @@
 import { Carta, Deck } from "../../dominio/entidade/deck";
-import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 
 export type ListarDecksInputDto = {
-  usuarioId: string;
+  usuarioId?: string;
+  formato?: string;
+  criadoApos?: string; // ISO string
+  criadoAntes?: string; // ISO string
 };
 
 export type ListarDecksOutputDto = {
@@ -28,7 +31,13 @@ export class ListarDecks
   public async executar(
     input: ListarDecksInputDto
   ): Promise<ListarDecksOutputDto> {
-    const decks = await this.deckGateway.listarPorUsuario(input.usuarioId);
+    const filtros: FiltrosListarDecks = {};
+    if (input.usuarioId) filtros.usuarioId = input.usuarioId;
+    if (input.formato) filtros.formato = input.formato;
+    if (input.criadoApos) filtros.criadoApos = new Date(input.criadoApos);
+    if (input.criadoAntes) filtros.criadoAntes = new Date(input.criadoAntes);
+
+    const decks = await this.deckGateway.listar(filtros);
 
     return decks.map((deck) => ({
       id: deck.id,

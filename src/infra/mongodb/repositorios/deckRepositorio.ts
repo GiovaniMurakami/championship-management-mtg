@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, FilterQuery } from "mongoose";
 import { Carta, Deck } from "../../../dominio/entidade/deck";
-import { DeckGateway } from "../../../dominio/gateway/deckGateway";
+import { DeckGateway, FiltrosListarDecks } from "../../../dominio/gateway/deckGateway";
 import { conectarMongoDB } from "../conexao";
 
 interface DeckDocument extends Document {
@@ -36,7 +36,7 @@ const DeckModel =
   mongoose.model<DeckDocument>("Deck", deckSchema);
 
 export class DeckRepositorio implements DeckGateway {
-  private constructor() {}
+  private constructor() { }
 
   public static criar() {
     return new DeckRepositorio();
@@ -87,6 +87,31 @@ export class DeckRepositorio implements DeckGateway {
     );
   }
 
+  public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
+    await conectarMongoDB();
+    const query: FilterQuery<DeckDocument> = {};
+    if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
+    if (filtros.formato) query.formato = { $regex: filtros.formato, $options: "i" };
+    if (filtros.criadoApos || filtros.criadoAntes) {
+      query.criadoEm = {};
+      if (filtros.criadoApos) query.criadoEm.$gte = filtros.criadoApos;
+      if (filtros.criadoAntes) query.criadoEm.$lte = filtros.criadoAntes;
+    }
+    const docs = await DeckModel.find(query).sort({ criadoEm: -1 });
+    return docs.map(
+      (doc) =>
+        new Deck({
+          id: doc.get("id"),
+          nome: doc.get("nome"),
+          formato: doc.get("formato"),
+          maindeck: doc.get("maindeck"),
+          sideboard: doc.get("sideboard"),
+          usuarioId: doc.get("usuarioId"),
+          criadoEm: doc.get("criadoEm"),
+        })
+    );
+  }
+
   public async atualizar(deck: Deck): Promise<void> {
     await conectarMongoDB();
     await DeckModel.updateOne(
@@ -97,6 +122,23 @@ export class DeckRepositorio implements DeckGateway {
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
       }
+    );
+  }
+
+  public async buscarVarios(ids: string[]): Promise<Deck[]> {
+    await conectarMongoDB();
+    const docs = await DeckModel.find({ id: { $in: ids } });
+    return docs.map(
+      (doc) =>
+        new Deck({
+          id: doc.get("id"),
+          nome: doc.get("nome"),
+          formato: doc.get("formato"),
+          maindeck: doc.get("maindeck"),
+          sideboard: doc.get("sideboard"),
+          usuarioId: doc.get("usuarioId"),
+          criadoEm: doc.get("criadoEm"),
+        })
     );
   }
 

@@ -12,7 +12,7 @@ async function buildLambda() {
       platform: "node",
       sourcemap: true,
       target: "node22",
-      external: ["aws-sdk"],
+      external: ["aws-sdk", "ably"],
       loader: { ".ts": "ts" },
       define: {
         "process.env.NODE_ENV": '"production"',
