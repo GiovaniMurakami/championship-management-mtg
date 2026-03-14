@@ -12,6 +12,7 @@ interface TorneioDocument extends Document {
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
+  premio?: string;
   criadoEm: Date;
 }
 
@@ -24,6 +25,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   status: { type: String, required: true, default: "inscricoes_abertas" },
   rodadaAtual: { type: Number, required: true, default: 0 },
   totalRodadas: { type: Number, required: true, default: 0 },
+  premio: { type: String },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -41,12 +43,13 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     status: doc.get("status"),
     rodadaAtual: doc.get("rodadaAtual"),
     totalRodadas: doc.get("totalRodadas"),
+    premio: doc.get("premio") ?? undefined,
     criadoEm: doc.get("criadoEm"),
   });
 }
 
 export class TorneioRepositorio implements TorneioGateway {
-  private constructor() {}
+  private constructor() { }
 
   public static criar() {
     return new TorneioRepositorio();
@@ -63,6 +66,7 @@ export class TorneioRepositorio implements TorneioGateway {
       status: torneio.status,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
+      premio: torneio.premio,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -91,6 +95,7 @@ export class TorneioRepositorio implements TorneioGateway {
         status: torneio.status,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
+        premio: torneio.premio,
       }
     );
   }

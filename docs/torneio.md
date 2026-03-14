@@ -20,6 +20,7 @@ interface TorneioProps {
   status: "inscricoes_abertas" | "em_andamento" | "finalizado";
   rodadaAtual: number;
   totalRodadas: number;
+  premio?: string;
   criadoEm?: Date;
 }
 ```
@@ -34,6 +35,7 @@ interface TorneioProps {
 | status       | string | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
 | rodadaAtual  | number | Rodada corrente (0 antes de iniciar)                      |
 | totalRodadas | number | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
+| premio       | string | Descrição do prêmio (opcional)                            |
 
 ### Inscrição
 
@@ -152,9 +154,12 @@ Cria um novo torneio.
 {
   "nome": "FNM Standard",
   "horario": "2026-03-20T19:00:00.000Z",
-  "formato": "standard"
+  "formato": "standard",
+  "premio": "1º lugar: booster box" 
 }
 ```
+
+> `premio` é opcional.
 
 **Response (201):**
 
@@ -166,6 +171,7 @@ Cria um novo torneio.
   "formato": "standard",
   "donoId": "uuid-do-usuario",
   "status": "inscricoes_abertas",
+  "premio": "1º lugar: booster box",
   "criadoEm": "2026-03-13T10:00:00.000Z"
 }
 ```
@@ -190,6 +196,7 @@ Lista todos os torneios existentes, ordenados por data de criação (mais recent
       "status": "inscricoes_abertas",
       "rodadaAtual": 0,
       "totalRodadas": 0,
+      "premio": "1º lugar: booster box",
       "criadoEm": "2026-03-13T10:00:00.000Z"
     }
   ]
@@ -200,7 +207,7 @@ Lista todos os torneios existentes, ordenados por data de criação (mais recent
 
 ### GET /torneio/:torneioId
 
-Retorna os dados de um torneio específico.
+Retorna os dados completos de um torneio: informações gerais, contagem de inscritos/check-in e todas as partidas com nomes dos jogadores.
 
 **Response (200):**
 
@@ -214,9 +221,43 @@ Retorna os dados de um torneio específico.
   "status": "em_andamento",
   "rodadaAtual": 2,
   "totalRodadas": 4,
-  "criadoEm": "2026-03-13T10:00:00.000Z"
+  "premio": "1º lugar: booster box",
+  "totalInscritos": 12,
+  "totalCheckin": 10,
+  "criadoEm": "2026-03-13T10:00:00.000Z",
+  "partidas": [
+    {
+      "id": "uuid",
+      "rodada": 1,
+      "jogador1Id": "uuid-j1",
+      "jogador1Nome": "João Silva",
+      "jogador2Id": "uuid-j2",
+      "jogador2Nome": "Maria Santos",
+      "vitoriasJogador1": 2,
+      "vitoriasJogador2": 1,
+      "status": "finalizada"
+    },
+    {
+      "id": "uuid",
+      "rodada": 2,
+      "jogador1Id": "uuid-j3",
+      "jogador1Nome": "Pedro Lima",
+      "jogador2Id": null,
+      "jogador2Nome": null,
+      "vitoriasJogador1": 2,
+      "vitoriasJogador2": 0,
+      "status": "finalizada"
+    }
+  ]
 }
 ```
+
+| Campo          | Descrição                                                         |
+| -------------- | ----------------------------------------------------------------- |
+| totalInscritos | Total de jogadores inscritos no torneio                           |
+| totalCheckin   | Total de jogadores que confirmaram presença (`checkIn = true`)    |
+| partidas       | Todas as partidas do torneio ordenadas por rodada                 |
+| jogador2Nome   | `null` quando a partida é um bye                                  |
 
 ---
 
@@ -279,12 +320,12 @@ Escolhe ou troca o deck para o torneio. Pode ser feito a qualquer momento enquan
 
 ### POST /torneio/:torneioId/checkin
 
-Confirma presença no torneio ou em uma rodada específica.
+Confirma presença no torneio ou em uma rodada específica. Nenhum body necessário.
 
-- **Pré-torneio** (`inscricoes_abertas`): só aceito a partir de **1 hora antes** do `horario`. Seta `checkIn = true`.
-- **Entre rodadas** (`em_andamento`): confirma presença para a próxima rodada. Jogadores que não fizerem check-in são excluídos dos próximos pareamentos.
-
-**Request Body:** _(sem body obrigatório)_
+| Contexto                  | Comportamento                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `inscricoes_abertas`      | Aceito a partir de **1 hora antes** do `horario`. Seta `checkIn = true`.        |
+| `em_andamento`            | Confirma para a próxima rodada. Sem check-in = excluído dos próximos pareamentos. |
 
 **Response (200):**
 
@@ -298,7 +339,7 @@ Confirma presença no torneio ou em uma rodada específica.
 }
 ```
 
-> `checkInRodada = 0` = check-in inicial. `checkInRodada = N` = confirmado para rodada N+1.
+> `checkInRodada = 0` = check-in inicial. `checkInRodada = N` = confirmado para a rodada N+1.
 
 **Erros:**
 
@@ -417,6 +458,7 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
 
 - `404` — Partida não encontrada
 - `400` — Partida já finalizada
+- `400` — Torneio não está em andamento
 - `403` — Usuário não é jogador nem dono
 - `400` — Resultado inválido (ex: 3-0, 2-2)
 
@@ -475,9 +517,43 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
 
 ### GET /torneio/:torneioId/standings
 
-Retorna a classificação atual do torneio com todas as estatísticas de desempate. Disponível enquanto `em_andamento` ou `finalizado`.
+Retorna a classificação atual do torneio com todas as estatísticas de desempate.
 
-**Response (200):**
+- Torneio em `inscricoes_abertas` (ou `rodadaAtual === 0`): retorna lista de inscritos com campos básicos e estatísticas zeradas.
+- Torneio em `em_andamento` ou `finalizado`: retorna ranking ordenado pelo critério oficial WotC.
+
+**Response (200) — antes do início:**
+
+```json
+{
+  "torneioId": "uuid",
+  "rodadaAtual": 0,
+  "totalRodadas": 0,
+  "status": "inscricoes_abertas",
+  "standings": [
+    {
+      "posicao": 1,
+      "usuarioId": "uuid",
+      "nome": "João Silva",
+      "pontosMesa": 0,
+      "vitoriasPartida": 0,
+      "empatesPartida": 0,
+      "derrotasPartida": 0,
+      "mwp": 0,
+      "omwp": 0,
+      "gwp": 0,
+      "ogwp": 0,
+      "checkIn": true,
+      "deckId": "uuid-do-deck",
+      "deckNome": "Mono Red Aggro",
+      "checkInProximaRodada": true,
+      "dropped": false
+    }
+  ]
+}
+```
+
+**Response (200) — durante o torneio:**
 
 ```json
 {
@@ -489,6 +565,7 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
     {
       "posicao": 1,
       "usuarioId": "uuid",
+      "nome": "João Silva",
       "pontosMesa": 6,
       "vitoriasPartida": 2,
       "empatesPartida": 0,
@@ -497,31 +574,75 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "omwp": 0.67,
       "gwp": 0.83,
       "ogwp": 0.61,
+      "checkIn": true,
+      "deckId": "uuid-do-deck",
+      "deckNome": "Mono Red Aggro",
       "checkInProximaRodada": true,
       "dropped": false
-    },
-    {
-      "posicao": 2,
-      "usuarioId": "uuid",
-      "pontosMesa": 6,
-      "vitoriasPartida": 2,
-      "empatesPartida": 0,
-      "derrotasPartida": 0,
-      "mwp": 1.0,
-      "omwp": 0.61,
-      "gwp": 0.75,
-      "ogwp": 0.58,
-      "checkInProximaRodada": false,
-      "dropped": true
     }
   ]
 }
 ```
 
+| Campo                | Descrição                                                                 |
+| -------------------- | ------------------------------------------------------------------------- |
+| nome                 | Nome do jogador                                                           |
+| deckNome             | Nome do deck escolhido (`null` se nenhum deck foi escolhido)              |
+| mwp                  | Match Win Percentage                                                      |
+| omwp                 | Opponent Match Win Percentage (mín. 33%)                                  |
+| gwp                  | Game Win Percentage (mín. 33%)                                            |
+| ogwp                 | Opponent Game Win Percentage (mín. 33%)                                   |
+| checkInProximaRodada | `true` se o jogador fez check-in para a rodada em andamento/seguinte      |
+
 **Erros:**
 
 - `404` — Torneio não encontrado
-- `400` — Torneio ainda não iniciado
+
+---
+
+### GET /torneio/:torneioId/meu-historico
+
+Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, oponente e placar de cada rodada.
+
+**Response (200):**
+
+```json
+{
+  "torneioId": "uuid",
+  "usuarioId": "uuid",
+  "partidas": [
+    {
+      "id": "uuid",
+      "rodada": 1,
+      "oponenteId": "uuid-oponente",
+      "oponenteNome": "Maria Santos",
+      "vitoriasJogador": 2,
+      "vitoriasOponente": 1,
+      "resultado": "vitoria",
+      "status": "finalizada"
+    },
+    {
+      "id": "uuid",
+      "rodada": 2,
+      "oponenteId": null,
+      "oponenteNome": null,
+      "vitoriasJogador": 2,
+      "vitoriasOponente": 0,
+      "resultado": "bye",
+      "status": "finalizada"
+    }
+  ]
+}
+```
+
+| Campo           | Valores possíveis                          |
+| --------------- | ------------------------------------------ |
+| resultado       | `vitoria`, `derrota`, `empate`, `bye`      |
+| oponenteId/Nome | `null` quando a partida é um bye          |
+
+**Erros:**
+
+- `404` — Torneio não encontrado
 
 ---
 
@@ -562,12 +683,14 @@ torneio-{torneioId}
 
 ### Eventos emitidos
 
-| Evento                  | Disparado quando                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| `rodada_iniciada`       | `POST /torneio/:id/iniciar` ou `POST /torneio/:id/proxima-rodada` (torneio não finalizado) |
-| `torneio_finalizado`    | `POST /torneio/:id/proxima-rodada` quando última rodada encerra                            |
-| `resultado_registrado`  | `POST /torneio/partida/:id/resultado`                                                      |
-| `standings_atualizados` | Imediatamente após `resultado_registrado` com standings recalculados                       |
+| Evento                   | Disparado quando                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| `rodada_iniciada`        | `POST /torneio/:id/iniciar` ou `POST /torneio/:id/proxima-rodada` (torneio não finalizado) |
+| `torneio_finalizado`     | `POST /torneio/:id/proxima-rodada` quando última rodada encerra                            |
+| `resultado_registrado`   | `POST /torneio/partida/:id/resultado`                                                      |
+| `standings_atualizados`  | Imediatamente após `resultado_registrado` com standings recalculados                       |
+| `participante_inscrito`  | `POST /torneio/:id/inscrever` — novo jogador inscrito                                      |
+| `checkin_realizado`      | `POST /torneio/:id/checkin` — jogador confirmou presença                                   |
 
 ### Payload dos eventos
 
@@ -629,6 +752,8 @@ canal.subscribe("rodada_iniciada", (msg) => console.log(msg.data));
 canal.subscribe("resultado_registrado", (msg) => console.log(msg.data));
 canal.subscribe("standings_atualizados", (msg) => console.log(msg.data));
 canal.subscribe("torneio_finalizado", (msg) => console.log(msg.data));
+canal.subscribe("participante_inscrito", (msg) => console.log(msg.data));
+canal.subscribe("checkin_realizado", (msg) => console.log(msg.data));
 ```
 
 > No Lambda (produção), a variável `ABLY_API_KEY` deve ser configurada nas variáveis de ambiente da função no console da AWS ou via `serverless.yaml`.

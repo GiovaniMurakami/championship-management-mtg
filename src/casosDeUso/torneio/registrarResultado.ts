@@ -26,12 +26,11 @@ export type RegistrarResultadoOutputDto = {
 
 export class RegistrarResultado
   implements
-    CasoDeUso<RegistrarResultadoInputDto, RegistrarResultadoOutputDto>
-{
+  CasoDeUso<RegistrarResultadoInputDto, RegistrarResultadoOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly partidaGateway: PartidaGateway
-  ) {}
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
@@ -60,10 +59,17 @@ export class RegistrarResultado
 
     // Apenas os jogadores envolvidos ou o dono do torneio podem registrar
     const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
+
+    if (!torneio || torneio.status !== "em_andamento") {
+      throw ErroPersonalizado.criar({
+        mensagem: "Resultados só podem ser registrados enquanto o torneio está em andamento.",
+        status: StatusErro.erroParametro,
+      });
+    }
     const ehJogador =
       input.usuarioId === partida.jogador1Id ||
       input.usuarioId === partida.jogador2Id;
-    const ehDono = torneio?.donoId === input.usuarioId;
+    const ehDono = torneio.donoId === input.usuarioId;
 
     if (!ehJogador && !ehDono) {
       throw ErroPersonalizado.criar({

@@ -1,6 +1,8 @@
+import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -25,6 +27,7 @@ export type BuscarStandingsOutputDto = {
   standings: Array<{
     posicao: number;
     usuarioId: string;
+    nome: string;
     pontosMesa: number;
     vitoriasPartida: number;
     empatesPartida: number;
@@ -33,26 +36,32 @@ export type BuscarStandingsOutputDto = {
     omwp: number;
     gwp: number;
     ogwp: number;
+    checkIn: boolean;
+    deckId?: string | null;
+    deckNome?: string | null;
     checkInProximaRodada: boolean;
     dropped: boolean;
   }>;
 };
 
 export class BuscarStandings
-  implements CasoDeUso<BuscarStandingsInputDto, BuscarStandingsOutputDto>
-{
+  implements CasoDeUso<BuscarStandingsInputDto, BuscarStandingsOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) {}
+    private readonly partidaGateway: PartidaGateway,
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly deckGateway: DeckGateway
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    partidaGateway: PartidaGateway
+    partidaGateway: PartidaGateway,
+    usuarioGateway: UsuarioGateway,
+    deckGateway: DeckGateway
   ) {
-    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway);
+    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway);
   }
 
   public async executar(
@@ -66,17 +75,54 @@ export class BuscarStandings
       });
     }
 
-    if (torneio.status === "inscricoes_abertas") {
-      throw ErroPersonalizado.criar({
-        mensagem: "O torneio ainda não foi iniciado.",
-        status: StatusErro.erroParametro,
-      });
+    const inscricoes = await this.inscricaoGateway.listarPorTorneio(
+      input.torneioId
+    );
+
+    const usuarioIds = inscricoes.map((i) => i.usuarioId);
+    const usuarios = await this.usuarioGateway.buscarVarios(usuarioIds);
+    const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
+
+    const deckIds = inscricoes
+      .map((i) => i.deckId)
+      .filter((id): id is string => !!id);
+    const decks = deckIds.length > 0
+      ? await this.deckGateway.buscarVarios(deckIds)
+      : [];
+    const deckMap = new Map(decks.map((d) => [d.id, d]));
+
+    if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual === 0) {
+      const standings = inscricoes.map((i, idx) => ({
+        posicao: idx + 1,
+        usuarioId: i.usuarioId,
+        nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId,
+        pontosMesa: 0,
+        vitoriasPartida: 0,
+        empatesPartida: 0,
+        derrotasPartida: 0,
+        mwp: 0,
+        omwp: 0,
+        gwp: 0,
+        ogwp: 0,
+        checkIn: i.checkIn,
+        deckId: i.deckId ?? null,
+        deckNome: i.deckId ? (deckMap.get(i.deckId)?.nome ?? null) : null,
+        checkInProximaRodada: i.checkIn,
+        dropped: i.dropped,
+      }));
+
+      return {
+        torneioId: torneio.id,
+        rodadaAtual: torneio.rodadaAtual,
+        totalRodadas: torneio.totalRodadas,
+        status: torneio.status,
+        standings,
+      };
     }
 
-    const [inscricoes, todasPartidas] = await Promise.all([
-      this.inscricaoGateway.listarPorTorneio(input.torneioId),
-      this.partidaGateway.listarPorTorneio(input.torneioId),
-    ]);
+    const todasPartidas = await this.partidaGateway.listarPorTorneio(
+      input.torneioId
+    );
 
     const jogadoresIds = inscricoes
       .filter((i) => i.checkIn)
@@ -95,21 +141,30 @@ export class BuscarStandings
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
-      standings: ordenados.map((s, idx) => ({
-        posicao: idx + 1,
-        usuarioId: s.usuarioId,
-        pontosMesa: s.pontosMesa,
-        vitoriasPartida: s.vitoriasPartida,
-        empatesPartida: s.empatesPartida,
-        derrotasPartida: s.derrotasPartida,
-        mwp: mwp(s),
-        omwp: omwp(s, statsMap),
-        gwp: gwp(s),
-        ogwp: ogwp(s, statsMap),
-        checkInProximaRodada:
-          (inscricaoMap.get(s.usuarioId)?.checkInRodada ?? -1) >= torneio.rodadaAtual,
-        dropped: inscricaoMap.get(s.usuarioId)?.dropped ?? false,
-      })),
+      standings: ordenados.map((s, idx) => {
+        const inscricao = inscricaoMap.get(s.usuarioId);
+        return {
+          posicao: idx + 1,
+          usuarioId: s.usuarioId,
+          nome: usuarioMap.get(s.usuarioId)?.nome ?? s.usuarioId,
+          pontosMesa: s.pontosMesa,
+          vitoriasPartida: s.vitoriasPartida,
+          empatesPartida: s.empatesPartida,
+          derrotasPartida: s.derrotasPartida,
+          mwp: mwp(s),
+          omwp: omwp(s, statsMap),
+          gwp: gwp(s),
+          ogwp: ogwp(s, statsMap),
+          checkIn: inscricao?.checkIn ?? false,
+          deckId: inscricao?.deckId ?? null,
+          deckNome: inscricao?.deckId
+            ? (deckMap.get(inscricao.deckId)?.nome ?? null)
+            : null,
+          checkInProximaRodada:
+            (inscricao?.checkInRodada ?? -1) >= torneio.rodadaAtual,
+          dropped: inscricao?.dropped ?? false,
+        };
+      }),
     };
   }
 }

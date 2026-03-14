@@ -9,5 +9,6 @@ export interface PartidaGateway {
     torneioId: string,
     rodada: number
   ): Promise<Partida[]>;
+  listarPorJogadorETorneio(torneioId: string, usuarioId: string): Promise<Partida[]>;
   atualizar(partida: Partida): Promise<void>;
 }

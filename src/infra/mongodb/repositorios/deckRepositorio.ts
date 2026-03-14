@@ -36,7 +36,7 @@ const DeckModel =
   mongoose.model<DeckDocument>("Deck", deckSchema);
 
 export class DeckRepositorio implements DeckGateway {
-  private constructor() {}
+  private constructor() { }
 
   public static criar() {
     return new DeckRepositorio();
@@ -122,6 +122,23 @@ export class DeckRepositorio implements DeckGateway {
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
       }
+    );
+  }
+
+  public async buscarVarios(ids: string[]): Promise<Deck[]> {
+    await conectarMongoDB();
+    const docs = await DeckModel.find({ id: { $in: ids } });
+    return docs.map(
+      (doc) =>
+        new Deck({
+          id: doc.get("id"),
+          nome: doc.get("nome"),
+          formato: doc.get("formato"),
+          maindeck: doc.get("maindeck"),
+          sideboard: doc.get("sideboard"),
+          usuarioId: doc.get("usuarioId"),
+          criadoEm: doc.get("criadoEm"),
+        })
     );
   }
 

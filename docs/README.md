@@ -32,15 +32,18 @@ A documentação completa está organizada por entidade:
 
 ### Torneios (🔒 JWT obrigatório)
 
-- `POST /torneio/criar` - Criar novo torneio
+- `POST /torneio/criar` - Criar novo torneio (aceita campo opcional `premio`)
 - `GET /torneio/listar` - Listar todos os torneios
-- `GET /torneio/:torneioId` - Buscar torneio por ID
+- `GET /torneio/:torneioId` - Buscar torneio por ID (inclui `partidas` com nomes, `totalInscritos`, `totalCheckin`)
 - `POST /torneio/:torneioId/inscrever` - Inscrever-se em um torneio
-- `POST /torneio/:torneioId/checkin` - Fazer check-in com um deck
+- `POST /torneio/:torneioId/checkin` - Fazer check-in (pré-torneio ou entre rodadas)
+- `POST /torneio/:torneioId/deck` - Escolher deck para o torneio
 - `POST /torneio/:torneioId/iniciar` - _(dono)_ Iniciar torneio e gerar rodada 1
 - `POST /torneio/partida/:partidaId/resultado` - Registrar resultado de partida
 - `POST /torneio/:torneioId/proxima-rodada` - _(dono)_ Avançar rodada ou finalizar
-- `GET /torneio/:torneioId/standings` - Ver classificação atual
+- `POST /torneio/:torneioId/drop` - Dropar jogador
+- `GET /torneio/:torneioId/standings` - Ver classificação atual (inclui `nome` e `deckNome`)
+- `GET /torneio/:torneioId/meu-historico` - Ver histórico de partidas do jogador autenticado
 
 > **⚠️ Importante:** Todos os endpoints marcados com 🔒 requerem token JWT no header `Authorization: Bearer {token}`
 

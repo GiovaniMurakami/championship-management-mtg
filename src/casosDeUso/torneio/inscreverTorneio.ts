@@ -4,6 +4,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type InscreverTorneioInputDto = {
   torneioId: string;
@@ -19,12 +20,11 @@ export type InscreverTorneioOutputDto = {
 };
 
 export class InscreverTorneio
-  implements CasoDeUso<InscreverTorneioInputDto, InscreverTorneioOutputDto>
-{
+  implements CasoDeUso<InscreverTorneioInputDto, InscreverTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway
-  ) {}
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
@@ -70,6 +70,12 @@ export class InscreverTorneio
     });
 
     await this.inscricaoGateway.salvar(inscricao);
+
+    eventosTorneio.emit("participante_inscrito", {
+      torneioId: inscricao.torneioId,
+      usuarioId: inscricao.usuarioId,
+      inscricaoId: inscricao.id,
+    });
 
     return {
       id: inscricao.id,

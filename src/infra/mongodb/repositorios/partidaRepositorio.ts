@@ -52,7 +52,7 @@ function docParaPartida(doc: PartidaDocument): Partida {
 }
 
 export class PartidaRepositorio implements PartidaGateway {
-  private constructor() {}
+  private constructor() { }
 
   public static criar() {
     return new PartidaRepositorio();
@@ -113,6 +113,18 @@ export class PartidaRepositorio implements PartidaGateway {
   ): Promise<Partida[]> {
     await conectarMongoDB();
     const docs = await PartidaModel.find({ torneioId, rodada });
+    return docs.map((doc) => docParaPartida(doc as unknown as PartidaDocument));
+  }
+
+  public async listarPorJogadorETorneio(
+    torneioId: string,
+    usuarioId: string
+  ): Promise<Partida[]> {
+    await conectarMongoDB();
+    const docs = await PartidaModel.find({
+      torneioId,
+      $or: [{ jogador1Id: usuarioId }, { jogador2Id: usuarioId }],
+    }).sort({ rodada: 1 });
     return docs.map((doc) => docParaPartida(doc as unknown as PartidaDocument));
   }
 

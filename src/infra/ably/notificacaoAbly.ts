@@ -37,5 +37,13 @@ export class NotificacaoAbly {
     eventosTorneio.on("standings_atualizados", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "standings_atualizados", payload);
     });
+
+    eventosTorneio.on("participante_inscrito", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "participante_inscrito", payload);
+    });
+
+    eventosTorneio.on("checkin_realizado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "checkin_realizado", payload);
+    });
   }
 }

@@ -30,7 +30,7 @@ const UsuarioModel =
   mongoose.model<UsuarioDocument>("Usuario", usuarioSchema);
 
 export class UsuarioRepositorio implements UsuarioGateway {
-  private constructor() {}
+  private constructor() { }
 
   public static criar() {
     return new UsuarioRepositorio();
@@ -84,6 +84,24 @@ export class UsuarioRepositorio implements UsuarioGateway {
       nickArena: doc.get("nickArena"),
       criadoEm: doc.get("criadoEm"),
     });
+  }
+
+  public async buscarVarios(ids: string[]): Promise<Usuario[]> {
+    await conectarMongoDB();
+    const docs = await UsuarioModel.find({ id: { $in: ids } });
+    return docs.map(
+      (doc) =>
+        new Usuario({
+          id: doc.get("id"),
+          nome: doc.get("nome"),
+          email: doc.get("email"),
+          senha: doc.get("senha"),
+          telefone: doc.get("telefone"),
+          nickMTGO: doc.get("nickMTGO"),
+          nickArena: doc.get("nickArena"),
+          criadoEm: doc.get("criadoEm"),
+        })
+    );
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {

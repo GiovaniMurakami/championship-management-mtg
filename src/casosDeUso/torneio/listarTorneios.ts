@@ -13,14 +13,14 @@ export type ListarTorneiosOutputDto = {
     status: string;
     rodadaAtual: number;
     totalRodadas: number;
+    premio?: string;
     criadoEm: Date;
   }>;
 };
 
 export class ListarTorneios
-  implements CasoDeUso<ListarTorneiosInputDto, ListarTorneiosOutputDto>
-{
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  implements CasoDeUso<ListarTorneiosInputDto, ListarTorneiosOutputDto> {
+  private constructor(private readonly torneioGateway: TorneioGateway) { }
 
   public static criar(torneioGateway: TorneioGateway) {
     return new ListarTorneios(torneioGateway);
@@ -39,6 +39,7 @@ export class ListarTorneios
         status: t.status,
         rodadaAtual: t.rodadaAtual,
         totalRodadas: t.totalRodadas,
+        premio: t.premio,
         criadoEm: t.criadoEm,
       })),
     };

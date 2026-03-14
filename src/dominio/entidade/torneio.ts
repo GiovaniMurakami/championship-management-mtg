@@ -11,6 +11,7 @@ export interface TorneioProps {
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
+  premio?: string;
   criadoEm?: Date;
 }
 
@@ -23,6 +24,7 @@ export class Torneio {
   public status: StatusTorneio;
   public rodadaAtual: number;
   public totalRodadas: number;
+  public premio?: string;
   public criadoEm: Date;
 
   constructor(props: TorneioProps) {
@@ -34,6 +36,7 @@ export class Torneio {
     this.status = props.status;
     this.rodadaAtual = props.rodadaAtual;
     this.totalRodadas = props.totalRodadas;
+    this.premio = props.premio;
     this.criadoEm = props.criadoEm || new Date();
   }
 

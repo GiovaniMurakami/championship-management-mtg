@@ -7,6 +7,7 @@ export type CriarTorneioInputDto = {
   horario: Date;
   formato: string;
   donoId: string;
+  premio?: string;
 };
 
 export type CriarTorneioOutputDto = {
@@ -16,13 +17,13 @@ export type CriarTorneioOutputDto = {
   formato: string;
   donoId: string;
   status: string;
+  premio?: string;
   criadoEm: Date;
 };
 
 export class CriarTorneio
-  implements CasoDeUso<CriarTorneioInputDto, CriarTorneioOutputDto>
-{
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  implements CasoDeUso<CriarTorneioInputDto, CriarTorneioOutputDto> {
+  private constructor(private readonly torneioGateway: TorneioGateway) { }
 
   public static criar(torneioGateway: TorneioGateway) {
     return new CriarTorneio(torneioGateway);
@@ -36,6 +37,7 @@ export class CriarTorneio
       horario: input.horario,
       formato: input.formato.toLowerCase().trim(),
       donoId: input.donoId,
+      premio: input.premio?.trim(),
     });
 
     await this.torneioGateway.salvar(torneio);
@@ -47,6 +49,7 @@ export class CriarTorneio
       formato: torneio.formato,
       donoId: torneio.donoId,
       status: torneio.status,
+      premio: torneio.premio,
       criadoEm: torneio.criadoEm,
     };
   }

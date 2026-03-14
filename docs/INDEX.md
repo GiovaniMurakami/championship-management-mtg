@@ -26,8 +26,11 @@
 - Estrutura das entidades (Torneio, Inscrição, Partida)
 - Fluxo completo do torneio
 - Sistema Swiss com critérios de desempate WotC
-- Endpoints: criar, inscrever, escolher deck, check-in, drop, iniciar, resultado, próxima rodada, standings
-- Notificações em tempo real via Ably (rodada iniciada, resultado, standings, torneio finalizado)
+- Endpoints: criar, listar, buscar, inscrever, check-in, escolher deck, drop, iniciar, resultado, próxima rodada, standings, meu histórico
+- Campo `premio` no torneio
+- Contagem de inscritos e check-in (`totalInscritos`, `totalCheckin`)
+- Nomes populados em standings e partidas
+- Notificações em tempo real via Ably (6 eventos)
 
 ## Sistema
 
