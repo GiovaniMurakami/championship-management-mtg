@@ -45,9 +45,10 @@ import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepo
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
 import dotenv from "dotenv";
 
+dotenv.config();
+NotificacaoAbly.iniciar();
+
 export function app() {
-  dotenv.config();
-  NotificacaoAbly.iniciar();
 
   const repositorios = {
     usuario: UsuarioRepositorio.criar(),
