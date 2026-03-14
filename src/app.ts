@@ -69,7 +69,8 @@ export function app() {
   const criarTorneio = CriarTorneio.criar(repositorios.torneio);
   const inscreverTorneio = InscreverTorneio.criar(
     repositorios.torneio,
-    repositorios.inscricao
+    repositorios.inscricao,
+    repositorios.usuario
   );
   const checkInTorneio = CheckInTorneio.criar(
     repositorios.torneio,

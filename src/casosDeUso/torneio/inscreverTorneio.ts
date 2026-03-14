@@ -1,6 +1,7 @@
 import { Inscricao } from "../../dominio/entidade/inscricao";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -23,14 +24,16 @@ export class InscreverTorneio
   implements CasoDeUso<InscreverTorneioInputDto, InscreverTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly inscricaoGateway: InscricaoGateway
+    private readonly inscricaoGateway: InscricaoGateway,
+    private readonly usuarioGateway: UsuarioGateway
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    inscricaoGateway: InscricaoGateway
+    inscricaoGateway: InscricaoGateway,
+    usuarioGateway: UsuarioGateway
   ) {
-    return new InscreverTorneio(torneioGateway, inscricaoGateway);
+    return new InscreverTorneio(torneioGateway, inscricaoGateway, usuarioGateway);
   }
 
   public async executar(
@@ -71,9 +74,11 @@ export class InscreverTorneio
 
     await this.inscricaoGateway.salvar(inscricao);
 
+    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
     eventosTorneio.emit("participante_inscrito", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
+      usuarioNome: usuario?.nome ?? null,
       inscricaoId: inscricao.id,
     });
 

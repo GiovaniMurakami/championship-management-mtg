@@ -6,6 +6,7 @@ import { eventosTorneio } from "../socketio/eventosTorneio";
 
 export class NotificacaoAbly {
   private ably: Ably.Rest;
+  private static publicacoesPendentes = new Set<Promise<void>>();
 
   private constructor() {
     this.ably = new Ably.Rest(process.env.ABLY_API_KEY!);
@@ -16,9 +17,16 @@ export class NotificacaoAbly {
     return new NotificacaoAbly();
   }
 
+  public static async aguardarPublicacoesPendentes() {
+    await Promise.allSettled(NotificacaoAbly.publicacoesPendentes);
+  }
+
   private publicar(torneioId: string, evento: string, payload: unknown) {
-    this.ably.channels.get(`torneio-${torneioId}`).publish(evento, payload)
-      .catch((err) => console.error(`[Ably] erro ao publicar ${evento}:`, err));
+    const canal = `torneio-${torneioId}`;
+    const p: Promise<void> = this.ably.channels.get(canal).publish(evento, payload).then(() => undefined)
+      .catch((err) => console.error(`[Ably] erro ao publicar ${evento} no canal ${canal}:`, err))
+      .finally(() => NotificacaoAbly.publicacoesPendentes.delete(p));
+    NotificacaoAbly.publicacoesPendentes.add(p);
   }
 
   private escutarEventos() {
@@ -44,6 +52,10 @@ export class NotificacaoAbly {
 
     eventosTorneio.on("checkin_realizado", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "checkin_realizado", payload);
+    });
+
+    eventosTorneio.on("deck_inserido", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "deck_inserido", payload);
     });
   }
 }

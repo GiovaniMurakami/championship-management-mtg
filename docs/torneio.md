@@ -691,6 +691,7 @@ torneio-{torneioId}
 | `standings_atualizados`  | Imediatamente após `resultado_registrado` com standings recalculados                       |
 | `participante_inscrito`  | `POST /torneio/:id/inscrever` — novo jogador inscrito                                      |
 | `checkin_realizado`      | `POST /torneio/:id/checkin` — jogador confirmou presença                                   |
+| `deck_inserido`          | `POST /torneio/:id/deck` — jogador escolheu ou trocou o deck                               |
 
 ### Payload dos eventos
 
