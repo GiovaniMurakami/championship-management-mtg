@@ -12,7 +12,7 @@ export class RegistrarResultadoRota implements Rotas {
     private readonly metodo: HttpMethod,
     private readonly registrarResultadoServico: RegistrarResultado,
     private readonly buscarStandingsServico: BuscarStandings
-  ) {}
+  ) { }
 
   public static criar(
     registrarResultadoServico: RegistrarResultado,
@@ -54,6 +54,12 @@ export class RegistrarResultadoRota implements Rotas {
         });
 
         eventosTorneio.emit("resultado_registrado", resultado);
+        eventosTorneio.emit("mesa_atualizada", {
+          torneioId: resultado.torneioId,
+          rodada: resultado.rodada,
+          partidaId: resultado.id,
+          partida: resultado,
+        });
 
         // Recalcula standings e emite em background
         this.buscarStandingsServico
