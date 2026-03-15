@@ -3,6 +3,8 @@ import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGat
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Partida } from "../../../src/dominio/entidade/partida";
+import { criarMockUsuarioGateway } from "../../mocks/gateways";
+import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 describe("IniciarProximaRodada", () => {
     const torneio = new Torneio({
@@ -35,6 +37,14 @@ describe("IniciarProximaRodada", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
             partidaGw,
+            criarMockUsuarioGateway({
+                buscarVarios: jest.fn().mockResolvedValue([
+                    new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
+                    new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
+                    new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@e.com", senha: "s" }),
+                    new Usuario({ id: "u-4", nome: "Jogador 4", email: "u4@e.com", senha: "s" }),
+                ]),
+            }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono" });
@@ -43,6 +53,7 @@ describe("IniciarProximaRodada", () => {
         if (!resultado.finalizado) {
             expect(resultado.rodadaAtual).toBe(2);
             expect(resultado.partidas).toHaveLength(2);
+            expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         }
         expect(torneioGw.atualizar).toHaveBeenCalled();
         expect(partidaGw.salvarVarias).toHaveBeenCalled();
@@ -76,6 +87,7 @@ describe("IniciarProximaRodada", () => {
                 listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodadaAtual),
                 listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
             }),
+            criarMockUsuarioGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono" });
@@ -96,6 +108,7 @@ describe("IniciarProximaRodada", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneio }) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasPendentes) }),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -108,6 +121,7 @@ describe("IniciarProximaRodada", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -121,6 +135,7 @@ describe("IniciarProximaRodada", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(

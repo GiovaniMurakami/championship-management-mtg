@@ -16,7 +16,9 @@ export type RegistrarResultadoOutputDto = {
   torneioId: string;
   rodada: number;
   jogador1Id: string;
+  jogador1Nome?: string;
   jogador2Id: string | null;
+  jogador2Nome?: string | null;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -108,7 +110,9 @@ export class RegistrarResultado
       torneioId: partida.torneioId,
       rodada: partida.rodada,
       jogador1Id: partida.jogador1Id,
+      jogador1Nome: partida.jogador1Nome,
       jogador2Id: partida.jogador2Id,
+      jogador2Nome: partida.jogador2Nome,
       deckJogador1Id: partida.deckJogador1Id,
       deckJogador2Id: partida.deckJogador2Id,
       vitoriasJogador1: partida.vitoriasJogador1,

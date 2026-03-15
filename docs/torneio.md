@@ -60,7 +60,9 @@ interface PartidaProps {
   torneioId: string;
   rodada: number;
   jogador1Id: string;
+  jogador1Nome?: string;
   jogador2Id: string | null; // null = bye
+  jogador2Nome?: string | null;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -95,7 +97,8 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`)
 8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
 9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
-10. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
+10. Partidas (mesas) do torneio disponíveis a qualquer momento (`GET /torneio/:id/partidas` e filtro por rodada)
+11. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
 
 ---
 
@@ -258,6 +261,59 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 | totalCheckin   | Total de jogadores que confirmaram presença (`checkIn = true`)    |
 | partidas       | Todas as partidas do torneio ordenadas por rodada                 |
 | jogador2Nome   | `null` quando a partida é um bye                                  |
+
+---
+
+### GET /torneio/:torneioId/partidas
+
+Retorna apenas as partidas do torneio informado, filtradas por `torneioId`.
+
+Esse endpoint funciona com o torneio em qualquer status, incluindo `finalizado`, para permitir listar as mesas de rodadas anteriores no front.
+
+Você pode filtrar por rodada com query string:
+
+- `GET /torneio/:torneioId/partidas` → retorna todas as partidas do torneio
+- `GET /torneio/:torneioId/partidas?rodada=2` → retorna apenas as mesas da rodada 2
+
+**Response (200):**
+
+```json
+{
+  "torneioId": "uuid",
+  "rodada": 2,
+  "partidas": [
+    {
+      "id": "uuid",
+      "rodada": 1,
+      "jogador1Id": "uuid-j1",
+      "jogador1Nome": "João Silva",
+      "jogador2Id": "uuid-j2",
+      "jogador2Nome": "Maria Santos",
+      "deckJogador1Id": "uuid-deck-j1",
+      "deckJogador2Id": "uuid-deck-j2",
+      "vitoriasJogador1": 2,
+      "vitoriasJogador2": 1,
+      "status": "finalizada"
+    },
+    {
+      "id": "uuid",
+      "rodada": 2,
+      "jogador1Id": "uuid-j3",
+      "jogador1Nome": "Pedro Lima",
+      "jogador2Id": null,
+      "jogador2Nome": null,
+      "vitoriasJogador1": 2,
+      "vitoriasJogador2": 0,
+      "status": "finalizada"
+    }
+  ]
+}
+```
+
+**Erros:**
+
+- `404` — Torneio não encontrado
+- `400` — Rodada inválida (deve ser inteiro >= 1)
 
 ---
 
@@ -445,7 +501,9 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
   "torneioId": "uuid",
   "rodada": 1,
   "jogador1Id": "uuid",
+  "jogador1Nome": "João Silva",
   "jogador2Id": "uuid",
+  "jogador2Nome": "Maria Santos",
   "deckJogador1Id": "uuid",
   "deckJogador2Id": "uuid",
   "vitoriasJogador1": 2,
@@ -688,6 +746,7 @@ torneio-{torneioId}
 | `rodada_iniciada`        | `POST /torneio/:id/iniciar` ou `POST /torneio/:id/proxima-rodada` (torneio não finalizado) |
 | `torneio_finalizado`     | `POST /torneio/:id/proxima-rodada` quando última rodada encerra                            |
 | `resultado_registrado`   | `POST /torneio/partida/:id/resultado`                                                      |
+| `mesa_atualizada`        | `POST /torneio/partida/:id/resultado` — payload focado em atualização da mesa no front     |
 | `standings_atualizados`  | Imediatamente após `resultado_registrado` com standings recalculados                       |
 | `participante_inscrito`  | `POST /torneio/:id/inscrever` — novo jogador inscrito                                      |
 | `checkin_realizado`      | `POST /torneio/:id/checkin` — jogador confirmou presença                                   |
@@ -714,10 +773,34 @@ torneio-{torneioId}
   "torneioId": "abc123",
   "rodada": 2,
   "jogador1Id": "...",
+  "jogador1Nome": "João Silva",
   "jogador2Id": "...",
+  "jogador2Nome": "Maria Santos",
   "vitoriasJogador1": 2,
   "vitoriasJogador2": 1,
   "status": "finalizada"
+}
+```
+
+**`mesa_atualizada`**
+
+```json
+{
+  "torneioId": "abc123",
+  "rodada": 2,
+  "partidaId": "p-123",
+  "partida": {
+    "id": "p-123",
+    "torneioId": "abc123",
+    "rodada": 2,
+    "jogador1Id": "...",
+    "jogador1Nome": "João Silva",
+    "jogador2Id": "...",
+    "jogador2Nome": "Maria Santos",
+    "vitoriasJogador1": 2,
+    "vitoriasJogador2": 1,
+    "status": "finalizada"
+  }
 }
 ```
 
@@ -751,6 +834,7 @@ const canal = ably.channels.get(`torneio-${torneioId}`);
 
 canal.subscribe("rodada_iniciada", (msg) => console.log(msg.data));
 canal.subscribe("resultado_registrado", (msg) => console.log(msg.data));
+canal.subscribe("mesa_atualizada", (msg) => console.log(msg.data));
 canal.subscribe("standings_atualizados", (msg) => console.log(msg.data));
 canal.subscribe("torneio_finalizado", (msg) => console.log(msg.data));
 canal.subscribe("participante_inscrito", (msg) => console.log(msg.data));

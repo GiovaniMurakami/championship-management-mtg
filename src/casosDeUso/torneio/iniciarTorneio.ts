@@ -2,6 +2,7 @@ import { Partida } from "../../dominio/entidade/partida";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -18,27 +19,30 @@ export type IniciarTorneioOutputDto = {
   partidas: Array<{
     id: string;
     jogador1Id: string;
+    jogador1Nome: string;
     jogador2Id: string | null;
+    jogador2Nome: string | null;
     deckJogador1Id?: string;
     deckJogador2Id?: string | null;
   }>;
 };
 
 export class IniciarTorneio
-  implements CasoDeUso<IniciarTorneioInputDto, IniciarTorneioOutputDto>
-{
+  implements CasoDeUso<IniciarTorneioInputDto, IniciarTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) {}
+    private readonly partidaGateway: PartidaGateway,
+    private readonly usuarioGateway: UsuarioGateway
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    partidaGateway: PartidaGateway
+    partidaGateway: PartidaGateway,
+    usuarioGateway: UsuarioGateway
   ) {
-    return new IniciarTorneio(torneioGateway, inscricaoGateway, partidaGateway);
+    return new IniciarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway);
   }
 
   public async executar(
@@ -89,6 +93,8 @@ export class IniciarTorneio
     // Rodada 1: embaralhamento aleatório
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn.map((i) => i.usuarioId);
+    const usuarios = await this.usuarioGateway.buscarVarios(jogadores);
+    const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
     for (let i = jogadores.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
@@ -102,7 +108,9 @@ export class IniciarTorneio
           torneioId: input.torneioId,
           rodada: 1,
           jogador1Id: jogadores[i],
+          jogador1Nome: usuarioNomeMap.get(jogadores[i]) ?? jogadores[i],
           jogador2Id: j2,
+          jogador2Nome: j2 ? (usuarioNomeMap.get(j2) ?? j2) : null,
           deckJogador1Id: deckMap.get(jogadores[i]),
           deckJogador2Id: j2 ? deckMap.get(j2) : null,
         })
@@ -118,7 +126,9 @@ export class IniciarTorneio
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,
+        jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
         jogador2Id: p.jogador2Id,
+        jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
         deckJogador1Id: p.deckJogador1Id,
         deckJogador2Id: p.deckJogador2Id,
       })),

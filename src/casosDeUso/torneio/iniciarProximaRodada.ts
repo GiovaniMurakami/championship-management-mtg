@@ -2,6 +2,7 @@ import { Partida } from "../../dominio/entidade/partida";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -26,47 +27,51 @@ export type IniciarProximaRodadaInputDto = {
 
 export type IniciarProximaRodadaOutputDto =
   | {
-      finalizado: false;
-      rodadaAtual: number;
-      partidas: Array<{
-        id: string;
-        jogador1Id: string;
-        jogador2Id: string | null;
-        deckJogador1Id?: string;
-        deckJogador2Id?: string | null;
-      }>;
-    }
+    finalizado: false;
+    rodadaAtual: number;
+    partidas: Array<{
+      id: string;
+      jogador1Id: string;
+      jogador1Nome: string;
+      jogador2Id: string | null;
+      jogador2Nome: string | null;
+      deckJogador1Id?: string;
+      deckJogador2Id?: string | null;
+    }>;
+  }
   | {
-      finalizado: true;
-      classificacao: Array<{
-        posicao: number;
-        usuarioId: string;
-        pontosMesa: number;
-        omwp: number;
-        gwp: number;
-        ogwp: number;
-      }>;
-    };
+    finalizado: true;
+    classificacao: Array<{
+      posicao: number;
+      usuarioId: string;
+      pontosMesa: number;
+      omwp: number;
+      gwp: number;
+      ogwp: number;
+    }>;
+  };
 
 export class IniciarProximaRodada
   implements
-    CasoDeUso<IniciarProximaRodadaInputDto, IniciarProximaRodadaOutputDto>
-{
+  CasoDeUso<IniciarProximaRodadaInputDto, IniciarProximaRodadaOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) {}
+    private readonly partidaGateway: PartidaGateway,
+    private readonly usuarioGateway: UsuarioGateway
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    partidaGateway: PartidaGateway
+    partidaGateway: PartidaGateway,
+    usuarioGateway: UsuarioGateway
   ) {
     return new IniciarProximaRodada(
       torneioGateway,
       inscricaoGateway,
-      partidaGateway
+      partidaGateway,
+      usuarioGateway
     );
   }
 
@@ -126,6 +131,8 @@ export class IniciarProximaRodada
     );
     const jogadoresIds = inscricoesComCheckIn.map((i) => i.usuarioId);
     const deckMap = new Map(inscricoesComCheckIn.map((i) => [i.usuarioId, i.deckId]));
+    const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
+    const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
 
     if (jogadoresIds.length < 2) {
       throw ErroPersonalizado.criar({
@@ -174,7 +181,11 @@ export class IniciarProximaRodada
         torneioId: input.torneioId,
         rodada: proximaRodada,
         jogador1Id: par.jogador1Id,
+        jogador1Nome: usuarioNomeMap.get(par.jogador1Id) ?? par.jogador1Id,
         jogador2Id: par.jogador2Id,
+        jogador2Nome: par.jogador2Id
+          ? (usuarioNomeMap.get(par.jogador2Id) ?? par.jogador2Id)
+          : null,
         deckJogador1Id: deckMap.get(par.jogador1Id),
         deckJogador2Id: par.jogador2Id ? deckMap.get(par.jogador2Id) : null,
       })
@@ -191,7 +202,9 @@ export class IniciarProximaRodada
       partidas: novasPartidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,
+        jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
         jogador2Id: p.jogador2Id,
+        jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
         deckJogador1Id: p.deckJogador1Id,
         deckJogador2Id: p.deckJogador2Id,
       })),
