@@ -8,7 +8,9 @@ interface PartidaDocument extends Document {
   torneioId: string;
   rodada: number;
   jogador1Id: string;
+  jogador1Nome?: string;
   jogador2Id: string | null;
+  jogador2Nome?: string | null;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -22,7 +24,9 @@ const partidaSchema = new Schema<PartidaDocument>({
   torneioId: { type: String, required: true },
   rodada: { type: Number, required: true },
   jogador1Id: { type: String, required: true },
+  jogador1Nome: { type: String },
   jogador2Id: { type: String, default: null },
+  jogador2Nome: { type: String, default: null },
   deckJogador1Id: { type: String },
   deckJogador2Id: { type: String },
   vitoriasJogador1: { type: Number, required: true, default: 0 },
@@ -41,7 +45,9 @@ function docParaPartida(doc: PartidaDocument): Partida {
     torneioId: doc.get("torneioId"),
     rodada: doc.get("rodada"),
     jogador1Id: doc.get("jogador1Id"),
+    jogador1Nome: doc.get("jogador1Nome") ?? undefined,
     jogador2Id: doc.get("jogador2Id"),
+    jogador2Nome: doc.get("jogador2Nome") ?? undefined,
     deckJogador1Id: doc.get("deckJogador1Id") ?? undefined,
     deckJogador2Id: doc.get("deckJogador2Id") ?? undefined,
     vitoriasJogador1: doc.get("vitoriasJogador1"),
@@ -65,7 +71,9 @@ export class PartidaRepositorio implements PartidaGateway {
       torneioId: partida.torneioId,
       rodada: partida.rodada,
       jogador1Id: partida.jogador1Id,
+      jogador1Nome: partida.jogador1Nome,
       jogador2Id: partida.jogador2Id,
+      jogador2Nome: partida.jogador2Nome,
       deckJogador1Id: partida.deckJogador1Id,
       deckJogador2Id: partida.deckJogador2Id,
       vitoriasJogador1: partida.vitoriasJogador1,
@@ -83,7 +91,9 @@ export class PartidaRepositorio implements PartidaGateway {
         torneioId: p.torneioId,
         rodada: p.rodada,
         jogador1Id: p.jogador1Id,
+        jogador1Nome: p.jogador1Nome,
         jogador2Id: p.jogador2Id,
+        jogador2Nome: p.jogador2Nome,
         deckJogador1Id: p.deckJogador1Id,
         deckJogador2Id: p.deckJogador2Id,
         vitoriasJogador1: p.vitoriasJogador1,

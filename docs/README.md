@@ -35,6 +35,7 @@ A documentação completa está organizada por entidade:
 - `POST /torneio/criar` - Criar novo torneio (aceita campo opcional `premio`)
 - `GET /torneio/listar` - Listar todos os torneios
 - `GET /torneio/:torneioId` - Buscar torneio por ID (inclui `partidas` com nomes, `totalInscritos`, `totalCheckin`)
+- `GET /torneio/:torneioId/partidas` - Listar partidas do torneio com IDs e nomes dos jogadores (aceita `?rodada=N`)
 - `POST /torneio/:torneioId/inscrever` - Inscrever-se em um torneio
 - `POST /torneio/:torneioId/checkin` - Fazer check-in (pré-torneio ou entre rodadas)
 - `POST /torneio/:torneioId/deck` - Escolher deck para o torneio

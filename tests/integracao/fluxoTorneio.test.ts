@@ -172,12 +172,13 @@ describe("Integração - Fluxo completo de torneio", () => {
     });
 
     it("5. Deve iniciar o torneio e gerar partidas da rodada 1", async () => {
-        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw);
+        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
         const resultado = await iniciar.executar({ torneioId, donoId });
 
         expect(resultado.rodadaAtual).toBe(1);
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(4))
         expect(resultado.partidas).toHaveLength(2);
+        expect(resultado.partidas[0].jogador1Nome).toBeDefined();
 
         const torneio = await torneioGw.buscarPorId(torneioId);
         expect(torneio!.status).toBe("em_andamento");
@@ -211,7 +212,7 @@ describe("Integração - Fluxo completo de torneio", () => {
     });
 
     it("8. Deve avançar para rodada 2 e finalizar o torneio", async () => {
-        const proximaRodada = IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw);
+        const proximaRodada = IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
         const resultado = await proximaRodada.executar({ torneioId, donoId });
 
         // Rodada 2 é a última (totalRodadas = 2), mas como rodadaAtual era 1, 
@@ -219,6 +220,7 @@ describe("Integração - Fluxo completo de torneio", () => {
         expect(resultado.finalizado).toBe(false);
         if (!resultado.finalizado) {
             expect(resultado.rodadaAtual).toBe(2);
+            expect(resultado.partidas[0].jogador1Nome).toBeDefined();
 
             // Registrar resultados da rodada 2
             const registrar = RegistrarResultado.criar(torneioGw, partidaGw);

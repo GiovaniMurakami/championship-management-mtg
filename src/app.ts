@@ -17,6 +17,7 @@ import { ListarTorneios } from "./casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "./casosDeUso/torneio/buscarTorneio";
 import { BuscarStandings } from "./casosDeUso/torneio/buscarStandings";
 import { MeuHistoricoTorneio } from "./casosDeUso/torneio/meuHistoricoTorneio";
+import { ListarPartidasTorneio } from "./casosDeUso/torneio/listarPartidasTorneio";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
@@ -38,6 +39,7 @@ import { ListarTorneiosRota } from "./infra/api/express/rotas/torneio/listarTorn
 import { BuscarTorneioRota } from "./infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarStandingsRota } from "./infra/api/express/rotas/torneio/buscarStandings.express.route";
 import { MeuHistoricoTorneioRota } from "./infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
+import { ListarPartidasTorneioRota } from "./infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
 import { UsuarioRepositorio } from "./infra/mongodb/repositorios/usuarioRepositorio";
 import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
@@ -84,12 +86,14 @@ export function app() {
   const iniciarTorneio = IniciarTorneio.criar(
     repositorios.torneio,
     repositorios.inscricao,
-    repositorios.partida
+    repositorios.partida,
+    repositorios.usuario
   );
   const iniciarProximaRodada = IniciarProximaRodada.criar(
     repositorios.torneio,
     repositorios.inscricao,
-    repositorios.partida
+    repositorios.partida,
+    repositorios.usuario
   );
   const registrarResultado = RegistrarResultado.criar(
     repositorios.torneio,
@@ -118,6 +122,10 @@ export function app() {
     repositorios.partida,
     repositorios.usuario
   );
+  const listarPartidasTorneio = ListarPartidasTorneio.criar(
+    repositorios.torneio,
+    repositorios.partida
+  );
 
   const cadastrarUsuarioRota = CadastrarUsuarioRota.criar(cadastrarUsuario);
   const loginUsuarioRota = LoginUsuarioRota.criar(loginUsuario);
@@ -142,6 +150,7 @@ export function app() {
   const buscarTorneioRota = BuscarTorneioRota.criar(buscarTorneio);
   const buscarStandingsRota = BuscarStandingsRota.criar(buscarStandings);
   const meuHistoricoTorneioRota = MeuHistoricoTorneioRota.criar(meuHistoricoTorneio);
+  const listarPartidasTorneioRota = ListarPartidasTorneioRota.criar(listarPartidasTorneio);
 
   const port = Number(process.env.PORT) || 0;
 
@@ -165,6 +174,7 @@ export function app() {
     buscarTorneioRota,
     buscarStandingsRota,
     meuHistoricoTorneioRota,
+    listarPartidasTorneioRota,
   ]);
 
   api.start(port);
