@@ -1,5 +1,6 @@
 import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 
 export type ListarDecksInputDto = {
@@ -15,17 +16,19 @@ export type ListarDecksOutputDto = {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   criadoEm: Date;
 }[];
 
 export class ListarDecks
-  implements CasoDeUso<ListarDecksInputDto, ListarDecksOutputDto>
-{
-  private constructor(private readonly deckGateway: DeckGateway) {}
+  implements CasoDeUso<ListarDecksInputDto, ListarDecksOutputDto> {
+  private constructor(
+    private readonly deckGateway: DeckGateway,
+    private readonly usuarioGateway: UsuarioGateway
+  ) { }
 
-  public static criar(deckGateway: DeckGateway) {
-    return new ListarDecks(deckGateway);
+  public static criar(deckGateway: DeckGateway, usuarioGateway: UsuarioGateway) {
+    return new ListarDecks(deckGateway, usuarioGateway);
   }
 
   public async executar(
@@ -39,13 +42,22 @@ export class ListarDecks
 
     const decks = await this.deckGateway.listar(filtros);
 
+    const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];
+    const usuarios = usuarioIds.length > 0
+      ? await this.usuarioGateway.buscarVarios(usuarioIds)
+      : [];
+    const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
+
     return decks.map((deck) => ({
       id: deck.id,
       nome: deck.nome,
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
-      usuarioId: deck.usuarioId,
+      usuario: {
+        id: deck.usuarioId,
+        nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
+      },
       criadoEm: deck.criadoEm,
     }));
   }

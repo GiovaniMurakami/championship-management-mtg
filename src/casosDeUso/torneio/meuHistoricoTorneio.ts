@@ -12,12 +12,11 @@ export type MeuHistoricoTorneioInputDto = {
 
 export type MeuHistoricoTorneioOutputDto = {
     torneioId: string;
-    usuarioId: string;
+    usuario: { id: string; nome: string };
     partidas: Array<{
         id: string;
         rodada: number;
-        oponenteId: string | null;
-        oponenteNome: string | null;
+        oponente: { id: string; nome: string } | null;
         vitoriasJogador: number;
         vitoriasOponente: number;
         resultado: "vitoria" | "derrota" | "empate" | "bye";
@@ -63,10 +62,11 @@ export class MeuHistoricoTorneio
             )
             .filter((id): id is string => !!id);
 
-        const oponentes = oponenteIds.length > 0
-            ? await this.usuarioGateway.buscarVarios(oponenteIds)
-            : [];
-        const oponenteMap = new Map(oponentes.map((u) => [u.id, u]));
+        const idsParaBuscar = [...new Set([input.usuarioId, ...oponenteIds])];
+        const usuarios = await this.usuarioGateway.buscarVarios(idsParaBuscar);
+        const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
+
+        const usuarioAtual = usuarioMap.get(input.usuarioId);
 
         const historicoPartidas = partidas.map((p) => {
             const euSouJogador1 = p.jogador1Id === input.usuarioId;
@@ -87,13 +87,14 @@ export class MeuHistoricoTorneio
                 resultado = "empate";
             }
 
+            const oponente = oponenteId
+                ? { id: oponenteId, nome: usuarioMap.get(oponenteId)?.nome ?? oponenteId }
+                : null;
+
             return {
                 id: p.id,
                 rodada: p.rodada,
-                oponenteId,
-                oponenteNome: oponenteId
-                    ? (oponenteMap.get(oponenteId)?.nome ?? oponenteId)
-                    : null,
+                oponente,
                 vitoriasJogador: minhasVitorias,
                 vitoriasOponente,
                 resultado,
@@ -103,7 +104,7 @@ export class MeuHistoricoTorneio
 
         return {
             torneioId: input.torneioId,
-            usuarioId: input.usuarioId,
+            usuario: { id: input.usuarioId, nome: usuarioAtual?.nome ?? input.usuarioId },
             partidas: historicoPartidas,
         };
     }

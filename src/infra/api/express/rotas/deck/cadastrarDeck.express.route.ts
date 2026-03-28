@@ -12,7 +12,7 @@ export class CadastrarDeckRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly cadastrarDeckServico: CadastrarDeck
-  ) {}
+  ) { }
 
   public static criar(cadastrarDeckServico: CadastrarDeck) {
     return new CadastrarDeckRota(
@@ -42,6 +42,7 @@ export class CadastrarDeckRota implements Rotas {
     ): Promise<void> => {
       try {
         const usuarioId = request.usuario!.id;
+        const usuarioNome = request.usuario!.nome;
         const { nome, formato, maindeck, sideboard } =
           request.body as Omit<CadastrarDeckInputDto, "usuarioId">;
 
@@ -65,6 +66,7 @@ export class CadastrarDeckRota implements Rotas {
           maindeck,
           sideboard: Array.isArray(sideboard) ? sideboard : [],
           usuarioId,
+          usuarioNome,
         });
 
         response.status(201).json(resultado);

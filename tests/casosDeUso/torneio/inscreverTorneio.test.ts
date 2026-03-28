@@ -30,7 +30,7 @@ describe("InscreverTorneio", () => {
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
 
         expect(resultado.torneioId).toBe("t-1");
-        expect(resultado.usuarioId).toBe("u-1");
+        expect(resultado.usuario.id).toBe("u-1");
         expect(resultado.checkIn).toBe(false);
     });
 

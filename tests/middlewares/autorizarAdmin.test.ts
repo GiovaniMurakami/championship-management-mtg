@@ -15,7 +15,7 @@ describe("autorizarAdmin middleware", () => {
     });
 
     it("deve chamar next quando role é 'admin'", () => {
-        req = { usuario: { id: "u-1", email: "admin@e.com", nome: "Admin", role: "admin" } };
+        req = { usuario: { id: "u-1", email: "admin@e.com", nome: "Admin", role: "admin" } } as any;
 
         autorizarAdmin(req as Request, res as Response, next);
 
@@ -24,7 +24,7 @@ describe("autorizarAdmin middleware", () => {
     });
 
     it("deve retornar 403 quando role é 'user'", () => {
-        req = { usuario: { id: "u-1", email: "user@e.com", nome: "João", role: "user" } };
+        req = { usuario: { id: "u-1", email: "user@e.com", nome: "João", role: "user" } } as any;
 
         autorizarAdmin(req as Request, res as Response, next);
 

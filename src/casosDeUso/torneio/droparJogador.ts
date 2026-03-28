@@ -1,5 +1,6 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -15,23 +16,24 @@ export type DroparJogadorInputDto = {
 export type DroparJogadorOutputDto = {
   inscricaoId: string;
   torneioId: string;
-  jogadorId: string;
+  jogador: { id: string; nome: string };
   dropped: boolean;
 };
 
 export class DroparJogador
-  implements CasoDeUso<DroparJogadorInputDto, DroparJogadorOutputDto>
-{
+  implements CasoDeUso<DroparJogadorInputDto, DroparJogadorOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly inscricaoGateway: InscricaoGateway
-  ) {}
+    private readonly inscricaoGateway: InscricaoGateway,
+    private readonly usuarioGateway: UsuarioGateway
+  ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    inscricaoGateway: InscricaoGateway
+    inscricaoGateway: InscricaoGateway,
+    usuarioGateway: UsuarioGateway
   ) {
-    return new DroparJogador(torneioGateway, inscricaoGateway);
+    return new DroparJogador(torneioGateway, inscricaoGateway, usuarioGateway);
   }
 
   public async executar(
@@ -85,10 +87,12 @@ export class DroparJogador
     inscricao.dropped = true;
     await this.inscricaoGateway.atualizar(inscricao);
 
+    const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
+
     return {
       inscricaoId: inscricao.id,
       torneioId: inscricao.torneioId,
-      jogadorId: inscricao.usuarioId,
+      jogador: { id: inscricao.usuarioId, nome: jogador?.nome ?? inscricao.usuarioId },
       dropped: true,
     };
   }

@@ -69,7 +69,7 @@ export function app() {
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
-  const listarDecks = ListarDecks.criar(repositorios.deck);
+  const listarDecks = ListarDecks.criar(repositorios.deck, repositorios.usuario);
 
   const criarTorneio = CriarTorneio.criar(repositorios.torneio);
   const inscreverTorneio = InscreverTorneio.criar(
@@ -104,7 +104,8 @@ export function app() {
   );
   const droparJogador = DroparJogador.criar(
     repositorios.torneio,
-    repositorios.inscricao
+    repositorios.inscricao,
+    repositorios.usuario
   );
   const listarTorneios = ListarTorneios.criar(repositorios.torneio);
   const buscarTorneio = BuscarTorneio.criar(

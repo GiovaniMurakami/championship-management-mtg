@@ -8,12 +8,13 @@ import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 export type CheckInTorneioInputDto = {
   torneioId: string;
   usuarioId: string;
+  usuarioNome: string;
 };
 
 export type CheckInTorneioOutputDto = {
   id: string;
   torneioId: string;
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   checkIn: boolean;
   checkInRodada: number;
 };
@@ -94,7 +95,7 @@ export class CheckInTorneio
     return {
       id: inscricao.id,
       torneioId: inscricao.torneioId,
-      usuarioId: inscricao.usuarioId,
+      usuario: { id: inscricao.usuarioId, nome: input.usuarioNome },
       checkIn: inscricao.checkIn,
       checkInRodada: inscricao.checkInRodada,
     };

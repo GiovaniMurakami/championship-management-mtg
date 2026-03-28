@@ -9,13 +9,14 @@ import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 export type EscolherDeckTorneioInputDto = {
   torneioId: string;
   usuarioId: string;
+  usuarioNome: string;
   deckId: string;
 };
 
 export type EscolherDeckTorneioOutputDto = {
   id: string;
   torneioId: string;
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   deckId: string;
 };
 
@@ -92,7 +93,7 @@ export class EscolherDeckTorneio
     return {
       id: inscricao.id,
       torneioId: inscricao.torneioId,
-      usuarioId: inscricao.usuarioId,
+      usuario: { id: inscricao.usuarioId, nome: input.usuarioNome },
       deckId: inscricao.deckId!,
     };
   }

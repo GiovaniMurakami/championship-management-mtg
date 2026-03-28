@@ -22,12 +22,14 @@ describe("CadastrarDeck", () => {
             maindeck: maindeckValido,
             sideboard: sideboardValido,
             usuarioId: "user-1",
+            usuarioNome: "Jogador Teste",
         });
 
         expect(resultado.id).toBeDefined();
         expect(resultado.nome).toBe("Burn");
         expect(resultado.formato).toBe("legacy");
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
+        expect(resultado.usuario).toEqual({ id: "user-1", nome: "Jogador Teste" });
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
     });
 
@@ -42,6 +44,7 @@ describe("CadastrarDeck", () => {
                 maindeck: [{ nome: "carta", quantidade: 10 }],
                 sideboard: [],
                 usuarioId: "user-1",
+                usuarioNome: "Jogador Teste",
             })
         ).rejects.toMatchObject({ status: 400 });
     });
@@ -57,6 +60,7 @@ describe("CadastrarDeck", () => {
                 maindeck: maindeckValido,
                 sideboard: [{ nome: "carta", quantidade: 16 }],
                 usuarioId: "user-1",
+                usuarioNome: "Jogador Teste",
             })
         ).rejects.toMatchObject({ status: 400 });
     });
@@ -71,6 +75,7 @@ describe("CadastrarDeck", () => {
             maindeck: [{ nome: "  Lightning BOLT  ", quantidade: 60 }],
             sideboard: [{ nome: "  SIDEBOARD Card ", quantidade: 1 }],
             usuarioId: "u",
+            usuarioNome: "Usuário",
         });
 
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");

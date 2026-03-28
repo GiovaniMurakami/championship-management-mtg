@@ -329,7 +329,10 @@ Inscreve o usuário autenticado no torneio. Só funciona enquanto `status = insc
 {
   "id": "uuid",
   "torneioId": "uuid",
-  "usuarioId": "uuid",
+  "usuario": {
+    "id": "uuid",
+    "nome": "João Silva"
+  },
   "checkIn": false,
   "dropped": false,
   "criadoEm": "2026-03-13T10:05:00.000Z"
@@ -362,7 +365,10 @@ Escolhe ou troca o deck para o torneio. Pode ser feito a qualquer momento enquan
 {
   "id": "uuid",
   "torneioId": "uuid",
-  "usuarioId": "uuid",
+  "usuario": {
+    "id": "uuid",
+    "nome": "João Silva"
+  },
   "deckId": "uuid-do-deck"
 }
 ```
@@ -391,7 +397,10 @@ Confirma presença no torneio ou em uma rodada específica. Nenhum body necessá
 {
   "id": "uuid",
   "torneioId": "uuid",
-  "usuarioId": "uuid",
+  "usuario": {
+    "id": "uuid",
+    "nome": "João Silva"
+  },
   "checkIn": true,
   "checkInRodada": 0
 }
@@ -466,7 +475,10 @@ Dropa um jogador do torneio. O jogador dropado não participa dos próximos pare
 {
   "inscricaoId": "uuid",
   "torneioId": "uuid",
-  "jogadorId": "uuid",
+  "jogador": {
+    "id": "uuid",
+    "nome": "João Silva"
+  },
   "dropped": true
 }
 ```
@@ -557,7 +569,10 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
   "classificacao": [
     {
       "posicao": 1,
-      "usuarioId": "uuid",
+      "usuario": {
+        "id": "uuid",
+        "nome": "João Silva"
+      },
       "pontosMesa": 12,
       "omwp": 0.72,
       "gwp": 0.85,
@@ -593,8 +608,10 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
   "standings": [
     {
       "posicao": 1,
-      "usuarioId": "uuid",
-      "nome": "João Silva",
+      "usuario": {
+        "id": "uuid",
+        "nome": "João Silva"
+      },
       "pontosMesa": 0,
       "vitoriasPartida": 0,
       "empatesPartida": 0,
@@ -624,8 +641,10 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
   "standings": [
     {
       "posicao": 1,
-      "usuarioId": "uuid",
-      "nome": "João Silva",
+      "usuario": {
+        "id": "uuid",
+        "nome": "João Silva"
+      },
       "pontosMesa": 6,
       "vitoriasPartida": 2,
       "empatesPartida": 0,
@@ -646,7 +665,7 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
 
 | Campo                | Descrição                                                                 |
 | -------------------- | ------------------------------------------------------------------------- |
-| nome                 | Nome do jogador                                                           |
+| usuario              | Objeto com `id` e `nome` do jogador                                       |
 | deckNome             | Nome do deck escolhido (`null` se nenhum deck foi escolhido)              |
 | mwp                  | Match Win Percentage                                                      |
 | omwp                 | Opponent Match Win Percentage (mín. 33%)                                  |
@@ -669,13 +688,18 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
 ```json
 {
   "torneioId": "uuid",
-  "usuarioId": "uuid",
+  "usuario": {
+    "id": "uuid",
+    "nome": "João Silva"
+  },
   "partidas": [
     {
       "id": "uuid",
       "rodada": 1,
-      "oponenteId": "uuid-oponente",
-      "oponenteNome": "Maria Santos",
+      "oponente": {
+        "id": "uuid-oponente",
+        "nome": "Maria Santos"
+      },
       "vitoriasJogador": 2,
       "vitoriasOponente": 1,
       "resultado": "vitoria",
@@ -684,8 +708,7 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
     {
       "id": "uuid",
       "rodada": 2,
-      "oponenteId": null,
-      "oponenteNome": null,
+      "oponente": null,
       "vitoriasJogador": 2,
       "vitoriasOponente": 0,
       "resultado": "bye",
@@ -695,10 +718,10 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
 }
 ```
 
-| Campo           | Valores possíveis                          |
-| --------------- | ------------------------------------------ |
-| resultado       | `vitoria`, `derrota`, `empate`, `bye`      |
-| oponenteId/Nome | `null` quando a partida é um bye          |
+| Campo     | Valores possíveis                          |
+| --------- | ------------------------------------------ |
+| resultado | `vitoria`, `derrota`, `empate`, `bye`      |
+| oponente  | Objeto `{ id, nome }` ou `null` no bye     |
 
 **Erros:**
 
@@ -816,7 +839,10 @@ torneio-{torneioId}
   "classificacao": [
     {
       "posicao": 1,
-      "usuarioId": "...",
+      "usuario": {
+        "id": "...",
+        "nome": "João Silva"
+      },
       "pontosMesa": 9,
       "omwp": 0.67,
       "gwp": 0.72,

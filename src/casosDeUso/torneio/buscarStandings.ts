@@ -26,8 +26,7 @@ export type BuscarStandingsOutputDto = {
   status: string;
   standings: Array<{
     posicao: number;
-    usuarioId: string;
-    nome: string;
+    usuario: { id: string; nome: string };
     pontosMesa: number;
     vitoriasPartida: number;
     empatesPartida: number;
@@ -94,8 +93,7 @@ export class BuscarStandings
     if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual === 0) {
       const standings = inscricoes.map((i, idx) => ({
         posicao: idx + 1,
-        usuarioId: i.usuarioId,
-        nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId,
+        usuario: { id: i.usuarioId, nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId },
         pontosMesa: 0,
         vitoriasPartida: 0,
         empatesPartida: 0,
@@ -145,8 +143,7 @@ export class BuscarStandings
         const inscricao = inscricaoMap.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuarioId: s.usuarioId,
-          nome: usuarioMap.get(s.usuarioId)?.nome ?? s.usuarioId,
+          usuario: { id: s.usuarioId, nome: usuarioMap.get(s.usuarioId)?.nome ?? s.usuarioId },
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,
           empatesPartida: s.empatesPartida,

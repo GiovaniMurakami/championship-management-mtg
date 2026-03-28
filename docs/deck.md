@@ -89,7 +89,10 @@ Authorization: Bearer {token}
   "formato": "Commander",
   "maindeck": [...],
   "sideboard": [],
-  "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
   "criadoEm": "2026-03-09T22:00:00.000Z"
 }
 ```
@@ -145,7 +148,10 @@ Authorization: Bearer {token}
   "formato": "Commander",
   "maindeck": [...],
   "sideboard": [],
-  "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
   "criadoEm": "2026-03-09T22:00:00.000Z"
 }
 ```
@@ -216,7 +222,10 @@ Array de decks do usuário:
       }
     ],
     "sideboard": [],
-    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "usuario": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva"
+    },
     "criadoEm": "2026-03-09T22:00:00.000Z"
   },
   {
@@ -225,7 +234,10 @@ Array de decks do usuário:
     "formato": "Modern",
     "maindeck": [...],
     "sideboard": [],
-    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "usuario": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva"
+    },
     "criadoEm": "2026-03-08T10:30:00.000Z"
   }
 ]

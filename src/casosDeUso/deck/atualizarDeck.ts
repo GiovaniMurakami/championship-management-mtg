@@ -14,6 +14,7 @@ function totalCartas(cartas: Carta[]): number {
 export type AtualizarDeckInputDto = {
   id: string;
   usuarioIdRequisitante: string;
+  usuarioNome: string;
   nome?: string;
   formato?: string;
   maindeck?: Carta[];
@@ -26,14 +27,13 @@ export type AtualizarDeckOutputDto = {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   criadoEm: Date;
 };
 
 export class AtualizarDeck
-  implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto>
-{
-  private constructor(private readonly deckGateway: DeckGateway) {}
+  implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto> {
+  private constructor(private readonly deckGateway: DeckGateway) { }
 
   public static criar(deckGateway: DeckGateway) {
     return new AtualizarDeck(deckGateway);
@@ -97,7 +97,7 @@ export class AtualizarDeck
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
-      usuarioId: deck.usuarioId,
+      usuario: { id: deck.usuarioId, nome: input.usuarioNome },
       criadoEm: deck.criadoEm,
     };
   }

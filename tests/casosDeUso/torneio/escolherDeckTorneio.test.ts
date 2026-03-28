@@ -34,9 +34,10 @@ describe("EscolherDeckTorneio", () => {
             criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deck) }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", deckId: "deck-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "deck-1" });
 
         expect(resultado.deckId).toBe("deck-1");
+        expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
@@ -48,7 +49,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "x", usuarioId: "u", deckId: "d" })
+            uc.executar({ torneioId: "x", usuarioId: "u", usuarioNome: "u", deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -61,7 +62,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u", deckId: "d" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u", usuarioNome: "u", deckId: "d" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -73,7 +74,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", deckId: "d" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -85,7 +86,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", deckId: "inexistente" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "inexistente" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -98,7 +99,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", deckId: "deck-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "deck-1" })
         ).rejects.toMatchObject({ status: 403 });
     });
 });

@@ -17,6 +17,7 @@ export type CadastrarDeckInputDto = {
   maindeck: Carta[];
   sideboard: Carta[];
   usuarioId: string;
+  usuarioNome: string;
 };
 
 export type CadastrarDeckOutputDto = {
@@ -25,14 +26,13 @@ export type CadastrarDeckOutputDto = {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   criadoEm: Date;
 };
 
 export class CadastrarDeck
-  implements CasoDeUso<CadastrarDeckInputDto, CadastrarDeckOutputDto>
-{
-  private constructor(private readonly deckGateway: DeckGateway) {}
+  implements CasoDeUso<CadastrarDeckInputDto, CadastrarDeckOutputDto> {
+  private constructor(private readonly deckGateway: DeckGateway) { }
 
   public static criar(deckGateway: DeckGateway) {
     return new CadastrarDeck(deckGateway);
@@ -83,7 +83,7 @@ export class CadastrarDeck
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
-      usuarioId: deck.usuarioId,
+      usuario: { id: deck.usuarioId, nome: input.usuarioNome },
       criadoEm: deck.criadoEm,
     };
   }
