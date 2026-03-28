@@ -5,6 +5,7 @@ import { RefreshToken } from "./casosDeUso/usuario/refreshToken";
 import { CadastrarDeck } from "./casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "./casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "./casosDeUso/deck/excluirDeck";
+import { BuscarDeck } from "./casosDeUso/deck/buscarDeck";
 import { ListarDecks } from "./casosDeUso/deck/listarDecks";
 import { CriarTorneio } from "./casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "./casosDeUso/torneio/inscreverTorneio";
@@ -28,6 +29,7 @@ import { RefreshTokenRota } from "./infra/api/express/rotas/usuario/refreshToken
 import { CadastrarDeckRota } from "./infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "./infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "./infra/api/express/rotas/deck/excluirDeck.express.route";
+import { BuscarDeckRota } from "./infra/api/express/rotas/deck/buscarDeck.express.route";
 import { ListarDecksRota } from "./infra/api/express/rotas/deck/listarDecks.express.route";
 import { CriarTorneioRota } from "./infra/api/express/rotas/torneio/criarTorneio.express.route";
 import { InscreverTorneioRota } from "./infra/api/express/rotas/torneio/inscreverTorneio.express.route";
@@ -71,6 +73,7 @@ export function app() {
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
+  const buscarDeck = BuscarDeck.criar(repositorios.deck, repositorios.usuario);
   const listarDecks = ListarDecks.criar(repositorios.deck, repositorios.usuario);
 
   const criarTorneio = CriarTorneio.criar(repositorios.torneio);
@@ -140,6 +143,7 @@ export function app() {
   const cadastrarDeckRota = CadastrarDeckRota.criar(cadastrarDeck);
   const atualizarDeckRota = AtualizarDeckRota.criar(atualizarDeck);
   const excluirDeckRota = ExcluirDeckRota.criar(excluirDeck);
+  const buscarDeckRota = BuscarDeckRota.criar(buscarDeck);
   const listarDecksRota = ListarDecksRota.criar(listarDecks);
 
   const criarTorneioRota = CriarTorneioRota.criar(criarTorneio);
@@ -169,6 +173,7 @@ export function app() {
     cadastrarDeckRota,
     atualizarDeckRota,
     excluirDeckRota,
+    buscarDeckRota,
     listarDecksRota,
     criarTorneioRota,
     inscreverTorneioRota,

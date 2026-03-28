@@ -195,6 +195,50 @@ Authorization: Bearer {token}
 
 ---
 
+### GET /deck/:id
+
+Busca um deck pelo seu ID.
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Parâmetros de URL:**
+
+- `id` - ID do deck
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "nome": "Atraxa Superfriends",
+  "formato": "Commander",
+  "maindeck": [
+    {
+      "nome": "Atraxa, Praetors' Voice",
+      "quantidade": 1
+    }
+  ],
+  "sideboard": [],
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
+  "criadoEm": "2026-03-09T22:00:00.000Z"
+}
+```
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token inválido ou ausente
+- `404 Not Found` - Deck não encontrado
+- `500 Internal Server Error` - Erro no servidor
+
+---
+
 ### GET /deck/listar
 
 Lista todos os decks do usuário autenticado.
@@ -275,6 +319,7 @@ Array de decks do usuário:
 - [CadastrarDeck](../src/casosDeUso/deck/cadastrarDeck.ts) - Registra novo deck
 - [AtualizarDeck](../src/casosDeUso/deck/atualizarDeck.ts) - Atualiza deck existente
 - [ExcluirDeck](../src/casosDeUso/deck/excluirDeck.ts) - Remove deck
+- [BuscarDeck](../src/casosDeUso/deck/buscarDeck.ts) - Busca deck por ID
 - [ListarDecks](../src/casosDeUso/deck/listarDecks.ts) - Lista decks do usuário
 
 ## Gateway
