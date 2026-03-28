@@ -47,6 +47,7 @@ import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
 import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepositorio";
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
+import { ChatGptServico } from "./infra/services/chatGptServico";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -66,7 +67,8 @@ export function app() {
   const loginUsuario = LoginUsuario.criar(repositorios.usuario);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario);
-  const cadastrarDeck = CadastrarDeck.criar(repositorios.deck);
+  const chatGptServico = ChatGptServico.criar();
+  const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
   const listarDecks = ListarDecks.criar(repositorios.deck, repositorios.usuario);

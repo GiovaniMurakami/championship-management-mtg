@@ -1,5 +1,5 @@
 import { CadastrarDeck } from "../../../src/casosDeUso/deck/cadastrarDeck";
-import { criarMockDeckGateway } from "../../mocks/gateways";
+import { criarMockDeckGateway, criarMockChatGptGateway } from "../../mocks/gateways";
 import { Carta } from "../../../src/dominio/entidade/deck";
 
 describe("CadastrarDeck", () => {
@@ -14,7 +14,8 @@ describe("CadastrarDeck", () => {
 
     it("deve cadastrar um deck com sucesso", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = CadastrarDeck.criar(gateway);
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
 
         const resultado = await uc.executar({
             nome: "Burn",
@@ -30,12 +31,15 @@ describe("CadastrarDeck", () => {
         expect(resultado.formato).toBe("legacy");
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
         expect(resultado.usuario).toEqual({ id: "user-1", nome: "Jogador Teste" });
+        expect(resultado.nomeConsolidado).toBe("Burn");
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
+        expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledTimes(1);
     });
 
     it("deve lançar erro se o maindeck tiver menos de 60 cartas", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = CadastrarDeck.criar(gateway);
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
 
         await expect(
             uc.executar({
@@ -51,7 +55,8 @@ describe("CadastrarDeck", () => {
 
     it("deve lançar erro se o sideboard tiver mais de 15 cartas", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = CadastrarDeck.criar(gateway);
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
 
         await expect(
             uc.executar({
@@ -67,7 +72,8 @@ describe("CadastrarDeck", () => {
 
     it("deve normalizar nomes de cartas para minúsculas", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = CadastrarDeck.criar(gateway);
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
 
         const resultado = await uc.executar({
             nome: "Test",
@@ -80,5 +86,24 @@ describe("CadastrarDeck", () => {
 
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
         expect(resultado.sideboard[0].nome).toBe("sideboard card");
+    });
+
+    it("deve salvar nomeConsolidado como null quando o ChatGPT retorna null", async () => {
+        const gateway = criarMockDeckGateway();
+        const chatGpt = criarMockChatGptGateway({
+            obterNomeConsolidado: jest.fn().mockResolvedValue(null),
+        });
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        const resultado = await uc.executar({
+            nome: "Deck Desconhecido",
+            formato: "modern",
+            maindeck: maindeckValido,
+            sideboard: [],
+            usuarioId: "u",
+            usuarioNome: "Usuário",
+        });
+
+        expect(resultado.nomeConsolidado).toBeNull();
     });
 });
