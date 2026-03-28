@@ -107,7 +107,7 @@ export function app() {
     repositorios.inscricao,
     repositorios.usuario
   );
-  const listarTorneios = ListarTorneios.criar(repositorios.torneio);
+  const listarTorneios = ListarTorneios.criar(repositorios.torneio, repositorios.inscricao);
   const buscarTorneio = BuscarTorneio.criar(
     repositorios.torneio,
     repositorios.inscricao,

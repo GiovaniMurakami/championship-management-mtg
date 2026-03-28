@@ -7,5 +7,6 @@ export interface InscricaoGateway {
     usuarioId: string
   ): Promise<Inscricao | null>;
   listarPorTorneio(torneioId: string): Promise<Inscricao[]>;
+  listarPorUsuario(usuarioId: string): Promise<Inscricao[]>;
   atualizar(inscricao: Inscricao): Promise<void>;
 }

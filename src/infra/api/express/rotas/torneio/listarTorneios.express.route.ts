@@ -25,12 +25,14 @@ export class ListarTorneiosRota implements Rotas {
 
   public getHandler() {
     return async (
-      _request: Request,
+      request: Request,
       response: Response,
       next: NextFunction
     ): Promise<void> => {
       try {
-        const resultado = await this.listarTorneiosServico.executar({});
+        const resultado = await this.listarTorneiosServico.executar({
+          usuarioId: request.usuario!.id,
+        });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
