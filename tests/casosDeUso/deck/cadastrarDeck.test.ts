@@ -88,6 +88,31 @@ describe("CadastrarDeck", () => {
         expect(resultado.sideboard[0].nome).toBe("sideboard card");
     });
 
+    it("deve chamar o ChatGPT com as cartas normalizadas e o formato correto", async () => {
+        const gateway = criarMockDeckGateway();
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        await uc.executar({
+            nome: "Burn",
+            formato: "Legacy",
+            maindeck: maindeckValido,
+            sideboard: sideboardValido,
+            usuarioId: "user-1",
+            usuarioNome: "Jogador Teste",
+        });
+
+        expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                expect.objectContaining({ nome: "lightning bolt" }),
+            ]),
+            expect.arrayContaining([
+                expect.objectContaining({ nome: "red elemental blast" }),
+            ]),
+            "legacy"
+        );
+    });
+
     it("deve salvar nomeConsolidado como null quando o ChatGPT retorna null", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway({

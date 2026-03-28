@@ -26,7 +26,9 @@ export class ChatGptServico implements ChatGptGateway {
     const prompt =
       `Você é um especialista em Magic: The Gathering. Analise a lista de deck abaixo no formato "${formato}" ` +
       `e retorne APENAS um JSON válido com a chave "nomeConsolidado" contendo o nome de arquétipo mais ` +
-      `conhecido para esse deck (ex: "Burn", "Storm", "Merfolk", "Temur Rhinos", "Mono Red Aggro", etc).\n\n` +
+      `conhecido para esse deck, conforme os nomes utilizados em sites como MTGGoldfish, MTGTop8 e EDHREC ` +
+      `(ex: "Burn", "Storm", "Merfolk", "Temur Rhinos", "Mono Red Aggro", "Atraxa Superfriends", etc).\n\n` +
+      `Priorize o nome exato como aparece nos metagame reports do MTGGoldfish para o formato "${formato}".\n\n` +
       `Maindeck:\n${listaMain}${listaSide}\n\n` +
       `Responda apenas com JSON válido, sem texto adicional. Exemplo: {"nomeConsolidado": "Burn"}`;
 
@@ -45,7 +47,11 @@ export class ChatGptServico implements ChatGptGateway {
         }),
       });
 
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errBody = await response.text().catch(() => "");
+        console.error(`[ChatGptServico] HTTP ${response.status}: ${errBody}`);
+        return null;
+      }
 
       const data = (await response.json()) as {
         choices?: { message?: { content?: string } }[];
@@ -55,7 +61,8 @@ export class ChatGptServico implements ChatGptGateway {
 
       const parsed = JSON.parse(content) as { nomeConsolidado?: string };
       return parsed.nomeConsolidado ?? null;
-    } catch {
+    } catch (err) {
+      console.error("[ChatGptServico] erro:", err);
       return null;
     }
   }
