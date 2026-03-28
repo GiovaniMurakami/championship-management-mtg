@@ -81,6 +81,14 @@ export class InscricaoRepositorio implements InscricaoGateway {
     );
   }
 
+  public async listarPorUsuario(usuarioId: string): Promise<Inscricao[]> {
+    await conectarMongoDB();
+    const docs = await InscricaoModel.find({ usuarioId });
+    return docs.map((doc) =>
+      docParaInscricao(doc as unknown as InscricaoDocument)
+    );
+  }
+
   public async atualizar(inscricao: Inscricao): Promise<void> {
     await conectarMongoDB();
     await InscricaoModel.updateOne(

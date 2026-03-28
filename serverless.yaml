@@ -8,6 +8,7 @@ provider:
     MONGODB_URI: ${env:MONGODB_URI}
     JWT_SECRET: ${env:JWT_SECRET}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
+    CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
 
 build:
   esbuild: false

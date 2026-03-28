@@ -138,10 +138,6 @@ export function ordenarPorDesempate(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Pareamento Swiss (greedy, evita rematches)
-// ---------------------------------------------------------------------------
-
 export function parKey(id1: string, id2: string): string {
   return [id1, id2].sort().join("|");
 }

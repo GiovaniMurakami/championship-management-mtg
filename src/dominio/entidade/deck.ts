@@ -8,6 +8,7 @@ export interface Carta {
 export interface DeckProps {
   id: string;
   nome: string;
+  nomeConsolidado?: string | null;
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
@@ -18,6 +19,7 @@ export interface DeckProps {
 export class Deck {
   public id: string;
   public nome: string;
+  public nomeConsolidado: string | null;
   public formato: string;
   public maindeck: Carta[];
   public sideboard: Carta[];
@@ -27,6 +29,7 @@ export class Deck {
   constructor({
     id,
     nome,
+    nomeConsolidado,
     formato,
     maindeck,
     sideboard,
@@ -35,6 +38,7 @@ export class Deck {
   }: DeckProps) {
     this.id = id;
     this.nome = nome;
+    this.nomeConsolidado = nomeConsolidado ?? null;
     this.formato = formato;
     this.maindeck = maindeck;
     this.sideboard = sideboard;

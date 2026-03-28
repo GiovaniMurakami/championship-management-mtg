@@ -15,7 +15,7 @@ export type InscreverTorneioInputDto = {
 export type InscreverTorneioOutputDto = {
   id: string;
   torneioId: string;
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   checkIn: boolean;
   criadoEm: Date;
 };
@@ -75,17 +75,19 @@ export class InscreverTorneio
     await this.inscricaoGateway.salvar(inscricao);
 
     const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
+    const usuarioNome = usuario?.nome ?? input.usuarioId;
+
     eventosTorneio.emit("participante_inscrito", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
-      usuarioNome: usuario?.nome ?? null,
+      usuarioNome,
       inscricaoId: inscricao.id,
     });
 
     return {
       id: inscricao.id,
       torneioId: inscricao.torneioId,
-      usuarioId: inscricao.usuarioId,
+      usuario: { id: inscricao.usuarioId, nome: usuarioNome },
       checkIn: inscricao.checkIn,
       criadoEm: inscricao.criadoEm,
     };

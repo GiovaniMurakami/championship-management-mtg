@@ -59,7 +59,6 @@ export class RegistrarResultado
       });
     }
 
-    // Apenas os jogadores envolvidos ou o dono do torneio podem registrar
     const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
 
     if (!torneio || torneio.status !== "em_andamento") {
@@ -84,7 +83,6 @@ export class RegistrarResultado
     const v1 = input.vitoriasJogador1;
     const v2 = input.vitoriasJogador2;
 
-    // Validações do resultado BO3: máx 2 vitórias por jogador, máx 3 jogos totais
     if (
       v1 < 0 ||
       v2 < 0 ||

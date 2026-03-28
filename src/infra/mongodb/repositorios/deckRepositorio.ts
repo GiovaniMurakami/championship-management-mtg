@@ -6,6 +6,7 @@ import { conectarMongoDB } from "../conexao";
 interface DeckDocument extends Document {
   id: string;
   nome: string;
+  nomeConsolidado?: string | null;
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
@@ -24,6 +25,7 @@ const cartaSchema = new Schema<Carta>(
 const deckSchema = new Schema<DeckDocument>({
   id: { type: String, required: true, unique: true },
   nome: { type: String, required: true },
+  nomeConsolidado: { type: String, default: null },
   formato: { type: String, required: true },
   maindeck: { type: [cartaSchema], default: [] },
   sideboard: { type: [cartaSchema], default: [] },
@@ -35,8 +37,21 @@ const DeckModel =
   mongoose.models.Deck ||
   mongoose.model<DeckDocument>("Deck", deckSchema);
 
+function docParaDeck(doc: Document): Deck {
+  return new Deck({
+    id: doc.get("id"),
+    nome: doc.get("nome"),
+    nomeConsolidado: doc.get("nomeConsolidado") ?? null,
+    formato: doc.get("formato"),
+    maindeck: doc.get("maindeck"),
+    sideboard: doc.get("sideboard"),
+    usuarioId: doc.get("usuarioId"),
+    criadoEm: doc.get("criadoEm"),
+  });
+}
+
 export class DeckRepositorio implements DeckGateway {
-  private constructor() { }
+  private constructor() {}
 
   public static criar() {
     return new DeckRepositorio();
@@ -47,6 +62,7 @@ export class DeckRepositorio implements DeckGateway {
     await DeckModel.create({
       id: deck.id,
       nome: deck.nome,
+      nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
@@ -59,32 +75,13 @@ export class DeckRepositorio implements DeckGateway {
     await conectarMongoDB();
     const doc = await DeckModel.findOne({ id });
     if (!doc) return null;
-    return new Deck({
-      id: doc.get("id"),
-      nome: doc.get("nome"),
-      formato: doc.get("formato"),
-      maindeck: doc.get("maindeck"),
-      sideboard: doc.get("sideboard"),
-      usuarioId: doc.get("usuarioId"),
-      criadoEm: doc.get("criadoEm"),
-    });
+    return docParaDeck(doc);
   }
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {
     await conectarMongoDB();
     const docs = await DeckModel.find({ usuarioId });
-    return docs.map(
-      (doc) =>
-        new Deck({
-          id: doc.get("id"),
-          nome: doc.get("nome"),
-          formato: doc.get("formato"),
-          maindeck: doc.get("maindeck"),
-          sideboard: doc.get("sideboard"),
-          usuarioId: doc.get("usuarioId"),
-          criadoEm: doc.get("criadoEm"),
-        })
-    );
+    return docs.map(docParaDeck);
   }
 
   public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
@@ -98,18 +95,7 @@ export class DeckRepositorio implements DeckGateway {
       if (filtros.criadoAntes) query.criadoEm.$lte = filtros.criadoAntes;
     }
     const docs = await DeckModel.find(query).sort({ criadoEm: -1 });
-    return docs.map(
-      (doc) =>
-        new Deck({
-          id: doc.get("id"),
-          nome: doc.get("nome"),
-          formato: doc.get("formato"),
-          maindeck: doc.get("maindeck"),
-          sideboard: doc.get("sideboard"),
-          usuarioId: doc.get("usuarioId"),
-          criadoEm: doc.get("criadoEm"),
-        })
-    );
+    return docs.map(docParaDeck);
   }
 
   public async atualizar(deck: Deck): Promise<void> {
@@ -128,18 +114,7 @@ export class DeckRepositorio implements DeckGateway {
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
     await conectarMongoDB();
     const docs = await DeckModel.find({ id: { $in: ids } });
-    return docs.map(
-      (doc) =>
-        new Deck({
-          id: doc.get("id"),
-          nome: doc.get("nome"),
-          formato: doc.get("formato"),
-          maindeck: doc.get("maindeck"),
-          sideboard: doc.get("sideboard"),
-          usuarioId: doc.get("usuarioId"),
-          criadoEm: doc.get("criadoEm"),
-        })
-    );
+    return docs.map(docParaDeck);
   }
 
   public async excluir(id: string): Promise<void> {

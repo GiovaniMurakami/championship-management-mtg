@@ -1,5 +1,6 @@
 import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -17,25 +18,29 @@ export type CadastrarDeckInputDto = {
   maindeck: Carta[];
   sideboard: Carta[];
   usuarioId: string;
+  usuarioNome: string;
 };
 
 export type CadastrarDeckOutputDto = {
   id: string;
   nome: string;
+  nomeConsolidado: string | null;
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
-  usuarioId: string;
+  usuario: { id: string; nome: string };
   criadoEm: Date;
 };
 
 export class CadastrarDeck
-  implements CasoDeUso<CadastrarDeckInputDto, CadastrarDeckOutputDto>
-{
-  private constructor(private readonly deckGateway: DeckGateway) {}
+  implements CasoDeUso<CadastrarDeckInputDto, CadastrarDeckOutputDto> {
+  private constructor(
+    private readonly deckGateway: DeckGateway,
+    private readonly chatGptGateway: ChatGptGateway
+  ) {}
 
-  public static criar(deckGateway: DeckGateway) {
-    return new CadastrarDeck(deckGateway);
+  public static criar(deckGateway: DeckGateway, chatGptGateway: ChatGptGateway) {
+    return new CadastrarDeck(deckGateway, chatGptGateway);
   }
 
   public async executar(
@@ -67,9 +72,18 @@ export class CadastrarDeck
       quantidade: carta.quantidade,
     }));
 
+    const formato = input.formato.toLowerCase().trim();
+
+    const nomeConsolidado = await this.chatGptGateway.obterNomeConsolidado(
+      maindeckNormalizado,
+      sideboardNormalizado,
+      formato
+    );
+
     const deck = Deck.criar({
       nome: input.nome.trim(),
-      formato: input.formato.toLowerCase().trim(),
+      nomeConsolidado,
+      formato,
       maindeck: maindeckNormalizado,
       sideboard: sideboardNormalizado,
       usuarioId: input.usuarioId,
@@ -80,10 +94,11 @@ export class CadastrarDeck
     return {
       id: deck.id,
       nome: deck.nome,
+      nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
-      usuarioId: deck.usuarioId,
+      usuario: { id: deck.usuarioId, nome: input.usuarioNome },
       criadoEm: deck.criadoEm,
     };
   }

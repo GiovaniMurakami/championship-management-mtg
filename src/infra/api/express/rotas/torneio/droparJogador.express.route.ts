@@ -9,7 +9,7 @@ export class DroparJogadorRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly droparJogadorServico: DroparJogador
-  ) {}
+  ) { }
 
   public static criar(droparJogadorServico: DroparJogador) {
     return new DroparJogadorRota(
@@ -33,8 +33,6 @@ export class DroparJogadorRota implements Rotas {
         const requisitanteId = request.usuario!.id;
         const torneioId = request.params.torneioId as string;
 
-        // Se dono mandar body com jogadorId, dropa esse jogador
-        // Se o próprio jogador chamar sem body, dropa a si mesmo
         const jogadorId = request.body.jogadorId ?? requisitanteId;
 
         const resultado = await this.droparJogadorServico.executar({

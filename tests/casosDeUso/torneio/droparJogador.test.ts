@@ -1,7 +1,8 @@
 import { DroparJogador } from "../../../src/casosDeUso/torneio/droparJogador";
-import { criarMockTorneioGateway, criarMockInscricaoGateway } from "../../mocks/gateways";
+import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
+import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 describe("DroparJogador", () => {
     const torneio = new Torneio({
@@ -14,6 +15,8 @@ describe("DroparJogador", () => {
         checkIn: true, checkInRodada: 0, dropped: false,
     });
 
+    const jogador = new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" });
+
     it("deve dropar o próprio jogador com sucesso", async () => {
         const inscricaoGw = criarMockInscricaoGateway({
             buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
@@ -21,6 +24,7 @@ describe("DroparJogador", () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
         );
 
         const resultado = await uc.executar({
@@ -28,6 +32,7 @@ describe("DroparJogador", () => {
         });
 
         expect(resultado.dropped).toBe(true);
+        expect(resultado.jogador).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
@@ -35,6 +40,7 @@ describe("DroparJogador", () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
         );
 
         const resultado = await uc.executar({
@@ -42,12 +48,14 @@ describe("DroparJogador", () => {
         });
 
         expect(resultado.dropped).toBe(true);
+        expect(resultado.jogador.id).toBe("u-1");
     });
 
     it("deve lançar erro se não for o próprio jogador nem o dono", async () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -60,6 +68,7 @@ describe("DroparJogador", () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
             criarMockInscricaoGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -71,6 +80,7 @@ describe("DroparJogador", () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -83,6 +93,7 @@ describe("DroparJogador", () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricaoJaDropada) }),
+            criarMockUsuarioGateway(),
         );
 
         await expect(

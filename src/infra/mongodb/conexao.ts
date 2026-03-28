@@ -15,7 +15,6 @@ export async function conectarMongoDB(): Promise<mongoose.Connection> {
 
   try {
     await mongoose.connect(uri, {
-      // Lambda + Atlas pode oscilar no primeiro handshake DNS/TLS.
       serverSelectionTimeoutMS: 15000,
       connectTimeoutMS: 15000,
       socketTimeoutMS: 30000,

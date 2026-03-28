@@ -9,7 +9,7 @@ export class EscolherDeckTorneioRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly escolherDeckTorneioServico: EscolherDeckTorneio
-  ) {}
+  ) { }
 
   public static criar(escolherDeckTorneioServico: EscolherDeckTorneio) {
     return new EscolherDeckTorneioRota(
@@ -31,6 +31,7 @@ export class EscolherDeckTorneioRota implements Rotas {
     ): Promise<void> => {
       try {
         const usuarioId = request.usuario!.id;
+        const usuarioNome = request.usuario!.nome;
         const torneioId = request.params.torneioId as string;
         const { deckId } = request.body;
 
@@ -42,6 +43,7 @@ export class EscolherDeckTorneioRota implements Rotas {
         const resultado = await this.escolherDeckTorneioServico.executar({
           torneioId,
           usuarioId,
+          usuarioNome,
           deckId,
         });
 

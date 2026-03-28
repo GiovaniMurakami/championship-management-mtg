@@ -19,21 +19,23 @@ interface DeckProps {
   maindeck: Carta[];
   sideboard: Carta[];
   usuarioId: string;
+  nomeConsolidado?: string | null;
   criadoEm?: Date;
 }
 ```
 
 ### Propriedades
 
-| Campo     | Tipo    | Obrigatório | Descrição                                            |
-| --------- | ------- | ----------- | ---------------------------------------------------- |
-| id        | string  | Sim         | Identificador único UUID do deck                     |
-| nome      | string  | Sim         | Nome do deck                                         |
-| formato   | string  | Sim         | Formato do deck (Commander, Standard, Modern, etc.)  |
-| maindeck  | Carta[] | Sim         | Array de cartas do deck principal                    |
-| sideboard | Carta[] | Sim         | Array de cartas do sideboard/banco de reservas       |
-| usuarioId | string  | Sim         | ID do usuário proprietário do deck                   |
-| criadoEm  | Date    | Não         | Data de criação do registro (gerada automaticamente) |
+| Campo           | Tipo           | Obrigatório | Descrição                                                                                       |
+| --------------- | -------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| id              | string         | Sim         | Identificador único UUID do deck                                                                |
+| nome            | string         | Sim         | Nome do deck                                                                                    |
+| formato         | string         | Sim         | Formato do deck (Commander, Standard, Modern, etc.)                                             |
+| maindeck        | Carta[]        | Sim         | Array de cartas do deck principal                                                               |
+| sideboard       | Carta[]        | Sim         | Array de cartas do sideboard/banco de reservas                                                  |
+| usuarioId       | string         | Sim         | ID do usuário proprietário do deck                                                              |
+| nomeConsolidado | string \| null | Não         | Nome de arquétipo identificado via ChatGPT (ex: "Burn", "Storm"). `null` se não identificado.  |
+| criadoEm        | Date           | Não         | Data de criação do registro (gerada automaticamente)                                            |
 
 ### Tipo Carta
 
@@ -89,7 +91,11 @@ Authorization: Bearer {token}
   "formato": "Commander",
   "maindeck": [...],
   "sideboard": [],
-  "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
+  "nomeConsolidado": "Atraxa Superfriends",
   "criadoEm": "2026-03-09T22:00:00.000Z"
 }
 ```
@@ -145,7 +151,11 @@ Authorization: Bearer {token}
   "formato": "Commander",
   "maindeck": [...],
   "sideboard": [],
-  "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
+  "nomeConsolidado": "Atraxa Superfriends",
   "criadoEm": "2026-03-09T22:00:00.000Z"
 }
 ```
@@ -185,6 +195,50 @@ Authorization: Bearer {token}
 
 ---
 
+### GET /deck/:id
+
+Busca um deck pelo seu ID.
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Parâmetros de URL:**
+
+- `id` - ID do deck
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "nome": "Atraxa Superfriends",
+  "formato": "Commander",
+  "maindeck": [
+    {
+      "nome": "Atraxa, Praetors' Voice",
+      "quantidade": 1
+    }
+  ],
+  "sideboard": [],
+  "usuario": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "nome": "João Silva"
+  },
+  "criadoEm": "2026-03-09T22:00:00.000Z"
+}
+```
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token inválido ou ausente
+- `404 Not Found` - Deck não encontrado
+- `500 Internal Server Error` - Erro no servidor
+
+---
+
 ### GET /deck/listar
 
 Lista todos os decks do usuário autenticado.
@@ -216,7 +270,11 @@ Array de decks do usuário:
       }
     ],
     "sideboard": [],
-    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "usuario": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva"
+    },
+    "nomeConsolidado": "Atraxa Superfriends",
     "criadoEm": "2026-03-09T22:00:00.000Z"
   },
   {
@@ -225,7 +283,11 @@ Array de decks do usuário:
     "formato": "Modern",
     "maindeck": [...],
     "sideboard": [],
-    "usuarioId": "550e8400-e29b-41d4-a716-446655440000",
+    "usuario": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva"
+    },
+    "nomeConsolidado": "Burn",
     "criadoEm": "2026-03-08T10:30:00.000Z"
   }
 ]
@@ -250,12 +312,14 @@ Array de decks do usuário:
    - Nome: obrigatório, mínimo 3 caracteres
    - Formato: obrigatório
    - Maindeck: obrigatório, deve conter pelo menos 1 carta
+6. **Nome Consolidado**: Ao cadastrar um deck, o serviço ChatGPT é consultado automaticamente para identificar o arquétipo do deck com base nos nomes usados em sites como MTGGoldfish, MTGTop8 e EDHREC. O campo `nomeConsolidado` será `null` caso a chave de API não esteja configurada ou o arquétipo não seja reconhecido.
 
 ## Casos de Uso
 
 - [CadastrarDeck](../src/casosDeUso/deck/cadastrarDeck.ts) - Registra novo deck
 - [AtualizarDeck](../src/casosDeUso/deck/atualizarDeck.ts) - Atualiza deck existente
 - [ExcluirDeck](../src/casosDeUso/deck/excluirDeck.ts) - Remove deck
+- [BuscarDeck](../src/casosDeUso/deck/buscarDeck.ts) - Busca deck por ID
 - [ListarDecks](../src/casosDeUso/deck/listarDecks.ts) - Lista decks do usuário
 
 ## Gateway
