@@ -7,6 +7,7 @@ describe("Usuario", () => {
             nome: "João",
             email: "joao@email.com",
             senha: "hash123",
+            role: "user" as const,
             telefone: "11999999999",
             nickMTGO: "joaoMTGO",
             nickArena: "joaoArena",
@@ -19,10 +20,34 @@ describe("Usuario", () => {
         expect(usuario.nome).toBe("João");
         expect(usuario.email).toBe("joao@email.com");
         expect(usuario.senha).toBe("hash123");
+        expect(usuario.role).toBe("user");
         expect(usuario.telefone).toBe("11999999999");
         expect(usuario.nickMTGO).toBe("joaoMTGO");
         expect(usuario.nickArena).toBe("joaoArena");
         expect(usuario.criadoEm).toEqual(new Date("2025-01-01"));
+    });
+
+    it("deve definir role como 'user' por padrão", () => {
+        const usuario = new Usuario({
+            id: "id-1",
+            nome: "João",
+            email: "joao@email.com",
+            senha: "hash123",
+        });
+
+        expect(usuario.role).toBe("user");
+    });
+
+    it("deve aceitar role 'admin'", () => {
+        const usuario = new Usuario({
+            id: "id-1",
+            nome: "Admin",
+            email: "admin@email.com",
+            senha: "hash123",
+            role: "admin",
+        });
+
+        expect(usuario.role).toBe("admin");
     });
 
     it("deve definir criadoEm automaticamente quando não informado", () => {
@@ -40,7 +65,7 @@ describe("Usuario", () => {
     });
 
     describe("criar", () => {
-        it("deve gerar id e criadoEm automaticamente", () => {
+        it("deve gerar id e criadoEm automaticamente com role 'user' por padrão", () => {
             const usuario = Usuario.criar({
                 nome: "Maria",
                 email: "maria@email.com",
@@ -52,6 +77,7 @@ describe("Usuario", () => {
             expect(usuario.nome).toBe("Maria");
             expect(usuario.email).toBe("maria@email.com");
             expect(usuario.senha).toBe("senha123");
+            expect(usuario.role).toBe("user");
             expect(usuario.criadoEm).toBeInstanceOf(Date);
             expect(usuario.telefone).toBeUndefined();
             expect(usuario.nickMTGO).toBeUndefined();

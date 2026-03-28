@@ -19,6 +19,7 @@ describe("LoginUsuario", () => {
         nome: "João",
         email: "joao@email.com",
         senha: "hashed",
+        role: "user",
         telefone: "11999",
         nickMTGO: "joaoMTGO",
         nickArena: "joaoArena",
@@ -45,7 +46,27 @@ describe("LoginUsuario", () => {
         expect(resultado.usuario.id).toBe("user-1");
         expect(resultado.usuario.nome).toBe("João");
         expect(resultado.usuario.email).toBe("joao@email.com");
+        expect(resultado.usuario.role).toBe("user");
         expect(resultado.usuario.telefone).toBe("11999");
+    });
+
+    it("deve incluir role 'admin' no token e resposta quando usuário é admin", async () => {
+        const admin = new Usuario({
+            id: "admin-1",
+            nome: "Admin",
+            email: "admin@email.com",
+            senha: "hashed",
+            role: "admin",
+        });
+        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+        const gateway = criarMockUsuarioGateway({
+            buscarPorEmail: jest.fn().mockResolvedValue(admin),
+        });
+        const uc = LoginUsuario.criar(gateway);
+
+        const resultado = await uc.executar({ email: "admin@email.com", senha: "s" });
+
+        expect(resultado.usuario.role).toBe("admin");
     });
 
     it("deve lançar erro se o e-mail não for encontrado", async () => {

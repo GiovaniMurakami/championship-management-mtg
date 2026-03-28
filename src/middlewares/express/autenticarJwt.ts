@@ -5,6 +5,7 @@ type JwtPayload = {
   id: string;
   email: string;
   nome: string;
+  role: string;
 };
 
 export const autenticarJwt = (
@@ -29,7 +30,7 @@ export const autenticarJwt = (
 
   try {
     const payload = jwt.verify(token, jwtSecret) as JwtPayload;
-    req.usuario = { id: payload.id, email: payload.email, nome: payload.nome };
+    req.usuario = { id: payload.id, email: payload.email, nome: payload.nome, role: payload.role || "user" };
     next();
   } catch {
     res.status(401).json({ mensagem: "Token inválido ou expirado." });

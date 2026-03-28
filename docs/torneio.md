@@ -88,7 +88,7 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
                                        [Próxima rodada / Finalizar]
 ```
 
-1. **Dono** cria o torneio (`POST /torneio/criar`)
+1. **Admin** cria o torneio (`POST /torneio/criar`) — requer role `"admin"`
 2. **Jogadores** se inscrevem (`POST /torneio/:id/inscrever`)
 3. **Jogadores** escolhem o deck a qualquer momento (`POST /torneio/:id/deck`)
 4. **Jogadores** fazem check-in — disponível **1 hora antes** do `horario` do torneio (`POST /torneio/:id/checkin`)
@@ -150,6 +150,8 @@ Quando há número ímpar de jogadores, o último colocado no ranking recebe um 
 ### POST /torneio/criar
 
 Cria um novo torneio.
+
+> **🔒 Requer role `admin`.** Além do token JWT, o usuário deve ter a role `"admin"`. Retorna `403` caso contrário.
 
 **Request Body:**
 

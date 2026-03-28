@@ -13,6 +13,7 @@ A API utiliza **JSON Web Tokens (JWT)** para autenticação e autorização de u
 4. Requisições autenticadas → Header: Authorization: Bearer {token}
 5. API valida o token       → Middleware autenticarJwt
 6. Endpoint processa        → Acesso aos dados do usuário via req.usuario
+7. Token próximo de expirar → POST /usuario/refresh-token → Novo token
 ```
 
 ## Estrutura do Token JWT
@@ -23,11 +24,12 @@ O token contém as seguintes informações do usuário:
 
 ```typescript
 {
-  id: string; // UUID do usuário
+  id: string;    // UUID do usuário
   email: string; // Email do usuário
-  nome: string; // Nome do usuário
-  iat: number; // Timestamp de emissão
-  exp: number; // Timestamp de expiração (se configurado)
+  nome: string;  // Nome do usuário
+  role: string;  // Papel do usuário: "user" | "admin"
+  iat: number;   // Timestamp de emissão
+  exp: number;   // Timestamp de expiração
 }
 ```
 
@@ -72,10 +74,41 @@ Content-Type: application/json
   "usuario": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "nome": "João Silva",
-    "email": "joao.silva@email.com"
+    "email": "joao.silva@email.com",
+    "role": "user"
   }
 }
 ```
+
+## Renovar o Token (Refresh)
+
+### POST /usuario/refresh-token
+
+Gera um novo token JWT com expiração renovada. Útil para manter o usuário autenticado sem precisar fazer login novamente.
+
+**Autenticação:** Requer token JWT válido no header `Authorization`.
+
+**Request:**
+
+```bash
+POST /usuario/refresh-token
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+> O novo token é emitido com dados atualizados do banco (incluindo a `role` mais recente) e expira em 24h.
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token ausente, inválido ou expirado
+- `500 Internal Server Error` - Erro no servidor
 
 ## Como Usar o Token
 
@@ -160,6 +193,7 @@ async handler(req: Request, res: Response) {
   const usuarioId = req.usuario.id;      // ID do usuário autenticado
   const email = req.usuario.email;       // Email do usuário
   const nome = req.usuario.nome;         // Nome do usuário
+  const role = req.usuario.role;         // "user" | "admin"
 
   // Usar nos casos de uso
   await cadastrarDeck.execute({
@@ -168,6 +202,33 @@ async handler(req: Request, res: Response) {
   });
 }
 ```
+
+## Autorização por Role (Admin)
+
+Algumas rotas exigem que o usuário tenha a role `"admin"` além de estar autenticado. O middleware `autorizarAdmin` é aplicado após `autenticarJwt` nessas rotas.
+
+```typescript
+// Rota restrita a administradores
+criarTorneioRoute.getMiddlewares = () => [autenticarJwt, autorizarAdmin];
+```
+
+### Erro de Autorização (403)
+
+```json
+{
+  "mensagem": "Acesso restrito a administradores."
+}
+```
+
+### Como promover um usuário a admin
+
+A role é definida diretamente no banco de dados. Para promover um usuário:
+
+```js
+db.usuarios.updateOne({ email: "seu@email.com" }, { $set: { role: "admin" } })
+```
+
+Usuários criados via `POST /usuario/cadastrar` recebem automaticamente a role `"user"`.
 
 ## Erros de Autenticação
 
@@ -209,14 +270,20 @@ Authorization: Bearer token_invalido_ou_expirado
 
 Ocorre quando o token é válido, mas o usuário não tem permissão para a ação:
 
-**Example:** Tentando excluir deck de outro usuário
-
-**Response:**
+**Exemplo 1:** Tentando excluir deck de outro usuário
 
 ```json
 {
   "mensagem": "Você não tem permissão para excluir este deck",
   "erros": ["Apenas o proprietário pode excluir o deck"]
+}
+```
+
+**Exemplo 2:** Tentando criar torneio sem ser admin
+
+```json
+{
+  "mensagem": "Acesso restrito a administradores."
 }
 ```
 
@@ -253,9 +320,9 @@ openssl rand -hex 64
    - Evite `localStorage` para dados muito sensíveis
    - Considere `sessionStorage` para sessões temporárias
 
-2. **Implemente refresh tokens** (futuro)
-   - Tokens de curta duração (15-30 min)
-   - Refresh tokens para renovação
+2. **Renove o token periodicamente**
+   - Use `POST /usuario/refresh-token` antes da expiração (24h)
+   - O novo token traz sempre a `role` atualizada do banco
 
 3. **Validação no cliente**
    - Verifique expiração antes de fazer requisições
@@ -270,13 +337,22 @@ openssl rand -hex 64
 
 ## Endpoints que Requerem Autenticação
 
-| Endpoint              | Método | Autenticação |
-| --------------------- | ------ | ------------ |
-| `/usuario/cadastrar`  | POST   | ❌ Não       |
-| `/usuario/login`      | POST   | ❌ Não       |
-| `/deck/cadastrar`     | POST   | ✅ Sim       |
-| `/deck/atualizar/:id` | PUT    | ✅ Sim       |
-| `/deck/excluir/:id`   | DELETE | ✅ Sim       |
+| Endpoint                    | Método | Autenticação | Role mínima |
+| --------------------------- | ------ | ------------ | ----------- |
+| `/usuario/cadastrar`        | POST   | ❌ Não       | —           |
+| `/usuario/login`            | POST   | ❌ Não       | —           |
+| `/usuario/refresh-token`    | POST   | ✅ Sim       | user        |
+| `/usuario/atualizar`        | PUT    | ✅ Sim       | user        |
+| `/deck/cadastrar`           | POST   | ✅ Sim       | user        |
+| `/deck/atualizar/:id`       | PUT    | ✅ Sim       | user        |
+| `/deck/excluir/:id`         | DELETE | ✅ Sim       | user        |
+| `/deck/listar`              | GET    | ✅ Sim       | user        |
+| `/torneio/criar`            | POST   | ✅ Sim       | **admin**   |
+| `/torneio/listar`           | GET    | ✅ Sim       | user        |
+| `/torneio/:id`              | GET    | ✅ Sim       | user        |
+| `/torneio/:id/inscrever`    | POST   | ✅ Sim       | user        |
+| `/torneio/:id/iniciar`      | POST   | ✅ Sim       | user        |
+| Demais endpoints de torneio | —      | ✅ Sim       | user        |
 
 ## Type Definitions
 
@@ -290,6 +366,7 @@ declare namespace Express {
       id: string;
       email: string;
       nome: string;
+      role: string;
     };
   }
 }
@@ -298,6 +375,8 @@ declare namespace Express {
 ## Referências
 
 - [Middleware autenticarJwt](../src/middlewares/express/autenticarJwt.ts)
+- [Middleware autorizarAdmin](../src/middlewares/express/autorizarAdmin.ts)
 - [Type Definitions](../src/types/express/index.d.ts)
 - [LoginUsuario](../src/casosDeUso/usuario/loginUsuario.ts)
+- [RefreshToken](../src/casosDeUso/usuario/refreshToken.ts)
 - [JWT.io](https://jwt.io/) - Decodificador de tokens JWT
