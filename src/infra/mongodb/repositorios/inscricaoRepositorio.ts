@@ -101,4 +101,17 @@ export class InscricaoRepositorio implements InscricaoGateway {
       }
     );
   }
+
+  public async contarPorTorneios(torneioIds: string[]): Promise<Record<string, number>> {
+    await conectarMongoDB();
+    const resultado = await InscricaoModel.aggregate<{ _id: string; total: number }>([
+      { $match: { torneioId: { $in: torneioIds } } },
+      { $group: { _id: "$torneioId", total: { $sum: 1 } } },
+    ]);
+    const mapa: Record<string, number> = {};
+    for (const item of resultado) {
+      mapa[item._id] = item.total;
+    }
+    return mapa;
+  }
 }

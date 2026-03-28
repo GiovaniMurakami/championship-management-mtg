@@ -17,6 +17,7 @@ export type ListarTorneiosOutputDto = {
     premio?: string;
     criadoEm: Date;
     inscrito: boolean;
+    totalInscritos: number;
   }>;
 };
 
@@ -38,6 +39,10 @@ export class ListarTorneios
     ]);
 
     const torneiosInscritos = new Set(inscricoes.map((i) => i.torneioId));
+    const torneioIds = torneios.map((t) => t.id);
+    const contagemInscritos = torneioIds.length > 0
+      ? await this.inscricaoGateway.contarPorTorneios(torneioIds)
+      : {};
 
     return {
       torneios: torneios.map((t) => ({
@@ -52,6 +57,7 @@ export class ListarTorneios
         premio: t.premio,
         criadoEm: t.criadoEm,
         inscrito: torneiosInscritos.has(t.id),
+        totalInscritos: contagemInscritos[t.id] ?? 0,
       })),
     };
   }
