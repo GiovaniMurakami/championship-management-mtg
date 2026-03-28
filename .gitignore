@@ -4,3 +4,4 @@ build/
 .env
 dist/
 *.js.map
+package-lock.json
