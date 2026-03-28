@@ -49,10 +49,6 @@ export class Partida {
     this.criadoEm = props.criadoEm || new Date();
   }
 
-  /**
-   * Cria uma partida. Byes (jogador2Id = null) são finalizados automaticamente
-   * com resultado 2-0 para o jogador que recebeu o bye.
-   */
   public static criar(
     props: Omit<
       PartidaProps,

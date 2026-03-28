@@ -74,7 +74,6 @@ export class CheckInTorneio
       inscricao.checkIn = true;
       inscricao.checkInRodada = 0;
     } else {
-      // Check-in entre rodadas (em_andamento)
       if (!inscricao.checkIn) {
         throw ErroPersonalizado.criar({
           mensagem: "Você não completou o check-in inicial deste torneio.",

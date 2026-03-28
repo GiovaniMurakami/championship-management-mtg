@@ -16,10 +16,6 @@ import {
   gerarPareamentos,
 } from "./swiss";
 
-// ---------------------------------------------------------------------------
-// Caso de uso
-// ---------------------------------------------------------------------------
-
 export type IniciarProximaRodadaInputDto = {
   torneioId: string;
   donoId: string;
@@ -101,7 +97,6 @@ export class IniciarProximaRodada
       });
     }
 
-    // Verifica se todas as partidas da rodada atual estão finalizadas
     const partidasRodadaAtual =
       await this.partidaGateway.listarPorTorneioERodada(
         input.torneioId,
@@ -118,7 +113,6 @@ export class IniciarProximaRodada
       });
     }
 
-    // Coleta todas as partidas do torneio para cálculo de stats
     const todasPartidas = await this.partidaGateway.listarPorTorneio(
       input.torneioId
     );
@@ -147,7 +141,6 @@ export class IniciarProximaRodada
       statsMap
     );
 
-    // Torneio finalizado?
     if (torneio.rodadaAtual >= torneio.totalRodadas) {
       torneio.status = "finalizado";
       await this.torneioGateway.atualizar(torneio);
@@ -164,7 +157,6 @@ export class IniciarProximaRodada
       return { finalizado: true, classificacao };
     }
 
-    // Monta o histórico de confrontos para evitar rematches
     const historico = new Set<string>();
     for (const p of todasPartidas) {
       if (p.jogador2Id !== null) {
@@ -172,7 +164,6 @@ export class IniciarProximaRodada
       }
     }
 
-    // Gera pareamentos para a próxima rodada
     const proximaRodada = torneio.rodadaAtual + 1;
     const pares = gerarPareamentos(statsOrdenados, historico);
 

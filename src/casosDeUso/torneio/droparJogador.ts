@@ -7,9 +7,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 
 export type DroparJogadorInputDto = {
   torneioId: string;
-  // quem está executando a ação (pode ser o próprio jogador ou o dono)
   requisitanteId: string;
-  // jogador a ser dropado (se o próprio jogador dropar, é o mesmo que requisitanteId)
   jogadorId: string;
 };
 
@@ -54,7 +52,6 @@ export class DroparJogador
       });
     }
 
-    // Apenas o próprio jogador ou o dono do torneio podem dropar
     const ehDono = torneio.donoId === input.requisitanteId;
     const ehProprioJogador = input.requisitanteId === input.jogadorId;
 
