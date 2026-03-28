@@ -50,6 +50,7 @@ export class AtualizarDeckRota implements Rotas {
         const resultado = await this.atualizarDeckServico.executar({
           id,
           usuarioIdRequisitante,
+          isAdmin: request.usuario!.role === "admin",
           usuarioNome,
           nome,
           formato,

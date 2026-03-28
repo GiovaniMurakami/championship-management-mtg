@@ -28,7 +28,7 @@ describe("DroparJogador", () => {
         );
 
         const resultado = await uc.executar({
-            torneioId: "t-1", requisitanteId: "u-1", jogadorId: "u-1",
+            torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1",
         });
 
         expect(resultado.dropped).toBe(true);
@@ -44,14 +44,14 @@ describe("DroparJogador", () => {
         );
 
         const resultado = await uc.executar({
-            torneioId: "t-1", requisitanteId: "dono", jogadorId: "u-1",
+            torneioId: "t-1", requisitanteId: "dono", isAdmin: false, jogadorId: "u-1",
         });
 
         expect(resultado.dropped).toBe(true);
         expect(resultado.jogador.id).toBe("u-1");
     });
 
-    it("deve lançar erro se não for o próprio jogador nem o dono", async () => {
+    it("deve lançar erro se não for o próprio jogador, nem dono, nem admin", async () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
@@ -59,8 +59,26 @@ describe("DroparJogador", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", requisitanteId: "outro", jogadorId: "u-1" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "outro", isAdmin: false, jogadorId: "u-1" })
         ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode dropar qualquer jogador de qualquer torneio", async () => {
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", requisitanteId: "admin-id", isAdmin: true, jogadorId: "u-1",
+        });
+
+        expect(resultado.dropped).toBe(true);
+        expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
     it("deve lançar erro se torneio finalizado", async () => {
@@ -72,7 +90,7 @@ describe("DroparJogador", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", jogadorId: "u-1" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -84,7 +102,7 @@ describe("DroparJogador", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", jogadorId: "u-1" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -97,7 +115,7 @@ describe("DroparJogador", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", jogadorId: "u-1" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" })
         ).rejects.toMatchObject({ status: 400 });
     });
 });

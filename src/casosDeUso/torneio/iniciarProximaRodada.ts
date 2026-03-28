@@ -19,6 +19,7 @@ import {
 export type IniciarProximaRodadaInputDto = {
   torneioId: string;
   donoId: string;
+  isAdmin: boolean;
 };
 
 export type IniciarProximaRodadaOutputDto =
@@ -82,7 +83,7 @@ export class IniciarProximaRodada
       });
     }
 
-    if (torneio.donoId !== input.donoId) {
+    if (torneio.donoId !== input.donoId && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Apenas o dono do torneio pode avançar as rodadas.",
         status: StatusErro.erroProibido,

@@ -37,6 +37,7 @@ export class IniciarTorneioRota implements Rotas {
         const resultado = await this.iniciarTorneioServico.executar({
           torneioId,
           donoId,
+          isAdmin: request.usuario!.role === "admin",
         });
 
         eventosTorneio.emit("rodada_iniciada", {

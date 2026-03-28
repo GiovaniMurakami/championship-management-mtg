@@ -18,6 +18,13 @@ describe("IniciarTorneio", () => {
         new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkIn: true, checkInRodada: 0, dropped: false }),
     ];
 
+    const quatroUsuarios = [
+        new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
+        new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
+        new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@e.com", senha: "s" }),
+        new Usuario({ id: "u-4", nome: "Jogador 4", email: "u4@e.com", senha: "s" }),
+    ];
+
     it("deve iniciar o torneio e criar as partidas da rodada 1", async () => {
         const torneioGw = criarMockTorneioGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }),
@@ -26,18 +33,11 @@ describe("IniciarTorneio", () => {
             listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn),
         });
         const partidaGw = criarMockPartidaGateway();
-        const usuarioGw = criarMockUsuarioGateway({
-            buscarVarios: jest.fn().mockResolvedValue([
-                new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
-                new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
-                new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@e.com", senha: "s" }),
-                new Usuario({ id: "u-4", nome: "Jogador 4", email: "u4@e.com", senha: "s" }),
-            ]),
-        });
+        const usuarioGw = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) });
 
         const uc = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
 
-        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
         expect(resultado.torneioId).toBe("t-1");
         expect(resultado.rodadaAtual).toBe(1);
@@ -57,11 +57,11 @@ describe("IniciarTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "inexistente", donoId: "d" })
+            uc.executar({ torneioId: "inexistente", donoId: "d", isAdmin: false })
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se não for o dono do torneio", async () => {
+    it("deve lançar erro se não for o dono do torneio e não for admin", async () => {
         const uc = IniciarTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }) }),
             criarMockInscricaoGateway(),
@@ -70,8 +70,25 @@ describe("IniciarTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", donoId: "outro" })
+            uc.executar({ torneioId: "t-1", donoId: "outro", isAdmin: false })
         ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode iniciar torneio de outro usuário", async () => {
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }),
+        });
+        const uc = IniciarTorneio.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "admin-id", isAdmin: true });
+
+        expect(resultado.torneioId).toBe("t-1");
+        expect(resultado.rodadaAtual).toBe(1);
     });
 
     it("deve lançar erro se o torneio já foi iniciado", async () => {
@@ -84,7 +101,7 @@ describe("IniciarTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", donoId: "dono-1" })
+            uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -98,7 +115,7 @@ describe("IniciarTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", donoId: "dono-1" })
+            uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -112,15 +129,11 @@ describe("IniciarTorneio", () => {
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(tresJogadores) }),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
-                buscarVarios: jest.fn().mockResolvedValue([
-                    new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
-                    new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
-                    new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@e.com", senha: "s" }),
-                ]),
+                buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 3)),
             }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
         expect(resultado.partidas).toHaveLength(2);
         const byes = resultado.partidas.filter((p) => p.jogador2Id === null);

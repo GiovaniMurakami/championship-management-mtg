@@ -26,6 +26,7 @@ describe("AtualizarDeck", () => {
         const resultado = await uc.executar({
             id: "deck-1",
             usuarioIdRequisitante: "user-1",
+            isAdmin: false,
             usuarioNome: "Jogador Teste",
             nome: "Burn Atualizado",
         });
@@ -40,19 +41,37 @@ describe("AtualizarDeck", () => {
         const uc = AtualizarDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", usuarioNome: "u" })
+            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", isAdmin: false, usuarioNome: "u" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se o usuário não for dono do deck", async () => {
+    it("deve lançar erro se o usuário não for dono do deck e não for admin", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente }),
         });
         const uc = AtualizarDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", usuarioNome: "Outro" })
+            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", isAdmin: false, usuarioNome: "Outro" })
         ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode atualizar deck de outro usuário", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "admin-id",
+            isAdmin: true,
+            usuarioNome: "Admin",
+            nome: "Burn Editado pelo Admin",
+        });
+
+        expect(resultado.nome).toBe("Burn Editado pelo Admin");
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
     it("deve lançar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
@@ -65,6 +84,7 @@ describe("AtualizarDeck", () => {
             uc.executar({
                 id: "deck-1",
                 usuarioIdRequisitante: "user-1",
+                isAdmin: false,
                 usuarioNome: "Jogador Teste",
                 maindeck: [{ nome: "carta", quantidade: 10 }],
             })
@@ -81,6 +101,7 @@ describe("AtualizarDeck", () => {
             uc.executar({
                 id: "deck-1",
                 usuarioIdRequisitante: "user-1",
+                isAdmin: false,
                 usuarioNome: "Jogador Teste",
                 sideboard: [{ nome: "carta", quantidade: 16 }],
             })

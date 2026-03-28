@@ -14,6 +14,7 @@ function totalCartas(cartas: Carta[]): number {
 export type AtualizarDeckInputDto = {
   id: string;
   usuarioIdRequisitante: string;
+  isAdmin: boolean;
   usuarioNome: string;
   nome?: string;
   formato?: string;
@@ -51,7 +52,7 @@ export class AtualizarDeck
       });
     }
 
-    if (deck.usuarioId !== input.usuarioIdRequisitante) {
+    if (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para alterar este deck.",
         status: StatusErro.erroProibido,

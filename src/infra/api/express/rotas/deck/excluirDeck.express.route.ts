@@ -44,6 +44,7 @@ export class ExcluirDeckRota implements Rotas {
         const resultado = await this.excluirDeckServico.executar({
           id,
           usuarioIdRequisitante,
+          isAdmin: request.usuario!.role === "admin",
         });
 
         response.status(200).json(resultado);
