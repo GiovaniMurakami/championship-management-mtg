@@ -12,7 +12,7 @@ export class AtualizarDeckRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly atualizarDeckServico: AtualizarDeck
-  ) {}
+  ) { }
 
   public static criar(atualizarDeckServico: AtualizarDeck) {
     return new AtualizarDeckRota(
@@ -43,12 +43,14 @@ export class AtualizarDeckRota implements Rotas {
       try {
         const id = request.params.id as string;
         const usuarioIdRequisitante = request.usuario!.id;
+        const usuarioNome = request.usuario!.nome;
         const { nome, formato, maindeck, sideboard } =
           request.body as Omit<AtualizarDeckInputDto, "id" | "usuarioIdRequisitante">;
 
         const resultado = await this.atualizarDeckServico.executar({
           id,
           usuarioIdRequisitante,
+          usuarioNome,
           nome,
           formato,
           maindeck,

@@ -26,10 +26,12 @@ describe("AtualizarDeck", () => {
         const resultado = await uc.executar({
             id: "deck-1",
             usuarioIdRequisitante: "user-1",
+            usuarioNome: "Jogador Teste",
             nome: "Burn Atualizado",
         });
 
         expect(resultado.nome).toBe("Burn Atualizado");
+        expect(resultado.usuario).toEqual({ id: "user-1", nome: "Jogador Teste" });
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
@@ -38,7 +40,7 @@ describe("AtualizarDeck", () => {
         const uc = AtualizarDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u" })
+            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", usuarioNome: "u" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -49,7 +51,7 @@ describe("AtualizarDeck", () => {
         const uc = AtualizarDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user" })
+            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", usuarioNome: "Outro" })
         ).rejects.toMatchObject({ status: 403 });
     });
 
@@ -63,6 +65,7 @@ describe("AtualizarDeck", () => {
             uc.executar({
                 id: "deck-1",
                 usuarioIdRequisitante: "user-1",
+                usuarioNome: "Jogador Teste",
                 maindeck: [{ nome: "carta", quantidade: 10 }],
             })
         ).rejects.toMatchObject({ status: 400 });
@@ -78,6 +81,7 @@ describe("AtualizarDeck", () => {
             uc.executar({
                 id: "deck-1",
                 usuarioIdRequisitante: "user-1",
+                usuarioNome: "Jogador Teste",
                 sideboard: [{ nome: "carta", quantidade: 16 }],
             })
         ).rejects.toMatchObject({ status: 400 });

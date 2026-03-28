@@ -24,7 +24,7 @@ describe("autenticarJwt middleware", () => {
     });
 
     it("deve chamar next com payload no req.usuario quando token válido", () => {
-        const payload = { id: "u-1", email: "j@e.com", nome: "João" };
+        const payload = { id: "u-1", email: "j@e.com", nome: "João", role: "user" };
         (jwt.verify as jest.Mock).mockReturnValue(payload);
         req.headers = { authorization: "Bearer valid-token" };
 
@@ -32,6 +32,26 @@ describe("autenticarJwt middleware", () => {
 
         expect(next).toHaveBeenCalledTimes(1);
         expect((req as any).usuario).toEqual(payload);
+    });
+
+    it("deve definir role como 'user' quando não presente no payload", () => {
+        const payload = { id: "u-1", email: "j@e.com", nome: "João" };
+        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        req.headers = { authorization: "Bearer valid-token" };
+
+        autenticarJwt(req as Request, res as Response, next);
+
+        expect((req as any).usuario.role).toBe("user");
+    });
+
+    it("deve propagar role 'admin' do payload", () => {
+        const payload = { id: "u-1", email: "admin@e.com", nome: "Admin", role: "admin" };
+        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        req.headers = { authorization: "Bearer admin-token" };
+
+        autenticarJwt(req as Request, res as Response, next);
+
+        expect((req as any).usuario.role).toBe("admin");
     });
 
     it("deve retornar 401 quando token não informado", () => {

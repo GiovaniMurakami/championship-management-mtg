@@ -1,30 +1,43 @@
 import { ListarTorneios } from "../../../src/casosDeUso/torneio/listarTorneios";
-import { criarMockTorneioGateway } from "../../mocks/gateways";
+import { criarMockTorneioGateway, criarMockInscricaoGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
+import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 
 describe("ListarTorneios", () => {
-    it("deve retornar lista de torneios", async () => {
-        const torneios = [
-            new Torneio({ id: "t1", nome: "T1", horario: new Date(), formato: "legacy", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0 }),
-            new Torneio({ id: "t2", nome: "T2", horario: new Date(), formato: "modern", donoId: "u1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3 }),
-        ];
-        const gateway = criarMockTorneioGateway({
-            listar: jest.fn().mockResolvedValue(torneios),
-        });
-        const uc = ListarTorneios.criar(gateway);
+    const torneios = [
+        new Torneio({ id: "t1", nome: "T1", horario: new Date(), formato: "legacy", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0 }),
+        new Torneio({ id: "t2", nome: "T2", horario: new Date(), formato: "modern", donoId: "u1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3 }),
+    ];
 
-        const resultado = await uc.executar({} as any);
+    it("deve retornar lista de torneios com inscrito=true quando inscrito", async () => {
+        const inscricao = new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u2", checkIn: false, checkInRodada: -1, dropped: false, criadoEm: new Date() });
+        const torneioGateway = criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) });
+        const inscricaoGateway = criarMockInscricaoGateway({ listarPorUsuario: jest.fn().mockResolvedValue([inscricao]) });
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u2" });
 
         expect(resultado.torneios).toHaveLength(2);
-        expect(resultado.torneios[0].nome).toBe("T1");
-        expect(resultado.torneios[1].status).toBe("em_andamento");
+        expect(resultado.torneios[0].inscrito).toBe(true);
+        expect(resultado.torneios[1].inscrito).toBe(false);
+    });
+
+    it("deve retornar inscrito=false para todos quando não inscrito em nenhum", async () => {
+        const torneioGateway = criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u3" });
+
+        expect(resultado.torneios.every((t) => t.inscrito === false)).toBe(true);
     });
 
     it("deve retornar lista vazia", async () => {
-        const gateway = criarMockTorneioGateway();
-        const uc = ListarTorneios.criar(gateway);
+        const torneioGateway = criarMockTorneioGateway();
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
 
-        const resultado = await uc.executar({} as any);
+        const resultado = await uc.executar({ usuarioId: "u1" });
         expect(resultado.torneios).toEqual([]);
     });
 });

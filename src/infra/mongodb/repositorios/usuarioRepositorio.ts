@@ -8,6 +8,7 @@ interface UsuarioDocument extends Document {
   nome: string;
   email: string;
   senha: string;
+  role: string;
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
@@ -19,6 +20,7 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   nome: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   senha: { type: String, required: true },
+  role: { type: String, required: true, default: "user" },
   telefone: { type: String, required: false },
   nickMTGO: { type: String, required: false },
   nickArena: { type: String, required: false },
@@ -43,6 +45,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
       nome: usuario.nome,
       email: usuario.email,
       senha: usuario.senha,
+      role: usuario.role,
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
@@ -61,6 +64,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
       nome: doc.get("nome"),
       email: doc.get("email"),
       senha: doc.get("senha"),
+      role: doc.get("role") || "user",
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
@@ -79,6 +83,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
       nome: doc.get("nome"),
       email: doc.get("email"),
       senha: doc.get("senha"),
+      role: doc.get("role") || "user",
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
@@ -96,6 +101,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
           nome: doc.get("nome"),
           email: doc.get("email"),
           senha: doc.get("senha"),
+          role: doc.get("role") || "user",
           telefone: doc.get("telefone"),
           nickMTGO: doc.get("nickMTGO"),
           nickArena: doc.get("nickArena"),

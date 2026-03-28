@@ -12,6 +12,7 @@ interface UsuarioProps {
   nome: string;
   email: string;
   senha: string;
+  role?: "user" | "admin";
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
@@ -21,16 +22,17 @@ interface UsuarioProps {
 
 ### Propriedades
 
-| Campo     | Tipo   | Obrigatório | Descrição                                            |
-| --------- | ------ | ----------- | ---------------------------------------------------- |
-| id        | string | Sim         | Identificador único UUID do usuário                  |
-| nome      | string | Sim         | Nome completo do usuário                             |
-| email     | string | Sim         | Email único do usuário (usado para login)            |
-| senha     | string | Sim         | Senha criptografada com bcrypt                       |
-| telefone  | string | Não         | Telefone de contato do usuário                       |
-| nickMTGO  | string | Não         | Username do Magic: The Gathering Online              |
-| nickArena | string | Não         | Username do Magic: The Gathering Arena               |
-| criadoEm  | Date   | Não         | Data de criação do registro (gerada automaticamente) |
+| Campo     | Tipo   | Obrigatório | Descrição                                                              |
+| --------- | ------ | ----------- | ---------------------------------------------------------------------- |
+| id        | string | Sim         | Identificador único UUID do usuário                                    |
+| nome      | string | Sim         | Nome completo do usuário                                               |
+| email     | string | Sim         | Email único do usuário (usado para login)                              |
+| senha     | string | Sim         | Senha criptografada com bcrypt                                         |
+| role      | string | Não         | Papel do usuário: `"user"` (padrão) ou `"admin"`. Definido no banco.   |
+| telefone  | string | Não         | Telefone de contato do usuário                                         |
+| nickMTGO  | string | Não         | Username do Magic: The Gathering Online                                |
+| nickArena | string | Não         | Username do Magic: The Gathering Arena                                 |
+| criadoEm  | Date   | Não         | Data de criação do registro (gerada automaticamente)                   |
 
 ## Endpoints
 
@@ -88,6 +90,7 @@ Realiza autenticação do usuário e retorna token JWT.
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "nome": "João Silva",
     "email": "joao.silva@email.com",
+    "role": "user",
     "telefone": "+55 11 98765-4321",
     "nickMTGO": "joaomagic",
     "nickArena": "JoaoMTG#12345"
@@ -95,12 +98,42 @@ Realiza autenticação do usuário e retorna token JWT.
 }
 ```
 
-> **Nota:** Os campos `telefone`, `nickMTGO` e `nickArena` só aparecem se foram previamente cadastrados pelo usuário. Caso contrário, não estarão presentes ou terão valor `null`.
+> **Nota:** Os campos `telefone`, `nickMTGO` e `nickArena` só aparecem se foram previamente cadastrados. O campo `role` sempre estará presente (`"user"` ou `"admin"`).
 
 **Erros Possíveis:**
 
 - `401 Unauthorized` - Email ou senha incorretos
 - `400 Bad Request` - Dados inválidos
+- `500 Internal Server Error` - Erro no servidor
+
+---
+
+---
+
+### POST /usuario/refresh-token
+
+Gera um novo token JWT com expiração renovada para o usuário autenticado.
+
+**Autenticação:** Requer token válido no header `Authorization`.
+
+**Request:**
+
+```bash
+POST /usuario/refresh-token
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Erros Possíveis:**
+
+- `401 Unauthorized` - Token ausente, inválido ou expirado
 - `500 Internal Server Error` - Erro no servidor
 
 ---

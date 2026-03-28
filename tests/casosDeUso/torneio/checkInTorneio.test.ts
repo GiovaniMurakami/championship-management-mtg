@@ -27,10 +27,11 @@ describe("CheckInTorneio", () => {
             inscricaoGw,
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
 
         expect(resultado.checkIn).toBe(true);
         expect(resultado.checkInRodada).toBe(0);
+        expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
@@ -50,7 +51,7 @@ describe("CheckInTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -69,7 +70,7 @@ describe("CheckInTorneio", () => {
             criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
         expect(resultado.checkInRodada).toBe(2);
     });
 
@@ -85,7 +86,7 @@ describe("CheckInTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -101,7 +102,7 @@ describe("CheckInTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -121,7 +122,7 @@ describe("CheckInTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
         ).rejects.toMatchObject({ status: 400 });
     });
 });

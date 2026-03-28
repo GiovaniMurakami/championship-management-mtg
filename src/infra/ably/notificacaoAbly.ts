@@ -1,9 +1,6 @@
 import Ably from "ably";
 import { eventosTorneio } from "../socketio/eventosTorneio";
 
-// Canal por torneio: "torneio-{torneioId}"
-// O cliente assina esse canal com ably-js
-
 export class NotificacaoAbly {
   private ably: Ably.Rest;
   private static publicacoesPendentes = new Set<Promise<void>>();

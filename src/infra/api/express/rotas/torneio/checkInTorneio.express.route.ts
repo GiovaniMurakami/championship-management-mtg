@@ -9,7 +9,7 @@ export class CheckInTorneioRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly checkInTorneioServico: CheckInTorneio
-  ) {}
+  ) { }
 
   public static criar(checkInTorneioServico: CheckInTorneio) {
     return new CheckInTorneioRota(
@@ -31,11 +31,13 @@ export class CheckInTorneioRota implements Rotas {
     ): Promise<void> => {
       try {
         const usuarioId = request.usuario!.id;
+        const usuarioNome = request.usuario!.nome;
         const torneioId = request.params.torneioId as string;
 
         const resultado = await this.checkInTorneioServico.executar({
           torneioId,
           usuarioId,
+          usuarioNome,
         });
 
         response.status(200).json(resultado);

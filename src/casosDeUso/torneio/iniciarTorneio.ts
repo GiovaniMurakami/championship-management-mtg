@@ -90,7 +90,6 @@ export class IniciarTorneio
     torneio.totalRodadas = totalRodadas;
     await this.torneioGateway.atualizar(torneio);
 
-    // Rodada 1: embaralhamento aleatório
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn.map((i) => i.usuarioId);
     const usuarios = await this.usuarioGateway.buscarVarios(jogadores);

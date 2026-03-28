@@ -36,9 +36,9 @@ describe("MeuHistoricoTorneio", () => {
 
         expect(resultado.partidas).toHaveLength(2);
         expect(resultado.partidas[0].resultado).toBe("vitoria");
-        expect(resultado.partidas[0].oponenteNome).toBe("Maria");
+        expect(resultado.partidas[0].oponente?.nome).toBe("Maria");
         expect(resultado.partidas[1].resultado).toBe("vitoria");
-        expect(resultado.partidas[1].oponenteNome).toBe("Pedro");
+        expect(resultado.partidas[1].oponente?.nome).toBe("Pedro");
     });
 
     it("deve identificar bye corretamente", async () => {
@@ -57,7 +57,7 @@ describe("MeuHistoricoTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
         expect(resultado.partidas[0].resultado).toBe("bye");
-        expect(resultado.partidas[0].oponenteId).toBeNull();
+        expect(resultado.partidas[0].oponente).toBeNull();
     });
 
     it("deve identificar derrota corretamente", async () => {

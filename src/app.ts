@@ -1,9 +1,11 @@
 import { CadastrarUsuario } from "./casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "./casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "./casosDeUso/usuario/atualizarUsuario";
+import { RefreshToken } from "./casosDeUso/usuario/refreshToken";
 import { CadastrarDeck } from "./casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "./casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "./casosDeUso/deck/excluirDeck";
+import { BuscarDeck } from "./casosDeUso/deck/buscarDeck";
 import { ListarDecks } from "./casosDeUso/deck/listarDecks";
 import { CriarTorneio } from "./casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "./casosDeUso/torneio/inscreverTorneio";
@@ -23,9 +25,11 @@ import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "./infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "./infra/api/express/rotas/usuario/atualizarUsuario.express.route";
+import { RefreshTokenRota } from "./infra/api/express/rotas/usuario/refreshToken.express.route";
 import { CadastrarDeckRota } from "./infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "./infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "./infra/api/express/rotas/deck/excluirDeck.express.route";
+import { BuscarDeckRota } from "./infra/api/express/rotas/deck/buscarDeck.express.route";
 import { ListarDecksRota } from "./infra/api/express/rotas/deck/listarDecks.express.route";
 import { CriarTorneioRota } from "./infra/api/express/rotas/torneio/criarTorneio.express.route";
 import { InscreverTorneioRota } from "./infra/api/express/rotas/torneio/inscreverTorneio.express.route";
@@ -45,6 +49,7 @@ import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
 import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepositorio";
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
+import { ChatGptServico } from "./infra/services/chatGptServico";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -63,10 +68,13 @@ export function app() {
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
   const loginUsuario = LoginUsuario.criar(repositorios.usuario);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
-  const cadastrarDeck = CadastrarDeck.criar(repositorios.deck);
+  const refreshToken = RefreshToken.criar(repositorios.usuario);
+  const chatGptServico = ChatGptServico.criar();
+  const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
-  const listarDecks = ListarDecks.criar(repositorios.deck);
+  const buscarDeck = BuscarDeck.criar(repositorios.deck, repositorios.usuario);
+  const listarDecks = ListarDecks.criar(repositorios.deck, repositorios.usuario);
 
   const criarTorneio = CriarTorneio.criar(repositorios.torneio);
   const inscreverTorneio = InscreverTorneio.criar(
@@ -101,9 +109,10 @@ export function app() {
   );
   const droparJogador = DroparJogador.criar(
     repositorios.torneio,
-    repositorios.inscricao
+    repositorios.inscricao,
+    repositorios.usuario
   );
-  const listarTorneios = ListarTorneios.criar(repositorios.torneio);
+  const listarTorneios = ListarTorneios.criar(repositorios.torneio, repositorios.inscricao);
   const buscarTorneio = BuscarTorneio.criar(
     repositorios.torneio,
     repositorios.inscricao,
@@ -130,9 +139,11 @@ export function app() {
   const cadastrarUsuarioRota = CadastrarUsuarioRota.criar(cadastrarUsuario);
   const loginUsuarioRota = LoginUsuarioRota.criar(loginUsuario);
   const atualizarUsuarioRota = AtualizarUsuarioRota.criar(atualizarUsuario);
+  const refreshTokenRota = RefreshTokenRota.criar(refreshToken);
   const cadastrarDeckRota = CadastrarDeckRota.criar(cadastrarDeck);
   const atualizarDeckRota = AtualizarDeckRota.criar(atualizarDeck);
   const excluirDeckRota = ExcluirDeckRota.criar(excluirDeck);
+  const buscarDeckRota = BuscarDeckRota.criar(buscarDeck);
   const listarDecksRota = ListarDecksRota.criar(listarDecks);
 
   const criarTorneioRota = CriarTorneioRota.criar(criarTorneio);
@@ -158,10 +169,12 @@ export function app() {
     cadastrarUsuarioRota,
     loginUsuarioRota,
     atualizarUsuarioRota,
+    refreshTokenRota,
     cadastrarDeckRota,
     atualizarDeckRota,
     excluirDeckRota,
     listarDecksRota,
+    buscarDeckRota,
     criarTorneioRota,
     inscreverTorneioRota,
     checkInTorneioRota,

@@ -16,6 +16,7 @@ export type LoginUsuarioOutputDto = {
     id: string;
     nome: string;
     email: string;
+    role: string;
     telefone?: string;
     nickMTGO?: string;
     nickArena?: string;
@@ -66,6 +67,7 @@ export class LoginUsuario
         id: usuario.id,
         email: usuario.email,
         nome: usuario.nome,
+        role: usuario.role,
       },
       jwtSecret,
       { expiresIn: "24h" }
@@ -77,6 +79,7 @@ export class LoginUsuario
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        role: usuario.role,
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
