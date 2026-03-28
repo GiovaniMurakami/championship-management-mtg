@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Inscricao } from "../../../dominio/entidade/inscricao";
 import { InscricaoGateway } from "../../../dominio/gateway/inscricaoGateway";
-import { conectarMongoDB } from "../conexao";
+import { BaseRepositorio } from "./baseRepositorio";
 
 interface InscricaoDocument extends Document {
   id: string;
@@ -42,15 +42,15 @@ function docParaInscricao(doc: InscricaoDocument): Inscricao {
   });
 }
 
-export class InscricaoRepositorio implements InscricaoGateway {
-  private constructor() {}
+export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGateway {
+  private constructor() { super(); }
 
   public static criar() {
     return new InscricaoRepositorio();
   }
 
   public async salvar(inscricao: Inscricao): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await InscricaoModel.create({
       id: inscricao.id,
       torneioId: inscricao.torneioId,
@@ -67,14 +67,14 @@ export class InscricaoRepositorio implements InscricaoGateway {
     torneioId: string,
     usuarioId: string
   ): Promise<Inscricao | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await InscricaoModel.findOne({ torneioId, usuarioId });
     if (!doc) return null;
     return docParaInscricao(doc as unknown as InscricaoDocument);
   }
 
   public async listarPorTorneio(torneioId: string): Promise<Inscricao[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await InscricaoModel.find({ torneioId });
     return docs.map((doc) =>
       docParaInscricao(doc as unknown as InscricaoDocument)
@@ -82,7 +82,7 @@ export class InscricaoRepositorio implements InscricaoGateway {
   }
 
   public async listarPorUsuario(usuarioId: string): Promise<Inscricao[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await InscricaoModel.find({ usuarioId });
     return docs.map((doc) =>
       docParaInscricao(doc as unknown as InscricaoDocument)
@@ -90,7 +90,7 @@ export class InscricaoRepositorio implements InscricaoGateway {
   }
 
   public async atualizar(inscricao: Inscricao): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await InscricaoModel.updateOne(
       { id: inscricao.id },
       {
@@ -103,7 +103,7 @@ export class InscricaoRepositorio implements InscricaoGateway {
   }
 
   public async contarPorTorneios(torneioIds: string[]): Promise<Record<string, number>> {
-    await conectarMongoDB();
+    await this.conectar();
     const resultado = await InscricaoModel.aggregate<{ _id: string; total: number }>([
       { $match: { torneioId: { $in: torneioIds } } },
       { $group: { _id: "$torneioId", total: { $sum: 1 } } },

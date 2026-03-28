@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Partida, StatusPartida } from "../../../dominio/entidade/partida";
 import { PartidaGateway } from "../../../dominio/gateway/partidaGateway";
-import { conectarMongoDB } from "../conexao";
+import { BaseRepositorio } from "./baseRepositorio";
 
 interface PartidaDocument extends Document {
   id: string;
@@ -57,15 +57,15 @@ function docParaPartida(doc: PartidaDocument): Partida {
   });
 }
 
-export class PartidaRepositorio implements PartidaGateway {
-  private constructor() { }
+export class PartidaRepositorio extends BaseRepositorio implements PartidaGateway {
+  private constructor() { super(); }
 
   public static criar() {
     return new PartidaRepositorio();
   }
 
   public async salvar(partida: Partida): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await PartidaModel.create({
       id: partida.id,
       torneioId: partida.torneioId,
@@ -84,7 +84,7 @@ export class PartidaRepositorio implements PartidaGateway {
   }
 
   public async salvarVarias(partidas: Partida[]): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await PartidaModel.insertMany(
       partidas.map((p) => ({
         id: p.id,
@@ -105,14 +105,14 @@ export class PartidaRepositorio implements PartidaGateway {
   }
 
   public async buscarPorId(id: string): Promise<Partida | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await PartidaModel.findOne({ id });
     if (!doc) return null;
     return docParaPartida(doc as unknown as PartidaDocument);
   }
 
   public async listarPorTorneio(torneioId: string): Promise<Partida[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await PartidaModel.find({ torneioId }).sort({ rodada: 1 });
     return docs.map((doc) => docParaPartida(doc as unknown as PartidaDocument));
   }
@@ -121,7 +121,7 @@ export class PartidaRepositorio implements PartidaGateway {
     torneioId: string,
     rodada: number
   ): Promise<Partida[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await PartidaModel.find({ torneioId, rodada });
     return docs.map((doc) => docParaPartida(doc as unknown as PartidaDocument));
   }
@@ -130,7 +130,7 @@ export class PartidaRepositorio implements PartidaGateway {
     torneioId: string,
     usuarioId: string
   ): Promise<Partida[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await PartidaModel.find({
       torneioId,
       $or: [{ jogador1Id: usuarioId }, { jogador2Id: usuarioId }],
@@ -139,7 +139,7 @@ export class PartidaRepositorio implements PartidaGateway {
   }
 
   public async atualizar(partida: Partida): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await PartidaModel.updateOne(
       { id: partida.id },
       {

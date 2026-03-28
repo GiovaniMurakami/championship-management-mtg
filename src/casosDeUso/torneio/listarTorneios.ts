@@ -2,7 +2,11 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { CasoDeUso } from "../casoDeUso";
 
-export type ListarTorneiosInputDto = { usuarioId: string };
+export type ListarTorneiosInputDto = {
+  usuarioId: string;
+  limite?: number;
+  offset?: number;
+};
 
 export type ListarTorneiosOutputDto = {
   torneios: Array<{
@@ -19,6 +23,9 @@ export type ListarTorneiosOutputDto = {
     inscrito: boolean;
     totalInscritos: number;
   }>;
+  total: number;
+  limite: number;
+  offset: number;
 };
 
 export class ListarTorneios
@@ -32,9 +39,10 @@ export class ListarTorneios
     return new ListarTorneios(torneioGateway, inscricaoGateway);
   }
 
-  public async executar({ usuarioId }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
-    const [torneios, inscricoes] = await Promise.all([
-      this.torneioGateway.listar(),
+  public async executar({ usuarioId, limite = 20, offset = 0 }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+    const [torneios, total, inscricoes] = await Promise.all([
+      this.torneioGateway.listar({ limite, offset }),
+      this.torneioGateway.listarTotal(),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
 
@@ -59,6 +67,9 @@ export class ListarTorneios
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,
       })),
+      total,
+      limite,
+      offset,
     };
   }
 }

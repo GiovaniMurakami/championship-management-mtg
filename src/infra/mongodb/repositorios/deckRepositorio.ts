@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, FilterQuery } from "mongoose";
 import { Carta, Deck } from "../../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../../dominio/gateway/deckGateway";
-import { conectarMongoDB } from "../conexao";
+import { BaseRepositorio } from "./baseRepositorio";
 
 interface DeckDocument extends Document {
   id: string;
@@ -50,15 +50,15 @@ function docParaDeck(doc: Document): Deck {
   });
 }
 
-export class DeckRepositorio implements DeckGateway {
-  private constructor() {}
+export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
+  private constructor() { super(); }
 
   public static criar() {
     return new DeckRepositorio();
   }
 
   public async salvar(deck: Deck): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await DeckModel.create({
       id: deck.id,
       nome: deck.nome,
@@ -72,20 +72,20 @@ export class DeckRepositorio implements DeckGateway {
   }
 
   public async buscarPorId(id: string): Promise<Deck | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await DeckModel.findOne({ id });
     if (!doc) return null;
     return docParaDeck(doc);
   }
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await DeckModel.find({ usuarioId });
     return docs.map(docParaDeck);
   }
 
   public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
     if (filtros.formato) query.formato = { $regex: filtros.formato, $options: "i" };
@@ -99,7 +99,7 @@ export class DeckRepositorio implements DeckGateway {
   }
 
   public async atualizar(deck: Deck): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await DeckModel.updateOne(
       { id: deck.id },
       {
@@ -112,13 +112,13 @@ export class DeckRepositorio implements DeckGateway {
   }
 
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await DeckModel.find({ id: { $in: ids } });
     return docs.map(docParaDeck);
   }
 
   public async excluir(id: string): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await DeckModel.deleteOne({ id });
   }
 }

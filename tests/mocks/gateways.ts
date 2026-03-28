@@ -34,6 +34,7 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         salvar: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
         listar: jest.fn().mockResolvedValue([]),
+        listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),
         ...overrides,
     };

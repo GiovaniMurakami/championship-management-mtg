@@ -2,6 +2,7 @@ import { CadastrarUsuario } from "./casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "./casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "./casosDeUso/usuario/atualizarUsuario";
 import { RefreshToken } from "./casosDeUso/usuario/refreshToken";
+import { LogoutUsuario } from "./casosDeUso/usuario/logoutUsuario";
 import { CadastrarDeck } from "./casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "./casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "./casosDeUso/deck/excluirDeck";
@@ -26,6 +27,7 @@ import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastra
 import { LoginUsuarioRota } from "./infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "./infra/api/express/rotas/usuario/atualizarUsuario.express.route";
 import { RefreshTokenRota } from "./infra/api/express/rotas/usuario/refreshToken.express.route";
+import { LogoutUsuarioRota } from "./infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { CadastrarDeckRota } from "./infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "./infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "./infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -49,6 +51,7 @@ import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
 import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepositorio";
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
+import { TokenBlacklistRepositorio } from "./infra/mongodb/repositorios/tokenBlacklistRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
 import dotenv from "dotenv";
 
@@ -63,12 +66,14 @@ export function app() {
     torneio: TorneioRepositorio.criar(),
     inscricao: InscricaoRepositorio.criar(),
     partida: PartidaRepositorio.criar(),
+    tokenBlacklist: TokenBlacklistRepositorio.criar(),
   };
 
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
   const loginUsuario = LoginUsuario.criar(repositorios.usuario);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario);
+  const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
@@ -140,6 +145,7 @@ export function app() {
   const loginUsuarioRota = LoginUsuarioRota.criar(loginUsuario);
   const atualizarUsuarioRota = AtualizarUsuarioRota.criar(atualizarUsuario);
   const refreshTokenRota = RefreshTokenRota.criar(refreshToken);
+  const logoutUsuarioRota = LogoutUsuarioRota.criar(logoutUsuario);
   const cadastrarDeckRota = CadastrarDeckRota.criar(cadastrarDeck);
   const atualizarDeckRota = AtualizarDeckRota.criar(atualizarDeck);
   const excluirDeckRota = ExcluirDeckRota.criar(excluirDeck);
@@ -170,6 +176,7 @@ export function app() {
     loginUsuarioRota,
     atualizarUsuarioRota,
     refreshTokenRota,
+    logoutUsuarioRota,
     cadastrarDeckRota,
     atualizarDeckRota,
     excluirDeckRota,

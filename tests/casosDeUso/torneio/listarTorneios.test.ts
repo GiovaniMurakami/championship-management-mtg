@@ -11,7 +11,10 @@ describe("ListarTorneios", () => {
 
     it("deve retornar lista de torneios com inscrito=true quando inscrito", async () => {
         const inscricao = new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u2", checkIn: false, checkInRodada: -1, dropped: false, criadoEm: new Date() });
-        const torneioGateway = criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) });
+        const torneioGateway = criarMockTorneioGateway({
+            listar: jest.fn().mockResolvedValue(torneios),
+            listarTotal: jest.fn().mockResolvedValue(2),
+        });
         const inscricaoGateway = criarMockInscricaoGateway({
             listarPorUsuario: jest.fn().mockResolvedValue([inscricao]),
             contarPorTorneios: jest.fn().mockResolvedValue({ t1: 3, t2: 5 }),
@@ -25,6 +28,9 @@ describe("ListarTorneios", () => {
         expect(resultado.torneios[0].totalInscritos).toBe(3);
         expect(resultado.torneios[1].inscrito).toBe(false);
         expect(resultado.torneios[1].totalInscritos).toBe(5);
+        expect(resultado.total).toBe(2);
+        expect(resultado.limite).toBe(20);
+        expect(resultado.offset).toBe(0);
     });
 
     it("deve retornar inscrito=false para todos quando não inscrito em nenhum", async () => {
@@ -45,5 +51,17 @@ describe("ListarTorneios", () => {
 
         const resultado = await uc.executar({ usuarioId: "u1" });
         expect(resultado.torneios).toEqual([]);
+        expect(resultado.total).toBe(0);
+    });
+
+    it("deve repassar limite e offset ao gateway", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        await uc.executar({ usuarioId: "u1", limite: 5, offset: 10 });
+
+        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10 });
     });
 });

@@ -1,5 +1,10 @@
 import { Carta } from "../../dominio/entidade/deck";
 import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
+import { logger } from "../../helpers/logger";
+import { comRetry } from "../../helpers/retry";
+
+const TENTATIVAS = 3;
+const DELAY_INICIAL_MS = 500;
 
 export class ChatGptServico implements ChatGptGateway {
   private constructor(private readonly apiKey: string) {}
@@ -33,37 +38,44 @@ export class ChatGptServico implements ChatGptGateway {
       `Responda apenas com JSON válido, sem texto adicional. Exemplo: {"nomeConsolidado": "Burn"}`;
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: prompt }],
-          response_format: { type: "json_object" },
-          max_tokens: 50,
-        }),
-      });
-
-      if (!response.ok) {
-        const errBody = await response.text().catch(() => "");
-        console.error(`[ChatGptServico] HTTP ${response.status}: ${errBody}`);
-        return null;
-      }
-
-      const data = (await response.json()) as {
-        choices?: { message?: { content?: string } }[];
-      };
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) return null;
-
-      const parsed = JSON.parse(content) as { nomeConsolidado?: string };
-      return parsed.nomeConsolidado ?? null;
+      return await comRetry(
+        () => this.chamarApi(prompt),
+        TENTATIVAS,
+        DELAY_INICIAL_MS
+      );
     } catch (err) {
-      console.error("[ChatGptServico] erro:", err);
+      logger.error({ err }, "[ChatGptServico] falhou após todas as tentativas");
       return null;
     }
+  }
+
+  private async chamarApi(prompt: string): Promise<string | null> {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 50,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => "");
+      throw new Error(`HTTP ${response.status}: ${errBody}`);
+    }
+
+    const data = (await response.json()) as {
+      choices?: { message?: { content?: string } }[];
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+
+    const parsed = JSON.parse(content) as { nomeConsolidado?: string };
+    return parsed.nomeConsolidado ?? null;
   }
 }

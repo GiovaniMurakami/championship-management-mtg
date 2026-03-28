@@ -1,5 +1,10 @@
 import Ably from "ably";
 import { eventosTorneio } from "../socketio/eventosTorneio";
+import { logger } from "../../helpers/logger";
+import { comRetry } from "../../helpers/retry";
+
+const TENTATIVAS = 3;
+const DELAY_INICIAL_MS = 200;
 
 export class NotificacaoAbly {
   private ably: Ably.Rest;
@@ -20,8 +25,14 @@ export class NotificacaoAbly {
 
   private publicar(torneioId: string, evento: string, payload: unknown) {
     const canal = `torneio-${torneioId}`;
-    const p: Promise<void> = this.ably.channels.get(canal).publish(evento, payload).then(() => undefined)
-      .catch((err) => console.error(`[Ably] erro ao publicar ${evento} no canal ${canal}:`, err))
+    const p: Promise<void> = comRetry(
+      () => this.ably.channels.get(canal).publish(evento, payload).then(() => undefined),
+      TENTATIVAS,
+      DELAY_INICIAL_MS
+    )
+      .catch((err) =>
+        logger.error({ err, canal, evento }, "[Ably] falhou após todas as tentativas")
+      )
       .finally(() => NotificacaoAbly.publicacoesPendentes.delete(p));
     NotificacaoAbly.publicacoesPendentes.add(p);
   }

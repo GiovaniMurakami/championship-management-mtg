@@ -1,22 +1,18 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { ListarTorneios } from "../../../../../casosDeUso/torneio/listarTorneios";
+import { LogoutUsuario } from "../../../../../casosDeUso/usuario/logoutUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 
-export class ListarTorneiosRota implements Rotas {
+export class LogoutUsuarioRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly listarTorneiosServico: ListarTorneios
+    private readonly logoutServico: LogoutUsuario
   ) {}
 
-  public static criar(listarTorneiosServico: ListarTorneios) {
-    return new ListarTorneiosRota(
-      "/torneio/listar",
-      HttpMethod.GET,
-      listarTorneiosServico
-    );
+  public static criar(logoutServico: LogoutUsuario) {
+    return new LogoutUsuarioRota("/usuario/logout", HttpMethod.POST, logoutServico);
   }
 
   public getCaminho(): string { return this.caminho; }
@@ -24,19 +20,11 @@ export class ListarTorneiosRota implements Rotas {
   public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
 
   public getHandler() {
-    return async (
-      request: Request,
-      response: Response,
-      next: NextFunction
-    ): Promise<void> => {
+    return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
-        const limite = request.query.limite ? Number(request.query.limite) : undefined;
-        const offset = request.query.offset ? Number(request.query.offset) : undefined;
-        const resultado = await this.listarTorneiosServico.executar({
-          usuarioId: request.usuario!.id,
-          limite,
-          offset,
-        });
+        const authHeader = request.headers["authorization"];
+        const token = authHeader?.replace("Bearer ", "") ?? "";
+        const resultado = await this.logoutServico.executar({ token });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
