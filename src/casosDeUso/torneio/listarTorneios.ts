@@ -19,6 +19,14 @@ export type ListarTorneiosOutputDto = {
     rodadaAtual: number;
     totalRodadas: number;
     premio?: string;
+    bannerUrl?: string;
+    linkBanner?: string;
+    somRodada?: string;
+    maxJogadores?: number;
+    maxRodadas?: number;
+    corteTop?: number;
+    linkLive?: string;
+    emCorte: boolean;
     criadoEm: Date;
     inscrito: boolean;
     totalInscritos: number;
@@ -63,6 +71,14 @@ export class ListarTorneios
         rodadaAtual: t.rodadaAtual,
         totalRodadas: t.totalRodadas,
         premio: t.premio,
+        bannerUrl: t.bannerUrl,
+        linkBanner: t.linkBanner,
+        somRodada: t.somRodada,
+        maxJogadores: t.maxJogadores,
+        maxRodadas: t.maxRodadas,
+        corteTop: t.corteTop,
+        linkLive: t.linkLive,
+        emCorte: t.emCorte,
         criadoEm: t.criadoEm,
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,

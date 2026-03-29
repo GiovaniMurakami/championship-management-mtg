@@ -20,6 +20,14 @@ export type BuscarTorneioOutputDto = {
   rodadaAtual: number;
   totalRodadas: number;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
+  emCorte: boolean;
   totalInscritos: number;
   totalCheckin: number;
   criadoEm: Date;
@@ -93,6 +101,14 @@ export class BuscarTorneio
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       premio: torneio.premio,
+      bannerUrl: torneio.bannerUrl,
+      linkBanner: torneio.linkBanner,
+      somRodada: torneio.somRodada,
+      maxJogadores: torneio.maxJogadores,
+      maxRodadas: torneio.maxRodadas,
+      corteTop: torneio.corteTop,
+      linkLive: torneio.linkLive,
+      emCorte: torneio.emCorte,
       totalInscritos,
       totalCheckin,
       criadoEm: torneio.criadoEm,

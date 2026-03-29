@@ -84,7 +84,7 @@ export class IniciarTorneio
       });
     }
 
-    const totalRodadas = Math.ceil(Math.log2(comCheckIn.length));
+    const totalRodadas = torneio.maxRodadas ?? Math.ceil(Math.log2(comCheckIn.length));
 
     torneio.status = "em_andamento";
     torneio.rodadaAtual = 1;

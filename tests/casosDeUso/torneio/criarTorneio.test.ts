@@ -37,4 +37,31 @@ describe("CriarTorneio", () => {
 
         expect(resultado.premio).toBeUndefined();
     });
+
+    it("deve criar torneio com todos os campos opcionais", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "Grand Prix",
+            horario: new Date("2025-09-01T10:00:00Z"),
+            formato: "Modern",
+            donoId: "user-1",
+            bannerUrl: " https://cdn.example.com/banner.png ",
+            linkBanner: " https://evento.example.com ",
+            somRodada: " round-start.mp3 ",
+            maxJogadores: 64,
+            maxRodadas: 6,
+            corteTop: 8,
+            linkLive: " https://youtube.com/live/abc ",
+        });
+
+        expect(resultado.bannerUrl).toBe("https://cdn.example.com/banner.png");
+        expect(resultado.linkBanner).toBe("https://evento.example.com");
+        expect(resultado.somRodada).toBe("round-start.mp3");
+        expect(resultado.maxJogadores).toBe(64);
+        expect(resultado.maxRodadas).toBe(6);
+        expect(resultado.corteTop).toBe(8);
+        expect(resultado.linkLive).toBe("https://youtube.com/live/abc");
+    });
 });

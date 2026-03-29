@@ -58,6 +58,41 @@ describe("InscreverTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
+    it("deve lançar erro se o torneio atingiu o limite de jogadores", async () => {
+        const torneioLotado = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+            maxJogadores: 8,
+        });
+
+        const uc = InscreverTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioLotado) }),
+            criarMockInscricaoGateway({ contarPorTorneios: jest.fn().mockResolvedValue({ "t-1": 8 }) }),
+            criarMockUsuarioGateway(),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-novo" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve inscrever quando ainda há vagas no limite", async () => {
+        const torneioComVaga = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+            maxJogadores: 8,
+        });
+
+        const uc = InscreverTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioComVaga) }),
+            criarMockInscricaoGateway({ contarPorTorneios: jest.fn().mockResolvedValue({ "t-1": 7 }) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-novo", nome: "Novo", email: "n@e.com", senha: "s" })) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-novo" });
+        expect(resultado.torneioId).toBe("t-1");
+    });
+
     it("deve lançar erro se o jogador já estiver inscrito", async () => {
         const inscricaoExistente = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",

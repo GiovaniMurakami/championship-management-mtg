@@ -13,6 +13,14 @@ interface TorneioDocument extends Document {
   rodadaAtual: number;
   totalRodadas: number;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
+  emCorte: boolean;
   criadoEm: Date;
 }
 
@@ -26,6 +34,14 @@ const torneioSchema = new Schema<TorneioDocument>({
   rodadaAtual: { type: Number, required: true, default: 0 },
   totalRodadas: { type: Number, required: true, default: 0 },
   premio: { type: String },
+  bannerUrl: { type: String },
+  linkBanner: { type: String },
+  somRodada: { type: String },
+  maxJogadores: { type: Number },
+  maxRodadas: { type: Number },
+  corteTop: { type: Number },
+  linkLive: { type: String },
+  emCorte: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -44,6 +60,14 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     rodadaAtual: doc.get("rodadaAtual"),
     totalRodadas: doc.get("totalRodadas"),
     premio: doc.get("premio") ?? undefined,
+    bannerUrl: doc.get("bannerUrl") ?? undefined,
+    linkBanner: doc.get("linkBanner") ?? undefined,
+    somRodada: doc.get("somRodada") ?? undefined,
+    maxJogadores: doc.get("maxJogadores") ?? undefined,
+    maxRodadas: doc.get("maxRodadas") ?? undefined,
+    corteTop: doc.get("corteTop") ?? undefined,
+    linkLive: doc.get("linkLive") ?? undefined,
+    emCorte: doc.get("emCorte") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -67,6 +91,14 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       premio: torneio.premio,
+      bannerUrl: torneio.bannerUrl,
+      linkBanner: torneio.linkBanner,
+      somRodada: torneio.somRodada,
+      maxJogadores: torneio.maxJogadores,
+      maxRodadas: torneio.maxRodadas,
+      corteTop: torneio.corteTop,
+      linkLive: torneio.linkLive,
+      emCorte: torneio.emCorte,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -104,6 +136,14 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
         premio: torneio.premio,
+        bannerUrl: torneio.bannerUrl,
+        linkBanner: torneio.linkBanner,
+        somRodada: torneio.somRodada,
+        maxJogadores: torneio.maxJogadores,
+        maxRodadas: torneio.maxRodadas,
+        corteTop: torneio.corteTop,
+        linkLive: torneio.linkLive,
+        emCorte: torneio.emCorte,
       }
     );
   }
