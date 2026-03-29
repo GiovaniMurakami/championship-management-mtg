@@ -1,6 +1,5 @@
 import { Carta } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
-import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -18,6 +17,7 @@ export type AtualizarDeckInputDto = {
   isAdmin: boolean;
   usuarioNome: string;
   nome?: string;
+  nomeConsolidado?: string | null;
   formato?: string;
   maindeck?: Carta[];
   sideboard?: Carta[];
@@ -36,13 +36,10 @@ export type AtualizarDeckOutputDto = {
 
 export class AtualizarDeck
   implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto> {
-  private constructor(
-    private readonly deckGateway: DeckGateway,
-    private readonly chatGptGateway: ChatGptGateway
-  ) { }
+  private constructor(private readonly deckGateway: DeckGateway) { }
 
-  public static criar(deckGateway: DeckGateway, chatGptGateway: ChatGptGateway) {
-    return new AtualizarDeck(deckGateway, chatGptGateway);
+  public static criar(deckGateway: DeckGateway) {
+    return new AtualizarDeck(deckGateway);
   }
 
   public async executar(
@@ -65,6 +62,7 @@ export class AtualizarDeck
     }
 
     if (input.nome !== undefined) deck.nome = input.nome.trim();
+    if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
     if (input.formato !== undefined) deck.formato = input.formato.toLowerCase().trim();
     if (input.maindeck !== undefined) {
       deck.maindeck = input.maindeck.map((carta) => ({
@@ -77,14 +75,6 @@ export class AtualizarDeck
         nome: carta.nome.toLowerCase().trim(),
         quantidade: carta.quantidade,
       }));
-    }
-
-    if (input.maindeck !== undefined || input.sideboard !== undefined) {
-      deck.nomeConsolidado = await this.chatGptGateway.obterNomeConsolidado(
-        deck.maindeck,
-        deck.sideboard,
-        deck.formato
-      );
     }
 
     const totalMaindeck = totalCartas(deck.maindeck);

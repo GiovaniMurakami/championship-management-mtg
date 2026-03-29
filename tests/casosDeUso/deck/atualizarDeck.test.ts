@@ -1,5 +1,5 @@
 import { AtualizarDeck } from "../../../src/casosDeUso/deck/atualizarDeck";
-import { criarMockDeckGateway, criarMockChatGptGateway } from "../../mocks/gateways";
+import { criarMockDeckGateway } from "../../mocks/gateways";
 import { Deck, Carta } from "../../../src/dominio/entidade/deck";
 
 describe("AtualizarDeck", () => {
@@ -22,8 +22,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const chatGptGateway = criarMockChatGptGateway();
-        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
+        const uc = AtualizarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -38,54 +37,61 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("não deve recalcular nomeConsolidado se maindeck e sideboard não forem alterados", async () => {
+    it("deve atualizar o nomeConsolidado diretamente", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const chatGptGateway = criarMockChatGptGateway();
-        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
+        const uc = AtualizarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             id: "deck-1",
             usuarioIdRequisitante: "user-1",
             isAdmin: false,
             usuarioNome: "Jogador Teste",
-            nome: "Burn Atualizado",
+            nomeConsolidado: "4C Omnath",
         });
 
-        expect(chatGptGateway.obterNomeConsolidado).not.toHaveBeenCalled();
-        expect(resultado.nomeConsolidado).toBe("Mono Red Burn");
+        expect(resultado.nomeConsolidado).toBe("4C Omnath");
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("deve recalcular nomeConsolidado ao atualizar o maindeck", async () => {
+    it("deve permitir limpar o nomeConsolidado enviando null", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const chatGptGateway = criarMockChatGptGateway({
-            obterNomeConsolidado: jest.fn().mockResolvedValue("Stompy"),
-        });
-        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
-
-        const novoMaindeck: Carta[] = [
-            { nome: "llanowar elves", quantidade: 4 },
-            { nome: "forest", quantidade: 56 },
-        ];
+        const uc = AtualizarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             id: "deck-1",
             usuarioIdRequisitante: "user-1",
             isAdmin: false,
             usuarioNome: "Jogador Teste",
-            maindeck: novoMaindeck,
+            nomeConsolidado: null,
         });
 
-        expect(chatGptGateway.obterNomeConsolidado).toHaveBeenCalledTimes(1);
-        expect(resultado.nomeConsolidado).toBe("Stompy");
+        expect(resultado.nomeConsolidado).toBeNull();
+    });
+
+    it("não deve alterar nomeConsolidado se não for enviado", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            nome: "Outro Nome",
+        });
+
+        expect(resultado.nomeConsolidado).toBe("Mono Red Burn");
     });
 
     it("deve lançar erro se o deck não for encontrado", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
+        const uc = AtualizarDeck.criar(gateway);
 
         await expect(
             uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", isAdmin: false, usuarioNome: "u" })
@@ -96,7 +102,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente }),
         });
-        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
+        const uc = AtualizarDeck.criar(gateway);
 
         await expect(
             uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", isAdmin: false, usuarioNome: "Outro" })
@@ -107,7 +113,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
+        const uc = AtualizarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -125,7 +131,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
+        const uc = AtualizarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -142,7 +148,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
+        const uc = AtualizarDeck.criar(gateway);
 
         await expect(
             uc.executar({
