@@ -44,7 +44,7 @@ export class AtualizarDeckRota implements Rotas {
         const id = request.params.id as string;
         const usuarioIdRequisitante = request.usuario!.id;
         const usuarioNome = request.usuario!.nome;
-        const { nome, formato, maindeck, sideboard } =
+        const { nome, nomeConsolidado, formato, maindeck, sideboard } =
           request.body as Omit<AtualizarDeckInputDto, "id" | "usuarioIdRequisitante">;
 
         const resultado = await this.atualizarDeckServico.executar({
@@ -53,6 +53,7 @@ export class AtualizarDeckRota implements Rotas {
           isAdmin: request.usuario!.role === "admin",
           usuarioNome,
           nome,
+          nomeConsolidado,
           formato,
           maindeck,
           sideboard,
