@@ -11,4 +11,5 @@ export interface TorneioGateway {
   listar(filtros?: FiltrosListarTorneios): Promise<Torneio[]>;
   listarTotal(): Promise<number>;
   atualizar(torneio: Torneio): Promise<void>;
+  excluir(id: string): Promise<void>;
 }

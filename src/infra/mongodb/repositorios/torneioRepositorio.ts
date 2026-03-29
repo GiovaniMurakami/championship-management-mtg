@@ -124,6 +124,11 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     return TorneioModel.countDocuments();
   }
 
+  public async excluir(id: string): Promise<void> {
+    await this.conectar();
+    await TorneioModel.deleteOne({ id });
+  }
+
   public async atualizar(torneio: Torneio): Promise<void> {
     await this.conectar();
     await TorneioModel.updateOne(

@@ -4,6 +4,7 @@ import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
 import { ChatGptGateway } from "../../src/dominio/gateway/chatGptGateway";
+import { LigaGateway } from "../../src/dominio/gateway/ligaGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -36,6 +37,18 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),
+        excluir: jest.fn(),
+        ...overrides,
+    };
+}
+
+export function criarMockLigaGateway(overrides: Partial<LigaGateway> = {}): LigaGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorId: jest.fn().mockResolvedValue(null),
+        listar: jest.fn().mockResolvedValue([]),
+        atualizar: jest.fn(),
+        excluir: jest.fn(),
         ...overrides,
     };
 }
