@@ -76,7 +76,7 @@ export function app() {
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
-  const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
+  const atualizarDeck = AtualizarDeck.criar(repositorios.deck, chatGptServico);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
   const buscarDeck = BuscarDeck.criar(repositorios.deck, repositorios.usuario);
   const listarDecks = ListarDecks.criar(repositorios.deck, repositorios.usuario);

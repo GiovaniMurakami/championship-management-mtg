@@ -1,5 +1,6 @@
 import { Carta } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -25,6 +26,7 @@ export type AtualizarDeckInputDto = {
 export type AtualizarDeckOutputDto = {
   id: string;
   nome: string;
+  nomeConsolidado: string | null;
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
@@ -34,10 +36,13 @@ export type AtualizarDeckOutputDto = {
 
 export class AtualizarDeck
   implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto> {
-  private constructor(private readonly deckGateway: DeckGateway) { }
+  private constructor(
+    private readonly deckGateway: DeckGateway,
+    private readonly chatGptGateway: ChatGptGateway
+  ) { }
 
-  public static criar(deckGateway: DeckGateway) {
-    return new AtualizarDeck(deckGateway);
+  public static criar(deckGateway: DeckGateway, chatGptGateway: ChatGptGateway) {
+    return new AtualizarDeck(deckGateway, chatGptGateway);
   }
 
   public async executar(
@@ -74,6 +79,14 @@ export class AtualizarDeck
       }));
     }
 
+    if (input.maindeck !== undefined || input.sideboard !== undefined) {
+      deck.nomeConsolidado = await this.chatGptGateway.obterNomeConsolidado(
+        deck.maindeck,
+        deck.sideboard,
+        deck.formato
+      );
+    }
+
     const totalMaindeck = totalCartas(deck.maindeck);
     if (totalMaindeck < MINIMO_MAINDECK) {
       throw ErroPersonalizado.criar({
@@ -95,6 +108,7 @@ export class AtualizarDeck
     return {
       id: deck.id,
       nome: deck.nome,
+      nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,

@@ -1,5 +1,5 @@
 import { AtualizarDeck } from "../../../src/casosDeUso/deck/atualizarDeck";
-import { criarMockDeckGateway } from "../../mocks/gateways";
+import { criarMockDeckGateway, criarMockChatGptGateway } from "../../mocks/gateways";
 import { Deck, Carta } from "../../../src/dominio/entidade/deck";
 
 describe("AtualizarDeck", () => {
@@ -11,6 +11,7 @@ describe("AtualizarDeck", () => {
     const deckExistente = new Deck({
         id: "deck-1",
         nome: "Burn",
+        nomeConsolidado: "Mono Red Burn",
         formato: "legacy",
         maindeck: maindeckValido,
         sideboard: [{ nome: "red elemental blast", quantidade: 3 }],
@@ -21,7 +22,8 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const chatGptGateway = criarMockChatGptGateway();
+        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -36,9 +38,54 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
+    it("não deve recalcular nomeConsolidado se maindeck e sideboard não forem alterados", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
+        });
+        const chatGptGateway = criarMockChatGptGateway();
+        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            nome: "Burn Atualizado",
+        });
+
+        expect(chatGptGateway.obterNomeConsolidado).not.toHaveBeenCalled();
+        expect(resultado.nomeConsolidado).toBe("Mono Red Burn");
+    });
+
+    it("deve recalcular nomeConsolidado ao atualizar o maindeck", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
+        });
+        const chatGptGateway = criarMockChatGptGateway({
+            obterNomeConsolidado: jest.fn().mockResolvedValue("Stompy"),
+        });
+        const uc = AtualizarDeck.criar(gateway, chatGptGateway);
+
+        const novoMaindeck: Carta[] = [
+            { nome: "llanowar elves", quantidade: 4 },
+            { nome: "forest", quantidade: 56 },
+        ];
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            maindeck: novoMaindeck,
+        });
+
+        expect(chatGptGateway.obterNomeConsolidado).toHaveBeenCalledTimes(1);
+        expect(resultado.nomeConsolidado).toBe("Stompy");
+    });
+
     it("deve lançar erro se o deck não for encontrado", async () => {
         const gateway = criarMockDeckGateway();
-        const uc = AtualizarDeck.criar(gateway);
+        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
 
         await expect(
             uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", isAdmin: false, usuarioNome: "u" })
@@ -49,7 +96,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente }),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
 
         await expect(
             uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", isAdmin: false, usuarioNome: "Outro" })
@@ -60,7 +107,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -78,7 +125,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
 
         await expect(
             uc.executar({
@@ -95,7 +142,7 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue({ ...deckExistente, maindeck: [...deckExistente.maindeck], sideboard: [...deckExistente.sideboard] }),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const uc = AtualizarDeck.criar(gateway, criarMockChatGptGateway());
 
         await expect(
             uc.executar({

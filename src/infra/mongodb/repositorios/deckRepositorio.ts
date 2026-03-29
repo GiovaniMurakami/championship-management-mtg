@@ -104,6 +104,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       { id: deck.id },
       {
         nome: deck.nome,
+        nomeConsolidado: deck.nomeConsolidado,
         formato: deck.formato,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
