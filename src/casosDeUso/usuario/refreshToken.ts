@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
+import { TokenBlacklistGateway } from "../../dominio/gateway/tokenBlacklistGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 
 export type RefreshTokenInputDto = {
   usuarioId: string;
+  tokenAtual: string;
 };
 
 export type RefreshTokenOutputDto = {
@@ -15,10 +17,16 @@ export type RefreshTokenOutputDto = {
 export class RefreshToken
   implements CasoDeUso<RefreshTokenInputDto, RefreshTokenOutputDto>
 {
-  private constructor(private readonly usuarioGateway: UsuarioGateway) {}
+  private constructor(
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly tokenBlacklistGateway: TokenBlacklistGateway
+  ) {}
 
-  public static criar(usuarioGateway: UsuarioGateway) {
-    return new RefreshToken(usuarioGateway);
+  public static criar(
+    usuarioGateway: UsuarioGateway,
+    tokenBlacklistGateway: TokenBlacklistGateway
+  ) {
+    return new RefreshToken(usuarioGateway, tokenBlacklistGateway);
   }
 
   public async executar(
@@ -41,6 +49,8 @@ export class RefreshToken
         status: StatusErro.erroServidor,
       });
     }
+
+    await this.tokenBlacklistGateway.adicionar(input.tokenAtual, new Date(Date.now() + 30 * 60 * 1000));
 
     const token = jwt.sign(
       {

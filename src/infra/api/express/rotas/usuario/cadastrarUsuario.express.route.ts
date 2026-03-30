@@ -51,6 +51,17 @@ export class CadastrarUsuarioRota implements Rotas {
           return;
         }
 
+        const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!emailValido) {
+          response.status(400).json({ mensagem: "E-mail inválido." });
+          return;
+        }
+
+        if (senha.length < 8) {
+          response.status(400).json({ mensagem: "A senha deve ter no mínimo 8 caracteres." });
+          return;
+        }
+
         const resultado = await this.cadastrarUsuarioServico.executar({
           nome,
           email,

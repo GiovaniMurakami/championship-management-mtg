@@ -1,4 +1,5 @@
 import { UsuarioGateway } from "../../src/dominio/gateway/usuarioGateway";
+import { TokenBlacklistGateway } from "../../src/dominio/gateway/tokenBlacklistGateway";
 import { DeckGateway, FiltrosListarDecks } from "../../src/dominio/gateway/deckGateway";
 import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
@@ -83,6 +84,14 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
 export function criarMockChatGptGateway(overrides: Partial<ChatGptGateway> = {}): ChatGptGateway {
     return {
         obterNomeConsolidado: jest.fn().mockResolvedValue("Burn"),
+        ...overrides,
+    };
+}
+
+export function criarMockTokenBlacklistGateway(overrides: Partial<TokenBlacklistGateway> = {}): TokenBlacklistGateway {
+    return {
+        adicionar: jest.fn(),
+        existe: jest.fn().mockResolvedValue(false),
         ...overrides,
     };
 }
