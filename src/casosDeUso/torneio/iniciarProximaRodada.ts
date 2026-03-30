@@ -122,7 +122,6 @@ export class IniciarProximaRodada
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
     );
-    // Deck map completo para uso nas rodadas de corte (independe de check-in)
     const deckMapCompleto = new Map(inscricoes.map((i) => [i.usuarioId, i.deckId]));
 
     const inscricoesComCheckIn = inscricoes.filter(
@@ -133,7 +132,6 @@ export class IniciarProximaRodada
     const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
     const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
 
-    // Validação de check-in só se aplica fora do corte
     if (!torneio.emCorte && jogadoresIds.length < 2) {
       throw ErroPersonalizado.criar({
         mensagem: `Apenas ${jogadoresIds.length} jogador(es) fez check-in para a próxima rodada. São necessários pelo menos 2.`,
@@ -141,7 +139,6 @@ export class IniciarProximaRodada
       });
     }
 
-    // No corte, usar todos que jogaram para manter standings corretos
     const idsParaStats = torneio.emCorte
       ? Array.from(new Set(todasPartidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])))
       : jogadoresIds;
@@ -152,7 +149,6 @@ export class IniciarProximaRodada
       statsMap
     );
 
-    // ── Transição para o corte: último round Swiss concluído e corte configurado ──
     if (torneio.rodadaAtual >= torneio.totalRodadas && torneio.corteTop && !torneio.emCorte) {
       if (statsOrdenados.length < torneio.corteTop) {
         throw ErroPersonalizado.criar({
@@ -165,11 +161,9 @@ export class IniciarProximaRodada
       const rodadasCorte = Math.log2(torneio.corteTop); // top8=3, top4=2, top2=1, top16=4
       const proximaRodada = torneio.rodadaAtual + 1;
 
-      // Nomes para o top N (podem não estar no usuarioNomeMap se não fizeram check-in)
       const topNUsuarios = await this.usuarioGateway.buscarVarios(topNIds);
       const topNNomeMap = new Map(topNUsuarios.map((u) => [u.id, u.nome]));
 
-      // Bracket: seed 1 vs seed N, seed 2 vs seed N-1, etc.
       const n = topNIds.length;
       const novasPartidas: Partida[] = [];
       for (let i = 0; i < n / 2; i++) {
@@ -212,7 +206,6 @@ export class IniciarProximaRodada
       };
     }
 
-    // ── Finalização: último round concluído (Swiss sem corte, ou corte terminado) ──
     if (torneio.rodadaAtual >= torneio.totalRodadas) {
       torneio.status = "finalizado";
       await this.torneioGateway.atualizar(torneio);
@@ -229,14 +222,12 @@ export class IniciarProximaRodada
       return { finalizado: true, classificacao };
     }
 
-    // ── Próxima rodada de corte: eliminar perdedores e parear vencedores ──
     if (torneio.emCorte) {
       const vencedoresIds = partidasRodadaAtual.map((p) => {
         if (p.jogador2Id === null) return p.jogador1Id; // bye automático
         return p.vitoriasJogador1 >= p.vitoriasJogador2 ? p.jogador1Id : p.jogador2Id;
       });
 
-      // Ordenar vencedores por standings Swiss (melhor seed primeiro)
       const vencedoresOrdenados = statsOrdenados
         .filter((s) => vencedoresIds.includes(s.usuarioId))
         .map((s) => s.usuarioId);
@@ -245,7 +236,6 @@ export class IniciarProximaRodada
       const vencedoresNomeMap = new Map(vencedoresUsuarios.map((u) => [u.id, u.nome]));
 
       const proximaRodada = torneio.rodadaAtual + 1;
-      // Pareamento sequencial por seed: top1 vs top2, top3 vs top4, etc.
       const novasPartidas: Partida[] = [];
       for (let i = 0; i < vencedoresOrdenados.length; i += 2) {
         const j1 = vencedoresOrdenados[i];
@@ -285,7 +275,6 @@ export class IniciarProximaRodada
       };
     }
 
-    // ── Próxima rodada Swiss ──
     const historico = new Set<string>();
     for (const p of todasPartidas) {
       if (p.jogador2Id !== null) {

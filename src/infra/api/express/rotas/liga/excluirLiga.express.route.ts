@@ -9,7 +9,7 @@ export class ExcluirLigaRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly excluirLigaServico: ExcluirLiga
-  ) {}
+  ) { }
 
   public static criar(excluirLigaServico: ExcluirLiga) {
     return new ExcluirLigaRota("/liga/:id", HttpMethod.DELETE, excluirLigaServico);
@@ -26,7 +26,7 @@ export class ExcluirLigaRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id;
+        const id = request.params.id as string;
         const requisitanteId = request.usuario!.id;
 
         const resultado = await this.excluirLigaServico.executar({

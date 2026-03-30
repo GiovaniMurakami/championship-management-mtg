@@ -9,7 +9,7 @@ export class RankingLigaRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly rankingLigaServico: RankingLiga
-  ) {}
+  ) { }
 
   public static criar(rankingLigaServico: RankingLiga) {
     return new RankingLigaRota("/liga/:id/ranking", HttpMethod.GET, rankingLigaServico);
@@ -26,7 +26,7 @@ export class RankingLigaRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const ligaId = request.params.id;
+        const ligaId = request.params.id as string;
         const resultado = await this.rankingLigaServico.executar({ ligaId });
         response.status(200).json(resultado);
       } catch (error) {

@@ -9,7 +9,7 @@ export class AlterarLigaRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly alterarLigaServico: AlterarLiga
-  ) {}
+  ) { }
 
   public static criar(alterarLigaServico: AlterarLiga) {
     return new AlterarLigaRota("/liga/:id", HttpMethod.PUT, alterarLigaServico);
@@ -26,7 +26,7 @@ export class AlterarLigaRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id;
+        const id = request.params.id as string;
         const requisitanteId = request.usuario!.id;
         const { nome, descricao, torneioIds } = request.body;
 

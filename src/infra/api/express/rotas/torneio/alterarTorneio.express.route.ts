@@ -9,7 +9,7 @@ export class AlterarTorneioRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly alterarTorneioServico: AlterarTorneio
-  ) {}
+  ) { }
 
   public static criar(alterarTorneioServico: AlterarTorneio) {
     return new AlterarTorneioRota("/torneio/:id", HttpMethod.PUT, alterarTorneioServico);
@@ -26,7 +26,7 @@ export class AlterarTorneioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id;
+        const id = request.params.id as string;
         const requisitanteId = request.usuario!.id;
         const {
           nome, horario, formato, premio,

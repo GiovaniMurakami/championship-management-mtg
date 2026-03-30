@@ -9,7 +9,7 @@ export class BuscarLigaRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly buscarLigaServico: BuscarLiga
-  ) {}
+  ) { }
 
   public static criar(buscarLigaServico: BuscarLiga) {
     return new BuscarLigaRota("/liga/:id", HttpMethod.GET, buscarLigaServico);
@@ -26,7 +26,7 @@ export class BuscarLigaRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id;
+        const id = request.params.id as string;
         const resultado = await this.buscarLigaServico.executar({ id });
         response.status(200).json(resultado);
       } catch (error) {
