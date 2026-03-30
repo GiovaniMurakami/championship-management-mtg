@@ -1,10 +1,11 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   CadastrarUsuario,
   CadastrarUsuarioInputDto,
 } from "../../../../../casosDeUso/usuario/cadastrarUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { authRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class CadastrarUsuarioRota implements Rotas {
   private constructor(
@@ -27,6 +28,10 @@ export class CadastrarUsuarioRota implements Rotas {
 
   public getMetodo(): HttpMethod {
     return this.metodo;
+  }
+
+  public getMiddlewares(): RequestHandler[] {
+    return [authRateLimiter];
   }
 
   public getHandler() {

@@ -37,6 +37,7 @@ export class IniciarProximaRodadaRota implements Rotas {
         const resultado = await this.iniciarProximaRodadaServico.executar({
           torneioId,
           donoId,
+          isAdmin: request.usuario!.role === "admin",
         });
 
         if (!resultado.finalizado) {

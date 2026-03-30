@@ -12,6 +12,14 @@ export interface TorneioProps {
   rodadaAtual: number;
   totalRodadas: number;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
+  emCorte?: boolean;
   criadoEm?: Date;
 }
 
@@ -25,6 +33,14 @@ export class Torneio {
   public rodadaAtual: number;
   public totalRodadas: number;
   public premio?: string;
+  public bannerUrl?: string;
+  public linkBanner?: string;
+  public somRodada?: string;
+  public maxJogadores?: number;
+  public maxRodadas?: number;
+  public corteTop?: number;
+  public linkLive?: string;
+  public emCorte: boolean = false;
   public criadoEm: Date;
 
   constructor(props: TorneioProps) {
@@ -37,6 +53,14 @@ export class Torneio {
     this.rodadaAtual = props.rodadaAtual;
     this.totalRodadas = props.totalRodadas;
     this.premio = props.premio;
+    this.bannerUrl = props.bannerUrl;
+    this.linkBanner = props.linkBanner;
+    this.somRodada = props.somRodada;
+    this.maxJogadores = props.maxJogadores;
+    this.maxRodadas = props.maxRodadas;
+    this.corteTop = props.corteTop;
+    this.linkLive = props.linkLive;
+    this.emCorte = props.emCorte ?? false;
     this.criadoEm = props.criadoEm || new Date();
   }
 

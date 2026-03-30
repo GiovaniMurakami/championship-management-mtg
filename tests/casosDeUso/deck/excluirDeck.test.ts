@@ -18,7 +18,7 @@ describe("ExcluirDeck", () => {
         });
         const uc = ExcluirDeck.criar(gateway);
 
-        const resultado = await uc.executar({ id: "deck-1", usuarioIdRequisitante: "user-1" });
+        const resultado = await uc.executar({ id: "deck-1", usuarioIdRequisitante: "user-1", isAdmin: false });
 
         expect(resultado.mensagem).toBe("Deck excluído com sucesso.");
         expect(gateway.excluir).toHaveBeenCalledWith("deck-1");
@@ -29,18 +29,30 @@ describe("ExcluirDeck", () => {
         const uc = ExcluirDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u" })
+            uc.executar({ id: "inexistente", usuarioIdRequisitante: "u", isAdmin: false })
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se o usuário não for dono do deck", async () => {
+    it("deve lançar erro se o usuário não for dono do deck e não for admin", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(deckExistente),
         });
         const uc = ExcluirDeck.criar(gateway);
 
         await expect(
-            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user" })
+            uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", isAdmin: false })
         ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode excluir deck de outro usuário", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deckExistente),
+        });
+        const uc = ExcluirDeck.criar(gateway);
+
+        const resultado = await uc.executar({ id: "deck-1", usuarioIdRequisitante: "admin-id", isAdmin: true });
+
+        expect(resultado.mensagem).toBe("Deck excluído com sucesso.");
+        expect(gateway.excluir).toHaveBeenCalledWith("deck-1");
     });
 });

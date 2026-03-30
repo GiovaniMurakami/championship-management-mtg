@@ -34,7 +34,7 @@ describe("EscolherDeckTorneio", () => {
             criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deck) }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "deck-1" });
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "deck-1" });
 
         expect(resultado.deckId).toBe("deck-1");
         expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
@@ -49,7 +49,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "x", usuarioId: "u", usuarioNome: "u", deckId: "d" })
+            uc.executar({ torneioId: "x", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -62,7 +62,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u", usuarioNome: "u", deckId: "d" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -74,7 +74,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "d" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -86,11 +86,11 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "inexistente" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "inexistente" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se o deck pertencer a outro usuário", async () => {
+    it("deve lançar erro se o deck pertencer a outro usuário e não for admin", async () => {
         const deckOutro = { ...deck, usuarioId: "outro" };
         const uc = EscolherDeckTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
@@ -99,7 +99,24 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", deckId: "deck-1" })
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "deck-1" })
         ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode atribuir deck de outro usuário a uma inscrição", async () => {
+        const deckOutro = { ...deck, usuarioId: "outro" };
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+        });
+        const uc = EscolherDeckTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            inscricaoGw,
+            criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deckOutro) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "Admin", isAdmin: true, deckId: "deck-1" });
+
+        expect(resultado.deckId).toBe("deck-1");
+        expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 });

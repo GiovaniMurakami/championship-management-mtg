@@ -30,20 +30,23 @@ export class EscolherDeckTorneioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const usuarioId = request.usuario!.id;
-        const usuarioNome = request.usuario!.nome;
+        const isAdmin = request.usuario!.role === "admin";
         const torneioId = request.params.torneioId as string;
-        const { deckId } = request.body;
+        const { deckId, jogadorId } = request.body;
 
         if (!deckId) {
           response.status(400).json({ mensagem: "deckId é obrigatório." });
           return;
         }
 
+        const usuarioId = isAdmin && jogadorId ? jogadorId : request.usuario!.id;
+        const usuarioNome = request.usuario!.nome;
+
         const resultado = await this.escolherDeckTorneioServico.executar({
           torneioId,
           usuarioId,
           usuarioNome,
+          isAdmin,
           deckId,
         });
 

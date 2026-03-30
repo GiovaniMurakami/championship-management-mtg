@@ -26,7 +26,7 @@ describe("RegistrarResultado", () => {
         );
 
         const resultado = await uc.executar({
-            partidaId: "p-1", usuarioId: "j1",
+            partidaId: "p-1", usuarioId: "j1", isAdmin: false,
             vitoriasJogador1: 2, vitoriasJogador2: 1,
         });
 
@@ -46,11 +46,40 @@ describe("RegistrarResultado", () => {
         );
 
         const resultado = await uc.executar({
-            partidaId: "p-1", usuarioId: "dono",
+            partidaId: "p-1", usuarioId: "dono", isAdmin: false,
             vitoriasJogador1: 2, vitoriasJogador2: 0,
         });
 
         expect(resultado.status).toBe("finalizada");
+    });
+
+    it("deve lançar erro se o usuário não for jogador, nem dono, nem admin", async () => {
+        const uc = RegistrarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+        );
+
+        await expect(
+            uc.executar({ partidaId: "p-1", usuarioId: "intruso", isAdmin: false, vitoriasJogador1: 2, vitoriasJogador2: 0 })
+        ).rejects.toMatchObject({ status: 403 });
+    });
+
+    it("admin pode registrar resultado de qualquer partida", async () => {
+        const partidaGw = criarMockPartidaGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
+        });
+        const uc = RegistrarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            partidaGw,
+        );
+
+        const resultado = await uc.executar({
+            partidaId: "p-1", usuarioId: "admin-id", isAdmin: true,
+            vitoriasJogador1: 2, vitoriasJogador2: 1,
+        });
+
+        expect(resultado.status).toBe("finalizada");
+        expect(partidaGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
     it("deve lançar erro se a partida não for encontrada", async () => {
@@ -60,7 +89,7 @@ describe("RegistrarResultado", () => {
         );
 
         await expect(
-            uc.executar({ partidaId: "x", usuarioId: "j", vitoriasJogador1: 0, vitoriasJogador2: 0 })
+            uc.executar({ partidaId: "x", usuarioId: "j", isAdmin: false, vitoriasJogador1: 0, vitoriasJogador2: 0 })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -72,19 +101,8 @@ describe("RegistrarResultado", () => {
         );
 
         await expect(
-            uc.executar({ partidaId: "p-1", usuarioId: "j1", vitoriasJogador1: 2, vitoriasJogador2: 0 })
+            uc.executar({ partidaId: "p-1", usuarioId: "j1", isAdmin: false, vitoriasJogador1: 2, vitoriasJogador2: 0 })
         ).rejects.toMatchObject({ status: 400 });
-    });
-
-    it("deve lançar erro se o usuário não for jogador nem dono", async () => {
-        const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
-        );
-
-        await expect(
-            uc.executar({ partidaId: "p-1", usuarioId: "intruso", vitoriasJogador1: 2, vitoriasJogador2: 0 })
-        ).rejects.toMatchObject({ status: 403 });
     });
 
     it("deve lançar erro para resultado inválido (v1 > 2)", async () => {
@@ -94,7 +112,7 @@ describe("RegistrarResultado", () => {
         );
 
         await expect(
-            uc.executar({ partidaId: "p-1", usuarioId: "j1", vitoriasJogador1: 3, vitoriasJogador2: 0 })
+            uc.executar({ partidaId: "p-1", usuarioId: "j1", isAdmin: false, vitoriasJogador1: 3, vitoriasJogador2: 0 })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -105,7 +123,7 @@ describe("RegistrarResultado", () => {
         );
 
         await expect(
-            uc.executar({ partidaId: "p-1", usuarioId: "j1", vitoriasJogador1: 2, vitoriasJogador2: 2 })
+            uc.executar({ partidaId: "p-1", usuarioId: "j1", isAdmin: false, vitoriasJogador1: 2, vitoriasJogador2: 2 })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -116,7 +134,7 @@ describe("RegistrarResultado", () => {
         );
 
         await expect(
-            uc.executar({ partidaId: "p-1", usuarioId: "j1", vitoriasJogador1: -1, vitoriasJogador2: 0 })
+            uc.executar({ partidaId: "p-1", usuarioId: "j1", isAdmin: false, vitoriasJogador1: -1, vitoriasJogador2: 0 })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -130,7 +148,7 @@ describe("RegistrarResultado", () => {
         );
 
         const resultado = await uc.executar({
-            partidaId: "p-1", usuarioId: "j1", vitoriasJogador1: 0, vitoriasJogador2: 0,
+            partidaId: "p-1", usuarioId: "j1", isAdmin: false, vitoriasJogador1: 0, vitoriasJogador2: 0,
         });
 
         expect(resultado.vitoriasJogador1).toBe(0);

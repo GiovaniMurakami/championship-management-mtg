@@ -1,9 +1,5 @@
 import { Partida } from "../../dominio/entidade/partida";
 
-// ---------------------------------------------------------------------------
-// Tipos
-// ---------------------------------------------------------------------------
-
 export interface EstatisticasJogador {
   usuarioId: string;
   pontosMesa: number;
@@ -15,10 +11,6 @@ export interface EstatisticasJogador {
   totalJogosJogados: number;
   oponentesIds: string[];
 }
-
-// ---------------------------------------------------------------------------
-// Cálculo de estatísticas
-// ---------------------------------------------------------------------------
 
 export function calcularEstatisticas(
   jogadoresIds: string[],
@@ -83,10 +75,6 @@ export function calcularEstatisticas(
 
   return statsMap;
 }
-
-// ---------------------------------------------------------------------------
-// Critérios de desempate MTG
-// ---------------------------------------------------------------------------
 
 export const MIN_PERCENTUAL = 0.33;
 

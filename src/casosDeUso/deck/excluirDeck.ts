@@ -6,6 +6,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 export type ExcluirDeckInputDto = {
   id: string;
   usuarioIdRequisitante: string;
+  isAdmin: boolean;
 };
 
 export type ExcluirDeckOutputDto = {
@@ -33,7 +34,7 @@ export class ExcluirDeck
       });
     }
 
-    if (deck.usuarioId !== input.usuarioIdRequisitante) {
+    if (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para excluir este deck.",
         status: StatusErro.erroProibido,

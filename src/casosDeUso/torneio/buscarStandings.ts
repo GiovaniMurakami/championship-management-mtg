@@ -104,7 +104,7 @@ export class BuscarStandings
         ogwp: 0,
         checkIn: i.checkIn,
         deckId: i.deckId ?? null,
-        deckNome: i.deckId ? (deckMap.get(i.deckId)?.nome ?? null) : null,
+        deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
         checkInProximaRodada: i.checkIn,
         dropped: i.dropped,
       }));
@@ -155,7 +155,7 @@ export class BuscarStandings
           checkIn: inscricao?.checkIn ?? false,
           deckId: inscricao?.deckId ?? null,
           deckNome: inscricao?.deckId
-            ? (deckMap.get(inscricao.deckId)?.nome ?? null)
+            ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
           checkInProximaRodada:
             (inscricao?.checkInRodada ?? -1) >= torneio.rodadaAtual,

@@ -67,6 +67,17 @@ export class InscreverTorneio
       });
     }
 
+    if (torneio.maxJogadores) {
+      const contagem = await this.inscricaoGateway.contarPorTorneios([input.torneioId]);
+      const totalInscritos = contagem[input.torneioId] ?? 0;
+      if (totalInscritos >= torneio.maxJogadores) {
+        throw ErroPersonalizado.criar({
+          mensagem: `O torneio atingiu o limite máximo de ${torneio.maxJogadores} jogadores.`,
+          status: StatusErro.erroParametro,
+        });
+      }
+    }
+
     const inscricao = Inscricao.criar({
       torneioId: input.torneioId,
       usuarioId: input.usuarioId,

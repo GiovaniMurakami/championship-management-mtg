@@ -2,7 +2,11 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { CasoDeUso } from "../casoDeUso";
 
-export type ListarTorneiosInputDto = { usuarioId: string };
+export type ListarTorneiosInputDto = {
+  usuarioId: string;
+  limite?: number;
+  offset?: number;
+};
 
 export type ListarTorneiosOutputDto = {
   torneios: Array<{
@@ -15,9 +19,21 @@ export type ListarTorneiosOutputDto = {
     rodadaAtual: number;
     totalRodadas: number;
     premio?: string;
+    bannerUrl?: string;
+    linkBanner?: string;
+    somRodada?: string;
+    maxJogadores?: number;
+    maxRodadas?: number;
+    corteTop?: number;
+    linkLive?: string;
+    emCorte: boolean;
     criadoEm: Date;
     inscrito: boolean;
+    totalInscritos: number;
   }>;
+  total: number;
+  limite: number;
+  offset: number;
 };
 
 export class ListarTorneios
@@ -31,13 +47,18 @@ export class ListarTorneios
     return new ListarTorneios(torneioGateway, inscricaoGateway);
   }
 
-  public async executar({ usuarioId }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
-    const [torneios, inscricoes] = await Promise.all([
-      this.torneioGateway.listar(),
+  public async executar({ usuarioId, limite = 20, offset = 0 }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+    const [torneios, total, inscricoes] = await Promise.all([
+      this.torneioGateway.listar({ limite, offset }),
+      this.torneioGateway.listarTotal(),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
 
     const torneiosInscritos = new Set(inscricoes.map((i) => i.torneioId));
+    const torneioIds = torneios.map((t) => t.id);
+    const contagemInscritos = torneioIds.length > 0
+      ? await this.inscricaoGateway.contarPorTorneios(torneioIds)
+      : {};
 
     return {
       torneios: torneios.map((t) => ({
@@ -50,9 +71,21 @@ export class ListarTorneios
         rodadaAtual: t.rodadaAtual,
         totalRodadas: t.totalRodadas,
         premio: t.premio,
+        bannerUrl: t.bannerUrl,
+        linkBanner: t.linkBanner,
+        somRodada: t.somRodada,
+        maxJogadores: t.maxJogadores,
+        maxRodadas: t.maxRodadas,
+        corteTop: t.corteTop,
+        linkLive: t.linkLive,
+        emCorte: t.emCorte,
         criadoEm: t.criadoEm,
         inscrito: torneiosInscritos.has(t.id),
+        totalInscritos: contagemInscritos[t.id] ?? 0,
       })),
+      total,
+      limite,
+      offset,
     };
   }
 }

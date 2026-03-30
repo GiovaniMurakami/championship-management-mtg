@@ -38,6 +38,7 @@ export class DroparJogadorRota implements Rotas {
         const resultado = await this.droparJogadorServico.executar({
           torneioId,
           requisitanteId,
+          isAdmin: request.usuario!.role === "admin",
           jogadorId,
         });
 

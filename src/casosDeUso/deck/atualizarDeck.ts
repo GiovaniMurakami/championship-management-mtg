@@ -14,8 +14,10 @@ function totalCartas(cartas: Carta[]): number {
 export type AtualizarDeckInputDto = {
   id: string;
   usuarioIdRequisitante: string;
+  isAdmin: boolean;
   usuarioNome: string;
   nome?: string;
+  nomeConsolidado?: string | null;
   formato?: string;
   maindeck?: Carta[];
   sideboard?: Carta[];
@@ -24,6 +26,7 @@ export type AtualizarDeckInputDto = {
 export type AtualizarDeckOutputDto = {
   id: string;
   nome: string;
+  nomeConsolidado: string | null;
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
@@ -51,7 +54,7 @@ export class AtualizarDeck
       });
     }
 
-    if (deck.usuarioId !== input.usuarioIdRequisitante) {
+    if (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para alterar este deck.",
         status: StatusErro.erroProibido,
@@ -59,6 +62,7 @@ export class AtualizarDeck
     }
 
     if (input.nome !== undefined) deck.nome = input.nome.trim();
+    if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
     if (input.formato !== undefined) deck.formato = input.formato.toLowerCase().trim();
     if (input.maindeck !== undefined) {
       deck.maindeck = input.maindeck.map((carta) => ({
@@ -94,6 +98,7 @@ export class AtualizarDeck
     return {
       id: deck.id,
       nome: deck.nome,
+      nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
