@@ -3,22 +3,32 @@ import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGatew
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 
+const LIMITE_MAXIMO_DECKS = 100;
+const LIMITE_PADRAO_DECKS = 20;
+
 export type ListarDecksInputDto = {
   usuarioId?: string;
   formato?: string;
   criadoApos?: string; // ISO string
   criadoAntes?: string; // ISO string
+  limite?: number;
+  offset?: number;
 };
 
 export type ListarDecksOutputDto = {
-  id: string;
-  nome: string;
-  formato: string;
-  maindeck: Carta[];
-  sideboard: Carta[];
-  usuario: { id: string; nome: string };
-  criadoEm: Date;
-}[];
+  decks: {
+    id: string;
+    nome: string;
+    formato: string;
+    maindeck: Carta[];
+    sideboard: Carta[];
+    usuario: { id: string; nome: string };
+    criadoEm: Date;
+  }[];
+  total: number;
+  limite: number;
+  offset: number;
+};
 
 export class ListarDecks
   implements CasoDeUso<ListarDecksInputDto, ListarDecksOutputDto> {
@@ -34,13 +44,19 @@ export class ListarDecks
   public async executar(
     input: ListarDecksInputDto
   ): Promise<ListarDecksOutputDto> {
-    const filtros: FiltrosListarDecks = {};
+    const limite = Math.min(input.limite ?? LIMITE_PADRAO_DECKS, LIMITE_MAXIMO_DECKS);
+    const offset = Math.max(input.offset ?? 0, 0);
+
+    const filtros: FiltrosListarDecks = { limite, offset };
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
     if (input.formato) filtros.formato = input.formato;
     if (input.criadoApos) filtros.criadoApos = new Date(input.criadoApos);
     if (input.criadoAntes) filtros.criadoAntes = new Date(input.criadoAntes);
 
-    const decks = await this.deckGateway.listar(filtros);
+    const [decks, total] = await Promise.all([
+      this.deckGateway.listar(filtros),
+      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, formato: filtros.formato }),
+    ]);
 
     const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];
     const usuarios = usuarioIds.length > 0
@@ -48,17 +64,22 @@ export class ListarDecks
       : [];
     const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
-    return decks.map((deck) => ({
-      id: deck.id,
-      nome: deck.nome,
-      formato: deck.formato,
-      maindeck: deck.maindeck,
-      sideboard: deck.sideboard,
-      usuario: {
-        id: deck.usuarioId,
-        nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
-      },
-      criadoEm: deck.criadoEm,
-    }));
+    return {
+      decks: decks.map((deck) => ({
+        id: deck.id,
+        nome: deck.nome,
+        formato: deck.formato,
+        maindeck: deck.maindeck,
+        sideboard: deck.sideboard,
+        usuario: {
+          id: deck.usuarioId,
+          nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
+        },
+        criadoEm: deck.criadoEm,
+      })),
+      total,
+      limite,
+      offset,
+    };
   }
 }

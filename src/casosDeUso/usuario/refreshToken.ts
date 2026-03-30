@@ -50,7 +50,7 @@ export class RefreshToken
         role: usuario.role,
       },
       jwtSecret,
-      { expiresIn: "24h" }
+      { expiresIn: "30m" }
     );
 
     return { token };

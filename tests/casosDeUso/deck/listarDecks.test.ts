@@ -14,6 +14,7 @@ describe("ListarDecks", () => {
         ];
         const deckGateway = criarMockDeckGateway({
             listar: jest.fn().mockResolvedValue(decks),
+            listarTotal: jest.fn().mockResolvedValue(2),
         });
         const usuarioGateway = criarMockUsuarioGateway({
             buscarVarios: jest.fn().mockResolvedValue(usuarios),
@@ -22,18 +23,20 @@ describe("ListarDecks", () => {
 
         const resultado = await uc.executar({ usuarioId: "u1" });
 
-        expect(resultado).toHaveLength(2);
-        expect(resultado[0].nome).toBe("Burn");
-        expect(resultado[0].usuario).toEqual({ id: "u1", nome: "João" });
-        expect(resultado[1].nome).toBe("Storm");
-        expect(resultado[1].usuario).toEqual({ id: "u1", nome: "João" });
+        expect(resultado.decks).toHaveLength(2);
+        expect(resultado.total).toBe(2);
+        expect(resultado.decks[0].nome).toBe("Burn");
+        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "João" });
+        expect(resultado.decks[1].nome).toBe("Storm");
+        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "João" });
     });
 
     it("deve retornar lista vazia quando não há decks", async () => {
         const uc = ListarDecks.criar(criarMockDeckGateway(), criarMockUsuarioGateway());
 
         const resultado = await uc.executar({});
-        expect(resultado).toEqual([]);
+        expect(resultado.decks).toEqual([]);
+        expect(resultado.total).toBe(0);
     });
 
     it("deve converter filtros de data corretamente", async () => {

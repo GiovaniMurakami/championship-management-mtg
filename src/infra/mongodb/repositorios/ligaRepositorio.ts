@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Liga } from "../../../dominio/entidade/liga";
-import { LigaGateway } from "../../../dominio/gateway/ligaGateway";
+import { FiltrosListarLigas, LigaGateway } from "../../../dominio/gateway/ligaGateway";
 import { BaseRepositorio } from "./baseRepositorio";
 
 interface LigaDocument extends Document {
@@ -20,6 +20,8 @@ const ligaSchema = new Schema<LigaDocument>({
   torneioIds: { type: [String], default: [] },
   criadoEm: { type: Date, default: Date.now },
 });
+
+ligaSchema.index({ criadoEm: -1 });
 
 const LigaModel =
   mongoose.models.Liga || mongoose.model<LigaDocument>("Liga", ligaSchema);
@@ -61,10 +63,18 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
     return docParaLiga(doc as unknown as LigaDocument);
   }
 
-  public async listar(): Promise<Liga[]> {
+  public async listar(filtros: FiltrosListarLigas = {}): Promise<Liga[]> {
     await this.conectar();
-    const docs = await LigaModel.find().sort({ criadoEm: -1 });
+    let find = LigaModel.find().sort({ criadoEm: -1 });
+    if (filtros.offset !== undefined) find = find.skip(filtros.offset);
+    if (filtros.limite !== undefined) find = find.limit(filtros.limite);
+    const docs = await find;
     return docs.map((doc) => docParaLiga(doc as unknown as LigaDocument));
+  }
+
+  public async listarTotal(): Promise<number> {
+    await this.conectar();
+    return LigaModel.countDocuments();
   }
 
   public async atualizar(liga: Liga): Promise<void> {

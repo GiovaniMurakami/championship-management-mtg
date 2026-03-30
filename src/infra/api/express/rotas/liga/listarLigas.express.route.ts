@@ -21,12 +21,16 @@ export class ListarLigasRota implements Rotas {
 
   public getHandler() {
     return async (
-      _request: Request,
+      request: Request,
       response: Response,
       next: NextFunction
     ): Promise<void> => {
       try {
-        const resultado = await this.listarLigasServico.executar({});
+        const { limite, offset } = request.query as Record<string, string | undefined>;
+        const resultado = await this.listarLigasServico.executar({
+          limite: limite !== undefined ? Number(limite) : undefined,
+          offset: offset !== undefined ? Number(offset) : undefined,
+        });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
