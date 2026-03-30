@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Usuario } from "../../../dominio/entidade/usuario";
 import { UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
-import { conectarMongoDB } from "../conexao";
+import { BaseRepositorio } from "./baseRepositorio";
 
 interface UsuarioDocument extends Document {
   id: string;
@@ -31,15 +31,15 @@ const UsuarioModel =
   mongoose.models.Usuario ||
   mongoose.model<UsuarioDocument>("Usuario", usuarioSchema);
 
-export class UsuarioRepositorio implements UsuarioGateway {
-  private constructor() { }
+export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGateway {
+  private constructor() { super(); }
 
   public static criar() {
     return new UsuarioRepositorio();
   }
 
   public async salvar(usuario: Usuario): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await UsuarioModel.create({
       id: usuario.id,
       nome: usuario.nome,
@@ -54,7 +54,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
   }
 
   public async buscarPorEmail(email: string): Promise<Usuario | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await UsuarioModel.findOne({ email });
 
     if (!doc) return null;
@@ -73,7 +73,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
   }
 
   public async buscarPorId(id: string): Promise<Usuario | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await UsuarioModel.findOne({ id });
 
     if (!doc) return null;
@@ -92,7 +92,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
   }
 
   public async buscarVarios(ids: string[]): Promise<Usuario[]> {
-    await conectarMongoDB();
+    await this.conectar();
     const docs = await UsuarioModel.find({ id: { $in: ids } });
     return docs.map(
       (doc) =>
@@ -111,7 +111,7 @@ export class UsuarioRepositorio implements UsuarioGateway {
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await UsuarioModel.updateOne(
       { id: usuario.id },
       {

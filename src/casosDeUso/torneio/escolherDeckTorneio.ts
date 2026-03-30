@@ -10,6 +10,7 @@ export type EscolherDeckTorneioInputDto = {
   torneioId: string;
   usuarioId: string;
   usuarioNome: string;
+  isAdmin: boolean;
   deckId: string;
 };
 
@@ -74,7 +75,7 @@ export class EscolherDeckTorneio
       });
     }
 
-    if (deck.usuarioId !== input.usuarioId) {
+    if (deck.usuarioId !== input.usuarioId && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Este deck não pertence a você.",
         status: StatusErro.erroProibido,

@@ -7,6 +7,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 export type RegistrarResultadoInputDto = {
   partidaId: string;
   usuarioId: string;
+  isAdmin: boolean;
   vitoriasJogador1: number;
   vitoriasJogador2: number;
 };
@@ -72,7 +73,7 @@ export class RegistrarResultado
       input.usuarioId === partida.jogador2Id;
     const ehDono = torneio.donoId === input.usuarioId;
 
-    if (!ehJogador && !ehDono) {
+    if (!ehJogador && !ehDono && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem:
           "Apenas os jogadores da partida ou o dono do torneio podem registrar o resultado.",

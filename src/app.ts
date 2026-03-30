@@ -2,6 +2,7 @@ import { CadastrarUsuario } from "./casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "./casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "./casosDeUso/usuario/atualizarUsuario";
 import { RefreshToken } from "./casosDeUso/usuario/refreshToken";
+import { LogoutUsuario } from "./casosDeUso/usuario/logoutUsuario";
 import { CadastrarDeck } from "./casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "./casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "./casosDeUso/deck/excluirDeck";
@@ -20,12 +21,21 @@ import { BuscarTorneio } from "./casosDeUso/torneio/buscarTorneio";
 import { BuscarStandings } from "./casosDeUso/torneio/buscarStandings";
 import { MeuHistoricoTorneio } from "./casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "./casosDeUso/torneio/listarPartidasTorneio";
+import { AlterarTorneio } from "./casosDeUso/torneio/alterarTorneio";
+import { ExcluirTorneio } from "./casosDeUso/torneio/excluirTorneio";
+import { CriarLiga } from "./casosDeUso/liga/criarLiga";
+import { AlterarLiga } from "./casosDeUso/liga/alterarLiga";
+import { ExcluirLiga } from "./casosDeUso/liga/excluirLiga";
+import { ListarLigas } from "./casosDeUso/liga/listarLigas";
+import { BuscarLiga } from "./casosDeUso/liga/buscarLiga";
+import { RankingLiga } from "./casosDeUso/liga/rankingLiga";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "./infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "./infra/api/express/rotas/usuario/atualizarUsuario.express.route";
 import { RefreshTokenRota } from "./infra/api/express/rotas/usuario/refreshToken.express.route";
+import { LogoutUsuarioRota } from "./infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { CadastrarDeckRota } from "./infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "./infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "./infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -44,11 +54,21 @@ import { BuscarTorneioRota } from "./infra/api/express/rotas/torneio/buscarTorne
 import { BuscarStandingsRota } from "./infra/api/express/rotas/torneio/buscarStandings.express.route";
 import { MeuHistoricoTorneioRota } from "./infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
 import { ListarPartidasTorneioRota } from "./infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
+import { AlterarTorneioRota } from "./infra/api/express/rotas/torneio/alterarTorneio.express.route";
+import { ExcluirTorneioRota } from "./infra/api/express/rotas/torneio/excluirTorneio.express.route";
+import { CriarLigaRota } from "./infra/api/express/rotas/liga/criarLiga.express.route";
+import { AlterarLigaRota } from "./infra/api/express/rotas/liga/alterarLiga.express.route";
+import { ExcluirLigaRota } from "./infra/api/express/rotas/liga/excluirLiga.express.route";
+import { ListarLigasRota } from "./infra/api/express/rotas/liga/listarLigas.express.route";
+import { BuscarLigaRota } from "./infra/api/express/rotas/liga/buscarLiga.express.route";
+import { RankingLigaRota } from "./infra/api/express/rotas/liga/rankingLiga.express.route";
 import { UsuarioRepositorio } from "./infra/mongodb/repositorios/usuarioRepositorio";
 import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
 import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepositorio";
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
+import { TokenBlacklistRepositorio } from "./infra/mongodb/repositorios/tokenBlacklistRepositorio";
+import { LigaRepositorio } from "./infra/mongodb/repositorios/ligaRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
 import dotenv from "dotenv";
 
@@ -63,12 +83,15 @@ export function app() {
     torneio: TorneioRepositorio.criar(),
     inscricao: InscricaoRepositorio.criar(),
     partida: PartidaRepositorio.criar(),
+    tokenBlacklist: TokenBlacklistRepositorio.criar(),
+    liga: LigaRepositorio.criar(),
   };
 
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
   const loginUsuario = LoginUsuario.criar(repositorios.usuario);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario);
+  const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
@@ -135,11 +158,27 @@ export function app() {
     repositorios.torneio,
     repositorios.partida
   );
+  const alterarTorneio = AlterarTorneio.criar(repositorios.torneio);
+  const excluirTorneio = ExcluirTorneio.criar(repositorios.torneio);
+
+  const criarLiga = CriarLiga.criar(repositorios.liga, repositorios.torneio);
+  const alterarLiga = AlterarLiga.criar(repositorios.liga, repositorios.torneio);
+  const excluirLiga = ExcluirLiga.criar(repositorios.liga);
+  const listarLigas = ListarLigas.criar(repositorios.liga);
+  const buscarLiga = BuscarLiga.criar(repositorios.liga, repositorios.torneio);
+  const rankingLiga = RankingLiga.criar(
+    repositorios.liga,
+    repositorios.partida,
+    repositorios.inscricao,
+    repositorios.deck,
+    repositorios.usuario
+  );
 
   const cadastrarUsuarioRota = CadastrarUsuarioRota.criar(cadastrarUsuario);
   const loginUsuarioRota = LoginUsuarioRota.criar(loginUsuario);
   const atualizarUsuarioRota = AtualizarUsuarioRota.criar(atualizarUsuario);
   const refreshTokenRota = RefreshTokenRota.criar(refreshToken);
+  const logoutUsuarioRota = LogoutUsuarioRota.criar(logoutUsuario);
   const cadastrarDeckRota = CadastrarDeckRota.criar(cadastrarDeck);
   const atualizarDeckRota = AtualizarDeckRota.criar(atualizarDeck);
   const excluirDeckRota = ExcluirDeckRota.criar(excluirDeck);
@@ -162,6 +201,15 @@ export function app() {
   const buscarStandingsRota = BuscarStandingsRota.criar(buscarStandings);
   const meuHistoricoTorneioRota = MeuHistoricoTorneioRota.criar(meuHistoricoTorneio);
   const listarPartidasTorneioRota = ListarPartidasTorneioRota.criar(listarPartidasTorneio);
+  const alterarTorneioRota = AlterarTorneioRota.criar(alterarTorneio);
+  const excluirTorneioRota = ExcluirTorneioRota.criar(excluirTorneio);
+
+  const criarLigaRota = CriarLigaRota.criar(criarLiga);
+  const alterarLigaRota = AlterarLigaRota.criar(alterarLiga);
+  const excluirLigaRota = ExcluirLigaRota.criar(excluirLiga);
+  const listarLigasRota = ListarLigasRota.criar(listarLigas);
+  const buscarLigaRota = BuscarLigaRota.criar(buscarLiga);
+  const rankingLigaRota = RankingLigaRota.criar(rankingLiga);
 
   const port = Number(process.env.PORT) || 0;
 
@@ -170,6 +218,7 @@ export function app() {
     loginUsuarioRota,
     atualizarUsuarioRota,
     refreshTokenRota,
+    logoutUsuarioRota,
     cadastrarDeckRota,
     atualizarDeckRota,
     excluirDeckRota,
@@ -188,6 +237,14 @@ export function app() {
     buscarStandingsRota,
     meuHistoricoTorneioRota,
     listarPartidasTorneioRota,
+    alterarTorneioRota,
+    excluirTorneioRota,
+    criarLigaRota,
+    listarLigasRota,
+    buscarLigaRota,
+    alterarLigaRota,
+    excluirLigaRota,
+    rankingLigaRota,
   ]);
 
   api.start(port);

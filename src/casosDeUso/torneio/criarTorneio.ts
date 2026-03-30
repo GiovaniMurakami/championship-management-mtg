@@ -8,6 +8,13 @@ export type CriarTorneioInputDto = {
   formato: string;
   donoId: string;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
 };
 
 export type CriarTorneioOutputDto = {
@@ -18,6 +25,13 @@ export type CriarTorneioOutputDto = {
   donoId: string;
   status: string;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
   criadoEm: Date;
 };
 
@@ -38,6 +52,13 @@ export class CriarTorneio
       formato: input.formato.toLowerCase().trim(),
       donoId: input.donoId,
       premio: input.premio?.trim(),
+      bannerUrl: input.bannerUrl?.trim(),
+      linkBanner: input.linkBanner?.trim(),
+      somRodada: input.somRodada?.trim(),
+      maxJogadores: input.maxJogadores,
+      maxRodadas: input.maxRodadas,
+      corteTop: input.corteTop,
+      linkLive: input.linkLive?.trim(),
     });
 
     await this.torneioGateway.salvar(torneio);
@@ -50,6 +71,13 @@ export class CriarTorneio
       donoId: torneio.donoId,
       status: torneio.status,
       premio: torneio.premio,
+      bannerUrl: torneio.bannerUrl,
+      linkBanner: torneio.linkBanner,
+      somRodada: torneio.somRodada,
+      maxJogadores: torneio.maxJogadores,
+      maxRodadas: torneio.maxRodadas,
+      corteTop: torneio.corteTop,
+      linkLive: torneio.linkLive,
       criadoEm: torneio.criadoEm,
     };
   }

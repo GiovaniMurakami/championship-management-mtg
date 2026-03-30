@@ -10,6 +10,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 export type IniciarTorneioInputDto = {
   torneioId: string;
   donoId: string;
+  isAdmin: boolean;
 };
 
 export type IniciarTorneioOutputDto = {
@@ -56,7 +57,7 @@ export class IniciarTorneio
       });
     }
 
-    if (torneio.donoId !== input.donoId) {
+    if (torneio.donoId !== input.donoId && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Apenas o dono do torneio pode iniciá-lo.",
         status: StatusErro.erroProibido,
@@ -83,7 +84,7 @@ export class IniciarTorneio
       });
     }
 
-    const totalRodadas = Math.ceil(Math.log2(comCheckIn.length));
+    const totalRodadas = torneio.maxRodadas ?? Math.ceil(Math.log2(comCheckIn.length));
 
     torneio.status = "em_andamento";
     torneio.rodadaAtual = 1;

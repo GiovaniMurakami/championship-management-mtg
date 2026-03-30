@@ -8,6 +8,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 export type DroparJogadorInputDto = {
   torneioId: string;
   requisitanteId: string;
+  isAdmin: boolean;
   jogadorId: string;
 };
 
@@ -55,7 +56,7 @@ export class DroparJogador
     const ehDono = torneio.donoId === input.requisitanteId;
     const ehProprioJogador = input.requisitanteId === input.jogadorId;
 
-    if (!ehDono && !ehProprioJogador) {
+    if (!ehDono && !ehProprioJogador && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Apenas o próprio jogador ou o dono do torneio podem executar esta ação.",
         status: StatusErro.erroProibido,

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { TokenBlacklistRepositorio } from "../../infra/mongodb/repositorios/tokenBlacklistRepositorio";
 
 type JwtPayload = {
   id: string;
@@ -8,11 +9,13 @@ type JwtPayload = {
   role: string;
 };
 
-export const autenticarJwt = (
+const blacklist = TokenBlacklistRepositorio.criar();
+
+export const autenticarJwt = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   const authHeader = req.headers["authorization"];
   const token = authHeader?.replace("Bearer ", "");
 
@@ -30,6 +33,12 @@ export const autenticarJwt = (
 
   try {
     const payload = jwt.verify(token, jwtSecret) as JwtPayload;
+
+    if (await blacklist.existe(token)) {
+      res.status(401).json({ mensagem: "Token inválido ou expirado." });
+      return;
+    }
+
     req.usuario = { id: payload.id, email: payload.email, nome: payload.nome, role: payload.role || "user" };
     next();
   } catch {

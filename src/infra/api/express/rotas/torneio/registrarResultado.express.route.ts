@@ -49,6 +49,7 @@ export class RegistrarResultadoRota implements Rotas {
         const resultado = await this.registrarResultadoServico.executar({
           partidaId,
           usuarioId,
+          isAdmin: request.usuario!.role === "admin",
           vitoriasJogador1: Number(vitoriasJogador1),
           vitoriasJogador2: Number(vitoriasJogador2),
         });

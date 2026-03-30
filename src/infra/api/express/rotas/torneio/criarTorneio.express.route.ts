@@ -30,7 +30,11 @@ export class CriarTorneioRota implements Rotas {
     ): Promise<void> => {
       try {
         const donoId = request.usuario!.id;
-        const { nome, horario, formato, premio } = request.body;
+        const {
+          nome, horario, formato, premio,
+          bannerUrl, linkBanner, somRodada,
+          maxJogadores, maxRodadas, corteTop, linkLive,
+        } = request.body;
 
         if (!nome || !horario || !formato) {
           response.status(400).json({ mensagem: "nome, horario e formato são obrigatórios." });
@@ -43,6 +47,13 @@ export class CriarTorneioRota implements Rotas {
           formato,
           donoId,
           premio,
+          bannerUrl,
+          linkBanner,
+          somRodada,
+          maxJogadores,
+          maxRodadas,
+          corteTop,
+          linkLive,
         });
 
         response.status(201).json(resultado);

@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
-import { TorneioGateway } from "../../../dominio/gateway/torneioGateway";
-import { conectarMongoDB } from "../conexao";
+import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
+import { BaseRepositorio } from "./baseRepositorio";
 
 interface TorneioDocument extends Document {
   id: string;
@@ -13,6 +13,14 @@ interface TorneioDocument extends Document {
   rodadaAtual: number;
   totalRodadas: number;
   premio?: string;
+  bannerUrl?: string;
+  linkBanner?: string;
+  somRodada?: string;
+  maxJogadores?: number;
+  maxRodadas?: number;
+  corteTop?: number;
+  linkLive?: string;
+  emCorte: boolean;
   criadoEm: Date;
 }
 
@@ -26,6 +34,14 @@ const torneioSchema = new Schema<TorneioDocument>({
   rodadaAtual: { type: Number, required: true, default: 0 },
   totalRodadas: { type: Number, required: true, default: 0 },
   premio: { type: String },
+  bannerUrl: { type: String },
+  linkBanner: { type: String },
+  somRodada: { type: String },
+  maxJogadores: { type: Number },
+  maxRodadas: { type: Number },
+  corteTop: { type: Number },
+  linkLive: { type: String },
+  emCorte: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -44,19 +60,27 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     rodadaAtual: doc.get("rodadaAtual"),
     totalRodadas: doc.get("totalRodadas"),
     premio: doc.get("premio") ?? undefined,
+    bannerUrl: doc.get("bannerUrl") ?? undefined,
+    linkBanner: doc.get("linkBanner") ?? undefined,
+    somRodada: doc.get("somRodada") ?? undefined,
+    maxJogadores: doc.get("maxJogadores") ?? undefined,
+    maxRodadas: doc.get("maxRodadas") ?? undefined,
+    corteTop: doc.get("corteTop") ?? undefined,
+    linkLive: doc.get("linkLive") ?? undefined,
+    emCorte: doc.get("emCorte") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
 
-export class TorneioRepositorio implements TorneioGateway {
-  private constructor() { }
+export class TorneioRepositorio extends BaseRepositorio implements TorneioGateway {
+  private constructor() { super(); }
 
   public static criar() {
     return new TorneioRepositorio();
   }
 
   public async salvar(torneio: Torneio): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await TorneioModel.create({
       id: torneio.id,
       nome: torneio.nome,
@@ -67,25 +91,46 @@ export class TorneioRepositorio implements TorneioGateway {
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       premio: torneio.premio,
+      bannerUrl: torneio.bannerUrl,
+      linkBanner: torneio.linkBanner,
+      somRodada: torneio.somRodada,
+      maxJogadores: torneio.maxJogadores,
+      maxRodadas: torneio.maxRodadas,
+      corteTop: torneio.corteTop,
+      linkLive: torneio.linkLive,
+      emCorte: torneio.emCorte,
       criadoEm: torneio.criadoEm,
     });
   }
 
   public async buscarPorId(id: string): Promise<Torneio | null> {
-    await conectarMongoDB();
+    await this.conectar();
     const doc = await TorneioModel.findOne({ id });
     if (!doc) return null;
     return docParaTorneio(doc as unknown as TorneioDocument);
   }
 
-  public async listar(): Promise<Torneio[]> {
-    await conectarMongoDB();
-    const docs = await TorneioModel.find().sort({ criadoEm: -1 });
+  public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
+    await this.conectar();
+    let query = TorneioModel.find().sort({ criadoEm: -1 });
+    if (filtros.offset !== undefined) query = query.skip(filtros.offset);
+    if (filtros.limite !== undefined) query = query.limit(filtros.limite);
+    const docs = await query;
     return docs.map((doc) => docParaTorneio(doc as unknown as TorneioDocument));
   }
 
+  public async listarTotal(): Promise<number> {
+    await this.conectar();
+    return TorneioModel.countDocuments();
+  }
+
+  public async excluir(id: string): Promise<void> {
+    await this.conectar();
+    await TorneioModel.deleteOne({ id });
+  }
+
   public async atualizar(torneio: Torneio): Promise<void> {
-    await conectarMongoDB();
+    await this.conectar();
     await TorneioModel.updateOne(
       { id: torneio.id },
       {
@@ -96,6 +141,14 @@ export class TorneioRepositorio implements TorneioGateway {
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
         premio: torneio.premio,
+        bannerUrl: torneio.bannerUrl,
+        linkBanner: torneio.linkBanner,
+        somRodada: torneio.somRodada,
+        maxJogadores: torneio.maxJogadores,
+        maxRodadas: torneio.maxRodadas,
+        corteTop: torneio.corteTop,
+        linkLive: torneio.linkLive,
+        emCorte: torneio.emCorte,
       }
     );
   }

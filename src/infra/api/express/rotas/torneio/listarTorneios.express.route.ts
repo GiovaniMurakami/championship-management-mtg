@@ -30,8 +30,12 @@ export class ListarTorneiosRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
+        const limite = request.query.limite ? Number(request.query.limite) : undefined;
+        const offset = request.query.offset ? Number(request.query.offset) : undefined;
         const resultado = await this.listarTorneiosServico.executar({
           usuarioId: request.usuario!.id,
+          limite,
+          offset,
         });
         response.status(200).json(resultado);
       } catch (error) {
