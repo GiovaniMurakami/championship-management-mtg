@@ -9,6 +9,7 @@ provider:
     JWT_SECRET: ${env:JWT_SECRET}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
+    AWS_S3_BUCKET: ${env:AWS_S3_BUCKET}
 
 build:
   esbuild: false

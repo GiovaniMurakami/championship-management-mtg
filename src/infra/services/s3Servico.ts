@@ -13,7 +13,10 @@ export class S3Servico implements S3Gateway {
   }
 
   public static criar() {
-    const bucket = process.env.AWS_S3_BUCKET ?? "";
+    const bucket = process.env.AWS_S3_BUCKET;
+    if (!bucket) {
+      throw new Error("AWS_S3_BUCKET environment variable is not set");
+    }
     const region = process.env.AWS_REGION ?? "us-east-1";
     return new S3Servico(bucket, region);
   }
