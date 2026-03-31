@@ -6,6 +6,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosUsuario } from "../../infra/socketio/eventosUsuario";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -118,6 +119,14 @@ export class IniciarTorneio
     }
 
     await this.partidaGateway.salvarVarias(partidas);
+
+    for (const inscricao of comCheckIn) {
+      eventosUsuario.emit("torneio_iniciado_para_jogador", {
+        usuarioId: inscricao.usuarioId,
+        torneioId: torneio.id,
+        torneioNome: torneio.nome,
+      });
+    }
 
     return {
       torneioId: torneio.id,

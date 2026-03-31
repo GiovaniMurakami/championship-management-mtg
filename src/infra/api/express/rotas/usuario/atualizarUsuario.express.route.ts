@@ -50,7 +50,7 @@ export class AtualizarUsuarioRota implements Rotas {
           return;
         }
 
-        const { nome, telefone, nickMTGO, nickArena } =
+        const { nome, telefone, nickMTGO, nickArena, fotoUrl } =
           request.body as Omit<AtualizarUsuarioInputDto, "id">;
 
         const resultado = await this.atualizarUsuarioServico.executar({
@@ -59,6 +59,7 @@ export class AtualizarUsuarioRota implements Rotas {
           telefone,
           nickMTGO,
           nickArena,
+          fotoUrl,
         });
 
         response.status(200).json(resultado);

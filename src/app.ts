@@ -29,6 +29,17 @@ import { ExcluirLiga } from "./casosDeUso/liga/excluirLiga";
 import { ListarLigas } from "./casosDeUso/liga/listarLigas";
 import { BuscarLiga } from "./casosDeUso/liga/buscarLiga";
 import { RankingLiga } from "./casosDeUso/liga/rankingLiga";
+import { BuscarCarta } from "./casosDeUso/scryfall/buscarCarta";
+import { AutocompletarCarta } from "./casosDeUso/scryfall/autocompletarCarta";
+import { ValidarDecklist } from "./casosDeUso/scryfall/validarDecklist";
+import { GerarPresignedUrl } from "./casosDeUso/upload/gerarPresignedUrl";
+import { CriarTime } from "./casosDeUso/time/criarTime";
+import { AlterarTime } from "./casosDeUso/time/alterarTime";
+import { ExcluirTime } from "./casosDeUso/time/excluirTime";
+import { BuscarTime } from "./casosDeUso/time/buscarTime";
+import { ListarTimes } from "./casosDeUso/time/listarTimes";
+import { AdicionarMembro } from "./casosDeUso/time/adicionarMembro";
+import { RemoverMembro } from "./casosDeUso/time/removerMembro";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
@@ -62,6 +73,17 @@ import { ExcluirLigaRota } from "./infra/api/express/rotas/liga/excluirLiga.expr
 import { ListarLigasRota } from "./infra/api/express/rotas/liga/listarLigas.express.route";
 import { BuscarLigaRota } from "./infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "./infra/api/express/rotas/liga/rankingLiga.express.route";
+import { BuscarCartaRota } from "./infra/api/express/rotas/scryfall/buscarCarta.express.route";
+import { AutocompletarCartaRota } from "./infra/api/express/rotas/scryfall/autocompletarCarta.express.route";
+import { ValidarDecklistRota } from "./infra/api/express/rotas/scryfall/validarDecklist.express.route";
+import { GerarPresignedUrlRota } from "./infra/api/express/rotas/upload/gerarPresignedUrl.express.route";
+import { CriarTimeRota } from "./infra/api/express/rotas/time/criarTime.express.route";
+import { ListarTimesRota } from "./infra/api/express/rotas/time/listarTimes.express.route";
+import { BuscarTimeRota } from "./infra/api/express/rotas/time/buscarTime.express.route";
+import { AlterarTimeRota } from "./infra/api/express/rotas/time/alterarTime.express.route";
+import { ExcluirTimeRota } from "./infra/api/express/rotas/time/excluirTime.express.route";
+import { AdicionarMembroRota } from "./infra/api/express/rotas/time/adicionarMembro.express.route";
+import { RemoverMembroRota } from "./infra/api/express/rotas/time/removerMembro.express.route";
 import { UsuarioRepositorio } from "./infra/mongodb/repositorios/usuarioRepositorio";
 import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
@@ -69,7 +91,10 @@ import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepo
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
 import { TokenBlacklistRepositorio } from "./infra/mongodb/repositorios/tokenBlacklistRepositorio";
 import { LigaRepositorio } from "./infra/mongodb/repositorios/ligaRepositorio";
+import { TimeRepositorio } from "./infra/mongodb/repositorios/timeRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
+import { ScryfallServico } from "./infra/services/scryfallServico";
+import { S3Servico } from "./infra/services/s3Servico";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -85,6 +110,7 @@ export function app() {
     partida: PartidaRepositorio.criar(),
     tokenBlacklist: TokenBlacklistRepositorio.criar(),
     liga: LigaRepositorio.criar(),
+    time: TimeRepositorio.criar(),
   };
 
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
@@ -93,6 +119,8 @@ export function app() {
   const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.tokenBlacklist);
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
   const chatGptServico = ChatGptServico.criar();
+  const scryfallServico = ScryfallServico.criar();
+  const s3Servico = S3Servico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
   const excluirDeck = ExcluirDeck.criar(repositorios.deck);
@@ -166,6 +194,17 @@ export function app() {
   const excluirLiga = ExcluirLiga.criar(repositorios.liga);
   const listarLigas = ListarLigas.criar(repositorios.liga);
   const buscarLiga = BuscarLiga.criar(repositorios.liga, repositorios.torneio);
+  const validarDecklist = ValidarDecklist.criar(scryfallServico);
+  const gerarPresignedUrl = GerarPresignedUrl.criar(s3Servico);
+
+  const criarTime = CriarTime.criar(repositorios.time);
+  const alterarTime = AlterarTime.criar(repositorios.time);
+  const excluirTime = ExcluirTime.criar(repositorios.time);
+  const buscarTime = BuscarTime.criar(repositorios.time, repositorios.usuario);
+  const listarTimes = ListarTimes.criar(repositorios.time);
+  const adicionarMembro = AdicionarMembro.criar(repositorios.time, repositorios.usuario);
+  const removerMembro = RemoverMembro.criar(repositorios.time);
+
   const rankingLiga = RankingLiga.criar(
     repositorios.liga,
     repositorios.partida,
@@ -211,6 +250,16 @@ export function app() {
   const buscarLigaRota = BuscarLigaRota.criar(buscarLiga);
   const rankingLigaRota = RankingLigaRota.criar(rankingLiga);
 
+  const validarDecklistRota = ValidarDecklistRota.criar(validarDecklist);
+  const gerarPresignedUrlRota = GerarPresignedUrlRota.criar(gerarPresignedUrl);
+  const criarTimeRota = CriarTimeRota.criar(criarTime);
+  const listarTimesRota = ListarTimesRota.criar(listarTimes);
+  const buscarTimeRota = BuscarTimeRota.criar(buscarTime);
+  const alterarTimeRota = AlterarTimeRota.criar(alterarTime);
+  const excluirTimeRota = ExcluirTimeRota.criar(excluirTime);
+  const adicionarMembroRota = AdicionarMembroRota.criar(adicionarMembro);
+  const removerMembroRota = RemoverMembroRota.criar(removerMembro);
+
   const port = Number(process.env.PORT) || 0;
 
   const api = ApiExpress.criar([
@@ -245,6 +294,15 @@ export function app() {
     alterarLigaRota,
     excluirLigaRota,
     rankingLigaRota,
+    validarDecklistRota,
+    gerarPresignedUrlRota,
+    criarTimeRota,
+    listarTimesRota,
+    buscarTimeRota,
+    alterarTimeRota,
+    excluirTimeRota,
+    adicionarMembroRota,
+    removerMembroRota,
   ]);
 
   api.start(port);

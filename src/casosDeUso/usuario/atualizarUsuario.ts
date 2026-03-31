@@ -9,6 +9,7 @@ export type AtualizarUsuarioInputDto = {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
 };
 
 export type AtualizarUsuarioOutputDto = {
@@ -18,6 +19,7 @@ export type AtualizarUsuarioOutputDto = {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
   criadoEm: Date;
 };
 
@@ -65,6 +67,10 @@ export class AtualizarUsuario
       usuario.nickArena = input.nickArena.trim() || undefined;
     }
 
+    if (input.fotoUrl !== undefined) {
+      usuario.fotoUrl = input.fotoUrl.trim() || undefined;
+    }
+
     await this.usuarioGateway.atualizar(usuario);
 
     return {
@@ -74,6 +80,7 @@ export class AtualizarUsuario
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      fotoUrl: usuario.fotoUrl,
       criadoEm: usuario.criadoEm,
     };
   }

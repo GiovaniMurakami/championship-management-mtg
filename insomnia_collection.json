@@ -1,0 +1,617 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-03-30",
+  "__export_source": "championship-management-mtg",
+  "resources": [
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "token": ""
+      }
+    },
+
+    { "_id": "wrk_1", "_type": "workspace", "name": "championship-management-mtg", "description": "" },
+
+    { "_id": "fld_usuario", "_type": "request_group", "parentId": "wrk_1", "name": "👤 Usuário" },
+    { "_id": "fld_deck",    "_type": "request_group", "parentId": "wrk_1", "name": "🃏 Deck" },
+    { "_id": "fld_torneio", "_type": "request_group", "parentId": "wrk_1", "name": "🏆 Torneio" },
+    { "_id": "fld_liga",    "_type": "request_group", "parentId": "wrk_1", "name": "🥇 Liga" },
+    { "_id": "fld_time",    "_type": "request_group", "parentId": "wrk_1", "name": "👥 Time" },
+    { "_id": "fld_scryfall","_type": "request_group", "parentId": "wrk_1", "name": "🔍 Scryfall" },
+    { "_id": "fld_upload",  "_type": "request_group", "parentId": "wrk_1", "name": "📤 Upload" },
+
+    {
+      "_id": "req_cadastrar_usuario",
+      "_type": "request",
+      "parentId": "fld_usuario",
+      "name": "Cadastrar Usuário",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuario/cadastrar",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Giovani Murakami\",\n  \"email\": \"giovani@email.com\",\n  \"senha\": \"senha123\"\n}"
+      }
+    },
+    {
+      "_id": "req_login_usuario",
+      "_type": "request",
+      "parentId": "fld_usuario",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuario/login",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"giovani@email.com\",\n  \"senha\": \"senha123\"\n}"
+      }
+    },
+    {
+      "_id": "req_atualizar_usuario",
+      "_type": "request",
+      "parentId": "fld_usuario",
+      "name": "Atualizar Usuário",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/usuario/atualizar",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Giovani Murakami\",\n  \"telefone\": \"11999999999\",\n  \"nickMTGO\": \"giovani_mtgo\",\n  \"nickArena\": \"giovani_arena\",\n  \"fotoUrl\": \"https://bucket.s3.us-east-1.amazonaws.com/avatar/uuid.webp\"\n}"
+      }
+    },
+    {
+      "_id": "req_refresh_token",
+      "_type": "request",
+      "parentId": "fld_usuario",
+      "name": "Refresh Token",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuario/refresh-token",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+    {
+      "_id": "req_logout_usuario",
+      "_type": "request",
+      "parentId": "fld_usuario",
+      "name": "Logout",
+      "method": "POST",
+      "url": "{{ _.base_url }}/usuario/logout",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+
+    {
+      "_id": "req_cadastrar_deck",
+      "_type": "request",
+      "parentId": "fld_deck",
+      "name": "Cadastrar Deck",
+      "method": "POST",
+      "url": "{{ _.base_url }}/deck/cadastrar",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Monored Burn\",\n  \"formato\": \"modern\",\n  \"maindeck\": [\n    { \"nome\": \"Lightning Bolt\", \"quantidade\": 4 },\n    { \"nome\": \"Monastery Swiftspear\", \"quantidade\": 4 },\n    { \"nome\": \"Goblin Guide\", \"quantidade\": 4 },\n    { \"nome\": \"Eidolon of the Great Revel\", \"quantidade\": 4 },\n    { \"nome\": \"Shard Volley\", \"quantidade\": 4 },\n    { \"nome\": \"Lava Spike\", \"quantidade\": 4 },\n    { \"nome\": \"Rift Bolt\", \"quantidade\": 4 },\n    { \"nome\": \"Searing Blaze\", \"quantidade\": 4 },\n    { \"nome\": \"Skullcrack\", \"quantidade\": 4 },\n    { \"nome\": \"Light Up the Stage\", \"quantidade\": 4 },\n    { \"nome\": \"Mountain\", \"quantidade\": 20 }\n  ],\n  \"sideboard\": [\n    { \"nome\": \"Shattering Spree\", \"quantidade\": 3 },\n    { \"nome\": \"Roiling Vortex\", \"quantidade\": 4 },\n    { \"nome\": \"Surgical Extraction\", \"quantidade\": 4 },\n    { \"nome\": \"Deflecting Palm\", \"quantidade\": 4 }\n  ]\n}"
+      }
+    },
+    {
+      "_id": "req_atualizar_deck",
+      "_type": "request",
+      "parentId": "fld_deck",
+      "name": "Atualizar Deck",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/deck/:id",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Monored Burn Updated\",\n  \"nomeConsolidado\": \"Burn\",\n  \"formato\": \"modern\",\n  \"maindeck\": [\n    { \"nome\": \"Lightning Bolt\", \"quantidade\": 4 },\n    { \"nome\": \"Mountain\", \"quantidade\": 56 }\n  ],\n  \"sideboard\": []\n}"
+      }
+    },
+    {
+      "_id": "req_buscar_deck",
+      "_type": "request",
+      "parentId": "fld_deck",
+      "name": "Buscar Deck",
+      "method": "GET",
+      "url": "{{ _.base_url }}/deck/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_listar_decks",
+      "_type": "request",
+      "parentId": "fld_deck",
+      "name": "Listar Decks",
+      "method": "GET",
+      "url": "{{ _.base_url }}/deck/listar?usuarioId=&formato=modern&limite=20&offset=0",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_excluir_deck",
+      "_type": "request",
+      "parentId": "fld_deck",
+      "name": "Excluir Deck",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/deck/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+
+    {
+      "_id": "req_criar_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Criar Torneio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/criar",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Torneio de Modern #1\",\n  \"horario\": \"2026-04-15T14:00:00.000Z\",\n  \"formato\": \"modern\",\n  \"premio\": \"Booster Box\",\n  \"maxJogadores\": 32,\n  \"maxRodadas\": 5,\n  \"corteTop\": 8,\n  \"linkLive\": \"https://twitch.tv/canal\",\n  \"bannerUrl\": null,\n  \"linkBanner\": null,\n  \"somRodada\": null\n}"
+      }
+    },
+    {
+      "_id": "req_listar_torneios",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Listar Torneios",
+      "method": "GET",
+      "url": "{{ _.base_url }}/torneio/listar",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_buscar_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Buscar Torneio",
+      "method": "GET",
+      "url": "{{ _.base_url }}/torneio/:torneioId",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_alterar_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Alterar Torneio",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/torneio/:id",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Torneio Atualizado\",\n  \"horario\": \"2026-04-20T14:00:00.000Z\",\n  \"formato\": \"modern\",\n  \"premio\": \"Booster Box + Playmat\",\n  \"maxJogadores\": 64,\n  \"maxRodadas\": 6,\n  \"corteTop\": 8,\n  \"linkLive\": \"https://twitch.tv/canal\"\n}"
+      }
+    },
+    {
+      "_id": "req_excluir_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Excluir Torneio",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/torneio/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_inscrever_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Inscrever no Torneio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/inscrever",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+    {
+      "_id": "req_checkin_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Check-in no Torneio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/checkin",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+    {
+      "_id": "req_escolher_deck_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Escolher Deck no Torneio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/deck",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"deckId\": \"uuid-do-deck\"\n}"
+      }
+    },
+    {
+      "_id": "req_iniciar_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Iniciar Torneio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/iniciar",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+    {
+      "_id": "req_proxima_rodada",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Iniciar Próxima Rodada",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/proxima-rodada",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{}" }
+    },
+    {
+      "_id": "req_registrar_resultado",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Registrar Resultado",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/partida/:partidaId/resultado",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vitoriasJogador1\": 2,\n  \"vitoriasJogador2\": 1\n}"
+      }
+    },
+    {
+      "_id": "req_dropar_jogador",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Dropar Jogador",
+      "method": "POST",
+      "url": "{{ _.base_url }}/torneio/:torneioId/drop",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"jogadorId\": \"uuid-do-jogador\"\n}"
+      }
+    },
+    {
+      "_id": "req_standings",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Buscar Standings",
+      "method": "GET",
+      "url": "{{ _.base_url }}/torneio/:torneioId/standings",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_partidas_torneio",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Listar Partidas do Torneio",
+      "method": "GET",
+      "url": "{{ _.base_url }}/torneio/:torneioId/partidas?rodada=1",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_meu_historico",
+      "_type": "request",
+      "parentId": "fld_torneio",
+      "name": "Meu Histórico no Torneio",
+      "method": "GET",
+      "url": "{{ _.base_url }}/torneio/:torneioId/meu-historico",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+
+    {
+      "_id": "req_criar_liga",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Criar Liga",
+      "method": "POST",
+      "url": "{{ _.base_url }}/liga/criar",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Liga de Modern 2026\",\n  \"descricao\": \"Temporada de Modern do clube\",\n  \"torneioIds\": []\n}"
+      }
+    },
+    {
+      "_id": "req_listar_ligas",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Listar Ligas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/liga/listar",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_buscar_liga",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Buscar Liga",
+      "method": "GET",
+      "url": "{{ _.base_url }}/liga/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_alterar_liga",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Alterar Liga",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/liga/:id",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Liga Atualizada\",\n  \"descricao\": \"Nova descrição\",\n  \"torneioIds\": [\"uuid-torneio-1\", \"uuid-torneio-2\"]\n}"
+      }
+    },
+    {
+      "_id": "req_excluir_liga",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Excluir Liga",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/liga/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_ranking_liga",
+      "_type": "request",
+      "parentId": "fld_liga",
+      "name": "Ranking da Liga",
+      "method": "GET",
+      "url": "{{ _.base_url }}/liga/:id/ranking",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+
+    {
+      "_id": "req_criar_time",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Criar Time",
+      "method": "POST",
+      "url": "{{ _.base_url }}/time/criar",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Team Lotus\",\n  \"tag\": \"TLT\",\n  \"fotoUrl\": null\n}"
+      }
+    },
+    {
+      "_id": "req_listar_times",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Listar Times",
+      "method": "GET",
+      "url": "{{ _.base_url }}/time/listar"
+    },
+    {
+      "_id": "req_buscar_time",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Buscar Time",
+      "method": "GET",
+      "url": "{{ _.base_url }}/time/:id"
+    },
+    {
+      "_id": "req_alterar_time",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Alterar Time",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/time/:id",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Team Lotus Updated\",\n  \"tag\": \"TLU\",\n  \"fotoUrl\": \"https://bucket.s3.us-east-1.amazonaws.com/logo-time/uuid.webp\"\n}"
+      }
+    },
+    {
+      "_id": "req_excluir_time",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Excluir Time",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/time/:id",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+    {
+      "_id": "req_adicionar_membro",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Adicionar Membro",
+      "method": "POST",
+      "url": "{{ _.base_url }}/time/:id/membro",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"novoMembroId\": \"uuid-do-usuario\"\n}"
+      }
+    },
+    {
+      "_id": "req_remover_membro",
+      "_type": "request",
+      "parentId": "fld_time",
+      "name": "Remover Membro",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/time/:id/membro/:membroId",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ]
+    },
+
+    {
+      "_id": "req_buscar_carta",
+      "_type": "request",
+      "parentId": "fld_scryfall",
+      "name": "Buscar Carta",
+      "method": "GET",
+      "url": "{{ _.base_url }}/scryfall/carta/Lightning Bolt"
+    },
+    {
+      "_id": "req_autocompletar_carta",
+      "_type": "request",
+      "parentId": "fld_scryfall",
+      "name": "Autocompletar Carta",
+      "method": "GET",
+      "url": "{{ _.base_url }}/scryfall/autocompletar?q=Light"
+    },
+    {
+      "_id": "req_validar_deck",
+      "_type": "request",
+      "parentId": "fld_scryfall",
+      "name": "Validar Decklist",
+      "method": "POST",
+      "url": "{{ _.base_url }}/scryfall/validar-deck",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"cartas\": [\n    \"Lightning Bolt\",\n    \"Monastery Swiftspear\",\n    \"Goblin Guide\",\n    \"CartaInexistente\"\n  ],\n  \"formato\": \"modern\"\n}"
+      }
+    },
+
+    {
+      "_id": "req_presigned_url",
+      "_type": "request",
+      "parentId": "fld_upload",
+      "name": "Gerar Presigned URL (avatar)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/upload/presigned-url",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"avatar\",\n  \"contentType\": \"image/webp\"\n}"
+      }
+    },
+    {
+      "_id": "req_presigned_url_banner_torneio",
+      "_type": "request",
+      "parentId": "fld_upload",
+      "name": "Gerar Presigned URL (banner-torneio)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/upload/presigned-url",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"banner-torneio\",\n  \"contentType\": \"image/jpeg\"\n}"
+      }
+    },
+    {
+      "_id": "req_presigned_url_banner_liga",
+      "_type": "request",
+      "parentId": "fld_upload",
+      "name": "Gerar Presigned URL (banner-liga)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/upload/presigned-url",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"banner-liga\",\n  \"contentType\": \"image/png\"\n}"
+      }
+    },
+    {
+      "_id": "req_presigned_url_logo_time",
+      "_type": "request",
+      "parentId": "fld_upload",
+      "name": "Gerar Presigned URL (logo-time)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/upload/presigned-url",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"logo-time\",\n  \"contentType\": \"image/webp\"\n}"
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { eventosUsuario } from "../../infra/socketio/eventosUsuario";
 
 export type InscreverTorneioInputDto = {
   torneioId: string;
@@ -93,6 +94,12 @@ export class InscreverTorneio
       usuarioId: inscricao.usuarioId,
       usuarioNome,
       inscricaoId: inscricao.id,
+    });
+
+    eventosUsuario.emit("inscricao_confirmada", {
+      usuarioId: inscricao.usuarioId,
+      torneioId: torneio.id,
+      torneioNome: torneio.nome,
     });
 
     return {

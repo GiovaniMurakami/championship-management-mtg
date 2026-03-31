@@ -6,6 +6,9 @@ import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
 import { ChatGptGateway } from "../../src/dominio/gateway/chatGptGateway";
 import { LigaGateway } from "../../src/dominio/gateway/ligaGateway";
+import { TimeGateway } from "../../src/dominio/gateway/timeGateway";
+import { ScryfallGateway } from "../../src/dominio/gateway/scryfallGateway";
+import { S3Gateway } from "../../src/dominio/gateway/s3Gateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -92,6 +95,37 @@ export function criarMockTokenBlacklistGateway(overrides: Partial<TokenBlacklist
     return {
         adicionar: jest.fn(),
         existe: jest.fn().mockResolvedValue(false),
+        ...overrides,
+    };
+}
+
+export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): TimeGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorId: jest.fn().mockResolvedValue(null),
+        listar: jest.fn().mockResolvedValue([]),
+        atualizar: jest.fn(),
+        excluir: jest.fn(),
+        buscarPorMembro: jest.fn().mockResolvedValue([]),
+        ...overrides,
+    };
+}
+
+export function criarMockScryfallGateway(overrides: Partial<ScryfallGateway> = {}): ScryfallGateway {
+    return {
+        buscarCarta: jest.fn().mockResolvedValue(null),
+        autocompletar: jest.fn().mockResolvedValue([]),
+        validarDecklist: jest.fn().mockResolvedValue({ validas: [], invalidas: [], valida: true }),
+        ...overrides,
+    };
+}
+
+export function criarMockS3Gateway(overrides: Partial<S3Gateway> = {}): S3Gateway {
+    return {
+        gerarPresignedUrl: jest.fn().mockResolvedValue({
+            uploadUrl: "https://s3.example.com/upload",
+            fileUrl: "https://s3.example.com/file",
+        }),
         ...overrides,
     };
 }

@@ -15,6 +15,7 @@ import {
   parKey,
   gerarPareamentos,
 } from "./swiss";
+import { eventosUsuario } from "../../infra/socketio/eventosUsuario";
 
 export type IniciarProximaRodadaInputDto = {
   torneioId: string;
@@ -185,6 +186,13 @@ export class IniciarProximaRodada
 
       await this.partidaGateway.salvarVarias(novasPartidas);
 
+      for (const p of novasPartidas) {
+        eventosUsuario.emit("partida_criada", { usuarioId: p.jogador1Id, torneioId: p.torneioId, oponenteNome: p.jogador2Nome ?? "BYE" });
+        if (p.jogador2Id) {
+          eventosUsuario.emit("partida_criada", { usuarioId: p.jogador2Id, torneioId: p.torneioId, oponenteNome: p.jogador1Nome ?? p.jogador1Id });
+        }
+      }
+
       torneio.emCorte = true;
       torneio.rodadaAtual = proximaRodada;
       torneio.totalRodadas = proximaRodada + rodadasCorte - 1;
@@ -256,6 +264,13 @@ export class IniciarProximaRodada
 
       await this.partidaGateway.salvarVarias(novasPartidas);
 
+      for (const p of novasPartidas) {
+        eventosUsuario.emit("partida_criada", { usuarioId: p.jogador1Id, torneioId: p.torneioId, oponenteNome: p.jogador2Nome ?? "BYE" });
+        if (p.jogador2Id) {
+          eventosUsuario.emit("partida_criada", { usuarioId: p.jogador2Id, torneioId: p.torneioId, oponenteNome: p.jogador1Nome ?? p.jogador1Id });
+        }
+      }
+
       torneio.rodadaAtual = proximaRodada;
       await this.torneioGateway.atualizar(torneio);
 
@@ -301,6 +316,13 @@ export class IniciarProximaRodada
     );
 
     await this.partidaGateway.salvarVarias(novasPartidas);
+
+    for (const p of novasPartidas) {
+      eventosUsuario.emit("partida_criada", { usuarioId: p.jogador1Id, torneioId: p.torneioId, oponenteNome: p.jogador2Nome ?? "BYE" });
+      if (p.jogador2Id) {
+        eventosUsuario.emit("partida_criada", { usuarioId: p.jogador2Id, torneioId: p.torneioId, oponenteNome: p.jogador1Nome ?? p.jogador1Id });
+      }
+    }
 
     torneio.rodadaAtual = proximaRodada;
     await this.torneioGateway.atualizar(torneio);

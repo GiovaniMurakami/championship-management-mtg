@@ -12,6 +12,7 @@ interface UsuarioDocument extends Document {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
   criadoEm: Date;
 }
 
@@ -24,6 +25,7 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   telefone: { type: String, required: false },
   nickMTGO: { type: String, required: false },
   nickArena: { type: String, required: false },
+  fotoUrl: { type: String, required: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -49,6 +51,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      fotoUrl: usuario.fotoUrl,
       criadoEm: usuario.criadoEm,
     });
   }
@@ -68,6 +71,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
+      fotoUrl: doc.get("fotoUrl"),
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -87,6 +91,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
+      fotoUrl: doc.get("fotoUrl"),
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -105,6 +110,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
           telefone: doc.get("telefone"),
           nickMTGO: doc.get("nickMTGO"),
           nickArena: doc.get("nickArena"),
+          fotoUrl: doc.get("fotoUrl"),
           criadoEm: doc.get("criadoEm"),
         })
     );
@@ -121,6 +127,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
+        fotoUrl: usuario.fotoUrl,
       }
     );
   }

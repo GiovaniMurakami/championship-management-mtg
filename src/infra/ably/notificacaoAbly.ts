@@ -1,5 +1,6 @@
 import Ably from "ably";
 import { eventosTorneio } from "../socketio/eventosTorneio";
+import { eventosUsuario } from "../socketio/eventosUsuario";
 import { logger } from "../../helpers/logger";
 import { comRetry } from "../../helpers/retry";
 
@@ -13,6 +14,7 @@ export class NotificacaoAbly {
   private constructor() {
     this.ably = new Ably.Rest(process.env.ABLY_API_KEY!);
     this.escutarEventos();
+    this.escutarEventosUsuario();
   }
 
   public static iniciar() {
@@ -21,6 +23,20 @@ export class NotificacaoAbly {
 
   public static async aguardarPublicacoesPendentes() {
     await Promise.allSettled(NotificacaoAbly.publicacoesPendentes);
+  }
+
+  private publicarUsuario(usuarioId: string, evento: string, payload: unknown) {
+    const canal = `usuario-${usuarioId}`;
+    const p: Promise<void> = comRetry(
+      () => this.ably.channels.get(canal).publish(evento, payload).then(() => undefined),
+      TENTATIVAS,
+      DELAY_INICIAL_MS
+    )
+      .catch((err) =>
+        logger.error({ err, canal, evento }, "[Ably] falhou após todas as tentativas")
+      )
+      .finally(() => NotificacaoAbly.publicacoesPendentes.delete(p));
+    NotificacaoAbly.publicacoesPendentes.add(p);
   }
 
   private publicar(torneioId: string, evento: string, payload: unknown) {
@@ -68,6 +84,28 @@ export class NotificacaoAbly {
 
     eventosTorneio.on("deck_inserido", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "deck_inserido", payload);
+    });
+
+    eventosTorneio.on("jogador_dropado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "jogador_dropado", payload);
+    });
+  }
+
+  private escutarEventosUsuario() {
+    eventosUsuario.on("inscricao_confirmada", (payload: Record<string, unknown> & { usuarioId: string }) => {
+      this.publicarUsuario(payload.usuarioId, "inscricao_confirmada", payload);
+    });
+
+    eventosUsuario.on("jogador_dropado", (payload: Record<string, unknown> & { usuarioId: string }) => {
+      this.publicarUsuario(payload.usuarioId, "jogador_dropado", payload);
+    });
+
+    eventosUsuario.on("partida_criada", (payload: Record<string, unknown> & { usuarioId: string }) => {
+      this.publicarUsuario(payload.usuarioId, "partida_criada", payload);
+    });
+
+    eventosUsuario.on("torneio_iniciado_para_jogador", (payload: Record<string, unknown> & { usuarioId: string }) => {
+      this.publicarUsuario(payload.usuarioId, "torneio_iniciado_para_jogador", payload);
     });
   }
 }

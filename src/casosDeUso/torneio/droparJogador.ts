@@ -4,6 +4,8 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { eventosUsuario } from "../../infra/socketio/eventosUsuario";
 
 export type DroparJogadorInputDto = {
   torneioId: string;
@@ -86,6 +88,19 @@ export class DroparJogador
     await this.inscricaoGateway.atualizar(inscricao);
 
     const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
+
+    eventosTorneio.emit("jogador_dropado", {
+      torneioId: inscricao.torneioId,
+      usuarioId: inscricao.usuarioId,
+      usuarioNome: jogador?.nome ?? inscricao.usuarioId,
+      inscricaoId: inscricao.id,
+    });
+
+    eventosUsuario.emit("jogador_dropado", {
+      usuarioId: inscricao.usuarioId,
+      torneioId: torneio.id,
+      torneioNome: torneio.nome,
+    });
 
     return {
       inscricaoId: inscricao.id,
