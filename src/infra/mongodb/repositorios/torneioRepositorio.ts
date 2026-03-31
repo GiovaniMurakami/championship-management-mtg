@@ -45,6 +45,9 @@ const torneioSchema = new Schema<TorneioDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
+torneioSchema.index({ criadoEm: -1 });
+torneioSchema.index({ donoId: 1 });
+
 const TorneioModel =
   mongoose.models.Torneio ||
   mongoose.model<TorneioDocument>("Torneio", torneioSchema);

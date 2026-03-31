@@ -35,6 +35,9 @@ const partidaSchema = new Schema<PartidaDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
+partidaSchema.index({ torneioId: 1 });
+partidaSchema.index({ torneioId: 1, rodada: 1 });
+
 const PartidaModel =
   mongoose.models.Partida ||
   mongoose.model<PartidaDocument>("Partida", partidaSchema);

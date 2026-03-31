@@ -1,6 +1,9 @@
 import { Api } from "../api";
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import mongoSanitize from "express-mongo-sanitize";
 import { Rotas } from "./rotas/rotas";
 import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
@@ -20,9 +23,12 @@ export class ApiExpress implements Api {
   }
 
   private adicionarMiddlewares(): void {
+    this.app.use(helmet());
     this.app.use(cors());
+    this.app.use(compression());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(mongoSanitize());
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       logger.info({ method: req.method, path: req.path }, "request");
       next();

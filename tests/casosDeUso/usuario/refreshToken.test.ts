@@ -1,5 +1,5 @@
 import { RefreshToken } from "../../../src/casosDeUso/usuario/refreshToken";
-import { criarMockUsuarioGateway } from "../../mocks/gateways";
+import { criarMockUsuarioGateway, criarMockTokenBlacklistGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 jest.mock("jsonwebtoken", () => ({
@@ -27,9 +27,10 @@ describe("RefreshToken", () => {
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const uc = RefreshToken.criar(gateway);
+        const blacklist = criarMockTokenBlacklistGateway();
+        const uc = RefreshToken.criar(gateway, blacklist);
 
-        const resultado = await uc.executar({ usuarioId: "user-1" });
+        const resultado = await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
 
         expect(resultado.token).toBe("novo_token");
     });
@@ -39,9 +40,10 @@ describe("RefreshToken", () => {
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const uc = RefreshToken.criar(gateway);
+        const blacklist = criarMockTokenBlacklistGateway();
+        const uc = RefreshToken.criar(gateway, blacklist);
 
-        await uc.executar({ usuarioId: "user-1" });
+        await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
 
         expect(jwt.sign).toHaveBeenCalledWith(
             expect.objectContaining({ role: "user" }),
@@ -50,12 +52,25 @@ describe("RefreshToken", () => {
         );
     });
 
+    it("deve invalidar o token atual na blacklist ao emitir novo token", async () => {
+        const gateway = criarMockUsuarioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
+        });
+        const blacklist = criarMockTokenBlacklistGateway();
+        const uc = RefreshToken.criar(gateway, blacklist);
+
+        await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
+
+        expect(blacklist.adicionar).toHaveBeenCalledWith("token_antigo", expect.any(Date));
+    });
+
     it("deve lançar erro 401 se usuário não existir", async () => {
         const gateway = criarMockUsuarioGateway();
-        const uc = RefreshToken.criar(gateway);
+        const blacklist = criarMockTokenBlacklistGateway();
+        const uc = RefreshToken.criar(gateway, blacklist);
 
         await expect(
-            uc.executar({ usuarioId: "inexistente" })
+            uc.executar({ usuarioId: "inexistente", tokenAtual: "token_antigo" })
         ).rejects.toMatchObject({ status: 401 });
     });
 
@@ -64,10 +79,11 @@ describe("RefreshToken", () => {
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const uc = RefreshToken.criar(gateway);
+        const blacklist = criarMockTokenBlacklistGateway();
+        const uc = RefreshToken.criar(gateway, blacklist);
 
         await expect(
-            uc.executar({ usuarioId: "user-1" })
+            uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" })
         ).rejects.toMatchObject({ status: 500 });
     });
 });

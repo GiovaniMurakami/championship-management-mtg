@@ -27,7 +27,7 @@ describe("CadastrarUsuarioRota", () => {
     it("retorna 201 com dados do usuario criado", async () => {
         const saida = { id: "u-1", nome: "Joao", email: "j@j.com" };
         servico.executar.mockResolvedValue(saida);
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "123456" });
+        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith(saida);
@@ -37,7 +37,7 @@ describe("CadastrarUsuarioRota", () => {
         servico.executar.mockRejectedValue(
             ErroPersonalizado.criar({ mensagem: "E-mail já cadastrado.", status: StatusErro.erroParametro })
         );
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "123456" });
+        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(400);
     });
@@ -45,7 +45,7 @@ describe("CadastrarUsuarioRota", () => {
     it("chama next() em erros desconhecidos", async () => {
         const err = new Error("db error");
         servico.executar.mockRejectedValue(err);
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "123456" });
+        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
         await rota.getHandler()(req, res, next);
         expect(next).toHaveBeenCalledWith(err);
     });
@@ -66,7 +66,7 @@ describe("LoginUsuarioRota", () => {
     it("retorna 200 com token em login bem-sucedido", async () => {
         const saida = { token: "jwt-token" };
         servico.executar.mockResolvedValue(saida);
-        const { req, res, next } = makeReqRes({ email: "j@j.com", senha: "123456" });
+        const { req, res, next } = makeReqRes({ email: "j@j.com", senha: "senha1234" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);

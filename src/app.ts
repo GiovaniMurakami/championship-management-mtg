@@ -90,7 +90,7 @@ export function app() {
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
   const loginUsuario = LoginUsuario.criar(repositorios.usuario);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
-  const refreshToken = RefreshToken.criar(repositorios.usuario);
+  const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.tokenBlacklist);
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
