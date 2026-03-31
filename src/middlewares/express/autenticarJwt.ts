@@ -32,7 +32,7 @@ export const autenticarJwt = async (
   }
 
   try {
-    const payload = jwt.verify(token, jwtSecret) as JwtPayload;
+    const payload = jwt.verify(token, jwtSecret, { algorithms: ["HS256"] }) as JwtPayload;
 
     if (await blacklist.existe(token)) {
       res.status(401).json({ mensagem: "Token inválido ou expirado." });

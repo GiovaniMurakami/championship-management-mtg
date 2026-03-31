@@ -25,6 +25,10 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
+inscricaoSchema.index({ torneioId: 1, usuarioId: 1 });
+inscricaoSchema.index({ torneioId: 1 });
+inscricaoSchema.index({ usuarioId: 1 });
+
 const InscricaoModel =
   mongoose.models.Inscricao ||
   mongoose.model<InscricaoDocument>("Inscricao", inscricaoSchema);

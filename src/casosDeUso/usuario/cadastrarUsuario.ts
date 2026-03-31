@@ -41,7 +41,7 @@ export class CadastrarUsuario
       });
     }
 
-    const senhaHash = await bcrypt.hash(input.senha, 10);
+    const senhaHash = await bcrypt.hash(input.senha, 12);
 
     const usuario = Usuario.criar({
       nome: input.nome,

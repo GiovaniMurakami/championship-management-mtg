@@ -70,7 +70,7 @@ export class LoginUsuario
         role: usuario.role,
       },
       jwtSecret,
-      { expiresIn: "24h" }
+      { expiresIn: "30m" }
     );
 
     return {

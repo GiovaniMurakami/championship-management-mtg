@@ -3,6 +3,7 @@ import { RefreshToken } from "../../../../../casosDeUso/usuario/refreshToken";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { refreshTokenRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class RefreshTokenRota implements Rotas {
   private constructor(
@@ -28,7 +29,7 @@ export class RefreshTokenRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [autenticarJwt];
+    return [refreshTokenRateLimiter, autenticarJwt];
   }
 
   public getHandler() {
@@ -38,8 +39,10 @@ export class RefreshTokenRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
+        const tokenAtual = request.headers["authorization"]!.replace("Bearer ", "");
         const resultado = await this.refreshTokenServico.executar({
           usuarioId: request.usuario!.id,
+          tokenAtual,
         });
 
         response.status(200).json(resultado);

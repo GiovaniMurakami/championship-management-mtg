@@ -33,6 +33,9 @@ const deckSchema = new Schema<DeckDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
+deckSchema.index({ usuarioId: 1 });
+deckSchema.index({ criadoEm: -1 });
+
 const DeckModel =
   mongoose.models.Deck ||
   mongoose.model<DeckDocument>("Deck", deckSchema);
@@ -84,18 +87,36 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
     return docs.map(docParaDeck);
   }
 
-  public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
-    await this.conectar();
+  private escaparRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  private construirQueryDeck(filtros: FiltrosListarDecks): FilterQuery<DeckDocument> {
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
-    if (filtros.formato) query.formato = { $regex: filtros.formato, $options: "i" };
+    if (filtros.formato) query.formato = { $regex: this.escaparRegex(filtros.formato), $options: "i" };
     if (filtros.criadoApos || filtros.criadoAntes) {
       query.criadoEm = {};
       if (filtros.criadoApos) query.criadoEm.$gte = filtros.criadoApos;
       if (filtros.criadoAntes) query.criadoEm.$lte = filtros.criadoAntes;
     }
-    const docs = await DeckModel.find(query).sort({ criadoEm: -1 });
+    return query;
+  }
+
+  public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
+    await this.conectar();
+    const query = this.construirQueryDeck(filtros);
+    let find = DeckModel.find(query).sort({ criadoEm: -1 });
+    if (filtros.offset !== undefined) find = find.skip(filtros.offset);
+    if (filtros.limite !== undefined) find = find.limit(filtros.limite);
+    const docs = await find;
     return docs.map(docParaDeck);
+  }
+
+  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "formato"> = {}): Promise<number> {
+    await this.conectar();
+    const query = this.construirQueryDeck(filtros);
+    return DeckModel.countDocuments(query);
   }
 
   public async atualizar(deck: Deck): Promise<void> {

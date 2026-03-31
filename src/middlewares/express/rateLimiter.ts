@@ -7,3 +7,11 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
+
+export const refreshTokenRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
+});
