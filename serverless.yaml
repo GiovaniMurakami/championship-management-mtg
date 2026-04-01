@@ -41,7 +41,7 @@ functions:
           method: any
           cors:
             origins:
-              - "*"
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com/"
             methods:
               - OPTIONS
               - GET
@@ -61,7 +61,7 @@ functions:
           method: any
           cors:
             origins:
-              - "*"
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com/"
             methods:
               - OPTIONS
               - GET
