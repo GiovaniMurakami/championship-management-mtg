@@ -1,11 +1,13 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   CadastrarDeck,
-  CadastrarDeckInputDto,
 } from "../../../../../casosDeUso/deck/cadastrarDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { deckRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { cadastrarDeckSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class CadastrarDeckRota implements Rotas {
   private constructor(
@@ -31,7 +33,7 @@ export class CadastrarDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [autenticarJwt];
+    return [deckRateLimiter, autenticarJwt];
   }
 
   public getHandler() {
@@ -43,28 +45,16 @@ export class CadastrarDeckRota implements Rotas {
       try {
         const usuarioId = request.usuario!.id;
         const usuarioNome = request.usuario!.nome;
-        const { nome, formato, maindeck, sideboard } =
-          request.body as Omit<CadastrarDeckInputDto, "usuarioId">;
+        const dados = validarBody(cadastrarDeckSchema, request.body, response);
+        if (!dados) return;
 
-        if (!nome || !formato || !maindeck) {
-          response.status(400).json({
-            mensagem: "nome, formato e maindeck são obrigatórios.",
-          });
-          return;
-        }
-
-        if (!Array.isArray(maindeck) || maindeck.length === 0) {
-          response.status(400).json({
-            mensagem: "maindeck deve ser um array com ao menos uma carta.",
-          });
-          return;
-        }
+        const { nome, formato, maindeck, sideboard } = dados;
 
         const resultado = await this.cadastrarDeckServico.executar({
           nome,
           formato,
           maindeck,
-          sideboard: Array.isArray(sideboard) ? sideboard : [],
+          sideboard: sideboard ?? [],
           usuarioId,
           usuarioNome,
         });

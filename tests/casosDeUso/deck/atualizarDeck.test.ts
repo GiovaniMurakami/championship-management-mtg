@@ -106,7 +106,7 @@ describe("AtualizarDeck", () => {
 
         await expect(
             uc.executar({ id: "deck-1", usuarioIdRequisitante: "outro-user", isAdmin: false, usuarioNome: "Outro" })
-        ).rejects.toMatchObject({ status: 403 });
+        ).rejects.toMatchObject({ status: 404 });
     });
 
     it("admin pode atualizar deck de outro usuário", async () => {

@@ -1,5 +1,6 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -24,15 +25,17 @@ export class DroparJogador
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly usuarioGateway: UsuarioGateway
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly partidaGateway: PartidaGateway
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    usuarioGateway: UsuarioGateway
+    usuarioGateway: UsuarioGateway,
+    partidaGateway: PartidaGateway
   ) {
-    return new DroparJogador(torneioGateway, inscricaoGateway, usuarioGateway);
+    return new DroparJogador(torneioGateway, inscricaoGateway, usuarioGateway, partidaGateway);
   }
 
   public async executar(
@@ -84,6 +87,31 @@ export class DroparJogador
 
     inscricao.dropped = true;
     await this.inscricaoGateway.atualizar(inscricao);
+
+    // Auto-resolve pending matches: give WO (2-0) to the opponent
+    if (torneio.status === "em_andamento") {
+      const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
+      const pendentes = partidas.filter(
+        (p) =>
+          p.status === "pendente" &&
+          (p.jogador1Id === input.jogadorId || p.jogador2Id === input.jogadorId)
+      );
+
+      for (const partida of pendentes) {
+        if (partida.jogador2Id === null) {
+          partida.vitoriasJogador1 = 2;
+          partida.vitoriasJogador2 = 0;
+        } else if (partida.jogador1Id === input.jogadorId) {
+          partida.vitoriasJogador1 = 0;
+          partida.vitoriasJogador2 = 2;
+        } else {
+          partida.vitoriasJogador1 = 2;
+          partida.vitoriasJogador2 = 0;
+        }
+        partida.status = "finalizada";
+        await this.partidaGateway.atualizar(partida);
+      }
+    }
 
     const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
 

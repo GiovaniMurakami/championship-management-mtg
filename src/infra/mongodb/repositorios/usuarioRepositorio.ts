@@ -17,13 +17,13 @@ interface UsuarioDocument extends Document {
 
 const usuarioSchema = new Schema<UsuarioDocument>({
   id: { type: String, required: true, unique: true },
-  nome: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  senha: { type: String, required: true },
+  nome: { type: String, required: true, maxlength: 100 },
+  email: { type: String, required: true, unique: true, maxlength: 254 },
+  senha: { type: String, required: true, maxlength: 128, select: false },
   role: { type: String, required: true, default: "user" },
-  telefone: { type: String, required: false },
-  nickMTGO: { type: String, required: false },
-  nickArena: { type: String, required: false },
+  telefone: { type: String, required: false, maxlength: 20 },
+  nickMTGO: { type: String, required: false, maxlength: 50 },
+  nickArena: { type: String, required: false, maxlength: 50 },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -55,7 +55,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
 
   public async buscarPorEmail(email: string): Promise<Usuario | null> {
     await this.conectar();
-    const doc = await UsuarioModel.findOne({ email });
+    const doc = await UsuarioModel.findOne({ email }).select("+senha");
 
     if (!doc) return null;
 

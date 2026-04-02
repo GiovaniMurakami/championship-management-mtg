@@ -47,17 +47,10 @@ export class AtualizarDeck
   ): Promise<AtualizarDeckOutputDto> {
     const deck = await this.deckGateway.buscarPorId(input.id);
 
-    if (!deck) {
+    if (!deck || (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin)) {
       throw ErroPersonalizado.criar({
         mensagem: "Deck não encontrado.",
         status: StatusErro.erroNaoEncontrado,
-      });
-    }
-
-    if (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin) {
-      throw ErroPersonalizado.criar({
-        mensagem: "Sem permissão para alterar este deck.",
-        status: StatusErro.erroProibido,
       });
     }
 

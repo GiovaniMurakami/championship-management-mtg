@@ -3,6 +3,9 @@ import { DroparJogador } from "../../../../../casosDeUso/torneio/droparJogador";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { droparJogadorSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class DroparJogadorRota implements Rotas {
   private constructor(
@@ -21,7 +24,7 @@ export class DroparJogadorRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (
@@ -32,8 +35,10 @@ export class DroparJogadorRota implements Rotas {
       try {
         const requisitanteId = request.usuario!.id;
         const torneioId = request.params.torneioId as string;
+        const dados = validarBody(droparJogadorSchema, request.body, response);
+        if (!dados) return;
 
-        const jogadorId = request.body.jogadorId ?? requisitanteId;
+        const jogadorId = dados.jogadorId ?? requisitanteId;
 
         const resultado = await this.droparJogadorServico.executar({
           torneioId,

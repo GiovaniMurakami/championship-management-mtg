@@ -225,7 +225,11 @@ export class IniciarProximaRodada
     if (torneio.emCorte) {
       const vencedoresIds = partidasRodadaAtual.map((p) => {
         if (p.jogador2Id === null) return p.jogador1Id; // bye automático
-        return p.vitoriasJogador1 >= p.vitoriasJogador2 ? p.jogador1Id : p.jogador2Id;
+        if (p.vitoriasJogador1 > p.vitoriasJogador2) return p.jogador1Id;
+        if (p.vitoriasJogador2 > p.vitoriasJogador1) return p.jogador2Id;
+        const idx1 = statsOrdenados.findIndex(s => s.usuarioId === p.jogador1Id);
+        const idx2 = statsOrdenados.findIndex(s => s.usuarioId === p.jogador2Id);
+        return idx1 <= idx2 ? p.jogador1Id : p.jogador2Id;
       });
 
       const vencedoresOrdenados = statsOrdenados

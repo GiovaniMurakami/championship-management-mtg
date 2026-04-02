@@ -131,4 +131,43 @@ describe("CadastrarDeck", () => {
 
         expect(resultado.nomeConsolidado).toBeNull();
     });
+
+    it("deve lançar 400 quando usuário já atingiu o limite de 50 decks", async () => {
+        const gateway = criarMockDeckGateway({
+            listarTotal: jest.fn().mockResolvedValue(50),
+        });
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        await expect(
+            uc.executar({
+                nome: "Deck Extra",
+                formato: "modern",
+                maindeck: maindeckValido,
+                sideboard: [],
+                usuarioId: "user-1",
+                usuarioNome: "Jogador",
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("50") });
+    });
+
+    it("deve permitir cadastro quando usuário tem exatamente 49 decks", async () => {
+        const gateway = criarMockDeckGateway({
+            listarTotal: jest.fn().mockResolvedValue(49),
+        });
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        const resultado = await uc.executar({
+            nome: "Deck 50",
+            formato: "modern",
+            maindeck: maindeckValido,
+            sideboard: [],
+            usuarioId: "user-1",
+            usuarioNome: "Jogador",
+        });
+
+        expect(resultado.id).toBeDefined();
+        expect(gateway.salvar).toHaveBeenCalledTimes(1);
+    });
 });
