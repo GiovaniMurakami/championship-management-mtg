@@ -24,7 +24,7 @@ export class ApiExpress implements Api {
   }
 
   private adicionarMiddlewares(): void {
-    this.app.set("trust proxy", true);
+    this.app.set("trust proxy", 1);
     this.app.use(helmet());
     this.app.use(cors({
       origin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
