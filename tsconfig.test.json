@@ -5,6 +5,7 @@
         "rootDir": ".",
         "allowJs": true,
         "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
@@ -12,6 +13,10 @@
         "typeRoots": [
             "./src/types",
             "./node_modules/@types"
+        ],
+        "types": [
+            "jest",
+            "node"
         ]
     },
     "include": [
