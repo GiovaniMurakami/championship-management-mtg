@@ -1,6 +1,6 @@
 {
   "name": "championship-management-mtg",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "API Lambda para gerenciamento de campeonatos de Magic: The Gathering",
   "main": "src/app.js",
   "scripts": {
