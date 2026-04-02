@@ -8,6 +8,8 @@ import { ChatGptGateway } from "../../src/dominio/gateway/chatGptGateway";
 import { LigaGateway } from "../../src/dominio/gateway/ligaGateway";
 import { LoginAttemptGateway } from "../../src/dominio/gateway/loginAttemptGateway";
 import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGateway";
+import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
+import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -112,6 +114,23 @@ export function criarMockRefreshTokenGateway(overrides: Partial<RefreshTokenGate
     return {
         salvar: jest.fn(),
         consumir: jest.fn().mockResolvedValue(null),
+        excluirPorUsuario: jest.fn(),
+        ...overrides,
+    };
+}
+
+export function criarMockEmailGateway(overrides: Partial<EmailGateway> = {}): EmailGateway {
+    return {
+        enviar: jest.fn().mockResolvedValue(undefined),
+        ...overrides,
+    };
+}
+
+export function criarMockResetSenhaGateway(overrides: Partial<ResetSenhaGateway> = {}): ResetSenhaGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorToken: jest.fn().mockResolvedValue(null),
+        excluirPorToken: jest.fn(),
         excluirPorUsuario: jest.fn(),
         ...overrides,
     };

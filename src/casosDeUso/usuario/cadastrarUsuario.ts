@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Usuario } from "../../dominio/entidade/usuario";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
+import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -22,10 +23,13 @@ export type CadastrarUsuarioOutputDto = {
 
 export class CadastrarUsuario
   implements CasoDeUso<CadastrarUsuarioInputDto, CadastrarUsuarioOutputDto> {
-  private constructor(private readonly usuarioGateway: UsuarioGateway) { }
+  private constructor(
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly emailGateway: EmailGateway
+  ) { }
 
-  public static criar(usuarioGateway: UsuarioGateway) {
-    return new CadastrarUsuario(usuarioGateway);
+  public static criar(usuarioGateway: UsuarioGateway, emailGateway: EmailGateway) {
+    return new CadastrarUsuario(usuarioGateway, emailGateway);
   }
 
   public async executar(
@@ -58,6 +62,16 @@ export class CadastrarUsuario
     });
 
     await this.usuarioGateway.salvar(usuario);
+
+    await this.emailGateway.enviar({
+      para: usuario.email,
+      assunto: "Bem-vindo ao MTG Championship!",
+      html: `
+        <h2>Olá, ${usuario.nome}!</h2>
+        <p>Sua conta foi criada com sucesso. Bem-vindo ao <strong>MTG Championship</strong>!</p>
+        <p>Agora você pode se inscrever em torneios, gerenciar seus decks e muito mais.</p>
+      `,
+    });
 
     return {
       id: usuario.id,

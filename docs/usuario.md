@@ -215,20 +215,88 @@ Remover um campo (enviar string vazia):
 - `400 Bad Request` - Dados inválidos (ex: nome com menos de 3 caracteres)
 - `500 Internal Server Error` - Erro no servidor
 
+---
+
+### POST /usuario/reset-senha/solicitar
+
+Solicita o envio de um e-mail com link para redefinição de senha.
+
+> **Segurança:** A resposta é sempre genérica, independente de o e-mail estar cadastrado ou não, para evitar enumeração de usuários.
+
+**Request Body:**
+
+```json
+{
+  "email": "joao.silva@email.com"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "mensagem": "Se o e-mail estiver cadastrado, você receberá as instruções em breve."
+}
+```
+
+**Notas:**
+- O link enviado por e-mail expira em **1 hora**
+- Ao solicitar novamente, o token anterior é invalidado
+- Rota protegida por rate limiter
+
+**Erros Possíveis:**
+
+- `500 Internal Server Error` - Erro no servidor
+
+---
+
+### POST /usuario/reset-senha/confirmar
+
+Confirma a redefinição de senha usando o token recebido por e-mail.
+
+**Request Body:**
+
+```json
+{
+  "token": "a3f9c2b1d4e5...",
+  "novaSenha": "minhaNovaSenha123"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "mensagem": "Senha redefinida com sucesso."
+}
+```
+
+**Erros Possíveis:**
+
+- `400 Bad Request` - Token inválido, expirado ou senha com menos de 8 caracteres
+- `404 Not Found` - Usuário não encontrado
+- `500 Internal Server Error` - Erro no servidor
+
 ## Regras de Negócio
 
 1. **Email único**: Cada email só pode ser cadastrado uma vez no sistema
 2. **Senha**: Deve ser criptografada usando bcrypt antes de ser armazenada
 3. **Token JWT**: Gerado no login e deve ser incluído no header de requisições autenticadas
-4. **Validações**:
+4. **Email de boas-vindas**: Enviado automaticamente após o cadastro bem-sucedido
+5. **Reset de senha**: Token de 32 bytes gerado com `crypto.randomBytes`, expira em 1 hora, uso único
+6. **Segurança no reset**: A resposta de `/reset-senha/solicitar` é sempre genérica para não revelar se o e-mail está cadastrado
+7. **Validações**:
    - Nome: obrigatório, mínimo 3 caracteres
    - Email: obrigatório, formato válido
-   - Senha: obrigatório, mínimo 6 caracteres
+   - Senha: obrigatório, mínimo 6 caracteres no cadastro; mínimo 8 caracteres na redefinição
 
 ## Casos de Uso
 
-- [CadastrarUsuario](../src/casosDeUso/usuario/cadastrarUsuario.ts) - Registra novo usuário
+- [CadastrarUsuario](../src/casosDeUso/usuario/cadastrarUsuario.ts) - Registra novo usuário e envia e-mail de boas-vindas
 - [LoginUsuario](../src/casosDeUso/usuario/loginUsuario.ts) - Autentica e gera token
+- [AtualizarUsuario](../src/casosDeUso/usuario/atualizarUsuario.ts) - Atualiza dados do usuário
+- [SolicitarResetSenha](../src/casosDeUso/usuario/solicitarResetSenha.ts) - Gera token e envia e-mail de redefinição
+- [ConfirmarResetSenha](../src/casosDeUso/usuario/confirmarResetSenha.ts) - Valida token e redefine a senha
 
 ## Gateway
 

@@ -3,6 +3,8 @@ import { LoginUsuario } from "./casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "./casosDeUso/usuario/atualizarUsuario";
 import { RefreshToken } from "./casosDeUso/usuario/refreshToken";
 import { LogoutUsuario } from "./casosDeUso/usuario/logoutUsuario";
+import { SolicitarResetSenha } from "./casosDeUso/usuario/solicitarResetSenha";
+import { ConfirmarResetSenha } from "./casosDeUso/usuario/confirmarResetSenha";
 import { CadastrarDeck } from "./casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "./casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "./casosDeUso/deck/excluirDeck";
@@ -36,6 +38,8 @@ import { LoginUsuarioRota } from "./infra/api/express/rotas/usuario/loginUsuario
 import { AtualizarUsuarioRota } from "./infra/api/express/rotas/usuario/atualizarUsuario.express.route";
 import { RefreshTokenRota } from "./infra/api/express/rotas/usuario/refreshToken.express.route";
 import { LogoutUsuarioRota } from "./infra/api/express/rotas/usuario/logoutUsuario.express.route";
+import { SolicitarResetSenhaRota } from "./infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
+import { ConfirmarResetSenhaRota } from "./infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
 import { CadastrarDeckRota } from "./infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "./infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "./infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -71,7 +75,9 @@ import { TokenBlacklistRepositorio } from "./infra/mongodb/repositorios/tokenBla
 import { RefreshTokenRepositorio } from "./infra/mongodb/repositorios/refreshTokenRepositorio";
 import { LigaRepositorio } from "./infra/mongodb/repositorios/ligaRepositorio";
 import { LoginAttemptRepositorio } from "./infra/mongodb/repositorios/loginAttemptRepositorio";
+import { ResetSenhaRepositorio } from "./infra/mongodb/repositorios/resetSenhaRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
+import { EmailServico } from "./infra/services/emailServico";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -97,13 +103,17 @@ export function app() {
     refreshToken: RefreshTokenRepositorio.criar(),
     liga: LigaRepositorio.criar(),
     loginAttempt: LoginAttemptRepositorio.criar(),
+    resetSenha: ResetSenhaRepositorio.criar(),
   };
 
-  const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
+  const emailServico = EmailServico.criar();
+  const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario, emailServico);
   const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.refreshToken);
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist, repositorios.refreshToken);
+  const solicitarResetSenha = SolicitarResetSenha.criar(repositorios.usuario, repositorios.resetSenha, emailServico);
+  const confirmarResetSenha = ConfirmarResetSenha.criar(repositorios.usuario, repositorios.resetSenha);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
@@ -192,6 +202,8 @@ export function app() {
   const atualizarUsuarioRota = AtualizarUsuarioRota.criar(atualizarUsuario);
   const refreshTokenRota = RefreshTokenRota.criar(refreshToken);
   const logoutUsuarioRota = LogoutUsuarioRota.criar(logoutUsuario);
+  const solicitarResetSenhaRota = SolicitarResetSenhaRota.criar(solicitarResetSenha);
+  const confirmarResetSenhaRota = ConfirmarResetSenhaRota.criar(confirmarResetSenha);
   const cadastrarDeckRota = CadastrarDeckRota.criar(cadastrarDeck);
   const atualizarDeckRota = AtualizarDeckRota.criar(atualizarDeck);
   const excluirDeckRota = ExcluirDeckRota.criar(excluirDeck);
@@ -232,6 +244,8 @@ export function app() {
     atualizarUsuarioRota,
     refreshTokenRota,
     logoutUsuarioRota,
+    solicitarResetSenhaRota,
+    confirmarResetSenhaRota,
     cadastrarDeckRota,
     atualizarDeckRota,
     excluirDeckRota,
