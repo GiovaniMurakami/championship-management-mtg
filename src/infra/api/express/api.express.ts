@@ -27,7 +27,7 @@ export class ApiExpress implements Api {
     this.app.set("trust proxy", 1);
     this.app.use(helmet());
     this.app.use(cors({
-      origin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
+      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
