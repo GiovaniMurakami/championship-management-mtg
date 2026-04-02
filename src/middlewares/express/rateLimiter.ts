@@ -27,19 +27,19 @@ export const accountRateLimiter = rateLimit({
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
-// Criar decks — evitar spam de decks no banco
+// Criar decks — limite brando pois chama ChatGPT mas não é rota crítica de segurança
 export const deckRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 20,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
-// Inscrições em torneios — por ser ação pontual, limite moderado
+// Inscrições em torneios — brando, jogadores se inscrevem/fazem check-in com frequência
 export const inscricaoRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 30,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
@@ -48,25 +48,25 @@ export const inscricaoRateLimiter = rateLimit({
 // Registrar resultado de partida — mais permissivo pois há muitas partidas por rodada
 export const resultadoRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 60,
+  max: 120,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
-// Mutações autenticadas genéricas — alterar/excluir deck, torneio, liga, etc.
+// Mutações autenticadas genéricas — alterar/excluir deck, torneio, liga, etc. (não críticas)
 export const mutationRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 30,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
-// Leitura pública — endpoints sem auth (ex: buscar/listar decks)
+// Leitura pública — endpoints de listagem/busca de torneio, deck e liga
 export const publicReadRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 50,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: "Muitas requisições. Tente novamente em 15 minutos." },
