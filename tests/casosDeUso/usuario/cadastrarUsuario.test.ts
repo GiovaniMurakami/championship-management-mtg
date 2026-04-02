@@ -1,5 +1,5 @@
 import { CadastrarUsuario } from "../../../src/casosDeUso/usuario/cadastrarUsuario";
-import { criarMockUsuarioGateway } from "../../mocks/gateways";
+import { criarMockUsuarioGateway, criarMockEmailGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
 
@@ -10,7 +10,8 @@ jest.mock("bcryptjs", () => ({
 describe("CadastrarUsuario", () => {
     it("deve cadastrar um novo usuário com sucesso", async () => {
         const gateway = criarMockUsuarioGateway();
-        const uc = CadastrarUsuario.criar(gateway);
+        const emailGateway = criarMockEmailGateway();
+        const uc = CadastrarUsuario.criar(gateway, emailGateway);
 
         const resultado = await uc.executar({
             nome: "João",
@@ -25,13 +26,27 @@ describe("CadastrarUsuario", () => {
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
     });
 
+    it("deve enviar email de boas-vindas após cadastro", async () => {
+        const gateway = criarMockUsuarioGateway();
+        const emailGateway = criarMockEmailGateway();
+        const uc = CadastrarUsuario.criar(gateway, emailGateway);
+
+        await uc.executar({ nome: "João", email: "joao@email.com", senha: "senha123" });
+
+        expect(emailGateway.enviar).toHaveBeenCalledTimes(1);
+        expect(emailGateway.enviar).toHaveBeenCalledWith(
+            expect.objectContaining({ para: "joao@email.com" })
+        );
+    });
+
     it("deve lançar erro se o e-mail já estiver cadastrado", async () => {
         const gateway = criarMockUsuarioGateway({
             buscarPorEmail: jest.fn().mockResolvedValue(
                 new Usuario({ id: "x", nome: "A", email: "joao@email.com", senha: "s" })
             ),
         });
-        const uc = CadastrarUsuario.criar(gateway);
+        const emailGateway = criarMockEmailGateway();
+        const uc = CadastrarUsuario.criar(gateway, emailGateway);
 
         await expect(
             uc.executar({ nome: "João", email: "joao@email.com", senha: "s" })
@@ -42,11 +57,13 @@ describe("CadastrarUsuario", () => {
         ).rejects.toMatchObject({ status: 400 });
 
         expect(gateway.salvar).not.toHaveBeenCalled();
+        expect(emailGateway.enviar).not.toHaveBeenCalled();
     });
 
     it("deve hash da senha antes de salvar", async () => {
         const gateway = criarMockUsuarioGateway();
-        const uc = CadastrarUsuario.criar(gateway);
+        const emailGateway = criarMockEmailGateway();
+        const uc = CadastrarUsuario.criar(gateway, emailGateway);
 
         await uc.executar({ nome: "João", email: "j@e.com", senha: "senha" });
 

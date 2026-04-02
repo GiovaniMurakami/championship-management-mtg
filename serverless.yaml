@@ -13,6 +13,9 @@ provider:
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
     CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
+    EMAIL_USER: ${env:EMAIL_USER, ''}
+    EMAIL_PASS: ${env:EMAIL_PASS, ''}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'http://localhost:5173'}
   iam:
     role:
       statements:
@@ -118,3 +121,11 @@ outputs:
   deckExcluir:
     Description: "Rota de exclusão de decks"
     Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/deck/excluir/{id}"
+
+  usuarioResetSenhaSolicitar:
+    Description: "Rota de solicitação de reset de senha"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/usuario/reset-senha/solicitar"
+
+  usuarioResetSenhaConfirmar:
+    Description: "Rota de confirmação de reset de senha"
+    Value: !Sub "https://${self:service}.execute-api.${aws:region}.amazonaws.com/${sls:stage}/usuario/reset-senha/confirmar"

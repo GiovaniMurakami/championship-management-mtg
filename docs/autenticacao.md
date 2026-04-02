@@ -7,13 +7,15 @@ A API utiliza **JSON Web Tokens (JWT)** para autenticação e autorização de u
 ## Fluxo de Autenticação
 
 ```
-1. Usuário faz cadastro     → POST /usuario/cadastrar
+1. Usuário faz cadastro     → POST /usuario/cadastrar → Recebe e-mail de boas-vindas
 2. Usuário faz login        → POST /usuario/login → Recebe token JWT
 3. Cliente guarda o token   → localStorage/sessionStorage
 4. Requisições autenticadas → Header: Authorization: Bearer {token}
 5. API valida o token       → Middleware autenticarJwt
 6. Endpoint processa        → Acesso aos dados do usuário via req.usuario
 7. Token próximo de expirar → POST /usuario/refresh-token → Novo token
+8. Esqueceu a senha         → POST /usuario/reset-senha/solicitar → E-mail com link
+                              POST /usuario/reset-senha/confirmar → Nova senha definida
 ```
 
 ## Estrutura do Token JWT
@@ -330,19 +332,33 @@ openssl rand -hex 64
 
 4. **Logout**
    - Remova o token do armazenamento
-   - Considere blacklist de tokens (futuro)
+   - O token é adicionado à blacklist no servidor
 
 5. **HTTPS obrigatório em produção**
    - Tokens devem ser transmitidos apenas via HTTPS
 
+## Configuração de E-mail
+
+Para os fluxos de cadastro e reset de senha funcionar, configure no `.env`:
+
+```env
+EMAIL_USER=seuemail@gmail.com
+EMAIL_PASS=sua_senha_de_app_16_chars   # Senha de app do Gmail, não a senha normal
+FRONTEND_URL=https://seu-frontend.com  # Usado no link do e-mail de reset
+```
+
+> Para obter a senha de app do Gmail: **Minha Conta → Segurança → Verificação em duas etapas → Senhas de app**
+
 ## Endpoints que Requerem Autenticação
 
-| Endpoint                    | Método | Autenticação | Role mínima |
-| --------------------------- | ------ | ------------ | ----------- |
-| `/usuario/cadastrar`        | POST   | ❌ Não       | —           |
-| `/usuario/login`            | POST   | ❌ Não       | —           |
-| `/usuario/refresh-token`    | POST   | ✅ Sim       | user        |
-| `/usuario/atualizar`        | PUT    | ✅ Sim       | user        |
+| Endpoint                            | Método | Autenticação | Role mínima |
+| ----------------------------------- | ------ | ------------ | ----------- |
+| `/usuario/cadastrar`                | POST   | ❌ Não       | —           |
+| `/usuario/login`                    | POST   | ❌ Não       | —           |
+| `/usuario/reset-senha/solicitar`    | POST   | ❌ Não       | —           |
+| `/usuario/reset-senha/confirmar`    | POST   | ❌ Não       | —           |
+| `/usuario/refresh-token`            | POST   | ✅ Sim       | user        |
+| `/usuario/atualizar`                | PUT    | ✅ Sim       | user        |
 | `/deck/cadastrar`           | POST   | ✅ Sim       | user        |
 | `/deck/atualizar/:id`       | PUT    | ✅ Sim       | user        |
 | `/deck/excluir/:id`         | DELETE | ✅ Sim       | user        |

@@ -21,6 +21,7 @@ import { InscreverTorneio } from "../../src/casosDeUso/torneio/inscreverTorneio"
 import { IniciarTorneio } from "../../src/casosDeUso/torneio/iniciarTorneio";
 import { RegistrarResultado } from "../../src/casosDeUso/torneio/registrarResultado";
 import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProximaRodada";
+import { criarMockEmailGateway } from "../mocks/gateways";
 
 // Mock bcrypt
 jest.mock("bcryptjs", () => ({
@@ -54,6 +55,7 @@ function criarDeckGatewayMemoria(): DeckGateway {
         buscarVarios: async (ids) => ids.map((id) => store.get(id)).filter(Boolean) as Deck[],
         listarPorUsuario: async (uid) => Array.from(store.values()).filter((d) => d.usuarioId === uid),
         listar: async () => Array.from(store.values()),
+        listarTotal: async () => store.size,
         atualizar: async (d) => { store.set(d.id, d); },
         excluir: async (id) => { store.delete(id); },
     };
@@ -65,7 +67,9 @@ function criarTorneioGatewayMemoria(): TorneioGateway {
         salvar: async (t) => { store.set(t.id, t); },
         buscarPorId: async (id) => store.get(id) ?? null,
         listar: async () => Array.from(store.values()),
+        listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        excluir: async (id) => { store.delete(id); },
     };
 }
 
@@ -76,7 +80,14 @@ function criarInscricaoGatewayMemoria(): InscricaoGateway {
         buscarPorTorneioEUsuario: async (tid, uid) =>
             Array.from(store.values()).find((i) => i.torneioId === tid && i.usuarioId === uid) ?? null,
         listarPorTorneio: async (tid) => Array.from(store.values()).filter((i) => i.torneioId === tid),
+        listarPorUsuario: async (uid) => Array.from(store.values()).filter((i) => i.usuarioId === uid),
         atualizar: async (i) => { store.set(i.id, i); },
+        excluir: async (id) => { store.delete(id); },
+        contarPorTorneios: async (ids) => {
+            const result: Record<string, number> = {};
+            for (const id of ids) result[id] = Array.from(store.values()).filter((i) => i.torneioId === id).length;
+            return result;
+        },
     };
 }
 
@@ -111,7 +122,7 @@ describe("Integração - Fluxo completo de torneio", () => {
     let torneioId: string;
 
     it("1. Deve cadastrar o dono e 4 jogadores", async () => {
-        const cadastrar = CadastrarUsuario.criar(usuarioGw);
+        const cadastrar = CadastrarUsuario.criar(usuarioGw, criarMockEmailGateway());
 
         const dono = await cadastrar.executar({ nome: "Organizador", email: "org@e.com", senha: "s" });
         donoId = dono.id;
@@ -173,7 +184,7 @@ describe("Integração - Fluxo completo de torneio", () => {
 
     it("5. Deve iniciar o torneio e gerar partidas da rodada 1", async () => {
         const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
-        const resultado = await iniciar.executar({ torneioId, donoId });
+        const resultado = await iniciar.executar({ torneioId, donoId, isAdmin: false });
 
         expect(resultado.rodadaAtual).toBe(1);
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(4))
@@ -195,6 +206,7 @@ describe("Integração - Fluxo completo de torneio", () => {
                     usuarioId: p.jogador1Id,
                     vitoriasJogador1: 2,
                     vitoriasJogador2: 1,
+                    isAdmin: false,
                 });
             }
         }
@@ -213,7 +225,7 @@ describe("Integração - Fluxo completo de torneio", () => {
 
     it("8. Deve avançar para rodada 2 e finalizar o torneio", async () => {
         const proximaRodada = IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
-        const resultado = await proximaRodada.executar({ torneioId, donoId });
+        const resultado = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
 
         // Rodada 2 é a última (totalRodadas = 2), mas como rodadaAtual era 1, 
         // agora deve ser rodada 2 com novas partidas
@@ -231,6 +243,7 @@ describe("Integração - Fluxo completo de torneio", () => {
                         usuarioId: p.jogador1Id,
                         vitoriasJogador1: 2,
                         vitoriasJogador2: 0,
+                        isAdmin: false,
                     });
                 }
             }
@@ -243,7 +256,7 @@ describe("Integração - Fluxo completo de torneio", () => {
             }
 
             // Finalizar torneio
-            const final = await proximaRodada.executar({ torneioId, donoId });
+            const final = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
             expect(final.finalizado).toBe(true);
             if (final.finalizado) {
                 expect(final.classificacao.length).toBe(4);

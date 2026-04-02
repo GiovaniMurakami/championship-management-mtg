@@ -1,6 +1,6 @@
 {
   "name": "championship-management-mtg",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "API Lambda para gerenciamento de campeonatos de Magic: The Gathering",
   "main": "src/app.js",
   "scripts": {
@@ -28,6 +28,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
+    "nodemailer": "^8.0.4",
     "pino": "^10.3.1",
     "serverless-http": "^3.2.0",
     "uuid": "^10.0.0",
@@ -44,6 +45,7 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.7.6",
+    "@types/nodemailer": "^7.0.11",
     "@types/uuid": "^10.0.0",
     "esbuild": "^0.24.0",
     "eslint": "^9.12.0",
