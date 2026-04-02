@@ -3,6 +3,7 @@ import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGat
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { Partida } from "../../../src/dominio/entidade/partida";
 
 describe("DroparJogador", () => {
     const torneio = new Torneio({
@@ -124,5 +125,56 @@ describe("DroparJogador", () => {
         await expect(
             uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" })
         ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 404 se torneio não encontrado", async () => {
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway(), // retorna null por padrão
+            criarMockInscricaoGateway(),
+            criarMockUsuarioGateway(),
+            criarMockPartidaGateway(),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "inexistente", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" })
+        ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve resolver partidas pendentes (bye, jogador1 e jogador2) ao dropar em torneio em andamento", async () => {
+        const partidaBye = new Partida({
+            id: "p-bye", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: null,
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+        const partidaComoJogador1 = new Partida({
+            id: "p-j1", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: "u-2",
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+        const partidaComoJogador2 = new Partida({
+            id: "p-j2", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-3", jogador2Id: "u-1",
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+        });
+        const partidaGw = criarMockPartidaGateway({
+            listarPorTorneio: jest.fn().mockResolvedValue([partidaBye, partidaComoJogador1, partidaComoJogador2]),
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            partidaGw,
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1",
+        });
+
+        expect(resultado.dropped).toBe(true);
+        expect(partidaGw.atualizar).toHaveBeenCalledTimes(3);
     });
 });

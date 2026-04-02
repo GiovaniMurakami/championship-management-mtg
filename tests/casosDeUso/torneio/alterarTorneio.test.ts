@@ -102,4 +102,42 @@ describe("AlterarTorneio", () => {
             uc.executar({ id: "torneio-1", requisitanteId: "user-1", isAdmin: false, nome: "Novo" })
         ).rejects.toMatchObject({ status: 400 });
     });
+
+    it("deve alterar todos os campos opcionais", async () => {
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+        const novoHorario = new Date("2025-07-01T14:00:00Z");
+
+        const resultado = await uc.executar({
+            id: "torneio-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            nome: "Novo Nome",
+            horario: novoHorario,
+            formato: "Vintage",
+            premio: "R$ 1000",
+            bannerUrl: "https://example.com/banner.jpg",
+            linkBanner: "https://example.com",
+            somRodada: "https://example.com/som.mp3",
+            maxJogadores: 64,
+            maxRodadas: 7,
+            corteTop: 8,
+            linkLive: "https://twitch.tv/example",
+        });
+
+        expect(resultado.nome).toBe("Novo Nome");
+        expect(resultado.horario).toEqual(novoHorario);
+        expect(resultado.formato).toBe("vintage");
+        expect(resultado.premio).toBe("R$ 1000");
+        expect(resultado.bannerUrl).toBe("https://example.com/banner.jpg");
+        expect(resultado.linkBanner).toBe("https://example.com");
+        expect(resultado.somRodada).toBe("https://example.com/som.mp3");
+        expect(resultado.maxJogadores).toBe(64);
+        expect(resultado.maxRodadas).toBe(7);
+        expect(resultado.corteTop).toBe(8);
+        expect(resultado.linkLive).toBe("https://twitch.tv/example");
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
 });
