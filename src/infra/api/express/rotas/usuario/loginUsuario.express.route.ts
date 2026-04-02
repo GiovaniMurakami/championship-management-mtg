@@ -1,18 +1,19 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   LoginUsuario,
-  LoginUsuarioInputDto,
 } from "../../../../../casosDeUso/usuario/loginUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { authRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { loginUsuarioSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class LoginUsuarioRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly loginUsuarioServico: LoginUsuario
-  ) {}
+  ) { }
 
   public static criar(loginUsuarioServico: LoginUsuario) {
     return new LoginUsuarioRota(
@@ -41,14 +42,10 @@ export class LoginUsuarioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { email, senha } = request.body as LoginUsuarioInputDto;
+        const dados = validarBody(loginUsuarioSchema, request.body, response);
+        if (!dados) return;
 
-        if (!email || !senha) {
-          response.status(400).json({
-            mensagem: "E-mail e senha são obrigatórios.",
-          });
-          return;
-        }
+        const { email, senha } = dados;
 
         const resultado = await this.loginUsuarioServico.executar({
           email,

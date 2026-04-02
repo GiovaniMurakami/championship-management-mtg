@@ -1,10 +1,12 @@
 import { RefreshToken } from "../../../src/casosDeUso/usuario/refreshToken";
-import { criarMockUsuarioGateway, criarMockTokenBlacklistGateway } from "../../mocks/gateways";
+import { criarMockUsuarioGateway, criarMockRefreshTokenGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
-jest.mock("jsonwebtoken", () => ({
-    sign: jest.fn().mockReturnValue("novo_token"),
+jest.mock("../../../src/helpers/jwt", () => ({
+    signToken: jest.fn().mockReturnValue("novo_token"),
 }));
+
+import { signToken } from "../../../src/helpers/jwt";
 
 describe("RefreshToken", () => {
     const usuarioExistente = new Usuario({
@@ -15,75 +17,99 @@ describe("RefreshToken", () => {
         role: "user",
     });
 
-    beforeEach(() => {
-        process.env.JWT_SECRET = "test-secret";
-    });
-
-    afterEach(() => {
-        delete process.env.JWT_SECRET;
-    });
-
-    it("deve retornar novo token quando usuário existe", async () => {
+    it("deve retornar novo token quando refresh token é válido", async () => {
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const blacklist = criarMockTokenBlacklistGateway();
-        const uc = RefreshToken.criar(gateway, blacklist);
+        const refreshTokenGw = criarMockRefreshTokenGateway({
+            consumir: jest.fn().mockResolvedValue({
+                token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
+            }),
+        });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
 
-        const resultado = await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
+        const resultado = await uc.executar({ refreshToken: "old-refresh" });
 
         expect(resultado.token).toBe("novo_token");
+        expect(resultado.refreshToken).toBeDefined();
+        expect(resultado.refreshToken).not.toBe("old-refresh");
+        expect(refreshTokenGw.salvar).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "user-1",
+        }));
     });
 
     it("deve incluir role no payload do novo token", async () => {
-        const jwt = require("jsonwebtoken");
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const blacklist = criarMockTokenBlacklistGateway();
-        const uc = RefreshToken.criar(gateway, blacklist);
+        const refreshTokenGw = criarMockRefreshTokenGateway({
+            consumir: jest.fn().mockResolvedValue({
+                token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
+            }),
+        });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
 
-        await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
+        await uc.executar({ refreshToken: "old-refresh" });
 
-        expect(jwt.sign).toHaveBeenCalledWith(
+        expect(signToken).toHaveBeenCalledWith(
             expect.objectContaining({ role: "user" }),
-            "test-secret",
-            expect.any(Object)
+            "30m"
         );
     });
 
-    it("deve invalidar o token atual na blacklist ao emitir novo token", async () => {
+    it("deve consumir atomicamente o refresh token antigo", async () => {
+        const consumir = jest.fn().mockResolvedValue({
+            token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
+        });
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const blacklist = criarMockTokenBlacklistGateway();
-        const uc = RefreshToken.criar(gateway, blacklist);
+        const refreshTokenGw = criarMockRefreshTokenGateway({ consumir });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
 
-        await uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" });
+        await uc.executar({ refreshToken: "old-refresh" });
 
-        expect(blacklist.adicionar).toHaveBeenCalledWith("token_antigo", expect.any(Date));
+        expect(consumir).toHaveBeenCalledWith("old-refresh");
+    });
+
+    it("deve lançar erro 401 se refresh token inválido ou expirado", async () => {
+        const gateway = criarMockUsuarioGateway();
+        const refreshTokenGw = criarMockRefreshTokenGateway();
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
+
+        await expect(
+            uc.executar({ refreshToken: "inexistente" })
+        ).rejects.toMatchObject({ status: 401 });
     });
 
     it("deve lançar erro 401 se usuário não existir", async () => {
         const gateway = criarMockUsuarioGateway();
-        const blacklist = criarMockTokenBlacklistGateway();
-        const uc = RefreshToken.criar(gateway, blacklist);
+        const refreshTokenGw = criarMockRefreshTokenGateway({
+            consumir: jest.fn().mockResolvedValue({
+                token: "old-refresh", usuarioId: "inexistente", expiresAt: new Date(Date.now() + 86400000),
+            }),
+        });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
 
         await expect(
-            uc.executar({ usuarioId: "inexistente", tokenAtual: "token_antigo" })
+            uc.executar({ refreshToken: "old-refresh" })
         ).rejects.toMatchObject({ status: 401 });
     });
 
-    it("deve lançar erro 500 se JWT_SECRET não configurado", async () => {
-        delete process.env.JWT_SECRET;
+    it("deve lançar erro 500 se signToken retornar null", async () => {
+        (signToken as jest.Mock).mockReturnValueOnce(null);
         const gateway = criarMockUsuarioGateway({
             buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
         });
-        const blacklist = criarMockTokenBlacklistGateway();
-        const uc = RefreshToken.criar(gateway, blacklist);
+        const refreshTokenGw = criarMockRefreshTokenGateway({
+            consumir: jest.fn().mockResolvedValue({
+                token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
+            }),
+        });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
 
         await expect(
-            uc.executar({ usuarioId: "user-1", tokenAtual: "token_antigo" })
+            uc.executar({ refreshToken: "old-refresh" })
         ).rejects.toMatchObject({ status: 500 });
     });
 });

@@ -7,6 +7,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 
 const MINIMO_MAINDECK = 60;
 const MAXIMO_SIDEBOARD = 15;
+const MAXIMO_DECKS_POR_USUARIO = 50;
 
 function totalCartas(cartas: Carta[]): number {
   return cartas.reduce((acc, carta) => acc + carta.quantidade, 0);
@@ -37,7 +38,7 @@ export class CadastrarDeck
   private constructor(
     private readonly deckGateway: DeckGateway,
     private readonly chatGptGateway: ChatGptGateway
-  ) {}
+  ) { }
 
   public static criar(deckGateway: DeckGateway, chatGptGateway: ChatGptGateway) {
     return new CadastrarDeck(deckGateway, chatGptGateway);
@@ -46,6 +47,14 @@ export class CadastrarDeck
   public async executar(
     input: CadastrarDeckInputDto
   ): Promise<CadastrarDeckOutputDto> {
+    const totalDecksUsuario = await this.deckGateway.listarTotal({ usuarioId: input.usuarioId });
+    if (totalDecksUsuario >= MAXIMO_DECKS_POR_USUARIO) {
+      throw ErroPersonalizado.criar({
+        mensagem: `Limite de ${MAXIMO_DECKS_POR_USUARIO} decks por usuário atingido.`,
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const totalMaindeck = totalCartas(input.maindeck);
     if (totalMaindeck < MINIMO_MAINDECK) {
       throw ErroPersonalizado.criar({

@@ -84,6 +84,14 @@ export class RegistrarResultado
     const v1 = input.vitoriasJogador1;
     const v2 = input.vitoriasJogador2;
 
+    if (torneio.emCorte && v1 === v2) {
+      throw ErroPersonalizado.criar({
+        mensagem:
+          "Empates não são permitidos na fase eliminatória. Um jogador deve vencer a partida.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     if (
       v1 < 0 ||
       v2 < 0 ||

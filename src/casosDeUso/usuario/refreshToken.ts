@@ -1,68 +1,82 @@
-import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
-import { TokenBlacklistGateway } from "../../dominio/gateway/tokenBlacklistGateway";
+import { RefreshTokenGateway } from "../../dominio/gateway/refreshTokenGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { signToken } from "../../helpers/jwt";
+
+const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 
 export type RefreshTokenInputDto = {
-  usuarioId: string;
-  tokenAtual: string;
+  refreshToken: string;
 };
 
 export type RefreshTokenOutputDto = {
   token: string;
+  refreshToken: string;
 };
 
 export class RefreshToken
-  implements CasoDeUso<RefreshTokenInputDto, RefreshTokenOutputDto>
-{
+  implements CasoDeUso<RefreshTokenInputDto, RefreshTokenOutputDto> {
   private constructor(
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly tokenBlacklistGateway: TokenBlacklistGateway
-  ) {}
+    private readonly refreshTokenGateway: RefreshTokenGateway
+  ) { }
 
   public static criar(
     usuarioGateway: UsuarioGateway,
-    tokenBlacklistGateway: TokenBlacklistGateway
+    refreshTokenGateway: RefreshTokenGateway
   ) {
-    return new RefreshToken(usuarioGateway, tokenBlacklistGateway);
+    return new RefreshToken(usuarioGateway, refreshTokenGateway);
   }
 
   public async executar(
     input: RefreshTokenInputDto
   ): Promise<RefreshTokenOutputDto> {
-    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
+    // Atomic consume: find-and-delete prevents race condition
+    const dados = await this.refreshTokenGateway.consumir(input.refreshToken);
 
-    if (!usuario) {
+    if (!dados) {
       throw ErroPersonalizado.criar({
-        mensagem: "Usuário não encontrado.",
+        mensagem: "Refresh token inválido ou expirado.",
         status: StatusErro.erroNaoAutorizado,
       });
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
+    const usuario = await this.usuarioGateway.buscarPorId(dados.usuarioId);
 
-    if (!jwtSecret) {
+    if (!usuario) {
       throw ErroPersonalizado.criar({
-        mensagem: "Erro interno do servidor.",
-        status: StatusErro.erroServidor,
+        mensagem: "Sessão inválida.",
+        status: StatusErro.erroNaoAutorizado,
       });
     }
 
-    await this.tokenBlacklistGateway.adicionar(input.tokenAtual, new Date(Date.now() + 30 * 60 * 1000));
-
-    const token = jwt.sign(
+    const token = signToken(
       {
         id: usuario.id,
         email: usuario.email,
         nome: usuario.nome,
         role: usuario.role,
       },
-      jwtSecret,
-      { expiresIn: "30m" }
+      "30m"
     );
 
-    return { token };
+    if (!token) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Erro interno do servidor.",
+        status: StatusErro.erroServidor,
+      });
+    }
+
+    const novoRefreshToken = uuidv4();
+    await this.refreshTokenGateway.salvar({
+      token: novoRefreshToken,
+      usuarioId: usuario.id,
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+    });
+
+    return { token, refreshToken: novoRefreshToken };
   }
 }

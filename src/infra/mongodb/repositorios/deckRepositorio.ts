@@ -16,19 +16,33 @@ interface DeckDocument extends Document {
 
 const cartaSchema = new Schema<Carta>(
   {
-    nome: { type: String, required: true },
-    quantidade: { type: Number, required: true },
+    nome: { type: String, required: true, maxlength: 200 },
+    quantidade: { type: Number, required: true, max: 99 },
   },
   { _id: false }
 );
 
 const deckSchema = new Schema<DeckDocument>({
   id: { type: String, required: true, unique: true },
-  nome: { type: String, required: true },
-  nomeConsolidado: { type: String, default: null },
-  formato: { type: String, required: true },
-  maindeck: { type: [cartaSchema], default: [] },
-  sideboard: { type: [cartaSchema], default: [] },
+  nome: { type: String, required: true, maxlength: 100 },
+  nomeConsolidado: { type: String, default: null, maxlength: 100 },
+  formato: { type: String, required: true, maxlength: 50 },
+  maindeck: {
+    type: [cartaSchema],
+    default: [],
+    validate: {
+      validator: (arr: Carta[]) => arr.length <= 100,
+      message: "maindeck não pode ter mais de 100 entradas",
+    },
+  },
+  sideboard: {
+    type: [cartaSchema],
+    default: [],
+    validate: {
+      validator: (arr: Carta[]) => arr.length <= 15,
+      message: "sideboard não pode ter mais de 15 entradas",
+    },
+  },
   usuarioId: { type: String, required: true },
   criadoEm: { type: Date, default: Date.now },
 });

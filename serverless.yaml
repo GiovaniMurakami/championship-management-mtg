@@ -7,8 +7,12 @@ provider:
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     JWT_SECRET: ${env:JWT_SECRET}
+    JWT_PRIVATE_KEY_BASE64: ${env:JWT_PRIVATE_KEY_BASE64, ''}
+    JWT_PUBLIC_KEY_BASE64: ${env:JWT_PUBLIC_KEY_BASE64, ''}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
+    CORS_ORIGIN: ${env:CORS_ORIGIN, ''}
+    AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
 
 build:
   esbuild: false
@@ -41,7 +45,7 @@ functions:
           method: any
           cors:
             origins:
-              - "*"
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com/"
             methods:
               - OPTIONS
               - GET
@@ -61,7 +65,7 @@ functions:
           method: any
           cors:
             origins:
-              - "*"
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com/"
             methods:
               - OPTIONS
               - GET

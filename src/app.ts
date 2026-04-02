@@ -68,11 +68,21 @@ import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioReposito
 import { InscricaoRepositorio } from "./infra/mongodb/repositorios/inscricaoRepositorio";
 import { PartidaRepositorio } from "./infra/mongodb/repositorios/partidaRepositorio";
 import { TokenBlacklistRepositorio } from "./infra/mongodb/repositorios/tokenBlacklistRepositorio";
+import { RefreshTokenRepositorio } from "./infra/mongodb/repositorios/refreshTokenRepositorio";
 import { LigaRepositorio } from "./infra/mongodb/repositorios/ligaRepositorio";
+import { LoginAttemptRepositorio } from "./infra/mongodb/repositorios/loginAttemptRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET"] as const;
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Variável de ambiente obrigatória não definida: ${envVar}`);
+  }
+}
+
 NotificacaoAbly.iniciar();
 
 export function app() {
@@ -84,14 +94,16 @@ export function app() {
     inscricao: InscricaoRepositorio.criar(),
     partida: PartidaRepositorio.criar(),
     tokenBlacklist: TokenBlacklistRepositorio.criar(),
+    refreshToken: RefreshTokenRepositorio.criar(),
     liga: LigaRepositorio.criar(),
+    loginAttempt: LoginAttemptRepositorio.criar(),
   };
 
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario);
-  const loginUsuario = LoginUsuario.criar(repositorios.usuario);
+  const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
-  const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.tokenBlacklist);
-  const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist);
+  const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.refreshToken);
+  const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist, repositorios.refreshToken);
   const chatGptServico = ChatGptServico.criar();
   const cadastrarDeck = CadastrarDeck.criar(repositorios.deck, chatGptServico);
   const atualizarDeck = AtualizarDeck.criar(repositorios.deck);
@@ -133,7 +145,8 @@ export function app() {
   const droparJogador = DroparJogador.criar(
     repositorios.torneio,
     repositorios.inscricao,
-    repositorios.usuario
+    repositorios.usuario,
+    repositorios.partida
   );
   const listarTorneios = ListarTorneios.criar(repositorios.torneio, repositorios.inscricao);
   const buscarTorneio = BuscarTorneio.criar(

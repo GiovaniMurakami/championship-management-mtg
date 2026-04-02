@@ -6,6 +6,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { criarTorneioSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class CriarTorneioRota implements Rotas {
   private constructor(
@@ -20,7 +23,7 @@ export class CriarTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt, autorizarAdmin]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt, autorizarAdmin]; }
 
   public getHandler() {
     return async (
@@ -30,16 +33,14 @@ export class CriarTorneioRota implements Rotas {
     ): Promise<void> => {
       try {
         const donoId = request.usuario!.id;
+        const dados = validarBody(criarTorneioSchema, request.body, response);
+        if (!dados) return;
+
         const {
           nome, horario, formato, premio,
           bannerUrl, linkBanner, somRodada,
           maxJogadores, maxRodadas, corteTop, linkLive,
-        } = request.body;
-
-        if (!nome || !horario || !formato) {
-          response.status(400).json({ mensagem: "nome, horario e formato são obrigatórios." });
-          return;
-        }
+        } = dados;
 
         const resultado = await this.criarTorneioServico.executar({
           nome,

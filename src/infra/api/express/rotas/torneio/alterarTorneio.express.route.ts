@@ -3,6 +3,9 @@ import { AlterarTorneio } from "../../../../../casosDeUso/torneio/alterarTorneio
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { alterarTorneioSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class AlterarTorneioRota implements Rotas {
   private constructor(
@@ -17,7 +20,7 @@ export class AlterarTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (
@@ -28,11 +31,14 @@ export class AlterarTorneioRota implements Rotas {
       try {
         const id = request.params.id as string;
         const requisitanteId = request.usuario!.id;
+        const dados = validarBody(alterarTorneioSchema, request.body, response);
+        if (!dados) return;
+
         const {
           nome, horario, formato, premio,
           bannerUrl, linkBanner, somRodada,
           maxJogadores, maxRodadas, corteTop, linkLive,
-        } = request.body;
+        } = dados;
 
         const resultado = await this.alterarTorneioServico.executar({
           id,

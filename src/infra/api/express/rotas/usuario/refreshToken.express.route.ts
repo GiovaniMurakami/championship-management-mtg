@@ -2,15 +2,16 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { RefreshToken } from "../../../../../casosDeUso/usuario/refreshToken";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { refreshTokenRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { refreshTokenSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class RefreshTokenRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly refreshTokenServico: RefreshToken
-  ) {}
+  ) { }
 
   public static criar(refreshTokenServico: RefreshToken) {
     return new RefreshTokenRota(
@@ -29,7 +30,7 @@ export class RefreshTokenRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [refreshTokenRateLimiter, autenticarJwt];
+    return [refreshTokenRateLimiter];
   }
 
   public getHandler() {
@@ -39,10 +40,11 @@ export class RefreshTokenRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const tokenAtual = request.headers["authorization"]!.replace("Bearer ", "");
+        const dados = validarBody(refreshTokenSchema, request.body, response);
+        if (!dados) return;
+
         const resultado = await this.refreshTokenServico.executar({
-          usuarioId: request.usuario!.id,
-          tokenAtual,
+          refreshToken: dados.refreshToken,
         });
 
         response.status(200).json(resultado);

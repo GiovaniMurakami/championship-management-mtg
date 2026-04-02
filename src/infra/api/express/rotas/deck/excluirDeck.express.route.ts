@@ -3,13 +3,14 @@ import { ExcluirDeck } from "../../../../../casosDeUso/deck/excluirDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class ExcluirDeckRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly excluirDeckServico: ExcluirDeck
-  ) {}
+  ) { }
 
   public static criar(excluirDeckServico: ExcluirDeck) {
     return new ExcluirDeckRota(
@@ -28,7 +29,7 @@ export class ExcluirDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [autenticarJwt];
+    return [mutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {

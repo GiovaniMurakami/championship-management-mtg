@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import mongoSanitize from "express-mongo-sanitize";
+import { sanitizarEntrada } from "../../../middlewares/express/sanitizarEntrada";
 import { Rotas } from "./rotas/rotas";
 import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
@@ -23,12 +24,19 @@ export class ApiExpress implements Api {
   }
 
   private adicionarMiddlewares(): void {
+    this.app.set("trust proxy", 1);
     this.app.use(helmet());
-    this.app.use(cors());
+    this.app.use(cors({
+      origin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
+    }));
     this.app.use(compression());
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json({ limit: "100kb" }));
+    this.app.use(express.urlencoded({ extended: true, limit: "100kb" }));
     this.app.use(mongoSanitize());
+    this.app.use(sanitizarEntrada);
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       logger.info({ method: req.method, path: req.path }, "request");
       next();

@@ -4,7 +4,10 @@ import { BuscarStandings } from "../../../../../casosDeUso/torneio/buscarStandin
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { resultadoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
+import { registrarResultadoSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class RegistrarResultadoRota implements Rotas {
   private constructor(
@@ -28,7 +31,7 @@ export class RegistrarResultadoRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [resultadoRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (
@@ -39,19 +42,15 @@ export class RegistrarResultadoRota implements Rotas {
       try {
         const usuarioId = request.usuario!.id;
         const partidaId = request.params.partidaId as string;
-        const { vitoriasJogador1, vitoriasJogador2 } = request.body;
-
-        if (vitoriasJogador1 === undefined || vitoriasJogador2 === undefined) {
-          response.status(400).json({ mensagem: "vitoriasJogador1 e vitoriasJogador2 são obrigatórios." });
-          return;
-        }
+        const dados = validarBody(registrarResultadoSchema, request.body, response);
+        if (!dados) return;
 
         const resultado = await this.registrarResultadoServico.executar({
           partidaId,
           usuarioId,
           isAdmin: request.usuario!.role === "admin",
-          vitoriasJogador1: Number(vitoriasJogador1),
-          vitoriasJogador2: Number(vitoriasJogador2),
+          vitoriasJogador1: dados.vitoriasJogador1,
+          vitoriasJogador2: dados.vitoriasJogador2,
         });
 
         eventosTorneio.emit("resultado_registrado", resultado);

@@ -3,6 +3,7 @@ import { CheckInTorneio } from "../../../../../casosDeUso/torneio/checkInTorneio
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class CheckInTorneioRota implements Rotas {
   private constructor(
@@ -21,7 +22,7 @@ export class CheckInTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [inscricaoRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

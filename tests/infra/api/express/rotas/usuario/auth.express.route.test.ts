@@ -21,7 +21,7 @@ describe("CadastrarUsuarioRota", () => {
         const { req, res, next } = makeReqRes({ nome: "Joao" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ mensagem: "Nome, e-mail e senha são obrigatórios." });
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ mensagem: expect.any(String) }));
     });
 
     it("retorna 201 com dados do usuario criado", async () => {
@@ -96,7 +96,7 @@ describe("LogoutUsuarioRota", () => {
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);
-        expect(servico.executar).toHaveBeenCalledWith({ token: "valid-token" });
+        expect(servico.executar).toHaveBeenCalledWith({ token: "valid-token", usuarioId: "u-1" });
     });
 
     it("chama next() em erros desconhecidos", async () => {

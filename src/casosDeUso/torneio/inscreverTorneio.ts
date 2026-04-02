@@ -85,6 +85,19 @@ export class InscreverTorneio
 
     await this.inscricaoGateway.salvar(inscricao);
 
+    // Re-verify maxJogadores after insert to handle race condition
+    if (torneio.maxJogadores) {
+      const contagemPos = await this.inscricaoGateway.contarPorTorneios([input.torneioId]);
+      const totalPosInsert = contagemPos[input.torneioId] ?? 0;
+      if (totalPosInsert > torneio.maxJogadores) {
+        await this.inscricaoGateway.excluir(inscricao.id);
+        throw ErroPersonalizado.criar({
+          mensagem: `O torneio atingiu o limite máximo de ${torneio.maxJogadores} jogadores.`,
+          status: StatusErro.erroParametro,
+        });
+      }
+    }
+
     const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
     const usuarioNome = usuario?.nome ?? input.usuarioId;
 

@@ -3,6 +3,9 @@ import { EscolherDeckTorneio } from "../../../../../casosDeUso/torneio/escolherD
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { escolherDeckTorneioSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class EscolherDeckTorneioRota implements Rotas {
   private constructor(
@@ -21,7 +24,7 @@ export class EscolherDeckTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [inscricaoRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (
@@ -32,12 +35,10 @@ export class EscolherDeckTorneioRota implements Rotas {
       try {
         const isAdmin = request.usuario!.role === "admin";
         const torneioId = request.params.torneioId as string;
-        const { deckId, jogadorId } = request.body;
+        const dados = validarBody(escolherDeckTorneioSchema, request.body, response);
+        if (!dados) return;
 
-        if (!deckId) {
-          response.status(400).json({ mensagem: "deckId é obrigatório." });
-          return;
-        }
+        const { deckId, jogadorId } = dados;
 
         const usuarioId = isAdmin && jogadorId ? jogadorId : request.usuario!.id;
         const usuarioNome = request.usuario!.nome;
