@@ -108,7 +108,7 @@ export function app() {
 
   const emailServico = EmailServico.criar();
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario, emailServico);
-  const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken);
+  const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken, emailServico, repositorios.resetSenha);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.refreshToken);
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist, repositorios.refreshToken);
