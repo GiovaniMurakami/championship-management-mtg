@@ -5,6 +5,8 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export type CadastrarUsuarioInputDto = {
   nome: string;
   email: string;
@@ -19,9 +21,8 @@ export type CadastrarUsuarioOutputDto = {
 };
 
 export class CadastrarUsuario
-  implements CasoDeUso<CadastrarUsuarioInputDto, CadastrarUsuarioOutputDto>
-{
-  private constructor(private readonly usuarioGateway: UsuarioGateway) {}
+  implements CasoDeUso<CadastrarUsuarioInputDto, CadastrarUsuarioOutputDto> {
+  private constructor(private readonly usuarioGateway: UsuarioGateway) { }
 
   public static criar(usuarioGateway: UsuarioGateway) {
     return new CadastrarUsuario(usuarioGateway);
@@ -30,13 +31,20 @@ export class CadastrarUsuario
   public async executar(
     input: CadastrarUsuarioInputDto
   ): Promise<CadastrarUsuarioOutputDto> {
+    if (!EMAIL_REGEX.test(input.email)) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Formato de e-mail inválido.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const usuarioExistente = await this.usuarioGateway.buscarPorEmail(
       input.email
     );
 
     if (usuarioExistente) {
       throw ErroPersonalizado.criar({
-        mensagem: "E-mail já cadastrado.",
+        mensagem: "Não foi possível concluir o cadastro.",
         status: StatusErro.erroParametro,
       });
     }

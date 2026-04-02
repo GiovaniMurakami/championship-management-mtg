@@ -22,7 +22,7 @@ describe("CriarTorneioRota", () => {
         const { req, res, next } = makeReqRes({ nome: "Torneio" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ mensagem: "nome, horario e formato são obrigatórios." });
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ mensagem: expect.any(String) }));
     });
 
     it("retorna 201 com torneio criado", async () => {

@@ -3,6 +3,7 @@ import { ExcluirLiga } from "../../../../../casosDeUso/liga/excluirLiga";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class ExcluirLigaRota implements Rotas {
   private constructor(
@@ -17,7 +18,7 @@ export class ExcluirLigaRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

@@ -1,5 +1,5 @@
 import { DroparJogador } from "../../../src/casosDeUso/torneio/droparJogador";
-import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGateway } from "../../mocks/gateways";
+import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGateway, criarMockPartidaGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
@@ -25,6 +25,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockPartidaGateway(),
         );
 
         const resultado = await uc.executar({
@@ -41,6 +42,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockPartidaGateway(),
         );
 
         const resultado = await uc.executar({
@@ -56,6 +58,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
+            criarMockPartidaGateway(),
         );
 
         await expect(
@@ -71,6 +74,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockPartidaGateway(),
         );
 
         const resultado = await uc.executar({
@@ -87,6 +91,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
+            criarMockPartidaGateway(),
         );
 
         await expect(
@@ -99,6 +104,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
+            criarMockPartidaGateway(),
         );
 
         await expect(
@@ -112,6 +118,7 @@ describe("DroparJogador", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricaoJaDropada) }),
             criarMockUsuarioGateway(),
+            criarMockPartidaGateway(),
         );
 
         await expect(

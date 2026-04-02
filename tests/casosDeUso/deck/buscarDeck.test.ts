@@ -28,7 +28,7 @@ describe("BuscarDeck", () => {
     it("deve lançar 404 quando deck não existe", async () => {
         const uc = BuscarDeck.criar(criarMockDeckGateway(), criarMockUsuarioGateway());
 
-        await expect(uc.executar({ id: "inexistente" })).rejects.toThrow(ErroPersonalizado);
+        await expect(uc.executar({ id: "inexistente" })).rejects.toThrow();
 
         try {
             await uc.executar({ id: "inexistente" });

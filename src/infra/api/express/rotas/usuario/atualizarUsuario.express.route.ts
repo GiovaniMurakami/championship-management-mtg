@@ -1,18 +1,20 @@
 import { NextFunction, Request, Response } from "express";
 import {
   AtualizarUsuario,
-  AtualizarUsuarioInputDto,
 } from "../../../../../casosDeUso/usuario/atualizarUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { accountRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { atualizarUsuarioSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class AtualizarUsuarioRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly atualizarUsuarioServico: AtualizarUsuario
-  ) {}
+  ) { }
 
   public static criar(atualizarUsuarioServico: AtualizarUsuario) {
     return new AtualizarUsuarioRota(
@@ -31,7 +33,7 @@ export class AtualizarUsuarioRota implements Rotas {
   }
 
   public getMiddlewares() {
-    return [autenticarJwt];
+    return [accountRateLimiter, autenticarJwt];
   }
 
   public getHandler() {
@@ -50,8 +52,10 @@ export class AtualizarUsuarioRota implements Rotas {
           return;
         }
 
-        const { nome, telefone, nickMTGO, nickArena } =
-          request.body as Omit<AtualizarUsuarioInputDto, "id">;
+        const dados = validarBody(atualizarUsuarioSchema, request.body, response);
+        if (!dados) return;
+
+        const { nome, telefone, nickMTGO, nickArena } = dados;
 
         const resultado = await this.atualizarUsuarioServico.executar({
           id: usuarioId,

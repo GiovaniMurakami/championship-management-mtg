@@ -3,13 +3,14 @@ import { InscreverTorneio } from "../../../../../casosDeUso/torneio/inscreverTor
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class InscreverTorneioRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly inscreverTorneioServico: InscreverTorneio
-  ) {}
+  ) { }
 
   public static criar(inscreverTorneioServico: InscreverTorneio) {
     return new InscreverTorneioRota(
@@ -21,7 +22,7 @@ export class InscreverTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [inscricaoRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

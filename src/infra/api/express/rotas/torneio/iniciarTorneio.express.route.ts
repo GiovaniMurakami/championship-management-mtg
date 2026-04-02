@@ -3,6 +3,7 @@ import { IniciarTorneio } from "../../../../../casosDeUso/torneio/iniciarTorneio
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 
 export class IniciarTorneioRota implements Rotas {
@@ -10,7 +11,7 @@ export class IniciarTorneioRota implements Rotas {
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly iniciarTorneioServico: IniciarTorneio
-  ) {}
+  ) { }
 
   public static criar(iniciarTorneioServico: IniciarTorneio) {
     return new IniciarTorneioRota(
@@ -22,7 +23,7 @@ export class IniciarTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

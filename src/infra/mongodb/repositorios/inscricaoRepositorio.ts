@@ -25,7 +25,7 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
-inscricaoSchema.index({ torneioId: 1, usuarioId: 1 });
+inscricaoSchema.index({ torneioId: 1, usuarioId: 1 }, { unique: true });
 inscricaoSchema.index({ torneioId: 1 });
 inscricaoSchema.index({ usuarioId: 1 });
 
@@ -117,5 +117,10 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
       mapa[item._id] = item.total;
     }
     return mapa;
+  }
+
+  public async excluir(id: string): Promise<void> {
+    await this.conectar();
+    await InscricaoModel.deleteOne({ id });
   }
 }

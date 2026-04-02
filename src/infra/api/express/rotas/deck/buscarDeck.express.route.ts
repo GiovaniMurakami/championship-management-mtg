@@ -1,14 +1,15 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { BuscarDeck } from "../../../../../casosDeUso/deck/buscarDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class BuscarDeckRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly buscarDeckServico: BuscarDeck
-  ) {}
+  ) { }
 
   public static criar(buscarDeckServico: BuscarDeck) {
     return new BuscarDeckRota("/deck/:id", HttpMethod.GET, buscarDeckServico);
@@ -20,6 +21,10 @@ export class BuscarDeckRota implements Rotas {
 
   public getMetodo(): HttpMethod {
     return this.metodo;
+  }
+
+  public getMiddlewares(): RequestHandler[] {
+    return [publicReadRateLimiter];
   }
 
   public getHandler() {

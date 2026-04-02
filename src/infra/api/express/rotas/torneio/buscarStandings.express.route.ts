@@ -3,13 +3,14 @@ import { BuscarStandings } from "../../../../../casosDeUso/torneio/buscarStandin
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class BuscarStandingsRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly buscarStandingsServico: BuscarStandings
-  ) {}
+  ) { }
 
   public static criar(buscarStandingsServico: BuscarStandings) {
     return new BuscarStandingsRota(
@@ -21,7 +22,7 @@ export class BuscarStandingsRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

@@ -1,11 +1,13 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   AtualizarDeck,
-  AtualizarDeckInputDto,
 } from "../../../../../casosDeUso/deck/atualizarDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { atualizarDeckSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class AtualizarDeckRota implements Rotas {
   private constructor(
@@ -31,7 +33,7 @@ export class AtualizarDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [autenticarJwt];
+    return [mutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {
@@ -44,8 +46,10 @@ export class AtualizarDeckRota implements Rotas {
         const id = request.params.id as string;
         const usuarioIdRequisitante = request.usuario!.id;
         const usuarioNome = request.usuario!.nome;
-        const { nome, nomeConsolidado, formato, maindeck, sideboard } =
-          request.body as Omit<AtualizarDeckInputDto, "id" | "usuarioIdRequisitante">;
+        const dados = validarBody(atualizarDeckSchema, request.body, response);
+        if (!dados) return;
+
+        const { nome, nomeConsolidado, formato, maindeck, sideboard } = dados;
 
         const resultado = await this.atualizarDeckServico.executar({
           id,

@@ -71,13 +71,13 @@ describe("autenticarJwt middleware", () => {
         expect(next).not.toHaveBeenCalled();
     });
 
-    it("deve retornar 500 quando JWT_SECRET não configurado", async () => {
+    it("deve retornar 401 quando JWT_SECRET não configurado", async () => {
         delete process.env.JWT_SECRET;
         req.headers = { authorization: "Bearer token" };
 
         await autenticarJwt(req as Request, res as Response, next);
 
-        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.status).toHaveBeenCalledWith(401);
         expect(next).not.toHaveBeenCalled();
     });
 

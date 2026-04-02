@@ -3,6 +3,7 @@ import { RankingLiga } from "../../../../../casosDeUso/liga/rankingLiga";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class RankingLigaRota implements Rotas {
   private constructor(
@@ -17,7 +18,7 @@ export class RankingLigaRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
 
   public getHandler() {
     return async (

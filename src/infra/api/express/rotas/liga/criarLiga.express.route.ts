@@ -4,13 +4,16 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { criarLigaSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class CriarLigaRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly criarLigaServico: CriarLiga
-  ) {}
+  ) { }
 
   public static criar(criarLigaServico: CriarLiga) {
     return new CriarLigaRota("/liga/criar", HttpMethod.POST, criarLigaServico);
@@ -18,7 +21,7 @@ export class CriarLigaRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [autenticarJwt, autorizarAdmin]; }
+  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt, autorizarAdmin]; }
 
   public getHandler() {
     return async (
@@ -28,12 +31,10 @@ export class CriarLigaRota implements Rotas {
     ): Promise<void> => {
       try {
         const donoId = request.usuario!.id;
-        const { nome, descricao, torneioIds } = request.body;
+        const dados = validarBody(criarLigaSchema, request.body, response);
+        if (!dados) return;
 
-        if (!nome) {
-          response.status(400).json({ mensagem: "nome é obrigatório." });
-          return;
-        }
+        const { nome, descricao, torneioIds } = dados;
 
         const resultado = await this.criarLigaServico.executar({
           nome,

@@ -1,11 +1,13 @@
 import { UsuarioGateway } from "../../src/dominio/gateway/usuarioGateway";
 import { TokenBlacklistGateway } from "../../src/dominio/gateway/tokenBlacklistGateway";
-import { DeckGateway, FiltrosListarDecks } from "../../src/dominio/gateway/deckGateway";
+import { DeckGateway } from "../../src/dominio/gateway/deckGateway";
 import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
 import { ChatGptGateway } from "../../src/dominio/gateway/chatGptGateway";
 import { LigaGateway } from "../../src/dominio/gateway/ligaGateway";
+import { LoginAttemptGateway } from "../../src/dominio/gateway/loginAttemptGateway";
+import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -64,6 +66,7 @@ export function criarMockInscricaoGateway(overrides: Partial<InscricaoGateway> =
         listarPorUsuario: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
         contarPorTorneios: jest.fn().mockResolvedValue({}),
+        excluir: jest.fn(),
         ...overrides,
     };
 }
@@ -92,6 +95,24 @@ export function criarMockTokenBlacklistGateway(overrides: Partial<TokenBlacklist
     return {
         adicionar: jest.fn(),
         existe: jest.fn().mockResolvedValue(false),
+        ...overrides,
+    };
+}
+
+export function criarMockLoginAttemptGateway(overrides: Partial<LoginAttemptGateway> = {}): LoginAttemptGateway {
+    return {
+        registrarFalha: jest.fn(),
+        obterFalhas: jest.fn().mockResolvedValue(0),
+        resetar: jest.fn(),
+        ...overrides,
+    };
+}
+
+export function criarMockRefreshTokenGateway(overrides: Partial<RefreshTokenGateway> = {}): RefreshTokenGateway {
+    return {
+        salvar: jest.fn(),
+        consumir: jest.fn().mockResolvedValue(null),
+        excluirPorUsuario: jest.fn(),
         ...overrides,
     };
 }

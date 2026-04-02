@@ -1,16 +1,17 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import {
   ListarDecks,
 } from "../../../../../casosDeUso/deck/listarDecks";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class ListarDecksRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
     private readonly listarDecksServico: ListarDecks
-  ) {}
+  ) { }
 
   public static criar(listarDecksServico: ListarDecks) {
     return new ListarDecksRota(
@@ -26,6 +27,10 @@ export class ListarDecksRota implements Rotas {
 
   public getMetodo(): HttpMethod {
     return this.metodo;
+  }
+
+  public getMiddlewares(): RequestHandler[] {
+    return [publicReadRateLimiter];
   }
 
   public getHandler() {

@@ -14,10 +14,17 @@ interface LigaDocument extends Document {
 
 const ligaSchema = new Schema<LigaDocument>({
   id: { type: String, required: true, unique: true },
-  nome: { type: String, required: true },
-  descricao: { type: String },
+  nome: { type: String, required: true, maxlength: 100 },
+  descricao: { type: String, maxlength: 500 },
   donoId: { type: String, required: true },
-  torneioIds: { type: [String], default: [] },
+  torneioIds: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: (arr: string[]) => arr.length <= 25,
+      message: "liga não pode ter mais de 25 torneios",
+    },
+  },
   criadoEm: { type: Date, default: Date.now },
 });
 
