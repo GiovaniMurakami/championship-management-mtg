@@ -10,6 +10,7 @@ import { LoginAttemptGateway } from "../../src/dominio/gateway/loginAttemptGatew
 import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGateway";
 import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
 import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
+import { ImagemGateway } from "../../src/dominio/gateway/imagemGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -132,6 +133,16 @@ export function criarMockResetSenhaGateway(overrides: Partial<ResetSenhaGateway>
         buscarPorToken: jest.fn().mockResolvedValue(null),
         excluirPorToken: jest.fn(),
         excluirPorUsuario: jest.fn(),
+        ...overrides,
+    };
+}
+
+export function criarMockImagemGateway(overrides: Partial<ImagemGateway> = {}): ImagemGateway {
+    return {
+        gerarUrlUpload: jest.fn().mockResolvedValue({
+            uploadUrl: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg?sig=x",
+            urlPublica: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg",
+        }),
         ...overrides,
     };
 }
