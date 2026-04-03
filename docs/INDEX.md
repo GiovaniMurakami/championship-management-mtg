@@ -32,6 +32,13 @@
 - Nomes populados em standings e partidas
 - Notificações em tempo real via Ably (7 eventos)
 
+### [Imagem](./imagem.md)
+
+- Fluxo de upload via presigned URL ao S3
+- Endpoint `POST /imagem/upload-url`
+- Tipos aceitos, limite de tamanho e validade da URL
+- Validação de URLs de imagem em campos de torneio
+
 ## Sistema
 
 ### [Autenticação JWT](./autenticacao.md)

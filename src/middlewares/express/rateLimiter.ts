@@ -82,3 +82,13 @@ export const publicReadRateLimiter = rateLimit({
   store: new MongoRateLimitStore(WINDOW_MS, "rl:public"),
   message: { mensagem: "Muitas requisições. Tente novamente em 15 minutos." },
 });
+
+// Upload de imagem — restritivo para evitar abuso e custos S3
+export const uploadImagemRateLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MongoRateLimitStore(WINDOW_MS, "rl:upload"),
+  message: { mensagem: "Limite de uploads atingido. Tente novamente em 15 minutos." },
+});
