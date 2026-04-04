@@ -78,6 +78,15 @@ export class InscreverTorneio
       }
     }
 
+    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
+
+    if (!usuario?.nickMTGO) {
+      throw ErroPersonalizado.criar({
+        mensagem: "É necessário configurar um nick do MTGO na sua conta antes de se inscrever em um torneio.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const inscricao = Inscricao.criar({
       torneioId: input.torneioId,
       usuarioId: input.usuarioId,
@@ -98,8 +107,7 @@ export class InscreverTorneio
       }
     }
 
-    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
-    const usuarioNome = usuario?.nome ?? input.usuarioId;
+    const usuarioNome = usuario.nome;
 
     eventosTorneio.emit("participante_inscrito", {
       torneioId: inscricao.torneioId,
