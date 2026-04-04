@@ -85,6 +85,15 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
     );
   }
 
+  public async listarPorTorneios(torneioIds: string[]): Promise<Inscricao[]> {
+    if (torneioIds.length === 0) return [];
+    await this.conectar();
+    const docs = await InscricaoModel.find({ torneioId: { $in: torneioIds } });
+    return docs.map((doc) =>
+      docParaInscricao(doc as unknown as InscricaoDocument)
+    );
+  }
+
   public async listarPorUsuario(usuarioId: string): Promise<Inscricao[]> {
     await this.conectar();
     const docs = await InscricaoModel.find({ usuarioId });

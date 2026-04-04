@@ -61,7 +61,7 @@ function criarDeckGatewayMemoria(): DeckGateway {
     };
 }
 
-function criarTorneioGatewayMemoria(): TorneioGateway {
+function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): TorneioGateway {
     const store = new Map<string, Torneio>();
     return {
         salvar: async (t) => { store.set(t.id, t); },
@@ -69,6 +69,10 @@ function criarTorneioGatewayMemoria(): TorneioGateway {
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        atualizarECriarPartidas: async (t, partidas) => {
+            store.set(t.id, t);
+            for (const p of partidas) partidaStoreRef.set(p.id, p);
+        },
         excluir: async (id) => { store.delete(id); },
     };
 }
@@ -80,6 +84,7 @@ function criarInscricaoGatewayMemoria(): InscricaoGateway {
         buscarPorTorneioEUsuario: async (tid, uid) =>
             Array.from(store.values()).find((i) => i.torneioId === tid && i.usuarioId === uid) ?? null,
         listarPorTorneio: async (tid) => Array.from(store.values()).filter((i) => i.torneioId === tid),
+        listarPorTorneios: async (tids) => Array.from(store.values()).filter((i) => tids.includes(i.torneioId)),
         listarPorUsuario: async (uid) => Array.from(store.values()).filter((i) => i.usuarioId === uid),
         atualizar: async (i) => { store.set(i.id, i); },
         excluir: async (id) => { store.delete(id); },
@@ -91,17 +96,37 @@ function criarInscricaoGatewayMemoria(): InscricaoGateway {
     };
 }
 
-function criarPartidaGatewayMemoria(): PartidaGateway {
-    const store = new Map<string, Partida>();
+function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway {
     return {
         salvar: async (p) => { store.set(p.id, p); },
         salvarVarias: async (ps) => { for (const p of ps) store.set(p.id, p); },
         buscarPorId: async (id) => store.get(id) ?? null,
         listarPorTorneio: async (tid) => Array.from(store.values()).filter((p) => p.torneioId === tid),
+        listarPorTorneios: async (tids) => Array.from(store.values()).filter((p) => tids.includes(p.torneioId)),
         listarPorTorneioERodada: async (tid, r) => Array.from(store.values()).filter((p) => p.torneioId === tid && p.rodada === r),
         listarPorJogadorETorneio: async (tid, uid) =>
             Array.from(store.values()).filter((p) => p.torneioId === tid && (p.jogador1Id === uid || p.jogador2Id === uid)),
         atualizar: async (p) => { store.set(p.id, p); },
+        finalizarAtomicamente: async (id, v1, v2) => {
+            const p = store.get(id);
+            if (!p || p.status !== "pendente") return null;
+            p.vitoriasJogador1 = v1;
+            p.vitoriasJogador2 = v2;
+            p.status = "finalizada";
+            store.set(id, p);
+            return p;
+        },
+        contestarPartida: async (id) => {
+            const p = store.get(id);
+            if (!p || p.status !== "finalizada") return null;
+            p.vitoriasJogador1 = 0;
+            p.vitoriasJogador2 = 0;
+            p.status = "pendente";
+            store.set(id, p);
+            return p;
+        },
+        existePartidaRodadaPosterior: async (torneioId, rodada) =>
+            Array.from(store.values()).some((p) => p.torneioId === torneioId && p.rodada > rodada),
     };
 }
 
@@ -110,9 +135,10 @@ function criarPartidaGatewayMemoria(): PartidaGateway {
 describe("Integração - Fluxo completo de torneio", () => {
     const usuarioGw = criarUsuarioGatewayMemoria();
     const deckGw = criarDeckGatewayMemoria();
-    const torneioGw = criarTorneioGatewayMemoria();
+    const partidaStore = new Map<string, Partida>();
+    const torneioGw = criarTorneioGatewayMemoria(partidaStore);
     const inscricaoGw = criarInscricaoGatewayMemoria();
-    const partidaGw = criarPartidaGatewayMemoria();
+    const partidaGw = criarPartidaGatewayMemoria(partidaStore);
 
     let donoId: string;
     let jogador1Id: string;

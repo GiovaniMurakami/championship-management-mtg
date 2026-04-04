@@ -174,21 +174,15 @@ export class IniciarProximaRodada
             torneioId: input.torneioId,
             rodada: proximaRodada,
             jogador1Id: j1,
-            jogador1Nome: topNNomeMap.get(j1) ?? j1,
             jogador2Id: j2,
-            jogador2Nome: topNNomeMap.get(j2) ?? j2,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: deckMapCompleto.get(j2),
           })
         );
       }
 
-      await this.partidaGateway.salvarVarias(novasPartidas);
-
-      torneio.emCorte = true;
-      torneio.rodadaAtual = proximaRodada;
-      torneio.totalRodadas = proximaRodada + rodadasCorte - 1;
-      await this.torneioGateway.atualizar(torneio);
+      torneio.entrarEmCorte(proximaRodada, proximaRodada + rodadasCorte - 1);
+      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
 
       return {
         finalizado: false,
@@ -197,9 +191,9 @@ export class IniciarProximaRodada
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
-          jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
+          jogador1Nome: topNNomeMap.get(p.jogador1Id) ?? p.jogador1Id,
           jogador2Id: p.jogador2Id,
-          jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
+          jogador2Nome: p.jogador2Id ? (topNNomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
           deckJogador1Id: p.deckJogador1Id,
           deckJogador2Id: p.deckJogador2Id,
         })),
@@ -207,7 +201,7 @@ export class IniciarProximaRodada
     }
 
     if (torneio.rodadaAtual >= torneio.totalRodadas) {
-      torneio.status = "finalizado";
+      torneio.finalizar();
       await this.torneioGateway.atualizar(torneio);
 
       const classificacao = statsOrdenados.map((s, idx) => ({
@@ -249,19 +243,15 @@ export class IniciarProximaRodada
             torneioId: input.torneioId,
             rodada: proximaRodada,
             jogador1Id: j1,
-            jogador1Nome: vencedoresNomeMap.get(j1) ?? j1,
             jogador2Id: j2,
-            jogador2Nome: j2 ? (vencedoresNomeMap.get(j2) ?? j2) : null,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: j2 ? deckMapCompleto.get(j2) : null,
           })
         );
       }
 
-      await this.partidaGateway.salvarVarias(novasPartidas);
-
-      torneio.rodadaAtual = proximaRodada;
-      await this.torneioGateway.atualizar(torneio);
+      torneio.avancarRodada(proximaRodada);
+      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
 
       return {
         finalizado: false,
@@ -270,9 +260,9 @@ export class IniciarProximaRodada
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
-          jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
+          jogador1Nome: vencedoresNomeMap.get(p.jogador1Id) ?? p.jogador1Id,
           jogador2Id: p.jogador2Id,
-          jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
+          jogador2Nome: p.jogador2Id ? (vencedoresNomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
           deckJogador1Id: p.deckJogador1Id,
           deckJogador2Id: p.deckJogador2Id,
         })),
@@ -294,20 +284,14 @@ export class IniciarProximaRodada
         torneioId: input.torneioId,
         rodada: proximaRodada,
         jogador1Id: par.jogador1Id,
-        jogador1Nome: usuarioNomeMap.get(par.jogador1Id) ?? par.jogador1Id,
         jogador2Id: par.jogador2Id,
-        jogador2Nome: par.jogador2Id
-          ? (usuarioNomeMap.get(par.jogador2Id) ?? par.jogador2Id)
-          : null,
         deckJogador1Id: deckMap.get(par.jogador1Id),
         deckJogador2Id: par.jogador2Id ? deckMap.get(par.jogador2Id) : null,
       })
     );
 
-    await this.partidaGateway.salvarVarias(novasPartidas);
-
-    torneio.rodadaAtual = proximaRodada;
-    await this.torneioGateway.atualizar(torneio);
+    torneio.avancarRodada(proximaRodada);
+    await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
 
     return {
       finalizado: false,
@@ -316,9 +300,9 @@ export class IniciarProximaRodada
       partidas: novasPartidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
+        jogador1Nome: usuarioNomeMap.get(p.jogador1Id) ?? p.jogador1Id,
         jogador2Id: p.jogador2Id,
-        jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
+        jogador2Nome: p.jogador2Id ? (usuarioNomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
         deckJogador1Id: p.deckJogador1Id,
         deckJogador2Id: p.deckJogador2Id,
       })),

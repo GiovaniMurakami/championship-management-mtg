@@ -33,7 +33,7 @@ describe("IniciarProximaRodada", () => {
 
     it("deve avançar para a próxima rodada criando novas partidas", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneio }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const partidaGw = criarMockPartidaGateway({
             listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
@@ -55,8 +55,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2);
             expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         }
-        expect(torneioGw.atualizar).toHaveBeenCalled();
-        expect(partidaGw.salvarVarias).toHaveBeenCalled();
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
     });
 
     it("deve lançar erro se não for o dono e não for admin", async () => {
@@ -74,7 +73,7 @@ describe("IniciarProximaRodada", () => {
 
     it("admin pode avançar rodada de torneio de outro usuário", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneio }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
@@ -92,7 +91,7 @@ describe("IniciarProximaRodada", () => {
     });
 
     it("deve finalizar o torneio na última rodada", async () => {
-        const torneioUltimaRodada = { ...torneio, rodadaAtual: 3, totalRodadas: 3 };
+        const torneioUltimaRodada = new Torneio({ ...torneio, rodadaAtual: 3, totalRodadas: 3 });
         const inscricoesRodada3 = [
             new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 3, dropped: false }),
             new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 3, dropped: false }),
@@ -191,7 +190,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2); // top4 = 2 partidas
         }
         // totalRodadas deve ser estendido: rodada 3 (semis) + rodada 4 (final)
-        expect(torneioGw.atualizar).toHaveBeenCalled();
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
     });
 
     it("deve gerar próxima rodada de corte com os vencedores", async () => {

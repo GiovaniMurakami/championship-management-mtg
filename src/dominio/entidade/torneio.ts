@@ -76,4 +76,39 @@ export class Torneio {
       ...props,
     });
   }
+
+  // --- Máquina de estados ---
+
+  public avancarParaEmAndamento(rodadaAtual: number, totalRodadas: number): void {
+    if (this.status !== "inscricoes_abertas") {
+      throw new Error(`Transição inválida: ${this.status} → em_andamento`);
+    }
+    this.status = "em_andamento";
+    this.rodadaAtual = rodadaAtual;
+    this.totalRodadas = totalRodadas;
+  }
+
+  public avancarRodada(novaRodada: number, novoTotal?: number): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: rodada não pode avançar com status ${this.status}`);
+    }
+    this.rodadaAtual = novaRodada;
+    if (novoTotal !== undefined) this.totalRodadas = novoTotal;
+  }
+
+  public entrarEmCorte(novaRodada: number, novoTotalRodadas: number): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: corte requer status em_andamento`);
+    }
+    this.emCorte = true;
+    this.rodadaAtual = novaRodada;
+    this.totalRodadas = novoTotalRodadas;
+  }
+
+  public finalizar(): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: ${this.status} → finalizado`);
+    }
+    this.status = "finalizado";
+  }
 }

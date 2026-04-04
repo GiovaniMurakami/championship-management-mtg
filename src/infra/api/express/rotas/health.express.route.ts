@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 import { HttpMethod, Rotas } from "./rotas";
 
 export class HealthRota implements Rotas {
@@ -13,6 +14,7 @@ export class HealthRota implements Rotas {
 
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
+    public getMiddlewares() { return []; }
 
     public getHandler() {
         return async (
@@ -20,7 +22,24 @@ export class HealthRota implements Rotas {
             response: Response,
             _next: NextFunction
         ): Promise<void> => {
-            response.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+            let mongoStatus = "unknown";
+            try {
+                if (mongoose.connection.readyState === 1) {
+                    await mongoose.connection.db!.admin().command({ ping: 1 });
+                    mongoStatus = "ok";
+                } else {
+                    mongoStatus = "disconnected";
+                }
+            } catch {
+                mongoStatus = "error";
+            }
+
+            const degraded = mongoStatus !== "ok";
+            response.status(degraded ? 503 : 200).json({
+                status: degraded ? "degraded" : "ok",
+                mongo: mongoStatus,
+                timestamp: new Date().toISOString(),
+            });
         };
     }
 }

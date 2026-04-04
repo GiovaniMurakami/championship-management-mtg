@@ -15,13 +15,15 @@ export async function conectarMongoDB(): Promise<mongoose.Connection> {
 
   try {
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 15000,
-      connectTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
       socketTimeoutMS: 25000,
-      maxPoolSize: 10,
+      maxPoolSize: 3,
+      minPoolSize: 0,
       family: 4,
       tls: true,
       retryWrites: true,
+      readPreference: "secondaryPreferred",
     });
   } catch (error) {
     const detalhes =

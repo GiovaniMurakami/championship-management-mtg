@@ -53,51 +53,107 @@ package:
     - "build/**"
 
 functions:
-  api:
+  # Auth, deck, imagem e health — operações leves, sem cálculos pesados
+  api-auth:
+    handler: src/handler.handler
+    memorySize: 256
+    timeout: 15
+    events:
+      - http:
+          path: /usuario
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /usuario/{proxy+}
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /deck
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /deck/{proxy+}
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /imagem
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /imagem/{proxy+}
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /health
+          method: get
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+
+  # Torneio e liga — Swiss pairing e ranking são CPU e memória intensivos
+  api-torneio:
     handler: src/handler.handler
     memorySize: 512
     timeout: 29
     events:
       - http:
-          path: /
+          path: /torneio
           method: any
           cors:
             origins:
               - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
-            methods:
-              - OPTIONS
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
       - http:
-          path: /{proxy+}
+          path: /torneio/{proxy+}
           method: any
           cors:
             origins:
               - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
-            methods:
-              - OPTIONS
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /liga
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+      - http:
+          path: /liga/{proxy+}
+          method: any
+          cors:
+            origins:
+              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
 
 outputs:
   usuarioCadastrar:

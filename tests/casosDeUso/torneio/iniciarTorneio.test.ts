@@ -27,7 +27,7 @@ describe("IniciarTorneio", () => {
 
     it("deve iniciar o torneio e criar as partidas da rodada 1", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const inscricaoGw = criarMockInscricaoGateway({
             listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn),
@@ -44,8 +44,7 @@ describe("IniciarTorneio", () => {
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(4)) = 2
         expect(resultado.partidas).toHaveLength(2);
         expect(resultado.partidas[0].jogador1Nome).toBeDefined();
-        expect(torneioGw.atualizar).toHaveBeenCalledTimes(1);
-        expect(partidaGw.salvarVarias).toHaveBeenCalledTimes(1);
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalledTimes(1);
     });
 
     it("deve lançar erro se o torneio não for encontrado", async () => {
@@ -76,7 +75,7 @@ describe("IniciarTorneio", () => {
 
     it("admin pode iniciar torneio de outro usuário", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
@@ -144,7 +143,7 @@ describe("IniciarTorneio", () => {
     it("deve gerar bye quando número ímpar de jogadores", async () => {
         const tresJogadores = inscricoesComCheckIn.slice(0, 3);
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,

@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
+import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { PartidaModel } from "./partidaRepositorio";
 
 interface TorneioDocument extends Document {
   id: string;
@@ -47,6 +49,7 @@ const torneioSchema = new Schema<TorneioDocument>({
 
 torneioSchema.index({ criadoEm: -1 });
 torneioSchema.index({ donoId: 1 });
+torneioSchema.index({ status: 1, criadoEm: -1 });
 
 const TorneioModel =
   mongoose.models.Torneio ||
@@ -154,5 +157,57 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         emCorte: torneio.emCorte,
       }
     );
+  }
+
+  /**
+   * Atualiza o torneio e insere novas partidas numa única transação MongoDB.
+   * Evita estado parcial (torneio avançado de rodada mas partidas não criadas).
+   */
+  public async atualizarECriarPartidas(
+    torneio: Torneio,
+    partidas: Partida[]
+  ): Promise<void> {
+    await this.conectar();
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      await TorneioModel.updateOne(
+        { id: torneio.id },
+        {
+          status: torneio.status,
+          rodadaAtual: torneio.rodadaAtual,
+          totalRodadas: torneio.totalRodadas,
+          emCorte: torneio.emCorte,
+        },
+        { session }
+      );
+
+      if (partidas.length > 0) {
+        await PartidaModel.insertMany(
+          partidas.map((p) => ({
+            id: p.id,
+            torneioId: p.torneioId,
+            rodada: p.rodada,
+            jogador1Id: p.jogador1Id,
+            jogador2Id: p.jogador2Id,
+            deckJogador1Id: p.deckJogador1Id,
+            deckJogador2Id: p.deckJogador2Id,
+            vitoriasJogador1: p.vitoriasJogador1,
+            vitoriasJogador2: p.vitoriasJogador2,
+            status: p.status,
+            criadoEm: p.criadoEm,
+          })),
+          { session }
+        );
+      }
+
+      await session.commitTransaction();
+    } catch (e) {
+      await session.abortTransaction();
+      throw e;
+    } finally {
+      await session.endSession();
+    }
   }
 }
