@@ -21,21 +21,23 @@ interface TorneioProps {
   rodadaAtual: number;
   totalRodadas: number;
   premio?: string;
+  maxJogadores?: number;
   criadoEm?: Date;
 }
 ```
 
-| Campo        | Tipo   | Descrição                                                 |
-| ------------ | ------ | --------------------------------------------------------- |
-| id           | string | Identificador único UUID                                  |
-| nome         | string | Nome do torneio                                           |
-| horario      | Date   | Data e hora de realização                                 |
-| formato      | string | Formato do torneio (Standard, Modern, Legacy, etc.)       |
-| donoId       | string | ID do usuário que criou o torneio                         |
-| status       | string | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
-| rodadaAtual  | number | Rodada corrente (0 antes de iniciar)                      |
-| totalRodadas | number | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
-| premio       | string | Descrição do prêmio (opcional)                            |
+| Campo         | Tipo   | Descrição                                                 |
+| ------------- | ------ | --------------------------------------------------------- |
+| id            | string | Identificador único UUID                                  |
+| nome          | string | Nome do torneio                                           |
+| horario       | Date   | Data e hora de realização                                 |
+| formato       | string | Formato do torneio (Standard, Modern, Legacy, etc.)       |
+| donoId        | string | ID do usuário que criou o torneio                         |
+| status        | string | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
+| rodadaAtual   | number | Rodada corrente (0 antes de iniciar)                      |
+| totalRodadas  | number | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
+| premio        | string | Descrição do prêmio (opcional)                            |
+| maxJogadores  | number | Limite máximo de inscrições. Sem limite quando omitido (opcional) |
 
 ### Inscrição
 
@@ -160,11 +162,12 @@ Cria um novo torneio.
   "nome": "FNM Standard",
   "horario": "2026-03-20T19:00:00.000Z",
   "formato": "standard",
-  "premio": "1º lugar: booster box" 
+  "premio": "1º lugar: booster box",
+  "maxJogadores": 32
 }
 ```
 
-> `premio` é opcional.
+> `premio` e `maxJogadores` são opcionais. Quando `maxJogadores` é omitido, o torneio não tem limite de inscrições.
 
 **Response (201):**
 
@@ -323,6 +326,8 @@ Você pode filtrar por rodada com query string:
 
 Inscreve o usuário autenticado no torneio. Só funciona enquanto `status = inscricoes_abertas`.
 
+> O usuário deve ter o campo `nickMTGO` configurado no perfil para se inscrever.
+
 **Response (201):**
 
 ```json
@@ -344,6 +349,8 @@ Inscreve o usuário autenticado no torneio. Só funciona enquanto `status = insc
 - `404` — Torneio não encontrado
 - `400` — Inscrições encerradas
 - `400` — Usuário já inscrito
+- `400` — Nick MTGO não configurado na conta
+- `400` — Limite máximo de jogadores atingido (`maxJogadores`)
 
 ---
 
@@ -731,17 +738,19 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
 
 ## Erros Comuns
 
-| Código | Situação                                      |
-| ------ | --------------------------------------------- |
-| 400    | Torneio em status incompatível com a operação |
-| 400    | Check-in antes da janela de 1h                |
-| 400    | Resultado de partida inválido                 |
-| 400    | Partidas pendentes ao tentar avançar a rodada |
-| 400    | Jogador já dropado                            |
-| 403    | Tentativa de operação exclusiva do dono       |
-| 403    | Deck pertence a outro usuário                 |
-| 403    | Drop de outro jogador sem ser o dono          |
-| 404    | Torneio, partida ou deck não encontrado       |
+| Código | Situação                                          |
+| ------ | ------------------------------------------------- |
+| 400    | Torneio em status incompatível com a operação     |
+| 400    | Check-in antes da janela de 1h                    |
+| 400    | Resultado de partida inválido                     |
+| 400    | Partidas pendentes ao tentar avançar a rodada     |
+| 400    | Jogador já dropado                                |
+| 400    | Nick MTGO não configurado ao tentar se inscrever  |
+| 400    | Limite máximo de jogadores atingido               |
+| 403    | Tentativa de operação exclusiva do dono           |
+| 403    | Deck pertence a outro usuário                     |
+| 403    | Drop de outro jogador sem ser o dono              |
+| 404    | Torneio, partida ou deck não encontrado           |
 
 ---
 

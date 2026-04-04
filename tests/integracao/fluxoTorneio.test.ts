@@ -139,6 +139,13 @@ describe("Integração - Fluxo completo de torneio", () => {
         const j4 = await cadastrar.executar({ nome: "Jogador4", email: "j4@e.com", senha: "s" });
         jogador4Id = j4.id;
 
+        // Configurar nickMTGO nos jogadores (requisito para inscrição em torneio)
+        for (const [id, nick] of [[jogador1Id, "j1_mtgo"], [jogador2Id, "j2_mtgo"], [jogador3Id, "j3_mtgo"], [jogador4Id, "j4_mtgo"]] as [string, string][]) {
+            const u = await usuarioGw.buscarPorId(id);
+            u!.nickMTGO = nick;
+            await usuarioGw.atualizar(u!);
+        }
+
         expect(donoId).toBeDefined();
         expect(jogador1Id).toBeDefined();
     });

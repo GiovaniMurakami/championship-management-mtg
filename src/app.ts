@@ -68,6 +68,7 @@ import { ListarLigasRota } from "./infra/api/express/rotas/liga/listarLigas.expr
 import { BuscarLigaRota } from "./infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "./infra/api/express/rotas/liga/rankingLiga.express.route";
 import { GerarUrlUploadImagemRota } from "./infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
+import { HealthRota } from "./infra/api/express/rotas/health.express.route";
 import { UsuarioRepositorio } from "./infra/mongodb/repositorios/usuarioRepositorio";
 import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
@@ -241,6 +242,7 @@ export function app() {
   const buscarLigaRota = BuscarLigaRota.criar(buscarLiga);
   const rankingLigaRota = RankingLigaRota.criar(rankingLiga);
   const gerarUrlUploadImagemRota = GerarUrlUploadImagemRota.criar(gerarUrlUploadImagem);
+  const healthRota = HealthRota.criar();
 
   const port = Number(process.env.PORT) || 0;
 
@@ -279,6 +281,7 @@ export function app() {
     excluirLigaRota,
     rankingLigaRota,
     gerarUrlUploadImagemRota,
+    healthRota,
   ]);
 
   api.start(port);

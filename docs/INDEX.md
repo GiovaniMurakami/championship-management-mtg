@@ -27,7 +27,8 @@
 - Fluxo completo do torneio
 - Sistema Swiss com critérios de desempate WotC
 - Endpoints: criar, listar, buscar, listar partidas, inscrever, check-in, escolher deck, drop, iniciar, resultado, próxima rodada, standings, meu histórico
-- Campo `premio` no torneio
+- Campo `premio` e `maxJogadores` no torneio
+- Requisito de `nickMTGO` para inscrição
 - Contagem de inscritos e check-in (`totalInscritos`, `totalCheckin`)
 - Nomes populados em standings e partidas
 - Notificações em tempo real via Ably (7 eventos)
