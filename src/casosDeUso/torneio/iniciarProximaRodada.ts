@@ -123,6 +123,14 @@ export class IniciarProximaRodada
       input.torneioId
     );
     const deckMapCompleto = new Map(inscricoes.map((i) => [i.usuarioId, i.deckId]));
+    const idsComHistorico = Array.from(
+      new Set(
+        todasPartidas.flatMap((p) => [
+          p.jogador1Id,
+          ...(p.jogador2Id ? [p.jogador2Id] : []),
+        ])
+      )
+    );
 
     const inscricoesComCheckIn = inscricoes.filter(
       (i) => i.checkIn && i.checkInRodada >= torneio.rodadaAtual && !i.dropped
@@ -131,16 +139,17 @@ export class IniciarProximaRodada
     const deckMap = new Map(inscricoesComCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
     const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+    const estaNaUltimaRodada = torneio.rodadaAtual >= torneio.totalRodadas;
 
-    if (!torneio.emCorte && jogadoresIds.length < 2) {
+    if (!torneio.emCorte && !estaNaUltimaRodada && jogadoresIds.length < 2) {
       throw ErroPersonalizado.criar({
         mensagem: `Apenas ${jogadoresIds.length} jogador(es) fez check-in para a próxima rodada. São necessários pelo menos 2.`,
         status: StatusErro.erroParametro,
       });
     }
 
-    const idsParaStats = torneio.emCorte
-      ? Array.from(new Set(todasPartidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])))
+    const idsParaStats = torneio.emCorte || estaNaUltimaRodada
+      ? idsComHistorico
       : jogadoresIds;
 
     const statsMap = calcularEstatisticas(idsParaStats, todasPartidas);
@@ -149,7 +158,7 @@ export class IniciarProximaRodada
       statsMap
     );
 
-    if (torneio.rodadaAtual >= torneio.totalRodadas && torneio.corteTop && !torneio.emCorte) {
+    if (estaNaUltimaRodada && torneio.corteTop && !torneio.emCorte) {
       if (statsOrdenados.length < torneio.corteTop) {
         throw ErroPersonalizado.criar({
           mensagem: `Não há jogadores suficientes para o corte top ${torneio.corteTop}. Jogadores classificados: ${statsOrdenados.length}.`,
@@ -200,7 +209,7 @@ export class IniciarProximaRodada
       };
     }
 
-    if (torneio.rodadaAtual >= torneio.totalRodadas) {
+    if (estaNaUltimaRodada) {
       torneio.finalizar();
       await this.torneioGateway.atualizar(torneio);
 

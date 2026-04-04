@@ -96,7 +96,7 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 4. **Jogadores** fazem check-in — disponível **1 hora antes** do `horario` do torneio (`POST /torneio/:id/checkin`)
 5. **Dono** inicia o torneio — rodada 1 gerada com sorteio aleatório (`POST /torneio/:id/iniciar`)
 6. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
-7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`)
+7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`), exceto quando a rodada atual já é a última do torneio
 8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
 9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
 10. Partidas (mesas) do torneio disponíveis a qualquer momento (`GET /torneio/:id/partidas` e filtro por rodada)
@@ -113,6 +113,14 @@ totalRodadas = ceil(log₂(n))
 ```
 
 Onde `n` = número de jogadores com check-in.
+
+Se `maxRodadas` estiver configurado no torneio, ele funciona como um teto:
+
+```
+totalRodadas = min(ceil(log₂(n)), maxRodadas)
+```
+
+Ou seja, `maxRodadas` nunca aumenta a quantidade padrão de rodadas; apenas impede que ela ultrapasse o limite definido.
 
 | Jogadores | Rodadas |
 | --------- | ------- |
@@ -396,7 +404,7 @@ Confirma presença no torneio ou em uma rodada específica. Nenhum body necessá
 | Contexto                  | Comportamento                                                                   |
 | ------------------------- | ------------------------------------------------------------------------------- |
 | `inscricoes_abertas`      | Aceito a partir de **1 hora antes** do `horario`. Seta `checkIn = true`.        |
-| `em_andamento`            | Confirma para a próxima rodada. Sem check-in = excluído dos próximos pareamentos. |
+| `em_andamento`            | Confirma para a próxima rodada. Sem check-in = excluído dos próximos pareamentos. Não é necessário quando a rodada atual já é a última e o próximo passo é apenas finalizar ou entrar no corte. |
 
 **Response (200):**
 
@@ -548,7 +556,7 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
 **(Somente dono)** Verifica se todas as partidas da rodada atual estão finalizadas e então:
 
 - Se ainda há rodadas: gera os pareamentos Swiss e avança para a próxima rodada
-- Se era a última rodada: finaliza o torneio e retorna a classificação final
+- Se era a última rodada: finaliza o torneio e retorna a classificação final, sem exigir novo check-in
 
 **Response quando há próxima rodada (200):**
 

@@ -130,6 +130,42 @@ describe("IniciarProximaRodada", () => {
         }
     });
 
+    it("deve finalizar o torneio na última rodada sem exigir novo check-in", async () => {
+        const torneioUltimaRodada = new Torneio({ ...torneio, rodadaAtual: 3, totalRodadas: 3 });
+        const inscricoesSemNovoCheckIn = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkIn: true, checkInRodada: 2, dropped: false }),
+        ];
+        const todasPartidas = [
+            ...partidasRodada1,
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 2, jogador1Id: "u-2", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            new Partida({ id: "p5", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p6", torneioId: "t-1", rodada: 3, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" }),
+        ];
+        const partidasRodadaAtual = todasPartidas.filter((p) => p.rodada === 3);
+
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(torneioUltimaRodada),
+        });
+
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesSemNovoCheckIn) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodadaAtual),
+                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+            }),
+            criarMockUsuarioGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(true);
+    });
+
     it("deve lançar erro se houver partidas pendentes", async () => {
         const partidasPendentes = [
             new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente" }),

@@ -122,6 +122,28 @@ describe("IniciarTorneio", () => {
         const torneioComMaxRodadas = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+            maxRodadas: 1,
+        });
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(torneioComMaxRodadas),
+        });
+        const uc = IniciarTorneio.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
+
+        // 4 jogadores -> ceil(log2(4)) = 2 por padrão, mas maxRodadas = 1 limita o total.
+        expect(resultado.totalRodadas).toBe(1);
+    });
+
+    it("não deve aumentar totalRodadas quando maxRodadas for maior que o calculado", async () => {
+        const torneioComMaxRodadas = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
             maxRodadas: 5,
         });
         const torneioGw = criarMockTorneioGateway({
@@ -136,8 +158,7 @@ describe("IniciarTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
-        // 4 jogadores → ceil(log2(4))=2 por padrão, mas maxRodadas=5 deve prevalecer
-        expect(resultado.totalRodadas).toBe(5);
+        expect(resultado.totalRodadas).toBe(2);
     });
 
     it("deve gerar bye quando número ímpar de jogadores", async () => {

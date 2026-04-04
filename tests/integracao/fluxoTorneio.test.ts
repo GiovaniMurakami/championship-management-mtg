@@ -281,13 +281,6 @@ describe("Integração - Fluxo completo de torneio", () => {
                 }
             }
 
-            // Check-in para próxima rodada
-            const inscricoes = await inscricaoGw.listarPorTorneio(torneioId);
-            for (const i of inscricoes) {
-                i.checkInRodada = 2;
-                await inscricaoGw.atualizar(i);
-            }
-
             // Finalizar torneio
             const final = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
             expect(final.finalizado).toBe(true);

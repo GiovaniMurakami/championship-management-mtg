@@ -84,7 +84,10 @@ export class IniciarTorneio
       });
     }
 
-    const totalRodadas = torneio.maxRodadas ?? Math.ceil(Math.log2(comCheckIn.length));
+    const rodadasCalculadas = Math.ceil(Math.log2(comCheckIn.length));
+    const totalRodadas = torneio.maxRodadas !== undefined
+      ? Math.min(rodadasCalculadas, torneio.maxRodadas)
+      : rodadasCalculadas;
 
     torneio.avancarParaEmAndamento(1, totalRodadas);
 
