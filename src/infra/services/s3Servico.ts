@@ -33,7 +33,6 @@ export class S3Servico implements ImagemGateway {
             Bucket: this.bucket,
             Key: input.chave,
             ContentType: input.contentType,
-            ContentLength: input.tamanhoBytes,
         });
 
         const uploadUrl = await getSignedUrl(this.client, command, {
