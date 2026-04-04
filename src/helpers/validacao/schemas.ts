@@ -1,4 +1,18 @@
 import { z } from "zod";
+import { getS3BaseUrl } from "../env";
+
+function s3ImagemUrl() {
+  return z
+    .string()
+    .url("URL inválida.")
+    .refine(
+      (url) => {
+        const base = getS3BaseUrl();
+        return base ? url.startsWith(base + "/") : true;
+      },
+      { message: "A URL da imagem deve pertencer ao bucket S3 autorizado." }
+    );
+}
 
 const cartaSchema = z.object({
   nome: z.string().min(1),
@@ -47,7 +61,7 @@ export const criarTorneioSchema = z.object({
   horario: z.string().min(1, "Horário é obrigatório."),
   formato: z.string().min(1, "Formato é obrigatório."),
   premio: z.string().optional(),
-  bannerUrl: z.string().optional(),
+  bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional(),
@@ -61,7 +75,7 @@ export const alterarTorneioSchema = z.object({
   horario: z.string().optional(),
   formato: z.string().min(1).optional(),
   premio: z.string().optional(),
-  bannerUrl: z.string().optional(),
+  bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
@@ -94,4 +108,15 @@ export const alterarLigaSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
   torneioIds: z.array(z.string()).optional(),
+});
+
+export const gerarUrlUploadImagemSchema = z.object({
+  contentType: z.enum(["image/jpeg", "image/png", "image/gif", "image/webp"], {
+    error: "contentType deve ser image/jpeg, image/png, image/gif ou image/webp.",
+  }),
+  tamanhoBytes: z
+    .number()
+    .int()
+    .min(1, "tamanhoBytes deve ser maior que 0.")
+    .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
 });

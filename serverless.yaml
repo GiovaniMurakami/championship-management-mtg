@@ -13,6 +13,7 @@ provider:
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
     CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
+    AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
     EMAIL_USER: ${env:EMAIL_USER, ''}
     EMAIL_PASS: ${env:EMAIL_PASS, ''}
     FRONTEND_URL: ${env:FRONTEND_URL, 'http://localhost:5173'}
@@ -25,6 +26,11 @@ provider:
           Resource:
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/championship-mtg/${sls:stage}/jwt-private-key"
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/championship-mtg/${sls:stage}/jwt-public-key"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            - !Sub "arn:aws:s3:::${env:AWS_S3_BUCKET, 'placeholder'}/*"
 
 build:
   esbuild: false

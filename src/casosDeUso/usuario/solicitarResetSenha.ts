@@ -5,6 +5,7 @@ import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { getFrontendUrl } from "../../helpers/env";
 
 const EXPIRACAO_MS = 60 * 60 * 1000; // 1 hora
 
@@ -51,12 +52,12 @@ export class SolicitarResetSenha
 
         await this.resetSenhaGateway.salvar({ token, usuarioId: usuario.id, expiresAt });
 
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const frontendUrl = getFrontendUrl();
         const link = `${frontendUrl}/reset-senha?token=${token}`;
 
         await this.emailGateway.enviar({
             para: usuario.email,
-            assunto: "Redefinição de senha - MTG Championship",
+            assunto: "Redefinição de senha - Fuguete",
             html: `
         <h2>Olá, ${usuario.nome}!</h2>
         <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>

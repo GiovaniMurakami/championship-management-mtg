@@ -24,7 +24,7 @@ describe("InscreverTorneio", () => {
         const uc = InscreverTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" })) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
@@ -86,11 +86,23 @@ describe("InscreverTorneio", () => {
         const uc = InscreverTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioComVaga) }),
             criarMockInscricaoGateway({ contarPorTorneios: jest.fn().mockResolvedValue({ "t-1": 7 }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-novo", nome: "Novo", email: "n@e.com", senha: "s" })) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-novo", nome: "Novo", email: "n@e.com", senha: "s", nickMTGO: "novo_mtgo" })) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-novo" });
         expect(resultado.torneioId).toBe("t-1");
+    });
+
+    it("deve lançar erro se o nick MTGO não estiver configurado na conta", async () => {
+        const uc = InscreverTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockInscricaoGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+        ).rejects.toMatchObject({ status: 400 });
     });
 
     it("deve lançar erro se o jogador já estiver inscrito", async () => {

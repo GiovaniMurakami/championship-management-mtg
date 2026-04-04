@@ -8,6 +8,7 @@ import { sanitizarEntrada } from "../../../middlewares/express/sanitizarEntrada"
 import { Rotas } from "./rotas/rotas";
 import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
+import { getCorsOrigin } from "../../../helpers/env";
 
 export class ApiExpress implements Api {
   private app: Express;
@@ -27,7 +28,7 @@ export class ApiExpress implements Api {
     this.app.set("trust proxy", 1);
     this.app.use(helmet());
     this.app.use(cors({
-      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+      origin: getCorsOrigin(),
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,

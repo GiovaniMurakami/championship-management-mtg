@@ -1,15 +1,20 @@
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { LoginAttemptGateway } from "../../dominio/gateway/loginAttemptGateway";
 import { RefreshTokenGateway } from "../../dominio/gateway/refreshTokenGateway";
+import { EmailGateway } from "../../dominio/gateway/emailGateway";
+import { ResetSenhaGateway } from "../../dominio/gateway/resetSenhaGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { signToken } from "../../helpers/jwt";
+import { getFrontendUrl } from "../../helpers/env";
 
 const MAX_TENTATIVAS = 5;
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
+const RESET_EXPIRACAO_MS = 60 * 60 * 1000; // 1 hora
 
 export type LoginUsuarioInputDto = {
   email: string;
@@ -35,15 +40,39 @@ export class LoginUsuario
   private constructor(
     private readonly usuarioGateway: UsuarioGateway,
     private readonly loginAttemptGateway: LoginAttemptGateway,
-    private readonly refreshTokenGateway: RefreshTokenGateway
+    private readonly refreshTokenGateway: RefreshTokenGateway,
+    private readonly emailGateway: EmailGateway,
+    private readonly resetSenhaGateway: ResetSenhaGateway
   ) { }
 
   public static criar(
     usuarioGateway: UsuarioGateway,
     loginAttemptGateway: LoginAttemptGateway,
-    refreshTokenGateway: RefreshTokenGateway
+    refreshTokenGateway: RefreshTokenGateway,
+    emailGateway: EmailGateway,
+    resetSenhaGateway: ResetSenhaGateway
   ) {
-    return new LoginUsuario(usuarioGateway, loginAttemptGateway, refreshTokenGateway);
+    return new LoginUsuario(usuarioGateway, loginAttemptGateway, refreshTokenGateway, emailGateway, resetSenhaGateway);
+  }
+
+  private async enviarEmailBloqueio(nomeUsuario: string, emailUsuario: string, usuarioId: string): Promise<void> {
+    await this.resetSenhaGateway.excluirPorUsuario(usuarioId);
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + RESET_EXPIRACAO_MS);
+    await this.resetSenhaGateway.salvar({ token, usuarioId, expiresAt });
+
+    const link = `${getFrontendUrl()}/reset-senha?token=${token}`;
+    await this.emailGateway.enviar({
+      para: emailUsuario,
+      assunto: "Sua conta foi bloqueada por excesso de tentativas - MTG Championship",
+      html: `
+        <h2>Olá, ${nomeUsuario}!</h2>
+        <p>Sua conta foi <strong>temporariamente bloqueada</strong> por excesso de tentativas de login incorretas.</p>
+        <p>Para desbloquear sua conta e recuperar o acesso, redefina sua senha clicando no botão abaixo. O link expira em <strong>1 hora</strong>.</p>
+        <p><a href="${link}" style="background:#6d28d9;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Redefinir senha e desbloquear conta</a></p>
+        <p>Se você não reconhece essas tentativas, recomendamos que você altere sua senha imediatamente.</p>
+      `,
+    });
   }
 
   public async executar(
@@ -71,6 +100,12 @@ export class LoginUsuario
 
     if (!senhaValida) {
       await this.loginAttemptGateway.registrarFalha(input.email);
+
+      // Esta falha atinge o limite: bloquear e enviar e-mail de desbloqueio + reset de senha
+      if (falhas + 1 >= MAX_TENTATIVAS) {
+        await this.enviarEmailBloqueio(usuario.nome, usuario.email, usuario.id);
+      }
+
       throw ErroPersonalizado.criar({
         mensagem: "Credenciais inválidas.",
         status: StatusErro.erroNaoAutorizado,

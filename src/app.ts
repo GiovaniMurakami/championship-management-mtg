@@ -31,6 +31,7 @@ import { ExcluirLiga } from "./casosDeUso/liga/excluirLiga";
 import { ListarLigas } from "./casosDeUso/liga/listarLigas";
 import { BuscarLiga } from "./casosDeUso/liga/buscarLiga";
 import { RankingLiga } from "./casosDeUso/liga/rankingLiga";
+import { GerarUrlUploadImagem } from "./casosDeUso/imagem/gerarUrlUploadImagem";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { CadastrarUsuarioRota } from "./infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
@@ -66,6 +67,8 @@ import { ExcluirLigaRota } from "./infra/api/express/rotas/liga/excluirLiga.expr
 import { ListarLigasRota } from "./infra/api/express/rotas/liga/listarLigas.express.route";
 import { BuscarLigaRota } from "./infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "./infra/api/express/rotas/liga/rankingLiga.express.route";
+import { GerarUrlUploadImagemRota } from "./infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
+import { HealthRota } from "./infra/api/express/rotas/health.express.route";
 import { UsuarioRepositorio } from "./infra/mongodb/repositorios/usuarioRepositorio";
 import { DeckRepositorio } from "./infra/mongodb/repositorios/deckRepositorio";
 import { TorneioRepositorio } from "./infra/mongodb/repositorios/torneioRepositorio";
@@ -78,6 +81,7 @@ import { LoginAttemptRepositorio } from "./infra/mongodb/repositorios/loginAttem
 import { ResetSenhaRepositorio } from "./infra/mongodb/repositorios/resetSenhaRepositorio";
 import { ChatGptServico } from "./infra/services/chatGptServico";
 import { EmailServico } from "./infra/services/emailServico";
+import { S3Servico } from "./infra/services/s3Servico";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -107,8 +111,10 @@ export function app() {
   };
 
   const emailServico = EmailServico.criar();
+  const s3Servico = S3Servico.criar();
+  const gerarUrlUploadImagem = GerarUrlUploadImagem.criar(s3Servico);
   const cadastrarUsuario = CadastrarUsuario.criar(repositorios.usuario, emailServico);
-  const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken);
+  const loginUsuario = LoginUsuario.criar(repositorios.usuario, repositorios.loginAttempt, repositorios.refreshToken, emailServico, repositorios.resetSenha);
   const atualizarUsuario = AtualizarUsuario.criar(repositorios.usuario);
   const refreshToken = RefreshToken.criar(repositorios.usuario, repositorios.refreshToken);
   const logoutUsuario = LogoutUsuario.criar(repositorios.tokenBlacklist, repositorios.refreshToken);
@@ -235,6 +241,8 @@ export function app() {
   const listarLigasRota = ListarLigasRota.criar(listarLigas);
   const buscarLigaRota = BuscarLigaRota.criar(buscarLiga);
   const rankingLigaRota = RankingLigaRota.criar(rankingLiga);
+  const gerarUrlUploadImagemRota = GerarUrlUploadImagemRota.criar(gerarUrlUploadImagem);
+  const healthRota = HealthRota.criar();
 
   const port = Number(process.env.PORT) || 0;
 
@@ -272,6 +280,8 @@ export function app() {
     alterarLigaRota,
     excluirLigaRota,
     rankingLigaRota,
+    gerarUrlUploadImagemRota,
+    healthRota,
   ]);
 
   api.start(port);
