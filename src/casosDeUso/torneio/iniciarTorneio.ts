@@ -84,12 +84,12 @@ export class IniciarTorneio
       });
     }
 
-    const totalRodadas = torneio.maxRodadas ?? Math.ceil(Math.log2(comCheckIn.length));
+    const rodadasCalculadas = Math.ceil(Math.log2(comCheckIn.length));
+    const totalRodadas = torneio.maxRodadas !== undefined
+      ? Math.min(rodadasCalculadas, torneio.maxRodadas)
+      : rodadasCalculadas;
 
-    torneio.status = "em_andamento";
-    torneio.rodadaAtual = 1;
-    torneio.totalRodadas = totalRodadas;
-    await this.torneioGateway.atualizar(torneio);
+    torneio.avancarParaEmAndamento(1, totalRodadas);
 
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn.map((i) => i.usuarioId);
@@ -108,16 +108,14 @@ export class IniciarTorneio
           torneioId: input.torneioId,
           rodada: 1,
           jogador1Id: jogadores[i],
-          jogador1Nome: usuarioNomeMap.get(jogadores[i]) ?? jogadores[i],
           jogador2Id: j2,
-          jogador2Nome: j2 ? (usuarioNomeMap.get(j2) ?? j2) : null,
           deckJogador1Id: deckMap.get(jogadores[i]),
           deckJogador2Id: j2 ? deckMap.get(j2) : null,
         })
       );
     }
 
-    await this.partidaGateway.salvarVarias(partidas);
+    await this.torneioGateway.atualizarECriarPartidas(torneio, partidas);
 
     return {
       torneioId: torneio.id,
@@ -126,9 +124,9 @@ export class IniciarTorneio
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
+        jogador1Nome: usuarioNomeMap.get(p.jogador1Id) ?? p.jogador1Id,
         jogador2Id: p.jogador2Id,
-        jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
+        jogador2Nome: p.jogador2Id ? (usuarioNomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
         deckJogador1Id: p.deckJogador1Id,
         deckJogador2Id: p.deckJogador2Id,
       })),

@@ -33,7 +33,7 @@ describe("IniciarProximaRodada", () => {
 
     it("deve avançar para a próxima rodada criando novas partidas", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneio }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const partidaGw = criarMockPartidaGateway({
             listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
@@ -55,8 +55,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2);
             expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         }
-        expect(torneioGw.atualizar).toHaveBeenCalled();
-        expect(partidaGw.salvarVarias).toHaveBeenCalled();
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
     });
 
     it("deve lançar erro se não for o dono e não for admin", async () => {
@@ -74,7 +73,7 @@ describe("IniciarProximaRodada", () => {
 
     it("admin pode avançar rodada de torneio de outro usuário", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneio }),
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
@@ -92,7 +91,7 @@ describe("IniciarProximaRodada", () => {
     });
 
     it("deve finalizar o torneio na última rodada", async () => {
-        const torneioUltimaRodada = { ...torneio, rodadaAtual: 3, totalRodadas: 3 };
+        const torneioUltimaRodada = new Torneio({ ...torneio, rodadaAtual: 3, totalRodadas: 3 });
         const inscricoesRodada3 = [
             new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 3, dropped: false }),
             new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 3, dropped: false }),
@@ -129,6 +128,42 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.classificacao.length).toBeGreaterThan(0);
             expect(resultado.classificacao[0].posicao).toBe(1);
         }
+    });
+
+    it("deve finalizar o torneio na última rodada sem exigir novo check-in", async () => {
+        const torneioUltimaRodada = new Torneio({ ...torneio, rodadaAtual: 3, totalRodadas: 3 });
+        const inscricoesSemNovoCheckIn = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkIn: true, checkInRodada: 2, dropped: false }),
+        ];
+        const todasPartidas = [
+            ...partidasRodada1,
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 2, jogador1Id: "u-2", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            new Partida({ id: "p5", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p6", torneioId: "t-1", rodada: 3, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" }),
+        ];
+        const partidasRodadaAtual = todasPartidas.filter((p) => p.rodada === 3);
+
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(torneioUltimaRodada),
+        });
+
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesSemNovoCheckIn) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodadaAtual),
+                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+            }),
+            criarMockUsuarioGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(true);
     });
 
     it("deve lançar erro se houver partidas pendentes", async () => {
@@ -191,7 +226,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2); // top4 = 2 partidas
         }
         // totalRodadas deve ser estendido: rodada 3 (semis) + rodada 4 (final)
-        expect(torneioGw.atualizar).toHaveBeenCalled();
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
     });
 
     it("deve gerar próxima rodada de corte com os vencedores", async () => {

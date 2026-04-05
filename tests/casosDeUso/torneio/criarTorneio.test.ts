@@ -64,4 +64,33 @@ describe("CriarTorneio", () => {
         expect(resultado.corteTop).toBe(8);
         expect(resultado.linkLive).toBe("https://youtube.com/live/abc");
     });
+
+    it("deve criar torneio secreto quando secreto=true", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "Torneio Privado",
+            horario: new Date(),
+            formato: "vintage",
+            donoId: "user-1",
+            secreto: true,
+        });
+
+        expect(resultado.secreto).toBe(true);
+    });
+
+    it("deve ter secreto=false por padrão", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "Torneio Normal",
+            horario: new Date(),
+            formato: "standard",
+            donoId: "user-1",
+        });
+
+        expect(resultado.secreto).toBe(false);
+    });
 });

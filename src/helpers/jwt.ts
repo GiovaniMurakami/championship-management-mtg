@@ -50,8 +50,11 @@ function getSigningConfig(): { key: string; algorithm: jwt.Algorithm } | null {
   const privateKey = loadKeyFromEnv("JWT_PRIVATE_KEY_BASE64");
   if (privateKey) return { key: privateKey, algorithm: "RS256" };
 
-  const secret = process.env.JWT_SECRET;
-  if (secret) return { key: secret, algorithm: "HS256" };
+  // HS256 only allowed outside production — RS256 from SSM is mandatory in prod
+  if (process.env.NODE_ENV !== "production") {
+    const secret = process.env.JWT_SECRET;
+    if (secret) return { key: secret, algorithm: "HS256" };
+  }
 
   return null;
 }
@@ -63,8 +66,11 @@ function getVerifyConfig(): { key: string; algorithms: jwt.Algorithm[] } | null 
   const publicKey = loadKeyFromEnv("JWT_PUBLIC_KEY_BASE64");
   if (publicKey) return { key: publicKey, algorithms: ["RS256"] };
 
-  const secret = process.env.JWT_SECRET;
-  if (secret) return { key: secret, algorithms: ["HS256"] };
+  // HS256 only allowed outside production
+  if (process.env.NODE_ENV !== "production") {
+    const secret = process.env.JWT_SECRET;
+    if (secret) return { key: secret, algorithms: ["HS256"] };
+  }
 
   return null;
 }

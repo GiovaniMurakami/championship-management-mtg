@@ -20,6 +20,7 @@ Validade da URL: **5 minutos**
 ```
 
 > **Nota:** O `PUT` para o S3 deve incluir o header `Content-Type` com o mesmo valor enviado na etapa 1. **Não** enviar o header `Authorization` nessa requisição.
+> **Importante:** para uploads diretos pelo navegador funcionarem, o bucket S3 precisa ter CORS habilitado para a origem do frontend e para o método `PUT`.
 
 ---
 
@@ -84,12 +85,35 @@ Authorization: Bearer {token}
 ```http
 PUT {uploadUrl}
 Content-Type: image/jpeg
-Content-Length: 204800
 
 <bytes do arquivo>
 ```
 
 Após o `PUT` retornar `200 OK`, a imagem estará disponível em `urlPublica`.
+
+Em navegador, o `Content-Length` é enviado automaticamente quando aplicável. O cliente só precisa garantir que o `Content-Type` usado no upload seja o mesmo informado ao gerar a URL.
+
+Se o navegador retornar erro de CORS no `PUT`, configure o bucket com uma regra equivalente a esta:
+
+```json
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedOrigins": ["https://homolog.d32mjk9mbam2cb.amplifyapp.com"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+Exemplo com AWS CLI:
+
+```bash
+aws s3api put-bucket-cors \
+  --bucket "$AWS_S3_BUCKET" \
+  --cors-configuration file://cors.json
+```
 
 ---
 

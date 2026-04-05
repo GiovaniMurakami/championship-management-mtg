@@ -1,5 +1,8 @@
 import rateLimit from "express-rate-limit";
-import { MongoRateLimitStore } from "../../infra/mongodb/rateLimitStore";
+
+// MemoryStore (padrão do express-rate-limit): sub-milissegundo, sem I/O de rede.
+// Em Lambda cada instância conta independentemente — aceitável para proteção
+// básica sem o overhead de uma escrita MongoDB por request.
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 
@@ -9,7 +12,6 @@ export const authRateLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:auth"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -19,7 +21,6 @@ export const refreshTokenRateLimiter = rateLimit({
   max: 15,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:refresh"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -29,7 +30,6 @@ export const accountRateLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:account"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -39,7 +39,6 @@ export const deckRateLimiter = rateLimit({
   max: 60,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:deck"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -49,7 +48,6 @@ export const inscricaoRateLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:inscricao"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -59,7 +57,6 @@ export const resultadoRateLimiter = rateLimit({
   max: 120,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:resultado"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -69,7 +66,6 @@ export const mutationRateLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:mutation"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
@@ -79,7 +75,6 @@ export const publicReadRateLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:public"),
   message: { mensagem: "Muitas requisições. Tente novamente em 15 minutos." },
 });
 
@@ -89,6 +84,5 @@ export const uploadImagemRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new MongoRateLimitStore(WINDOW_MS, "rl:upload"),
   message: { mensagem: "Limite de uploads atingido. Tente novamente em 15 minutos." },
 });

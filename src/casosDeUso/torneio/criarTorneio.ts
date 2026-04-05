@@ -15,6 +15,7 @@ export type CriarTorneioInputDto = {
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
+  secreto?: boolean;
 };
 
 export type CriarTorneioOutputDto = {
@@ -32,6 +33,7 @@ export type CriarTorneioOutputDto = {
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
+  secreto: boolean;
   criadoEm: Date;
 };
 
@@ -59,6 +61,7 @@ export class CriarTorneio
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
       linkLive: input.linkLive?.trim(),
+      secreto: input.secreto ?? false,
     });
 
     await this.torneioGateway.salvar(torneio);
@@ -78,6 +81,7 @@ export class CriarTorneio
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
+      secreto: torneio.secreto,
       criadoEm: torneio.criadoEm,
     };
   }

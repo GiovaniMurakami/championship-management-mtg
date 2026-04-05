@@ -82,6 +82,13 @@ export class EscolherDeckTorneio
       });
     }
 
+    if (deck.formato.toLowerCase() !== torneio.formato.toLowerCase()) {
+      throw ErroPersonalizado.criar({
+        mensagem: `O formato do deck (${deck.formato}) não corresponde ao formato do torneio (${torneio.formato}).`,
+        status: StatusErro.erroParametro,
+      });
+    }
+
     inscricao.deckId = deck.id;
     await this.inscricaoGateway.atualizar(inscricao);
 

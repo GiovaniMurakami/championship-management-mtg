@@ -90,7 +90,7 @@ export class BuscarStandings
       : [];
     const deckMap = new Map(decks.map((d) => [d.id, d]));
 
-    if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual === 0) {
+    if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
       const standings = inscricoes.map((i, idx) => ({
         posicao: idx + 1,
         usuario: { id: i.usuarioId, nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId },
@@ -122,13 +122,17 @@ export class BuscarStandings
       input.torneioId
     );
 
+    const partidasConsolidadas = torneio.status === "finalizado"
+      ? todasPartidas
+      : todasPartidas.filter((p) => p.rodada < torneio.rodadaAtual);
+
     const jogadoresIds = inscricoes
       .filter((i) => i.checkIn)
       .map((i) => i.usuarioId);
 
     const inscricaoMap = new Map(inscricoes.map((i) => [i.usuarioId, i]));
 
-    const statsMap = calcularEstatisticas(jogadoresIds, todasPartidas);
+    const statsMap = calcularEstatisticas(jogadoresIds, partidasConsolidadas);
     const ordenados = ordenarPorDesempate(
       Array.from(statsMap.values()),
       statsMap

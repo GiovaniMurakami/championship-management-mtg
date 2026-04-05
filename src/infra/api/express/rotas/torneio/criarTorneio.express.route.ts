@@ -39,7 +39,7 @@ export class CriarTorneioRota implements Rotas {
         const {
           nome, horario, formato, premio,
           bannerUrl, linkBanner, somRodada,
-          maxJogadores, maxRodadas, corteTop, linkLive,
+          maxJogadores, maxRodadas, corteTop, linkLive, secreto,
         } = dados;
 
         const resultado = await this.criarTorneioServico.executar({
@@ -55,6 +55,7 @@ export class CriarTorneioRota implements Rotas {
           maxRodadas,
           corteTop,
           linkLive,
+          secreto,
         });
 
         response.status(201).json(resultado);

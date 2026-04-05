@@ -1,5 +1,5 @@
 import { ListarPartidasTorneio } from "../../../src/casosDeUso/torneio/listarPartidasTorneio";
-import { criarMockPartidaGateway, criarMockTorneioGateway } from "../../mocks/gateways";
+import { criarMockPartidaGateway, criarMockTorneioGateway, criarMockUsuarioGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 
@@ -22,9 +22,7 @@ describe("ListarPartidasTorneio", () => {
                 torneioId: "t-1",
                 rodada: 1,
                 jogador1Id: "u-1",
-                jogador1Nome: "Jogador 1",
                 jogador2Id: "u-2",
-                jogador2Nome: "Jogador 2",
                 vitoriasJogador1: 2,
                 vitoriasJogador2: 1,
                 status: "finalizada",
@@ -34,9 +32,7 @@ describe("ListarPartidasTorneio", () => {
                 torneioId: "t-1",
                 rodada: 2,
                 jogador1Id: "u-3",
-                jogador1Nome: "Jogador 3",
                 jogador2Id: null,
-                jogador2Nome: null,
                 vitoriasJogador1: 2,
                 vitoriasJogador2: 0,
                 status: "finalizada",
@@ -45,7 +41,14 @@ describe("ListarPartidasTorneio", () => {
 
         const uc = ListarPartidasTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) })
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({
+                buscarVarios: jest.fn().mockResolvedValue([
+                    { id: "u-1", nome: "Jogador 1" },
+                    { id: "u-2", nome: "Jogador 2" },
+                    { id: "u-3", nome: "Jogador 3" },
+                ])
+            }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -56,12 +59,15 @@ describe("ListarPartidasTorneio", () => {
         expect(resultado.partidas[0].jogador1Nome).toBe("Jogador 1");
         expect(resultado.partidas[1].jogador2Id).toBeNull();
         expect(resultado.partidas[1].jogador2Nome).toBeNull();
+        expect(resultado.partidas[0]).toHaveProperty("contestado");
+        expect(resultado.partidas[0].contestado).toBe(false);
     });
 
     it("deve lançar erro quando torneio não existe", async () => {
         const uc = ListarPartidasTorneio.criar(
             criarMockTorneioGateway(),
-            criarMockPartidaGateway()
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -87,9 +93,7 @@ describe("ListarPartidasTorneio", () => {
                 torneioId: "t-1",
                 rodada: 2,
                 jogador1Id: "u-1",
-                jogador1Nome: "Jogador 1",
                 jogador2Id: "u-3",
-                jogador2Nome: "Jogador 3",
                 vitoriasJogador1: 0,
                 vitoriasJogador2: 0,
                 status: "pendente",
@@ -98,7 +102,13 @@ describe("ListarPartidasTorneio", () => {
 
         const uc = ListarPartidasTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada })
+            criarMockPartidaGateway({ listarPorTorneioERodada }),
+            criarMockUsuarioGateway({
+                buscarVarios: jest.fn().mockResolvedValue([
+                    { id: "u-1", nome: "Jogador 1" },
+                    { id: "u-3", nome: "Jogador 3" },
+                ])
+            }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", rodada: 2 });
@@ -124,7 +134,8 @@ describe("ListarPartidasTorneio", () => {
 
         const uc = ListarPartidasTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway()
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway(),
         );
 
         await expect(
@@ -150,9 +161,7 @@ describe("ListarPartidasTorneio", () => {
                 torneioId: "t-1",
                 rodada: 3,
                 jogador1Id: "u-1",
-                jogador1Nome: "Jogador 1",
                 jogador2Id: "u-2",
-                jogador2Nome: "Jogador 2",
                 vitoriasJogador1: 2,
                 vitoriasJogador2: 1,
                 status: "finalizada",
@@ -161,7 +170,8 @@ describe("ListarPartidasTorneio", () => {
 
         const uc = ListarPartidasTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada })
+            criarMockPartidaGateway({ listarPorTorneioERodada }),
+            criarMockUsuarioGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", rodada: 3 });

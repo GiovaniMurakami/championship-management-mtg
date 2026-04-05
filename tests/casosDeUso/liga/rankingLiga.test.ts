@@ -94,7 +94,7 @@ describe("RankingLiga", () => {
 
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([partida]) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
@@ -127,7 +127,7 @@ describe("RankingLiga", () => {
 
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([partida]) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
@@ -157,7 +157,7 @@ describe("RankingLiga", () => {
 
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([partida]) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
@@ -183,7 +183,7 @@ describe("RankingLiga", () => {
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
             criarMockPartidaGateway(),
             criarMockInscricaoGateway({
-                listarPorTorneio: jest.fn().mockResolvedValue([inscricao1, inscricao2]),
+                listarPorTorneios: jest.fn().mockResolvedValue([inscricao1, inscricao2]),
             }),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway()
@@ -219,7 +219,7 @@ describe("RankingLiga", () => {
 
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([partidaPendente]) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partidaPendente]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
             criarMockUsuarioGateway()

@@ -49,6 +49,7 @@ const deckSchema = new Schema<DeckDocument>({
 
 deckSchema.index({ usuarioId: 1 });
 deckSchema.index({ criadoEm: -1 });
+deckSchema.index({ usuarioId: 1, formato: 1 });
 
 const DeckModel =
   mongoose.models.Deck ||

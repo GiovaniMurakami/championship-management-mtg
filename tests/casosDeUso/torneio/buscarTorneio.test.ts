@@ -39,6 +39,8 @@ describe("BuscarTorneio", () => {
         expect(resultado.partidas).toHaveLength(1);
         expect(resultado.partidas[0].jogador1Nome).toBe("João");
         expect(resultado.partidas[0].jogador2Nome).toBe("Maria");
+        expect(resultado.partidas[0]).toHaveProperty("contestado");
+        expect(resultado.partidas[0].contestado).toBe(false);
     });
 
     it("deve lançar erro se o torneio não for encontrado", async () => {
