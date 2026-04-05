@@ -11,6 +11,7 @@ interface InscricaoDocument extends Document {
   checkIn: boolean;
   checkInRodada: number;
   dropped: boolean;
+  byeCount: number;
   criadoEm: Date;
 }
 
@@ -22,6 +23,7 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   checkIn: { type: Boolean, required: true, default: false },
   checkInRodada: { type: Number, required: true, default: -1 },
   dropped: { type: Boolean, required: true, default: false },
+  byeCount: { type: Number, required: true, default: 0 },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -42,6 +44,7 @@ function docParaInscricao(doc: InscricaoDocument): Inscricao {
     checkIn: doc.get("checkIn"),
     checkInRodada: doc.get("checkInRodada") ?? -1,
     dropped: doc.get("dropped") ?? false,
+    byeCount: doc.get("byeCount") ?? 0,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -63,6 +66,7 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
       checkIn: inscricao.checkIn,
       checkInRodada: inscricao.checkInRodada,
       dropped: inscricao.dropped,
+      byeCount: inscricao.byeCount,
       criadoEm: inscricao.criadoEm,
     });
   }
@@ -111,6 +115,7 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
         checkIn: inscricao.checkIn,
         checkInRodada: inscricao.checkInRodada,
         dropped: inscricao.dropped,
+        byeCount: inscricao.byeCount,
       }
     );
   }

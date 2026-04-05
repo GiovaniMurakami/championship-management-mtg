@@ -8,6 +8,7 @@ export interface InscricaoProps {
   checkIn: boolean;
   checkInRodada: number;
   dropped: boolean;
+  byeCount: number;
   criadoEm?: Date;
 }
 
@@ -19,6 +20,7 @@ export class Inscricao {
   public checkIn: boolean;
   public checkInRodada: number;
   public dropped: boolean;
+  public byeCount: number;
   public criadoEm: Date;
 
   constructor(props: InscricaoProps) {
@@ -29,17 +31,19 @@ export class Inscricao {
     this.checkIn = props.checkIn;
     this.checkInRodada = props.checkInRodada;
     this.dropped = props.dropped;
+    this.byeCount = props.byeCount ?? 0;
     this.criadoEm = props.criadoEm || new Date();
   }
 
   public static criar(
-    props: Omit<InscricaoProps, "id" | "checkIn" | "checkInRodada" | "dropped" | "criadoEm">
+    props: Omit<InscricaoProps, "id" | "checkIn" | "checkInRodada" | "dropped" | "byeCount" | "criadoEm">
   ) {
     return new Inscricao({
       id: uuidv4(),
       checkIn: false,
       checkInRodada: -1,
       dropped: false,
+      byeCount: 0,
       criadoEm: new Date(),
       ...props,
     });

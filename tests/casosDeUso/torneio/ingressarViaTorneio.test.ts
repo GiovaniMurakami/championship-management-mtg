@@ -264,4 +264,91 @@ describe("IngressarViaTorneio", () => {
         expect(atualizarMock).not.toHaveBeenCalled();
         expect(torneioComCap.totalRodadas).toBe(2);
     });
+
+    it("deve lançar 400 se o torneio estiver em fase de corte", async () => {
+        const torneioEmCorte = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
+            emCorte: true, rodadaCorteInicio: 3, rodadaCorteFim: 5,
+        });
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se o torneio não estiver em andamento", async () => {
+        const torneioFinalizado = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "finalizado", rodadaAtual: 3, totalRodadas: 3,
+        });
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 404 se o usuário não existir", async () => {
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-inexistente" })
+        ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve criar inscrição com checkInRodada MAX_SAFE_INTEGER para futuras rodadas", async () => {
+        const salvarMock = jest.fn();
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio), atualizar: jest.fn() }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
+                salvar: salvarMock,
+                listarPorTorneio: jest.fn().mockResolvedValue([{ dropped: false }]),
+            }),
+            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+        );
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+
+        expect(salvarMock).toHaveBeenCalledTimes(1);
+        const inscricaoSalva = salvarMock.mock.calls[0][0];
+        expect(inscricaoSalva.checkIn).toBe(true);
+        expect(inscricaoSalva.checkInRodada).toBe(Number.MAX_SAFE_INTEGER);
+    });
 });

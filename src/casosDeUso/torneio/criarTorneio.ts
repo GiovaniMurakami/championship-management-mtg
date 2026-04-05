@@ -1,6 +1,10 @@
 import { Torneio } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { StatusErro } from "../../helpers/error/statusErro";
+
+const CORTES_VALIDOS = [2, 4, 8, 16];
 
 export type CriarTorneioInputDto = {
   nome: string;
@@ -48,6 +52,13 @@ export class CriarTorneio
   public async executar(
     input: CriarTorneioInputDto
   ): Promise<CriarTorneioOutputDto> {
+    if (input.corteTop !== undefined && !CORTES_VALIDOS.includes(input.corteTop)) {
+      throw ErroPersonalizado.criar({
+        mensagem: `O corte deve ser 2, 4, 8 ou 16. Valor recebido: ${input.corteTop}.`,
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const torneio = Torneio.criar({
       nome: input.nome.trim(),
       horario: input.horario,

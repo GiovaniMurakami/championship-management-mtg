@@ -80,6 +80,14 @@ export class IngressarViaTorneio
             });
         }
 
+        // Bloquear entrada tardia durante fase de corte
+        if (torneio.emCorte) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Não é possível ingressar durante a fase eliminatória (corte).",
+                status: StatusErro.erroParametro,
+            });
+        }
+
         // 3. Validar usuário
         const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
         if (!usuario) {
@@ -117,7 +125,7 @@ export class IngressarViaTorneio
             usuarioId: input.usuarioId,
         });
         inscricao.checkIn = true;
-        inscricao.checkInRodada = 100; // garante participação em todas as rodadas restantes
+        inscricao.checkInRodada = Number.MAX_SAFE_INTEGER; // garante participação em todas as rodadas restantes
 
         await this.inscricaoGateway.salvar(inscricao);
 
@@ -170,6 +178,7 @@ export class IngressarViaTorneio
                 vitoriasJogador1: 0,
                 vitoriasJogador2: 2, // "bye" ganha 2-0
                 status: "finalizada",
+                tipoBye: "penalidade",
                 criadoEm: new Date(),
             });
             await this.partidaGateway.salvar(partida);

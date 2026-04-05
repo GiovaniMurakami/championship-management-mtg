@@ -290,4 +290,133 @@ describe("IniciarProximaRodada", () => {
             uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false })
         ).rejects.toMatchObject({ status: 400 });
     });
+
+    it("deve lançar 404 se o torneio não for encontrado", async () => {
+        const uc = IniciarProximaRodada.criar(
+            criarMockTorneioGateway(), // buscarPorId retorna null por padrão
+            criarMockInscricaoGateway(),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway(),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "inexistente", donoId: "dono", isAdmin: false })
+        ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve lançar erro se menos de 2 jogadores fizeram check-in (não é última rodada)", async () => {
+        const torneioRodada1 = new Torneio({
+            ...torneio, rodadaAtual: 1, totalRodadas: 3,
+        });
+        const apenasUm = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 1, dropped: false }),
+        ];
+        const uc = IniciarProximaRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRodada1) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(apenasUm) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway(),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve excluir jogadores dropados do pareamento da próxima rodada", async () => {
+        const inscricoesComDrop = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 1, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 1, dropped: true }), // dropado
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 1, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkIn: true, checkInRodada: 1, dropped: false }),
+        ];
+
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+        });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComDrop) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            // 3 jogadores ativos: 1 partida + 1 bye
+            expect(resultado.partidas).toHaveLength(2);
+            const todosJogadores = resultado.partidas.flatMap(p => [p.jogador1Id, p.jogador2Id]);
+            expect(todosJogadores).not.toContain("u-2");
+        }
+    });
+
+    it("deve finalizar corte na última rodada de eliminação (final) e retornar classificação", async () => {
+        const torneioFinal = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 4, totalRodadas: 4,
+            corteTop: 4, emCorte: true,
+        });
+        const partidaFinal = [
+            new Partida({ id: "pf", torneioId: "t-1", rodada: 4, jogador1Id: "u-1", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+        ];
+        const todasPartidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 1, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 3, jogador1Id: "u-3", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            ...partidaFinal,
+        ];
+
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(torneioFinal),
+        });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidaFinal),
+                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+            }),
+            criarMockUsuarioGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(true);
+        if (resultado.finalizado) {
+            expect(resultado.classificacao.length).toBeGreaterThan(0);
+            expect(resultado.classificacao[0].posicao).toBe(1);
+        }
+        expect(torneioGw.atualizar).toHaveBeenCalled();
+    });
+
+    it("deve lançar erro se não houver jogadores suficientes para o corte", async () => {
+        const torneioCorte = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 2, totalRodadas: 2,
+            corteTop: 8,
+        });
+        const uc = IniciarProximaRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        // 4 jogadores mas corteTop=8 → não há jogadores suficientes
+        await expect(
+            uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false })
+        ).rejects.toMatchObject({ status: 400 });
+    });
 });

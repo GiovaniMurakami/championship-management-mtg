@@ -126,9 +126,22 @@ export class BuscarStandings
       ? todasPartidas
       : todasPartidas.filter((p) => p.rodada < torneio.rodadaAtual);
 
-    const jogadoresIds = inscricoes
+    // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
+    // para que omwp/ogwp use o MWP real de oponentes dropados
+    const jogadoresComCheckIn = inscricoes
       .filter((i) => i.checkIn)
       .map((i) => i.usuarioId);
+
+    const idsComHistorico = Array.from(
+      new Set(
+        todasPartidas.flatMap((p) => [
+          p.jogador1Id,
+          ...(p.jogador2Id ? [p.jogador2Id] : []),
+        ])
+      )
+    );
+
+    const jogadoresIds = Array.from(new Set([...jogadoresComCheckIn, ...idsComHistorico]));
 
     const inscricaoMap = new Map(inscricoes.map((i) => [i.usuarioId, i]));
 

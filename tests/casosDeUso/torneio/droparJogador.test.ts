@@ -177,4 +177,123 @@ describe("DroparJogador", () => {
         expect(resultado.dropped).toBe(true);
         expect(partidaGw.atualizar).toHaveBeenCalledTimes(3);
     });
+
+    it("deve dar WO 0-2 para o jogador1 dropado (oponente vence 2-0)", async () => {
+        const partidaPendente = new Partida({
+            id: "p-1", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: "u-2",
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+
+        const partidasAtualizadas: Partida[] = [];
+        const partidaGw = criarMockPartidaGateway({
+            listarPorTorneio: jest.fn().mockResolvedValue([partidaPendente]),
+            atualizar: jest.fn().mockImplementation((p: Partida) => {
+                partidasAtualizadas.push({ ...p } as Partida);
+                return Promise.resolve();
+            }),
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            partidaGw,
+        );
+
+        await uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" });
+
+        expect(partidasAtualizadas).toHaveLength(1);
+        expect(partidasAtualizadas[0].vitoriasJogador1).toBe(0);
+        expect(partidasAtualizadas[0].vitoriasJogador2).toBe(2);
+        expect(partidasAtualizadas[0].status).toBe("finalizada");
+    });
+
+    it("deve dar WO 2-0 quando jogador2 é dropado (jogador1 vence 2-0)", async () => {
+        const inscricaoJ2 = new Inscricao({
+            id: "i-2", torneioId: "t-1", usuarioId: "u-2",
+            checkIn: true, checkInRodada: 0, dropped: false,
+        });
+        const jogador2 = new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" });
+        const partidaPendente = new Partida({
+            id: "p-1", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: "u-2",
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+
+        const partidasAtualizadas: Partida[] = [];
+        const partidaGw = criarMockPartidaGateway({
+            listarPorTorneio: jest.fn().mockResolvedValue([partidaPendente]),
+            atualizar: jest.fn().mockImplementation((p: Partida) => {
+                partidasAtualizadas.push({ ...p } as Partida);
+                return Promise.resolve();
+            }),
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricaoJ2 }) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador2) }),
+            partidaGw,
+        );
+
+        await uc.executar({ torneioId: "t-1", requisitanteId: "u-2", isAdmin: false, jogadorId: "u-2" });
+
+        expect(partidasAtualizadas).toHaveLength(1);
+        expect(partidasAtualizadas[0].vitoriasJogador1).toBe(2);
+        expect(partidasAtualizadas[0].vitoriasJogador2).toBe(0);
+        expect(partidasAtualizadas[0].status).toBe("finalizada");
+    });
+
+    it("não deve resolver partidas quando torneio está em inscricoes_abertas", async () => {
+        const torneioAberto = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+        });
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+        });
+        const partidaGw = criarMockPartidaGateway();
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            partidaGw,
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1",
+        });
+
+        expect(resultado.dropped).toBe(true);
+        // Não deve ter buscado nem atualizado partidas
+        expect(partidaGw.listarPorTorneio).not.toHaveBeenCalled();
+        expect(partidaGw.atualizar).not.toHaveBeenCalled();
+    });
+
+    it("deve ignorar partidas já finalizadas ao resolver pendentes do jogador dropado", async () => {
+        const partidaFinalizada = new Partida({
+            id: "p-f", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: "u-2",
+            vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada",
+        });
+        const partidaPendente = new Partida({
+            id: "p-p", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: "u-3",
+            vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
+        });
+
+        const partidaGw = criarMockPartidaGateway({
+            listarPorTorneio: jest.fn().mockResolvedValue([partidaFinalizada, partidaPendente]),
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            partidaGw,
+        );
+
+        await uc.executar({ torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1" });
+
+        // Apenas a partida pendente deve ser atualizada
+        expect(partidaGw.atualizar).toHaveBeenCalledTimes(1);
+    });
 });
