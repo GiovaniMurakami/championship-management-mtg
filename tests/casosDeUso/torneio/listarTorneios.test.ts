@@ -62,6 +62,23 @@ describe("ListarTorneios", () => {
 
         await uc.executar({ usuarioId: "u1", limite: 5, offset: 10 });
 
-        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10 });
+        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10, incluirSecretos: false });
+    });
+
+    it("não deve incluir torneios secretos na listagem pública", async () => {
+        const torneioSecreto = new Torneio({ id: "ts", nome: "Secreto", horario: new Date(), formato: "modern", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0, secreto: true });
+        const listarMock = jest.fn().mockResolvedValue([torneios[0]]);
+        const listarTotalMock = jest.fn().mockResolvedValue(1);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock, listarTotal: listarTotalMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u1" });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
+        expect(listarTotalMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
+        // torneio secreto não está na lista retornada pelo gateway (filtrado no nível do repositório)
+        void torneioSecreto;
+        expect(resultado.torneios).toHaveLength(1);
     });
 });

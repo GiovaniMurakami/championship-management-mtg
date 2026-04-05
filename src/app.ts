@@ -24,7 +24,6 @@ export function app() {
   const casos = criarCasosDeUso(repos, servicos);
   const rotas = criarRotas(casos);
 
-  // Injeta o repositório compartilhado no middleware autenticarJwt (evita criação duplicada)
   inicializarAutenticarJwt(repos.tokenBlacklist);
 
   const port = Number(process.env.PORT) || 0;

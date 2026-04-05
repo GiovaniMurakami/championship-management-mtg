@@ -25,6 +25,7 @@ export type ListarPartidasTorneioOutputDto = {
         vitoriasJogador1: number;
         vitoriasJogador2: number;
         status: string;
+        contestado: boolean;
     }>;
 };
 
@@ -87,6 +88,7 @@ export class ListarPartidasTorneio
                 vitoriasJogador1: p.vitoriasJogador1,
                 vitoriasJogador2: p.vitoriasJogador2,
                 status: p.status,
+                contestado: p.contestado,
             })),
         };
     }

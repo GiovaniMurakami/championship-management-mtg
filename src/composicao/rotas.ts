@@ -26,6 +26,9 @@ import { MeuHistoricoTorneioRota } from "../infra/api/express/rotas/torneio/meuH
 import { ListarPartidasTorneioRota } from "../infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
 import { AlterarTorneioRota } from "../infra/api/express/rotas/torneio/alterarTorneio.express.route";
 import { ExcluirTorneioRota } from "../infra/api/express/rotas/torneio/excluirTorneio.express.route";
+import { GerarLinkIngressoRota } from "../infra/api/express/rotas/torneio/gerarLinkIngresso.express.route";
+import { IngressarViaTorneioRota } from "../infra/api/express/rotas/torneio/ingressarViaTorneio.express.route";
+import { AjustarResultadoRota } from "../infra/api/express/rotas/torneio/ajustarResultado.express.route";
 import { CriarLigaRota } from "../infra/api/express/rotas/liga/criarLiga.express.route";
 import { AlterarLigaRota } from "../infra/api/express/rotas/liga/alterarLiga.express.route";
 import { ExcluirLigaRota } from "../infra/api/express/rotas/liga/excluirLiga.express.route";
@@ -66,6 +69,9 @@ export function criarRotas(casos: CasosDeUso) {
         ListarPartidasTorneioRota.criar(casos.listarPartidasTorneio),
         AlterarTorneioRota.criar(casos.alterarTorneio),
         ExcluirTorneioRota.criar(casos.excluirTorneio),
+        GerarLinkIngressoRota.criar(casos.gerarLinkIngresso),
+        IngressarViaTorneioRota.criar(casos.ingressarViaTorneio),
+        AjustarResultadoRota.criar(casos.ajustarResultado),
         CriarLigaRota.criar(casos.criarLiga),
         ListarLigasRota.criar(casos.listarLigas),
         BuscarLigaRota.criar(casos.buscarLiga),

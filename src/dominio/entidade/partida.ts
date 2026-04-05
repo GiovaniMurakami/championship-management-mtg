@@ -13,6 +13,7 @@ export interface PartidaProps {
   vitoriasJogador1: number;
   vitoriasJogador2: number;
   status: StatusPartida;
+  contestado?: boolean;
   criadoEm?: Date;
 }
 
@@ -27,6 +28,7 @@ export class Partida {
   public vitoriasJogador1: number;
   public vitoriasJogador2: number;
   public status: StatusPartida;
+  public contestado: boolean;
   public criadoEm: Date;
 
   constructor(props: PartidaProps) {
@@ -40,6 +42,7 @@ export class Partida {
     this.vitoriasJogador1 = props.vitoriasJogador1;
     this.vitoriasJogador2 = props.vitoriasJogador2;
     this.status = props.status;
+    this.contestado = props.contestado ?? false;
     this.criadoEm = props.criadoEm || new Date();
   }
 

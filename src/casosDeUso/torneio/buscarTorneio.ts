@@ -28,6 +28,7 @@ export type BuscarTorneioOutputDto = {
   corteTop?: number;
   linkLive?: string;
   emCorte: boolean;
+  secreto: boolean;
   totalInscritos: number;
   totalCheckin: number;
   criadoEm: Date;
@@ -41,6 +42,7 @@ export type BuscarTorneioOutputDto = {
     vitoriasJogador1: number;
     vitoriasJogador2: number;
     status: string;
+    contestado: boolean;
   }>;
 };
 
@@ -109,6 +111,7 @@ export class BuscarTorneio
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
+      secreto: torneio.secreto,
       totalInscritos,
       totalCheckin,
       criadoEm: torneio.criadoEm,
@@ -124,6 +127,7 @@ export class BuscarTorneio
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
+        contestado: p.contestado,
       })),
     };
   }

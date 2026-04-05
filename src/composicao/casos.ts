@@ -27,6 +27,9 @@ import { MeuHistoricoTorneio } from "../casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "../casosDeUso/torneio/listarPartidasTorneio";
 import { AlterarTorneio } from "../casosDeUso/torneio/alterarTorneio";
 import { ExcluirTorneio } from "../casosDeUso/torneio/excluirTorneio";
+import { GerarLinkIngresso } from "../casosDeUso/torneio/gerarLinkIngresso";
+import { IngressarViaTorneio } from "../casosDeUso/torneio/ingressarViaTorneio";
+import { AjustarResultado } from "../casosDeUso/torneio/ajustarResultado";
 import { CriarLiga } from "../casosDeUso/liga/criarLiga";
 import { AlterarLiga } from "../casosDeUso/liga/alterarLiga";
 import { ExcluirLiga } from "../casosDeUso/liga/excluirLiga";
@@ -73,6 +76,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const alterarTorneio = AlterarTorneio.criar(repos.torneio);
     const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
+    const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
+    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso);
+    const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
 
     // --- Liga ---
     const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);
@@ -91,6 +97,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado,
         droparJogador, listarTorneios, buscarTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
+        gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
     };
 }

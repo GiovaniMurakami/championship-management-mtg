@@ -11,6 +11,7 @@ import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGatew
 import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
 import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
 import { ImagemGateway } from "../../src/dominio/gateway/imagemGateway";
+import { LinkIngressoGateway } from "../../src/dominio/gateway/linkIngressoGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -89,6 +90,18 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         finalizarAtomicamente: jest.fn().mockResolvedValue(null),
         contestarPartida: jest.fn().mockResolvedValue(null),
         existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
+        ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
+        atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
+        buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
+        ...overrides,
+    };
+}
+
+export function criarMockLinkIngressoGateway(overrides: Partial<LinkIngressoGateway> = {}): LinkIngressoGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorToken: jest.fn().mockResolvedValue(null),
+        excluirPorToken: jest.fn(),
         ...overrides,
     };
 }

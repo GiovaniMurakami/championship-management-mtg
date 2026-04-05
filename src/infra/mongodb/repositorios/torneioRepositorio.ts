@@ -23,6 +23,7 @@ interface TorneioDocument extends Document {
   corteTop?: number;
   linkLive?: string;
   emCorte: boolean;
+  secreto: boolean;
   criadoEm: Date;
 }
 
@@ -44,6 +45,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   corteTop: { type: Number, max: 64 },
   linkLive: { type: String, maxlength: 500 },
   emCorte: { type: Boolean, default: false },
+  secreto: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -74,6 +76,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     corteTop: doc.get("corteTop") ?? undefined,
     linkLive: doc.get("linkLive") ?? undefined,
     emCorte: doc.get("emCorte") ?? false,
+    secreto: doc.get("secreto") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -105,6 +108,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
+      secreto: torneio.secreto,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -118,16 +122,20 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
 
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
     await this.conectar();
-    let query = TorneioModel.find().sort({ criadoEm: -1 });
+    const filtroQuery: Record<string, unknown> = {};
+    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1 });
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;
     return docs.map((doc) => docParaTorneio(doc as unknown as TorneioDocument));
   }
 
-  public async listarTotal(): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarTorneios, 'incluirSecretos'> = {}): Promise<number> {
     await this.conectar();
-    return TorneioModel.countDocuments();
+    const filtroQuery: Record<string, unknown> = {};
+    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    return TorneioModel.countDocuments(filtroQuery);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -155,6 +163,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         corteTop: torneio.corteTop,
         linkLive: torneio.linkLive,
         emCorte: torneio.emCorte,
+        secreto: torneio.secreto,
       }
     );
   }

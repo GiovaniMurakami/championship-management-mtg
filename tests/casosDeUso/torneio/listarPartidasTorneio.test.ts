@@ -59,6 +59,8 @@ describe("ListarPartidasTorneio", () => {
         expect(resultado.partidas[0].jogador1Nome).toBe("Jogador 1");
         expect(resultado.partidas[1].jogador2Id).toBeNull();
         expect(resultado.partidas[1].jogador2Nome).toBeNull();
+        expect(resultado.partidas[0]).toHaveProperty("contestado");
+        expect(resultado.partidas[0].contestado).toBe(false);
     });
 
     it("deve lançar erro quando torneio não existe", async () => {

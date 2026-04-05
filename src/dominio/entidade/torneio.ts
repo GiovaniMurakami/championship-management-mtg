@@ -20,6 +20,7 @@ export interface TorneioProps {
   corteTop?: number;
   linkLive?: string;
   emCorte?: boolean;
+  secreto?: boolean;
   criadoEm?: Date;
 }
 
@@ -41,6 +42,7 @@ export class Torneio {
   public corteTop?: number;
   public linkLive?: string;
   public emCorte: boolean = false;
+  public secreto: boolean = false;
   public criadoEm: Date;
 
   constructor(props: TorneioProps) {
@@ -61,6 +63,7 @@ export class Torneio {
     this.corteTop = props.corteTop;
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
+    this.secreto = props.secreto ?? false;
     this.criadoEm = props.criadoEm || new Date();
   }
 

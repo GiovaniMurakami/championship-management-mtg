@@ -19,6 +19,7 @@ export type ContestarResultadoOutputDto = {
     vitoriasJogador1: number;
     vitoriasJogador2: number;
     status: string;
+    contestado: boolean;
 };
 
 export class ContestarResultado
@@ -73,17 +74,6 @@ export class ContestarResultado
             });
         }
 
-        const temRodadaPosterior = await this.partidaGateway.existePartidaRodadaPosterior(
-            partida.torneioId,
-            partida.rodada
-        );
-        if (temRodadaPosterior) {
-            throw ErroPersonalizado.criar({
-                mensagem: "Não é possível contestar um resultado após o início da próxima rodada.",
-                status: StatusErro.erroParametro,
-            });
-        }
-
         const partidaContestada = await this.partidaGateway.contestarPartida(input.partidaId);
         if (!partidaContestada) {
             throw ErroPersonalizado.criar({
@@ -101,6 +91,7 @@ export class ContestarResultado
             vitoriasJogador1: partidaContestada.vitoriasJogador1,
             vitoriasJogador2: partidaContestada.vitoriasJogador2,
             status: partidaContestada.status,
+            contestado: partidaContestada.contestado,
         };
     }
 }

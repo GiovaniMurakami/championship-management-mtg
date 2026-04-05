@@ -8,6 +8,7 @@ import { RefreshTokenRepositorio } from "../infra/mongodb/repositorios/refreshTo
 import { LigaRepositorio } from "../infra/mongodb/repositorios/ligaRepositorio";
 import { LoginAttemptRepositorio } from "../infra/mongodb/repositorios/loginAttemptRepositorio";
 import { ResetSenhaRepositorio } from "../infra/mongodb/repositorios/resetSenhaRepositorio";
+import { LinkIngressoRepositorio } from "../infra/mongodb/repositorios/linkIngressoRepositorio";
 
 export function criarRepositorios() {
     return {
@@ -21,6 +22,7 @@ export function criarRepositorios() {
         liga: LigaRepositorio.criar(),
         loginAttempt: LoginAttemptRepositorio.criar(),
         resetSenha: ResetSenhaRepositorio.criar(),
+        linkIngresso: LinkIngressoRepositorio.criar(),
     };
 }
 

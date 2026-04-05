@@ -14,6 +14,7 @@ interface PartidaDocument extends Document {
   vitoriasJogador1: number;
   vitoriasJogador2: number;
   status: StatusPartida;
+  contestado: boolean;
   criadoEm: Date;
 }
 
@@ -28,6 +29,7 @@ const partidaSchema = new Schema<PartidaDocument>({
   vitoriasJogador1: { type: Number, required: true, default: 0, max: 3 },
   vitoriasJogador2: { type: Number, required: true, default: 0, max: 3 },
   status: { type: String, required: true, default: "pendente" },
+  contestado: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -51,6 +53,7 @@ function docParaPartida(doc: PartidaDocument): Partida {
     vitoriasJogador1: doc.get("vitoriasJogador1"),
     vitoriasJogador2: doc.get("vitoriasJogador2"),
     status: doc.get("status"),
+    contestado: doc.get("contestado") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -68,6 +71,7 @@ function leanParaPartida(doc: Record<string, unknown>): Partida {
     vitoriasJogador1: doc["vitoriasJogador1"] as number,
     vitoriasJogador2: doc["vitoriasJogador2"] as number,
     status: doc["status"] as StatusPartida,
+    contestado: (doc["contestado"] as boolean | undefined) ?? false,
     criadoEm: doc["criadoEm"] as Date,
   });
 }
@@ -164,6 +168,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
         vitoriasJogador1: partida.vitoriasJogador1,
         vitoriasJogador2: partida.vitoriasJogador2,
         status: partida.status,
+        contestado: partida.contestado,
       }
     );
   }
@@ -189,17 +194,66 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
   }
 
   /**
-   * Reabre a partida para contestação — só funciona se status="finalizada"
-   * e nenhuma rodada posterior foi iniciada (verificado no use case).
+   * Marca a partida como contestada — mantém placar e status finalizada.
    * Retorna null se a partida não estava finalizada.
    */
   public async contestarPartida(id: string): Promise<Partida | null> {
     await this.conectar();
     const doc = await PartidaModel.findOneAndUpdate(
       { id, status: "finalizada" },
-      { vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente" },
+      { contestado: true },
       { new: true }
     );
+    if (!doc) return null;
+    return docParaPartida(doc as unknown as PartidaDocument);
+  }
+
+  /**
+   * Admin ajusta resultado de partida contestada — sobrescreve placar sem verificar status.
+   * Retorna null se a partida não existir ou não estiver contestada.
+   */
+  public async ajustarResultadoContestado(
+    id: string,
+    v1: number,
+    v2: number
+  ): Promise<Partida | null> {
+    await this.conectar();
+    const doc = await PartidaModel.findOneAndUpdate(
+      { id, contestado: true },
+      { vitoriasJogador1: v1, vitoriasJogador2: v2, contestado: false, status: "finalizada" },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaPartida(doc as unknown as PartidaDocument);
+  }
+
+  /**
+   * Atualiza o jogador2 de uma partida BYE (jogador2Id era null).
+   * Usado quando um jogador entra no meio do torneio e assume o slot BYE.
+   */
+  public async atualizarJogador2Partida(
+    id: string,
+    jogador2Id: string
+  ): Promise<Partida | null> {
+    await this.conectar();
+    const doc = await PartidaModel.findOneAndUpdate(
+      { id, jogador2Id: null },
+      { jogador2Id },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaPartida(doc as unknown as PartidaDocument);
+  }
+
+  /**
+   * Busca a partida BYE (jogador2Id=null) de uma rodada de um torneio, se existir.
+   */
+  public async buscarByePartidaRodada(
+    torneioId: string,
+    rodada: number
+  ): Promise<Partida | null> {
+    await this.conectar();
+    const doc = await PartidaModel.findOne({ torneioId, rodada, jogador2Id: null });
     if (!doc) return null;
     return docParaPartida(doc as unknown as PartidaDocument);
   }

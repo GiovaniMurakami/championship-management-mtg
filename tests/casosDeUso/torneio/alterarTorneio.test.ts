@@ -140,4 +140,21 @@ describe("AlterarTorneio", () => {
         expect(resultado.linkLive).toBe("https://twitch.tv/example");
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
+
+    it("deve alterar o campo secreto", async () => {
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "torneio-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            secreto: true,
+        });
+
+        expect(resultado.secreto).toBe(true);
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
 });
