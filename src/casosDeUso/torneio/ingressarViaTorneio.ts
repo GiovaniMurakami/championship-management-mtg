@@ -121,6 +121,20 @@ export class IngressarViaTorneio
 
         await this.inscricaoGateway.salvar(inscricao);
 
+        // Verificar se o novo total de jogadores ativos exige uma rodada adicional
+        if (!torneio.emCorte) {
+            const todasInscricoes = await this.inscricaoGateway.listarPorTorneio(torneio.id);
+            const jogadoresAtivos = todasInscricoes.filter((i) => !i.dropped).length;
+            const novoTotal = Math.ceil(Math.log2(Math.max(jogadoresAtivos, 2)));
+            const totalComCap = torneio.maxRodadas
+                ? Math.min(novoTotal, torneio.maxRodadas)
+                : novoTotal;
+            if (totalComCap > torneio.totalRodadas) {
+                torneio.totalRodadas = totalComCap;
+                await this.torneioGateway.atualizar(torneio);
+            }
+        }
+
         // 7. Verificar se existe partida BYE na rodada atual
         const byePartida = await this.partidaGateway.buscarByePartidaRodada(
             torneio.id,
