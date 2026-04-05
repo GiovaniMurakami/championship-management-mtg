@@ -6,6 +6,7 @@ import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt"
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { registrarResultadoSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 
 export class AjustarResultadoRota implements Rotas {
     private constructor(
@@ -44,6 +45,15 @@ export class AjustarResultadoRota implements Rotas {
                     isAdmin: request.usuario!.role === "admin",
                     vitoriasJogador1: dados.vitoriasJogador1,
                     vitoriasJogador2: dados.vitoriasJogador2,
+                });
+
+                eventosTorneio.emit("resultado_ajustado", {
+                    torneioId: resultado.torneioId,
+                    partidaId: resultado.id,
+                    rodada: resultado.rodada,
+                    vitoriasJogador1: resultado.vitoriasJogador1,
+                    vitoriasJogador2: resultado.vitoriasJogador2,
+                    contestado: resultado.contestado,
                 });
 
                 response.status(200).json(resultado);

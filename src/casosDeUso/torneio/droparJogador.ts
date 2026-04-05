@@ -5,6 +5,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type DroparJogadorInputDto = {
   torneioId: string;
@@ -89,6 +90,7 @@ export class DroparJogador
     await this.inscricaoGateway.atualizar(inscricao);
 
     // Auto-resolve pending matches: give WO (2-0) to the opponent
+    const partidasResolvidas: Array<{ partidaId: string; vencedorId: string }> = [];
     if (torneio.status === "em_andamento") {
       const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
       const pendentes = partidas.filter(
@@ -104,9 +106,11 @@ export class DroparJogador
         } else if (partida.jogador1Id === input.jogadorId) {
           partida.vitoriasJogador1 = 0;
           partida.vitoriasJogador2 = 2;
+          partidasResolvidas.push({ partidaId: partida.id, vencedorId: partida.jogador2Id });
         } else {
           partida.vitoriasJogador1 = 2;
           partida.vitoriasJogador2 = 0;
+          partidasResolvidas.push({ partidaId: partida.id, vencedorId: partida.jogador1Id });
         }
         partida.status = "finalizada";
         await this.partidaGateway.atualizar(partida);
@@ -114,6 +118,13 @@ export class DroparJogador
     }
 
     const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
+
+    eventosTorneio.emit("jogador_dropou", {
+      torneioId: input.torneioId,
+      jogadorId: input.jogadorId,
+      jogadorNome: jogador?.nome ?? input.jogadorId,
+      partidasResolvidas,
+    });
 
     return {
       inscricaoId: inscricao.id,

@@ -9,6 +9,7 @@ import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type IngressarViaTorneioInputDto = {
     token: string;
@@ -138,8 +139,16 @@ export class IngressarViaTorneio
                 ? Math.min(novoTotal, torneio.maxRodadas)
                 : novoTotal;
             if (totalComCap > torneio.totalRodadas) {
+                const totalAnterior = torneio.totalRodadas;
                 torneio.totalRodadas = totalComCap;
                 await this.torneioGateway.atualizar(torneio);
+
+                eventosTorneio.emit("total_rodadas_alterado", {
+                    torneioId: torneio.id,
+                    totalRodadasAnterior: totalAnterior,
+                    totalRodadas: totalComCap,
+                    motivo: "ingresso_tardio",
+                });
             }
         }
 
@@ -183,6 +192,14 @@ export class IngressarViaTorneio
             });
             await this.partidaGateway.salvar(partida);
         }
+
+        eventosTorneio.emit("jogador_ingressou", {
+            torneioId: torneio.id,
+            usuarioId: input.usuarioId,
+            usuarioNome: usuario.nome,
+            rodadaIngresso: torneio.rodadaAtual,
+            substituiuBye: !!byePartida,
+        });
 
         return {
             inscricaoId: inscricao.id,
