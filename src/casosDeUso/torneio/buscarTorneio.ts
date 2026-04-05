@@ -28,6 +28,7 @@ export type BuscarTorneioOutputDto = {
   corteTop?: number;
   linkLive?: string;
   emCorte: boolean;
+  secreto: boolean;
   totalInscritos: number;
   totalCheckin: number;
   criadoEm: Date;
@@ -41,6 +42,7 @@ export type BuscarTorneioOutputDto = {
     vitoriasJogador1: number;
     vitoriasJogador2: number;
     status: string;
+    contestado: boolean;
   }>;
 };
 
@@ -109,6 +111,7 @@ export class BuscarTorneio
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
+      secreto: torneio.secreto,
       totalInscritos,
       totalCheckin,
       criadoEm: torneio.criadoEm,
@@ -116,14 +119,15 @@ export class BuscarTorneio
         id: p.id,
         rodada: p.rodada,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: p.jogador1Nome ?? usuarioMap.get(p.jogador1Id)?.nome ?? p.jogador1Id,
+        jogador1Nome: usuarioMap.get(p.jogador1Id)?.nome ?? p.jogador1Id,
         jogador2Id: p.jogador2Id,
         jogador2Nome: p.jogador2Id
-          ? (p.jogador2Nome ?? usuarioMap.get(p.jogador2Id)?.nome ?? p.jogador2Id)
+          ? (usuarioMap.get(p.jogador2Id)?.nome ?? p.jogador2Id)
           : null,
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
+        contestado: p.contestado,
       })),
     };
   }

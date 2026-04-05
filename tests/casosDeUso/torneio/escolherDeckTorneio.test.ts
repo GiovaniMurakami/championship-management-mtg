@@ -119,4 +119,20 @@ describe("EscolherDeckTorneio", () => {
         expect(resultado.deckId).toBe("deck-1");
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
+
+    it("deve lançar erro se o formato do deck não corresponder ao do torneio", async () => {
+        const deckModern = new Deck({
+            id: "deck-2", nome: "Burn Modern", formato: "modern",
+            maindeck: [], sideboard: [], usuarioId: "u-1",
+        });
+        const uc = EscolherDeckTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) }),
+            criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deckModern) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "deck-2" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
 });

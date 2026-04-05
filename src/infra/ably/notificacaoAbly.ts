@@ -50,8 +50,8 @@ export class NotificacaoAbly {
       this.publicar(payload.torneioId, "resultado_registrado", payload);
     });
 
-    eventosTorneio.on("mesa_atualizada", (payload: Record<string, unknown> & { torneioId: string }) => {
-      this.publicar(payload.torneioId, "mesa_atualizada", payload);
+    eventosTorneio.on("resultado_contestado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "resultado_contestado", payload);
     });
 
     eventosTorneio.on("standings_atualizados", (payload: Record<string, unknown> & { torneioId: string }) => {

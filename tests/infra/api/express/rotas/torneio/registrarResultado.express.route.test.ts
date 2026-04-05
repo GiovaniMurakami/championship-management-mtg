@@ -2,7 +2,7 @@ import { RegistrarResultadoRota } from "../../../../../../src/infra/api/express/
 import { eventosTorneio } from "../../../../../../src/infra/socketio/eventosTorneio";
 
 describe("RegistrarResultadoRota", () => {
-    it("deve emitir resultado_registrado e mesa_atualizada ao registrar resultado", async () => {
+    it("deve emitir resultado_registrado ao registrar resultado", async () => {
         const resultado = {
             id: "p-1",
             torneioId: "t-1",
@@ -51,15 +51,6 @@ describe("RegistrarResultadoRota", () => {
         expect(response.json).toHaveBeenCalledWith(resultado);
 
         expect(emitSpy).toHaveBeenCalledWith("resultado_registrado", resultado);
-        expect(emitSpy).toHaveBeenCalledWith(
-            "mesa_atualizada",
-            expect.objectContaining({
-                torneioId: "t-1",
-                rodada: 2,
-                partidaId: "p-1",
-                partida: resultado,
-            })
-        );
 
         emitSpy.mockRestore();
     });

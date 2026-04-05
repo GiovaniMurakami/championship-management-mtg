@@ -68,6 +68,7 @@ export const criarTorneioSchema = z.object({
   maxRodadas: z.number().int().min(1).optional(),
   corteTop: z.number().int().min(2).optional(),
   linkLive: z.string().optional(),
+  secreto: z.boolean().optional(),
 });
 
 export const alterarTorneioSchema = z.object({
@@ -82,6 +83,7 @@ export const alterarTorneioSchema = z.object({
   maxRodadas: z.number().int().min(1).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   linkLive: z.string().optional(),
+  secreto: z.boolean().optional(),
 });
 
 export const escolherDeckTorneioSchema = z.object({

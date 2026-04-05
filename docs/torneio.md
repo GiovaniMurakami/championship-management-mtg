@@ -22,22 +22,24 @@ interface TorneioProps {
   totalRodadas: number;
   premio?: string;
   maxJogadores?: number;
+  secreto?: boolean;
   criadoEm?: Date;
 }
 ```
 
-| Campo         | Tipo   | Descrição                                                 |
-| ------------- | ------ | --------------------------------------------------------- |
-| id            | string | Identificador único UUID                                  |
-| nome          | string | Nome do torneio                                           |
-| horario       | Date   | Data e hora de realização                                 |
-| formato       | string | Formato do torneio (Standard, Modern, Legacy, etc.)       |
-| donoId        | string | ID do usuário que criou o torneio                         |
-| status        | string | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
-| rodadaAtual   | number | Rodada corrente (0 antes de iniciar)                      |
-| totalRodadas  | number | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
-| premio        | string | Descrição do prêmio (opcional)                            |
-| maxJogadores  | number | Limite máximo de inscrições. Sem limite quando omitido (opcional) |
+| Campo         | Tipo    | Descrição                                                 |
+| ------------- | ------- | --------------------------------------------------------- |
+| id            | string  | Identificador único UUID                                  |
+| nome          | string  | Nome do torneio                                           |
+| horario       | Date    | Data e hora de realização                                 |
+| formato       | string  | Formato do torneio (Standard, Modern, Legacy, etc.)       |
+| donoId        | string  | ID do usuário que criou o torneio                         |
+| status        | string  | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
+| rodadaAtual   | number  | Rodada corrente (0 antes de iniciar)                      |
+| totalRodadas  | number  | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
+| premio        | string  | Descrição do prêmio (opcional)                            |
+| maxJogadores  | number  | Limite máximo de inscrições. Sem limite quando omitido (opcional) |
+| secreto       | boolean | Se `true`, o torneio não aparece em listagens públicas. Acessível apenas por link direto com o UUID. Padrão: `false`. |
 
 ### Inscrição
 
@@ -70,6 +72,7 @@ interface PartidaProps {
   vitoriasJogador1: number;
   vitoriasJogador2: number;
   status: "pendente" | "finalizada";
+  contestado: boolean; // true quando um jogador ou dono solicita revisão do resultado
 }
 ```
 
@@ -96,7 +99,7 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 4. **Jogadores** fazem check-in — disponível **1 hora antes** do `horario` do torneio (`POST /torneio/:id/checkin`)
 5. **Dono** inicia o torneio — rodada 1 gerada com sorteio aleatório (`POST /torneio/:id/iniciar`)
 6. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
-7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`)
+7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`), exceto quando a rodada atual já é a última do torneio
 8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
 9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
 10. Partidas (mesas) do torneio disponíveis a qualquer momento (`GET /torneio/:id/partidas` e filtro por rodada)
@@ -113,6 +116,14 @@ totalRodadas = ceil(log₂(n))
 ```
 
 Onde `n` = número de jogadores com check-in.
+
+Se `maxRodadas` estiver configurado no torneio, ele funciona como um teto:
+
+```
+totalRodadas = min(ceil(log₂(n)), maxRodadas)
+```
+
+Ou seja, `maxRodadas` nunca aumenta a quantidade padrão de rodadas; apenas impede que ela ultrapasse o limite definido.
 
 | Jogadores | Rodadas |
 | --------- | ------- |
@@ -163,11 +174,12 @@ Cria um novo torneio.
   "horario": "2026-03-20T19:00:00.000Z",
   "formato": "standard",
   "premio": "1º lugar: booster box",
-  "maxJogadores": 32
+  "maxJogadores": 32,
+  "secreto": false
 }
 ```
 
-> `premio` e `maxJogadores` são opcionais. Quando `maxJogadores` é omitido, o torneio não tem limite de inscrições.
+> `premio`, `maxJogadores` e `secreto` são opcionais. Quando `maxJogadores` é omitido, o torneio não tem limite de inscrições. Quando `secreto` é `true`, o torneio não aparece em listagens públicas — somente acessível via link direto com o UUID.
 
 **Response (201):**
 
@@ -179,6 +191,7 @@ Cria um novo torneio.
   "formato": "standard",
   "donoId": "uuid-do-usuario",
   "status": "inscricoes_abertas",
+  "secreto": false,
   "premio": "1º lugar: booster box",
   "criadoEm": "2026-03-13T10:00:00.000Z"
 }
@@ -189,6 +202,8 @@ Cria um novo torneio.
 ### GET /torneio/listar
 
 Lista todos os torneios existentes, ordenados por data de criação (mais recente primeiro).
+
+> **Torneios secretos (`secreto: true`) são automaticamente excluídos desta listagem.** Para acessar um torneio secreto, utilize `GET /torneio/:torneioId` diretamente com o UUID.
 
 **Response (200):**
 
@@ -243,7 +258,8 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
       "jogador2Nome": "Maria Santos",
       "vitoriasJogador1": 2,
       "vitoriasJogador2": 1,
-      "status": "finalizada"
+      "status": "finalizada",
+      "contestado": false
     },
     {
       "id": "uuid",
@@ -254,7 +270,8 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
       "jogador2Nome": null,
       "vitoriasJogador1": 2,
       "vitoriasJogador2": 0,
-      "status": "finalizada"
+      "status": "finalizada",
+      "contestado": false
     }
   ]
 }
@@ -266,6 +283,42 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 | totalCheckin   | Total de jogadores que confirmaram presença (`checkIn = true`)    |
 | partidas       | Todas as partidas do torneio ordenadas por rodada                 |
 | jogador2Nome   | `null` quando a partida é um bye                                  |
+| contestado     | `true` se o resultado da partida foi contestado e aguarda revisão |
+
+---
+
+### PUT /torneio/:torneioId
+
+**(Somente dono ou admin)** Atualiza os dados de um torneio. Só pode ser feito enquanto o status for `inscricoes_abertas`. Apenas os campos enviados são atualizados.
+
+**Request Body** _(todos os campos são opcionais)_:
+
+```json
+{
+  "nome": "FNM Standard Semanal",
+  "horario": "2026-03-27T19:00:00.000Z",
+  "formato": "standard",
+  "premio": "Booster Box",
+  "maxJogadores": 64,
+  "maxRodadas": 6,
+  "corteTop": 8,
+  "bannerUrl": "https://cdn.example.com/banner.png",
+  "linkBanner": "https://evento.example.com",
+  "somRodada": "https://cdn.example.com/som.mp3",
+  "linkLive": "https://twitch.tv/example",
+  "secreto": true
+}
+```
+
+> Quando `secreto: true`, o torneio é removido das listagens públicas mas continua acessível diretamente pelo UUID.
+
+**Response (200):** Retorna os dados completos atualizados do torneio (mesma estrutura de `POST /torneio/criar`).
+
+**Erros:**
+
+- `404` — Torneio não encontrado
+- `403` — Não é dono nem admin
+- `400` — Torneio não está em `inscricoes_abertas`
 
 ---
 
@@ -298,7 +351,8 @@ Você pode filtrar por rodada com query string:
       "deckJogador2Id": "uuid-deck-j2",
       "vitoriasJogador1": 2,
       "vitoriasJogador2": 1,
-      "status": "finalizada"
+      "status": "finalizada",
+      "contestado": false
     },
     {
       "id": "uuid",
@@ -309,7 +363,8 @@ Você pode filtrar por rodada com query string:
       "jogador2Nome": null,
       "vitoriasJogador1": 2,
       "vitoriasJogador2": 0,
-      "status": "finalizada"
+      "status": "finalizada",
+      "contestado": false
     }
   ]
 }
@@ -386,6 +441,7 @@ Escolhe ou troca o deck para o torneio. Pode ser feito a qualquer momento enquan
 - `403` — Deck pertence a outro usuário
 - `400` — Torneio já finalizado
 - `404` — Usuário não inscrito
+- `400` — Formato do deck diferente do formato do torneio
 
 ---
 
@@ -396,7 +452,7 @@ Confirma presença no torneio ou em uma rodada específica. Nenhum body necessá
 | Contexto                  | Comportamento                                                                   |
 | ------------------------- | ------------------------------------------------------------------------------- |
 | `inscricoes_abertas`      | Aceito a partir de **1 hora antes** do `horario`. Seta `checkIn = true`.        |
-| `em_andamento`            | Confirma para a próxima rodada. Sem check-in = excluído dos próximos pareamentos. |
+| `em_andamento`            | Confirma para a próxima rodada. Sem check-in = excluído dos próximos pareamentos. Não é necessário quando a rodada atual já é a última e o próximo passo é apenas finalizar ou entrar no corte. |
 
 **Response (200):**
 
@@ -548,7 +604,7 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
 **(Somente dono)** Verifica se todas as partidas da rodada atual estão finalizadas e então:
 
 - Se ainda há rodadas: gera os pareamentos Swiss e avança para a próxima rodada
-- Se era a última rodada: finaliza o torneio e retorna a classificação final
+- Se era a última rodada: finaliza o torneio e retorna a classificação final, sem exigir novo check-in
 
 **Response quando há próxima rodada (200):**
 
@@ -736,6 +792,143 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
 
 ---
 
+### POST /torneio/partida/:partidaId/contestar
+
+Marca uma partida finalizada como **contestada**, sinalizando ao dono/admin que o resultado precisa de revisão. O placar **não é alterado**. Pode ser feito pelos próprios jogadores da partida, pelo dono do torneio ou por um admin.
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid",
+  "torneioId": "uuid",
+  "rodada": 2,
+  "jogador1Id": "uuid-j1",
+  "jogador2Id": "uuid-j2",
+  "vitoriasJogador1": 2,
+  "vitoriasJogador2": 0,
+  "status": "finalizada",
+  "contestado": true
+}
+```
+
+**Erros:**
+
+- `404` — Partida não encontrada
+- `400` — Partida não está finalizada
+- `400` — Torneio não está em andamento
+- `403` — Usuário não é jogador, dono nem admin
+
+---
+
+### PUT /torneio/partida/:partidaId/ajustar
+
+**(Somente dono ou admin)** Corrige o resultado de uma partida que esteja com `contestado: true`. Após o ajuste, a flag `contestado` é removida. Empates não são permitidos durante a fase de **corte**.
+
+**Request Body:**
+
+```json
+{
+  "vitoriasJogador1": 1,
+  "vitoriasJogador2": 2
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "id": "uuid",
+  "torneioId": "uuid",
+  "rodada": 2,
+  "jogador1Id": "uuid-j1",
+  "jogador2Id": "uuid-j2",
+  "vitoriasJogador1": 1,
+  "vitoriasJogador2": 2,
+  "status": "finalizada",
+  "contestado": false
+}
+```
+
+**Erros:**
+
+- `404` — Partida não encontrada
+- `400` — Partida não está marcada como contestada
+- `400` — Torneio não está em andamento
+- `403` — Não é dono nem admin
+- `400` — Placar inválido (máx. 2 vitórias por jogador, soma ≤ 3)
+- `400` — Empate não permitido em fase de corte
+
+---
+
+### POST /torneio/:torneioId/gerar-link-ingresso
+
+**(Somente dono ou admin)** Gera um token de uso único para permitir que um jogador entre no torneio enquanto ele está **em andamento**. O token expira em 24 horas por padrão.
+
+**Request Body** _(opcional)_:
+
+```json
+{
+  "validadeHoras": 12
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "token": "uuid-do-token",
+  "torneioId": "uuid",
+  "expiresAt": "2026-03-21T10:00:00.000Z"
+}
+```
+
+> Compartilhe o `token` com o jogador. O frontend deve montar a URL de ingresso como: `/torneio/ingressar/{token}`.
+
+**Erros:**
+
+- `404` — Torneio não encontrado
+- `400` — Torneio não está em andamento
+- `403` — Não é dono nem admin
+
+---
+
+### POST /torneio/ingressar/:token
+
+Permite que o jogador autenticado ingresse em um torneio **em andamento** usando um token gerado pelo dono. O token é de **uso único** — é consumido imediatamente após o ingresso.
+
+**Comportamento após o ingresso:**
+
+| Situação na rodada atual                     | Resultado para o novo jogador                              |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| Existe jogador aguardando BYE                | O novo jogador substitui o BYE. O adversário original mantém sua vitória 2-0. |
+| Não há jogador com BYE disponível            | Nova partida criada com derrota 0-2 para o novo jogador (penalidade por entrada tardia). |
+
+**Response (200):**
+
+```json
+{
+  "inscricaoId": "uuid",
+  "torneioId": "uuid",
+  "usuarioId": "uuid",
+  "partidaId": "uuid",
+  "rodada": 3,
+  "vitoriasJogador1": 0,
+  "vitoriasJogador2": 2
+}
+```
+
+**Erros:**
+
+- `404` — Token inválido ou expirado
+- `400` — Link de ingresso expirado
+- `400` — Torneio não está em andamento
+- `404` — Usuário não encontrado
+- `400` — Nick MTGO não configurado na conta
+- `400` — Usuário já está inscrito neste torneio
+
+---
+
 ## Erros Comuns
 
 | Código | Situação                                          |
@@ -747,6 +940,9 @@ Retorna todas as partidas do jogador autenticado nesse torneio, com resultado, o
 | 400    | Jogador já dropado                                |
 | 400    | Nick MTGO não configurado ao tentar se inscrever  |
 | 400    | Limite máximo de jogadores atingido               |
+| 400    | Formato do deck diferente do formato do torneio   |
+| 400    | Partida não está marcada como contestada          |
+| 400    | Link de ingresso inválido ou expirado             |
 | 403    | Tentativa de operação exclusiva do dono           |
 | 403    | Deck pertence a outro usuário                     |
 | 403    | Drop de outro jogador sem ser o dono              |

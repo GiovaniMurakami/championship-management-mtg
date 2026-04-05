@@ -7,14 +7,13 @@ export interface PartidaProps {
   torneioId: string;
   rodada: number;
   jogador1Id: string;
-  jogador1Nome?: string;
   jogador2Id: string | null; // null = bye
-  jogador2Nome?: string | null;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
   vitoriasJogador2: number;
   status: StatusPartida;
+  contestado?: boolean;
   criadoEm?: Date;
 }
 
@@ -23,14 +22,13 @@ export class Partida {
   public torneioId: string;
   public rodada: number;
   public jogador1Id: string;
-  public jogador1Nome?: string;
   public jogador2Id: string | null;
-  public jogador2Nome?: string | null;
   public deckJogador1Id?: string;
   public deckJogador2Id?: string | null;
   public vitoriasJogador1: number;
   public vitoriasJogador2: number;
   public status: StatusPartida;
+  public contestado: boolean;
   public criadoEm: Date;
 
   constructor(props: PartidaProps) {
@@ -38,14 +36,13 @@ export class Partida {
     this.torneioId = props.torneioId;
     this.rodada = props.rodada;
     this.jogador1Id = props.jogador1Id;
-    this.jogador1Nome = props.jogador1Nome;
     this.jogador2Id = props.jogador2Id;
-    this.jogador2Nome = props.jogador2Nome;
     this.deckJogador1Id = props.deckJogador1Id;
     this.deckJogador2Id = props.deckJogador2Id;
     this.vitoriasJogador1 = props.vitoriasJogador1;
     this.vitoriasJogador2 = props.vitoriasJogador2;
     this.status = props.status;
+    this.contestado = props.contestado ?? false;
     this.criadoEm = props.criadoEm || new Date();
   }
 

@@ -61,7 +61,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly deckGateway: DeckGateway,
     private readonly usuarioGateway: UsuarioGateway
-  ) {}
+  ) { }
 
   public static criar(
     ligaGateway: LigaGateway,
@@ -88,78 +88,80 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const statsCartas = new Map<string, StatsCarta>();
     const deckIdsUsados = new Set<string>();
 
-    // Coleta todas as partidas finalizadas e inscrições de todos os torneios da liga
-    for (const torneioId of liga.torneioIds) {
-      const [partidas, inscricoes] = await Promise.all([
-        this.partidaGateway.listarPorTorneio(torneioId),
-        this.inscricaoGateway.listarPorTorneio(torneioId),
-      ]);
+    // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)
+    const [todasPartidas, todasInscricoes] = await Promise.all([
+      this.partidaGateway.listarPorTorneios(liga.torneioIds),
+      this.inscricaoGateway.listarPorTorneios(liga.torneioIds),
+    ]);
 
-      // Mapa de jogadorId → deckId para o torneio
-      const deckPorJogador = new Map<string, string>();
-      for (const inscricao of inscricoes) {
-        if (inscricao.deckId) {
-          deckPorJogador.set(inscricao.usuarioId, inscricao.deckId);
-          deckIdsUsados.add(inscricao.deckId);
-        }
+    // Constrói mapa de deckPorJogador por torneio
+    const deckPorTorneioEJogador = new Map<string, Map<string, string>>();
+    for (const inscricao of todasInscricoes) {
+      if (!deckPorTorneioEJogador.has(inscricao.torneioId)) {
+        deckPorTorneioEJogador.set(inscricao.torneioId, new Map());
+      }
+      if (inscricao.deckId) {
+        deckPorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.deckId);
+        deckIdsUsados.add(inscricao.deckId);
+      }
+    }
+
+    for (const partida of todasPartidas) {
+      const deckPorJogador = deckPorTorneioEJogador.get(partida.torneioId) ?? new Map<string, string>();
+      if (partida.status !== "finalizada") continue;
+
+      // Ignora byes (jogador2Id null)
+      const isBye = partida.jogador2Id === null;
+
+      const jogador1Id = partida.jogador1Id;
+      const jogador2Id = partida.jogador2Id;
+
+      if (!statsJogadores.has(jogador1Id)) {
+        statsJogadores.set(jogador1Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
+      }
+      if (!isBye && jogador2Id && !statsJogadores.has(jogador2Id)) {
+        statsJogadores.set(jogador2Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
       }
 
-      for (const partida of partidas) {
-        if (partida.status !== "finalizada") continue;
+      const stats1 = statsJogadores.get(jogador1Id)!;
 
-        // Ignora byes (jogador2Id null)
-        const isBye = partida.jogador2Id === null;
+      if (isBye) {
+        // Bye conta como vitória para o jogador1
+        stats1.vitorias++;
+        stats1.pontos += 3;
+        continue;
+      }
 
-        const jogador1Id = partida.jogador1Id;
-        const jogador2Id = partida.jogador2Id;
+      const stats2 = statsJogadores.get(jogador2Id!)!;
+      const v1 = partida.vitoriasJogador1;
+      const v2 = partida.vitoriasJogador2;
 
-        if (!statsJogadores.has(jogador1Id)) {
-          statsJogadores.set(jogador1Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
-        }
-        if (!isBye && jogador2Id && !statsJogadores.has(jogador2Id)) {
-          statsJogadores.set(jogador2Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
-        }
+      if (v1 > v2) {
+        stats1.vitorias++;
+        stats1.pontos += 3;
+        stats2.derrotas++;
+      } else if (v2 > v1) {
+        stats2.vitorias++;
+        stats2.pontos += 3;
+        stats1.derrotas++;
+      } else {
+        stats1.empates++;
+        stats1.pontos += 1;
+        stats2.empates++;
+        stats2.pontos += 1;
+      }
 
-        const stats1 = statsJogadores.get(jogador1Id)!;
+      // Stats de decks por resultado
+      const deckId1 = partida.deckJogador1Id ?? deckPorJogador.get(jogador1Id);
+      const deckId2 = partida.deckJogador2Id ?? deckPorJogador.get(jogador2Id!);
 
-        if (isBye) {
-          // Bye conta como vitória para o jogador1
-          stats1.vitorias++;
-          stats1.pontos += 3;
-          continue;
-        }
-
-        const stats2 = statsJogadores.get(jogador2Id!)!;
-        const v1 = partida.vitoriasJogador1;
-        const v2 = partida.vitoriasJogador2;
-
-        if (v1 > v2) {
-          stats1.vitorias++;
-          stats1.pontos += 3;
-          stats2.derrotas++;
-        } else if (v2 > v1) {
-          stats2.vitorias++;
-          stats2.pontos += 3;
-          stats1.derrotas++;
-        } else {
-          stats1.empates++;
-          stats1.pontos += 1;
-          stats2.empates++;
-          stats2.pontos += 1;
-        }
-
-        // Stats de decks por resultado
-        const deckId1 = partida.deckJogador1Id ?? deckPorJogador.get(jogador1Id);
-        const deckId2 = partida.deckJogador2Id ?? deckPorJogador.get(jogador2Id!);
-
-        if (deckId1) {
-          deckIdsUsados.add(deckId1);
-          this.registrarUsoDeck(statsDecks, deckId1, v1 > v2);
-        }
-        if (deckId2) {
-          deckIdsUsados.add(deckId2);
-          this.registrarUsoDeck(statsDecks, deckId2, v2 > v1);
-        }
+      if (deckId1) {
+        deckIdsUsados.add(deckId1);
+        this.registrarUsoDeck(statsDecks, deckId1, v1 > v2);
+      }
+      if (deckId2) {
+        deckIdsUsados.add(deckId2);
+        this.registrarUsoDeck(statsDecks, deckId2, v2 > v1);
       }
     }
 

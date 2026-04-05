@@ -20,6 +20,7 @@ export interface TorneioProps {
   corteTop?: number;
   linkLive?: string;
   emCorte?: boolean;
+  secreto?: boolean;
   criadoEm?: Date;
 }
 
@@ -41,6 +42,7 @@ export class Torneio {
   public corteTop?: number;
   public linkLive?: string;
   public emCorte: boolean = false;
+  public secreto: boolean = false;
   public criadoEm: Date;
 
   constructor(props: TorneioProps) {
@@ -61,6 +63,7 @@ export class Torneio {
     this.corteTop = props.corteTop;
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
+    this.secreto = props.secreto ?? false;
     this.criadoEm = props.criadoEm || new Date();
   }
 
@@ -75,5 +78,40 @@ export class Torneio {
       criadoEm: new Date(),
       ...props,
     });
+  }
+
+  // --- Máquina de estados ---
+
+  public avancarParaEmAndamento(rodadaAtual: number, totalRodadas: number): void {
+    if (this.status !== "inscricoes_abertas") {
+      throw new Error(`Transição inválida: ${this.status} → em_andamento`);
+    }
+    this.status = "em_andamento";
+    this.rodadaAtual = rodadaAtual;
+    this.totalRodadas = totalRodadas;
+  }
+
+  public avancarRodada(novaRodada: number, novoTotal?: number): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: rodada não pode avançar com status ${this.status}`);
+    }
+    this.rodadaAtual = novaRodada;
+    if (novoTotal !== undefined) this.totalRodadas = novoTotal;
+  }
+
+  public entrarEmCorte(novaRodada: number, novoTotalRodadas: number): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: corte requer status em_andamento`);
+    }
+    this.emCorte = true;
+    this.rodadaAtual = novaRodada;
+    this.totalRodadas = novoTotalRodadas;
+  }
+
+  public finalizar(): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: ${this.status} → finalizado`);
+    }
+    this.status = "finalizado";
   }
 }

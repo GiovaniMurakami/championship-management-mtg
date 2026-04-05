@@ -18,6 +18,7 @@ export type AlterarTorneioInputDto = {
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
+  secreto?: boolean;
 };
 
 export type AlterarTorneioOutputDto = {
@@ -35,12 +36,13 @@ export type AlterarTorneioOutputDto = {
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
+  secreto: boolean;
   criadoEm: Date;
 };
 
 export class AlterarTorneio
   implements CasoDeUso<AlterarTorneioInputDto, AlterarTorneioOutputDto> {
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  private constructor(private readonly torneioGateway: TorneioGateway) { }
 
   public static criar(torneioGateway: TorneioGateway) {
     return new AlterarTorneio(torneioGateway);
@@ -81,6 +83,7 @@ export class AlterarTorneio
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
     if (input.linkLive !== undefined) torneio.linkLive = input.linkLive?.trim();
+    if (input.secreto !== undefined) torneio.secreto = input.secreto;
 
     await this.torneioGateway.atualizar(torneio);
 
@@ -99,6 +102,7 @@ export class AlterarTorneio
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
+      secreto: torneio.secreto,
       criadoEm: torneio.criadoEm,
     };
   }

@@ -27,6 +27,7 @@ export type ListarTorneiosOutputDto = {
     corteTop?: number;
     linkLive?: string;
     emCorte: boolean;
+    secreto: boolean;
     criadoEm: Date;
     inscrito: boolean;
     totalInscritos: number;
@@ -49,8 +50,8 @@ export class ListarTorneios
 
   public async executar({ usuarioId, limite = 20, offset = 0 }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
     const [torneios, total, inscricoes] = await Promise.all([
-      this.torneioGateway.listar({ limite, offset }),
-      this.torneioGateway.listarTotal(),
+      this.torneioGateway.listar({ limite, offset, incluirSecretos: false }),
+      this.torneioGateway.listarTotal({ incluirSecretos: false }),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
 
@@ -79,6 +80,7 @@ export class ListarTorneios
         corteTop: t.corteTop,
         linkLive: t.linkLive,
         emCorte: t.emCorte,
+        secreto: t.secreto,
         criadoEm: t.criadoEm,
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,

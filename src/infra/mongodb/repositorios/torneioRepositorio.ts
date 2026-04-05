@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
+import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { PartidaModel } from "./partidaRepositorio";
 
 interface TorneioDocument extends Document {
   id: string;
@@ -21,6 +23,7 @@ interface TorneioDocument extends Document {
   corteTop?: number;
   linkLive?: string;
   emCorte: boolean;
+  secreto: boolean;
   criadoEm: Date;
 }
 
@@ -42,11 +45,13 @@ const torneioSchema = new Schema<TorneioDocument>({
   corteTop: { type: Number, max: 64 },
   linkLive: { type: String, maxlength: 500 },
   emCorte: { type: Boolean, default: false },
+  secreto: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
 });
 
 torneioSchema.index({ criadoEm: -1 });
 torneioSchema.index({ donoId: 1 });
+torneioSchema.index({ status: 1, criadoEm: -1 });
 
 const TorneioModel =
   mongoose.models.Torneio ||
@@ -71,6 +76,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     corteTop: doc.get("corteTop") ?? undefined,
     linkLive: doc.get("linkLive") ?? undefined,
     emCorte: doc.get("emCorte") ?? false,
+    secreto: doc.get("secreto") ?? false,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -102,6 +108,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
+      secreto: torneio.secreto,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -115,16 +122,20 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
 
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
     await this.conectar();
-    let query = TorneioModel.find().sort({ criadoEm: -1 });
+    const filtroQuery: Record<string, unknown> = {};
+    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1 });
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;
     return docs.map((doc) => docParaTorneio(doc as unknown as TorneioDocument));
   }
 
-  public async listarTotal(): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarTorneios, 'incluirSecretos'> = {}): Promise<number> {
     await this.conectar();
-    return TorneioModel.countDocuments();
+    const filtroQuery: Record<string, unknown> = {};
+    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    return TorneioModel.countDocuments(filtroQuery);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -152,7 +163,60 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         corteTop: torneio.corteTop,
         linkLive: torneio.linkLive,
         emCorte: torneio.emCorte,
+        secreto: torneio.secreto,
       }
     );
+  }
+
+  /**
+   * Atualiza o torneio e insere novas partidas numa única transação MongoDB.
+   * Evita estado parcial (torneio avançado de rodada mas partidas não criadas).
+   */
+  public async atualizarECriarPartidas(
+    torneio: Torneio,
+    partidas: Partida[]
+  ): Promise<void> {
+    await this.conectar();
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      await TorneioModel.updateOne(
+        { id: torneio.id },
+        {
+          status: torneio.status,
+          rodadaAtual: torneio.rodadaAtual,
+          totalRodadas: torneio.totalRodadas,
+          emCorte: torneio.emCorte,
+        },
+        { session }
+      );
+
+      if (partidas.length > 0) {
+        await PartidaModel.insertMany(
+          partidas.map((p) => ({
+            id: p.id,
+            torneioId: p.torneioId,
+            rodada: p.rodada,
+            jogador1Id: p.jogador1Id,
+            jogador2Id: p.jogador2Id,
+            deckJogador1Id: p.deckJogador1Id,
+            deckJogador2Id: p.deckJogador2Id,
+            vitoriasJogador1: p.vitoriasJogador1,
+            vitoriasJogador2: p.vitoriasJogador2,
+            status: p.status,
+            criadoEm: p.criadoEm,
+          })),
+          { session }
+        );
+      }
+
+      await session.commitTransaction();
+    } catch (e) {
+      await session.abortTransaction();
+      throw e;
+    } finally {
+      await session.endSession();
+    }
   }
 }

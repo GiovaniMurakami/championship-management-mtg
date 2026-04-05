@@ -17,9 +17,7 @@ export type RegistrarResultadoOutputDto = {
   torneioId: string;
   rodada: number;
   jogador1Id: string;
-  jogador1Nome?: string;
   jogador2Id: string | null;
-  jogador2Nome?: string | null;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -50,13 +48,6 @@ export class RegistrarResultado
       throw ErroPersonalizado.criar({
         mensagem: "Partida não encontrada.",
         status: StatusErro.erroNaoEncontrado,
-      });
-    }
-
-    if (partida.status === "finalizada") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Esta partida já teve o resultado registrado.",
-        status: StatusErro.erroParametro,
       });
     }
 
@@ -106,25 +97,25 @@ export class RegistrarResultado
       });
     }
 
-    partida.vitoriasJogador1 = v1;
-    partida.vitoriasJogador2 = v2;
-    partida.status = "finalizada";
-
-    await this.partidaGateway.atualizar(partida);
+    const partidaAtualizada = await this.partidaGateway.finalizarAtomicamente(input.partidaId, v1, v2);
+    if (!partidaAtualizada) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Esta partida já teve o resultado registrado.",
+        status: StatusErro.erroParametro,
+      });
+    }
 
     return {
-      id: partida.id,
-      torneioId: partida.torneioId,
-      rodada: partida.rodada,
-      jogador1Id: partida.jogador1Id,
-      jogador1Nome: partida.jogador1Nome,
-      jogador2Id: partida.jogador2Id,
-      jogador2Nome: partida.jogador2Nome,
-      deckJogador1Id: partida.deckJogador1Id,
-      deckJogador2Id: partida.deckJogador2Id,
-      vitoriasJogador1: partida.vitoriasJogador1,
-      vitoriasJogador2: partida.vitoriasJogador2,
-      status: partida.status,
+      id: partidaAtualizada.id,
+      torneioId: partidaAtualizada.torneioId,
+      rodada: partidaAtualizada.rodada,
+      jogador1Id: partidaAtualizada.jogador1Id,
+      jogador2Id: partidaAtualizada.jogador2Id,
+      deckJogador1Id: partidaAtualizada.deckJogador1Id,
+      deckJogador2Id: partidaAtualizada.deckJogador2Id,
+      vitoriasJogador1: partidaAtualizada.vitoriasJogador1,
+      vitoriasJogador2: partidaAtualizada.vitoriasJogador2,
+      status: partidaAtualizada.status,
     };
   }
 }

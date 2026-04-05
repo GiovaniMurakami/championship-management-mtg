@@ -1,5 +1,6 @@
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -24,6 +25,7 @@ export type ListarPartidasTorneioOutputDto = {
         vitoriasJogador1: number;
         vitoriasJogador2: number;
         status: string;
+        contestado: boolean;
     }>;
 };
 
@@ -31,14 +33,16 @@ export class ListarPartidasTorneio
     implements CasoDeUso<ListarPartidasTorneioInputDto, ListarPartidasTorneioOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+        private readonly usuarioGateway: UsuarioGateway
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+        usuarioGateway: UsuarioGateway
     ) {
-        return new ListarPartidasTorneio(torneioGateway, partidaGateway);
+        return new ListarPartidasTorneio(torneioGateway, partidaGateway, usuarioGateway);
     }
 
     public async executar(
@@ -63,6 +67,12 @@ export class ListarPartidasTorneio
             ? await this.partidaGateway.listarPorTorneio(input.torneioId)
             : await this.partidaGateway.listarPorTorneioERodada(input.torneioId, input.rodada);
 
+        const jogadorIds = Array.from(new Set(
+            partidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])
+        ));
+        const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
+        const nomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+
         return {
             torneioId: input.torneioId,
             rodada: input.rodada,
@@ -70,14 +80,15 @@ export class ListarPartidasTorneio
                 id: p.id,
                 rodada: p.rodada,
                 jogador1Id: p.jogador1Id,
-                jogador1Nome: p.jogador1Nome ?? p.jogador1Id,
+                jogador1Nome: nomeMap.get(p.jogador1Id) ?? p.jogador1Id,
                 jogador2Id: p.jogador2Id,
-                jogador2Nome: p.jogador2Id ? (p.jogador2Nome ?? p.jogador2Id) : null,
+                jogador2Nome: p.jogador2Id ? (nomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
                 deckJogador1Id: p.deckJogador1Id,
                 deckJogador2Id: p.deckJogador2Id,
                 vitoriasJogador1: p.vitoriasJogador1,
                 vitoriasJogador2: p.vitoriasJogador2,
                 status: p.status,
+                contestado: p.contestado,
             })),
         };
     }

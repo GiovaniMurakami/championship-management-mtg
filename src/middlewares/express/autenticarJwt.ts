@@ -1,8 +1,22 @@
 import { Request, Response, NextFunction } from "express";
+import { TokenBlacklistGateway } from "../../dominio/gateway/tokenBlacklistGateway";
 import { TokenBlacklistRepositorio } from "../../infra/mongodb/repositorios/tokenBlacklistRepositorio";
 import { verifyToken } from "../../helpers/jwt";
 
-const blacklist = TokenBlacklistRepositorio.criar();
+// Gateway injetável — configurado em app.ts via inicializarAutenticarJwt()
+// Fallback para instância própria se a inicialização não ocorrer (testes, ambiente local).
+let _blacklistGateway: TokenBlacklistGateway | undefined;
+
+export function inicializarAutenticarJwt(gateway: TokenBlacklistGateway): void {
+  _blacklistGateway = gateway;
+}
+
+function getBlacklistGateway(): TokenBlacklistGateway {
+  if (!_blacklistGateway) {
+    _blacklistGateway = TokenBlacklistRepositorio.criar();
+  }
+  return _blacklistGateway;
+}
 
 export const autenticarJwt = async (
   req: Request,
@@ -24,7 +38,7 @@ export const autenticarJwt = async (
     return;
   }
 
-  if (await blacklist.existe(token)) {
+  if (await getBlacklistGateway().existe(token)) {
     res.status(401).json({ mensagem: "Token inválido ou expirado." });
     return;
   }

@@ -11,6 +11,7 @@ import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGatew
 import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
 import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
 import { ImagemGateway } from "../../src/dominio/gateway/imagemGateway";
+import { LinkIngressoGateway } from "../../src/dominio/gateway/linkIngressoGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -44,6 +45,7 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),
+        atualizarECriarPartidas: jest.fn(),
         excluir: jest.fn(),
         ...overrides,
     };
@@ -66,6 +68,7 @@ export function criarMockInscricaoGateway(overrides: Partial<InscricaoGateway> =
         salvar: jest.fn(),
         buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
         listarPorTorneio: jest.fn().mockResolvedValue([]),
+        listarPorTorneios: jest.fn().mockResolvedValue([]),
         listarPorUsuario: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
         contarPorTorneios: jest.fn().mockResolvedValue({}),
@@ -80,9 +83,25 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         salvarVarias: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
         listarPorTorneio: jest.fn().mockResolvedValue([]),
+        listarPorTorneios: jest.fn().mockResolvedValue([]),
         listarPorTorneioERodada: jest.fn().mockResolvedValue([]),
         listarPorJogadorETorneio: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
+        finalizarAtomicamente: jest.fn().mockResolvedValue(null),
+        contestarPartida: jest.fn().mockResolvedValue(null),
+        existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
+        ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
+        atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
+        buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
+        ...overrides,
+    };
+}
+
+export function criarMockLinkIngressoGateway(overrides: Partial<LinkIngressoGateway> = {}): LinkIngressoGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorToken: jest.fn().mockResolvedValue(null),
+        excluirPorToken: jest.fn(),
         ...overrides,
     };
 }
