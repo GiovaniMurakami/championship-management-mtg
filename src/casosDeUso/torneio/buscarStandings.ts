@@ -24,6 +24,7 @@ export type BuscarStandingsOutputDto = {
   rodadaAtual: number;
   totalRodadas: number;
   status: string;
+  rodadaIniciadaEm?: string;
   standings: Array<{
     posicao: number;
     usuario: { id: string; nome: string };
@@ -36,9 +37,9 @@ export type BuscarStandingsOutputDto = {
     gwp: number;
     ogwp: number;
     checkIn: boolean;
+    checkInRodada: number;
     deckId?: string | null;
     deckNome?: string | null;
-    checkInProximaRodada: boolean;
     dropped: boolean;
   }>;
 };
@@ -74,6 +75,13 @@ export class BuscarStandings
       });
     }
 
+    const toBrasiliaISO = (date?: Date): string | undefined => {
+      if (!date) return undefined;
+      const offset = -3 * 60;
+      const local = new Date(date.getTime() + offset * 60 * 1000);
+      return local.toISOString().replace("Z", "-03:00");
+    };
+
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
     );
@@ -105,7 +113,7 @@ export class BuscarStandings
         checkIn: i.checkIn,
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
-        checkInProximaRodada: i.checkIn,
+        checkInRodada: i.checkInRodada,
         dropped: i.dropped,
       }));
 
@@ -114,6 +122,7 @@ export class BuscarStandings
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
         status: torneio.status,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
         standings,
       };
     }
@@ -156,6 +165,7 @@ export class BuscarStandings
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
         return {
@@ -174,8 +184,7 @@ export class BuscarStandings
           deckNome: inscricao?.deckId
             ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
-          checkInProximaRodada:
-            (inscricao?.checkInRodada ?? -1) >= torneio.rodadaAtual,
+          checkInRodada: inscricao?.checkInRodada ?? -1,
           dropped: inscricao?.dropped ?? false,
         };
       }),

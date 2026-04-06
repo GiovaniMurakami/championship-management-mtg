@@ -22,6 +22,7 @@ export interface TorneioProps {
   emCorte?: boolean;
   secreto?: boolean;
   criadoEm?: Date;
+  rodadaIniciadaEm?: Date;
 }
 
 export class Torneio {
@@ -44,6 +45,7 @@ export class Torneio {
   public emCorte: boolean = false;
   public secreto: boolean = false;
   public criadoEm: Date;
+  public rodadaIniciadaEm?: Date;
 
   constructor(props: TorneioProps) {
     this.id = props.id;
@@ -65,6 +67,7 @@ export class Torneio {
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
     this.criadoEm = props.criadoEm || new Date();
+    this.rodadaIniciadaEm = props.rodadaIniciadaEm;
   }
 
   public static criar(
@@ -89,6 +92,7 @@ export class Torneio {
     this.status = "em_andamento";
     this.rodadaAtual = rodadaAtual;
     this.totalRodadas = totalRodadas;
+    this.rodadaIniciadaEm = new Date();
   }
 
   public avancarRodada(novaRodada: number, novoTotal?: number): void {
@@ -97,6 +101,7 @@ export class Torneio {
     }
     this.rodadaAtual = novaRodada;
     if (novoTotal !== undefined) this.totalRodadas = novoTotal;
+    this.rodadaIniciadaEm = new Date();
   }
 
   public entrarEmCorte(novaRodada: number, novoTotalRodadas: number): void {

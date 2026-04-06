@@ -213,10 +213,10 @@ describe("BuscarStandings", () => {
         expect(standingDropado!.derrotasPartida).toBe(1);
     });
 
-    it("deve marcar checkInProximaRodada corretamente com base em checkInRodada", async () => {
+    it("deve retornar checkInRodada corretamente", async () => {
         const inscricoes = [
-            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 2, dropped: false }),
-            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 1, dropped: false }), // não fez check-in para rodada 2
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 2, dropped: false, byeCount: 0 }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 1, dropped: false, byeCount: 0 }), // não fez check-in para rodada 2
         ];
         const partidas = [
             new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
@@ -238,8 +238,8 @@ describe("BuscarStandings", () => {
 
         const s1 = resultado.standings.find(s => s.usuario.id === "u-1")!;
         const s2 = resultado.standings.find(s => s.usuario.id === "u-2")!;
-        expect(s1.checkInProximaRodada).toBe(true);
-        expect(s2.checkInProximaRodada).toBe(false);
+        expect(s1.checkInRodada).toBe(2);
+        expect(s2.checkInRodada).toBe(1);
     });
 
     it("deve contabilizar BYE no total de partidas jogadas", async () => {

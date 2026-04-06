@@ -25,6 +25,7 @@ interface TorneioDocument extends Document {
   emCorte: boolean;
   secreto: boolean;
   criadoEm: Date;
+  rodadaIniciadaEm?: Date;
 }
 
 const torneioSchema = new Schema<TorneioDocument>({
@@ -47,6 +48,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   emCorte: { type: Boolean, default: false },
   secreto: { type: Boolean, default: false },
   criadoEm: { type: Date, default: Date.now },
+  rodadaIniciadaEm: { type: Date },
 });
 
 torneioSchema.index({ criadoEm: -1 });
@@ -78,6 +80,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     emCorte: doc.get("emCorte") ?? false,
     secreto: doc.get("secreto") ?? false,
     criadoEm: doc.get("criadoEm"),
+    rodadaIniciadaEm: doc.get("rodadaIniciadaEm") ?? undefined,
   });
 }
 
@@ -164,6 +167,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         linkLive: torneio.linkLive,
         emCorte: torneio.emCorte,
         secreto: torneio.secreto,
+        rodadaIniciadaEm: torneio.rodadaIniciadaEm,
       }
     );
   }
@@ -188,6 +192,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
           rodadaAtual: torneio.rodadaAtual,
           totalRodadas: torneio.totalRodadas,
           emCorte: torneio.emCorte,
+          rodadaIniciadaEm: torneio.rodadaIniciadaEm,
         },
         { session }
       );
