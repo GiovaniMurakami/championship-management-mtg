@@ -37,6 +37,7 @@ export class IngressarViaTorneioRota implements Rotas {
                 const resultado = await this.ingressarViaTorneioServico.executar({
                     token,
                     usuarioId,
+                    deckId: request.body.deckId,
                 });
 
                 response.status(201).json(resultado);

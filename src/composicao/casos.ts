@@ -77,7 +77,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const alterarTorneio = AlterarTorneio.criar(repos.torneio);
     const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
-    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso);
+    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck);
     const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
 
     // --- Liga ---

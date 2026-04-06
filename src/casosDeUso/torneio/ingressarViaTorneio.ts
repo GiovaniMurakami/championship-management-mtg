@@ -6,6 +6,7 @@ import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
+import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -14,6 +15,7 @@ import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 export type IngressarViaTorneioInputDto = {
     token: string;
     usuarioId: string;
+    deckId: string;
 };
 
 export type IngressarViaTorneioOutputDto = {
@@ -33,7 +35,8 @@ export class IngressarViaTorneio
         private readonly inscricaoGateway: InscricaoGateway,
         private readonly partidaGateway: PartidaGateway,
         private readonly usuarioGateway: UsuarioGateway,
-        private readonly linkIngressoGateway: LinkIngressoGateway
+        private readonly linkIngressoGateway: LinkIngressoGateway,
+        private readonly deckGateway: DeckGateway
     ) { }
 
     public static criar(
@@ -41,14 +44,16 @@ export class IngressarViaTorneio
         inscricaoGateway: InscricaoGateway,
         partidaGateway: PartidaGateway,
         usuarioGateway: UsuarioGateway,
-        linkIngressoGateway: LinkIngressoGateway
+        linkIngressoGateway: LinkIngressoGateway,
+        deckGateway: DeckGateway
     ) {
         return new IngressarViaTorneio(
             torneioGateway,
             inscricaoGateway,
             partidaGateway,
             usuarioGateway,
-            linkIngressoGateway
+            linkIngressoGateway,
+            deckGateway
         );
     }
 
@@ -120,13 +125,29 @@ export class IngressarViaTorneio
         // 5. Consumir token (uso único)
         await this.linkIngressoGateway.excluirPorToken(input.token);
 
-        // 6. Criar inscrição com check-in liberado para todas as rodadas futuras
+        // 5.1. Validar deck obrigatório
+        const deck = await this.deckGateway.buscarPorId(input.deckId);
+        if (!deck) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Deck não encontrado.",
+                status: StatusErro.erroNaoEncontrado,
+            });
+        }
+        if (deck.usuarioId !== input.usuarioId) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Este deck não pertence a você.",
+                status: StatusErro.erroProibido,
+            });
+        }
+
+        // 6. Criar inscrição com check-in para rodada atual e deck
         const inscricao = Inscricao.criar({
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
         });
         inscricao.checkIn = true;
-        inscricao.checkInRodada = Number.MAX_SAFE_INTEGER; // garante participação em todas as rodadas restantes
+        inscricao.checkInRodada = torneio.rodadaAtual;
+        inscricao.deckId = input.deckId;
 
         await this.inscricaoGateway.salvar(inscricao);
 

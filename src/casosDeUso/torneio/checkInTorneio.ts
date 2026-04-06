@@ -71,6 +71,12 @@ export class CheckInTorneio
           status: StatusErro.erroParametro,
         });
       }
+      if (inscricao.checkIn) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Você já realizou o check-in para este torneio.",
+          status: StatusErro.erroParametro,
+        });
+      }
       inscricao.checkIn = true;
       inscricao.checkInRodada = 0;
     } else {
@@ -80,7 +86,13 @@ export class CheckInTorneio
           status: StatusErro.erroParametro,
         });
       }
-      inscricao.checkInRodada = torneio.rodadaAtual;
+      if (inscricao.checkInRodada >= torneio.rodadaAtual) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Você já fez check-in para esta rodada.",
+          status: StatusErro.erroParametro,
+        });
+      }
+      inscricao.checkInRodada = inscricao.checkInRodada + 1;
     }
 
     await this.inscricaoGateway.atualizar(inscricao);
