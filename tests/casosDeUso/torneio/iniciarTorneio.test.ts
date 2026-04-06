@@ -12,10 +12,10 @@ describe("IniciarTorneio", () => {
     });
 
     const inscricoesComCheckIn = [
-        new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 0, dropped: false }),
-        new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 0, dropped: false }),
-        new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 0, dropped: false }),
-        new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkIn: true, checkInRodada: 0, dropped: false }),
+        new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 0, dropped: false }),
+        new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 0, dropped: false }),
+        new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 0, dropped: false }),
+        new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 0, dropped: false }),
     ];
 
     const quatroUsuarios = [
@@ -184,9 +184,9 @@ describe("IniciarTorneio", () => {
 
     it("deve excluir jogadores dropados do check-in ao iniciar torneio", async () => {
         const inscricoesComDrop = [
-            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 0, dropped: false }),
-            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 0, dropped: true }), // dropado
-            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 0, dropped: true }), // dropado
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 0, dropped: false }),
         ];
         const torneioGw = criarMockTorneioGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
@@ -228,9 +228,9 @@ describe("IniciarTorneio", () => {
 
     it("deve excluir jogadores sem check-in do torneio", async () => {
         const inscricoesMistura = [
-            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 0, dropped: false }),
-            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: false, checkInRodada: -1, dropped: false }), // sem check-in
-            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkIn: true, checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: -1, dropped: false }), // sem check-in
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 0, dropped: false }),
         ];
         const torneioGw = criarMockTorneioGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),

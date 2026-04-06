@@ -16,7 +16,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false, byeCount: 0,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const inscricaoGw = criarMockInscricaoGateway({
@@ -29,7 +29,6 @@ describe("CheckInTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
 
-        expect(resultado.checkIn).toBe(true);
         expect(resultado.checkInRodada).toBe(0);
         expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
@@ -42,7 +41,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false, byeCount: 0,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -62,7 +61,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: true, checkInRodada: 1, dropped: false, byeCount: 0,
+            checkInRodada: 1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -113,7 +112,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false, byeCount: 0,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -134,7 +133,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: true, checkInRodada: 0, dropped: false, byeCount: 0,
+            checkInRodada: 0, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -147,14 +146,14 @@ describe("CheckInTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se já fez check-in para a rodada atual (em_andamento)", async () => {
+    it("deve lançar erro se já fez check-in para rodada futura (em_andamento)", async () => {
         const torneio = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 3,
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: true, checkInRodada: 2, dropped: false, byeCount: 0,
+            checkInRodada: 3, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -174,7 +173,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: true, checkInRodada: 1, dropped: false, byeCount: 0,
+            checkInRodada: 1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(

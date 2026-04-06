@@ -5,7 +5,6 @@ export interface InscricaoProps {
   torneioId: string;
   usuarioId: string;
   deckId?: string;
-  checkIn: boolean;
   checkInRodada: number;
   dropped: boolean;
   byeCount: number;
@@ -17,7 +16,6 @@ export class Inscricao {
   public torneioId: string;
   public usuarioId: string;
   public deckId?: string;
-  public checkIn: boolean;
   public checkInRodada: number;
   public dropped: boolean;
   public byeCount: number;
@@ -28,7 +26,6 @@ export class Inscricao {
     this.torneioId = props.torneioId;
     this.usuarioId = props.usuarioId;
     this.deckId = props.deckId;
-    this.checkIn = props.checkIn;
     this.checkInRodada = props.checkInRodada;
     this.dropped = props.dropped;
     this.byeCount = props.byeCount ?? 0;
@@ -36,11 +33,10 @@ export class Inscricao {
   }
 
   public static criar(
-    props: Omit<InscricaoProps, "id" | "checkIn" | "checkInRodada" | "dropped" | "byeCount" | "criadoEm">
+    props: Omit<InscricaoProps, "id" | "checkInRodada" | "dropped" | "byeCount" | "criadoEm">
   ) {
     return new Inscricao({
       id: uuidv4(),
-      checkIn: false,
       checkInRodada: -1,
       dropped: false,
       byeCount: 0,

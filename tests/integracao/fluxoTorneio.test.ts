@@ -226,13 +226,12 @@ describe("Integração - Fluxo completo de torneio", () => {
         // Simular check-in direto pois depende de horário
         const inscricoes = await inscricaoGw.listarPorTorneio(torneioId);
         for (const i of inscricoes) {
-            i.checkIn = true;
             i.checkInRodada = 0;
             await inscricaoGw.atualizar(i);
         }
 
         const atualizadas = await inscricaoGw.listarPorTorneio(torneioId);
-        expect(atualizadas.every((i) => i.checkIn)).toBe(true);
+        expect(atualizadas.every((i) => i.checkInRodada >= 0)).toBe(true);
     });
 
     it("5. Deve iniciar o torneio e gerar partidas da rodada 1", async () => {
@@ -369,7 +368,6 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
     it("3. Check-in e iniciar torneio com 3 jogadores (gera BYE)", async () => {
         const inscricoes = await inscricaoGw2.listarPorTorneio(torneioId);
         for (const i of inscricoes) {
-            i.checkIn = true;
             i.checkInRodada = 0;
             await inscricaoGw2.atualizar(i);
         }

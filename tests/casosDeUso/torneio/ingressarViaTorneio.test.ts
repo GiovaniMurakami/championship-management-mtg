@@ -378,7 +378,6 @@ describe("IngressarViaTorneio", () => {
 
         expect(salvarMock).toHaveBeenCalledTimes(1);
         const inscricaoSalva = salvarMock.mock.calls[0][0];
-        expect(inscricaoSalva.checkIn).toBe(true);
         expect(inscricaoSalva.checkInRodada).toBe(torneio.rodadaAtual);
         expect(inscricaoSalva.deckId).toBe("d-1");
     });

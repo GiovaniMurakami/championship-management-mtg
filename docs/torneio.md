@@ -49,7 +49,6 @@ interface InscricaoProps {
   torneioId: string;
   usuarioId: string;
   deckId?: string;
-  checkIn: boolean;
   checkInRodada: number; // -1 = sem check-in, 0 = check-in inicial, N = check-in da rodada N
   dropped: boolean;
   criadoEm?: Date;

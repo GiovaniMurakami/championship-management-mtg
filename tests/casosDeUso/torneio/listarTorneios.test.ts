@@ -1,4 +1,4 @@
-import { ListarTorneios } from "../../../src/casosDeUso/torneio/listarTorneios";
+﻿import { ListarTorneios } from "../../../src/casosDeUso/torneio/listarTorneios";
 import { criarMockTorneioGateway, criarMockInscricaoGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
@@ -10,7 +10,7 @@ describe("ListarTorneios", () => {
     ];
 
     it("deve retornar lista de torneios com inscrito=true quando inscrito", async () => {
-        const inscricao = new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u2", checkIn: false, checkInRodada: -1, dropped: false, criadoEm: new Date() });
+        const inscricao = new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u2", checkInRodada: -1, dropped: false, criadoEm: new Date() });
         const torneioGateway = criarMockTorneioGateway({
             listar: jest.fn().mockResolvedValue(torneios),
             listarTotal: jest.fn().mockResolvedValue(2),
@@ -33,7 +33,7 @@ describe("ListarTorneios", () => {
         expect(resultado.offset).toBe(0);
     });
 
-    it("deve retornar inscrito=false para todos quando não inscrito em nenhum", async () => {
+    it("deve retornar inscrito=false para todos quando nÃ£o inscrito em nenhum", async () => {
         const torneioGateway = criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
@@ -65,7 +65,7 @@ describe("ListarTorneios", () => {
         expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10, incluirSecretos: false });
     });
 
-    it("não deve incluir torneios secretos na listagem pública", async () => {
+    it("nÃ£o deve incluir torneios secretos na listagem pÃºblica", async () => {
         const torneioSecreto = new Torneio({ id: "ts", nome: "Secreto", horario: new Date(), formato: "modern", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0, secreto: true });
         const listarMock = jest.fn().mockResolvedValue([torneios[0]]);
         const listarTotalMock = jest.fn().mockResolvedValue(1);
@@ -77,7 +77,7 @@ describe("ListarTorneios", () => {
 
         expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
         expect(listarTotalMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
-        // torneio secreto não está na lista retornada pelo gateway (filtrado no nível do repositório)
+        // torneio secreto nÃ£o estÃ¡ na lista retornada pelo gateway (filtrado no nÃ­vel do repositÃ³rio)
         void torneioSecreto;
         expect(resultado.torneios).toHaveLength(1);
     });

@@ -133,7 +133,7 @@ export class IniciarProximaRodada
     );
 
     const inscricoesComCheckIn = inscricoes.filter(
-      (i) => i.checkIn && i.checkInRodada >= torneio.rodadaAtual && !i.dropped
+      (i) => i.checkInRodada >= torneio.rodadaAtual && !i.dropped
     );
     const jogadoresIds = inscricoesComCheckIn.map((i) => i.usuarioId);
     const deckMap = new Map(inscricoesComCheckIn.map((i) => [i.usuarioId, i.deckId]));

@@ -36,7 +36,6 @@ export type BuscarStandingsOutputDto = {
     omwp: number;
     gwp: number;
     ogwp: number;
-    checkIn: boolean;
     checkInRodada: number;
     deckId?: string | null;
     deckNome?: string | null;
@@ -110,10 +109,9 @@ export class BuscarStandings
         omwp: 0,
         gwp: 0,
         ogwp: 0,
-        checkIn: i.checkIn,
+        checkInRodada: i.checkInRodada,
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
-        checkInRodada: i.checkInRodada,
         dropped: i.dropped,
       }));
 
@@ -138,7 +136,7 @@ export class BuscarStandings
     // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
     // para que omwp/ogwp use o MWP real de oponentes dropados
     const jogadoresComCheckIn = inscricoes
-      .filter((i) => i.checkIn)
+      .filter((i) => i.checkInRodada >= 0)
       .map((i) => i.usuarioId);
 
     const idsComHistorico = Array.from(
@@ -179,12 +177,11 @@ export class BuscarStandings
           omwp: omwp(s, statsMap),
           gwp: gwp(s),
           ogwp: ogwp(s, statsMap),
-          checkIn: inscricao?.checkIn ?? false,
+          checkInRodada: inscricao?.checkInRodada ?? -1,
           deckId: inscricao?.deckId ?? null,
           deckNome: inscricao?.deckId
             ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
-          checkInRodada: inscricao?.checkInRodada ?? -1,
           dropped: inscricao?.dropped ?? false,
         };
       }),

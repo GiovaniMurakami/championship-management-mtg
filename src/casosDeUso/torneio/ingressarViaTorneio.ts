@@ -145,7 +145,6 @@ export class IngressarViaTorneio
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
         });
-        inscricao.checkIn = true;
         inscricao.checkInRodada = torneio.rodadaAtual;
         inscricao.deckId = input.deckId;
 

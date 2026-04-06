@@ -1,4 +1,4 @@
-import { DroparJogador } from "../../../src/casosDeUso/torneio/droparJogador";
+﻿import { DroparJogador } from "../../../src/casosDeUso/torneio/droparJogador";
 import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGateway, criarMockPartidaGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
@@ -13,12 +13,12 @@ describe("DroparJogador", () => {
 
     const inscricao = new Inscricao({
         id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-        checkIn: true, checkInRodada: 0, dropped: false,
+        checkInRodada: 0, dropped: false,
     });
 
-    const jogador = new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" });
+    const jogador = new Usuario({ id: "u-1", nome: "JoÃ£o", email: "j@e.com", senha: "s" });
 
-    it("deve dropar o próprio jogador com sucesso", async () => {
+    it("deve dropar o prÃ³prio jogador com sucesso", async () => {
         const inscricaoGw = criarMockInscricaoGateway({
             buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
         });
@@ -34,7 +34,7 @@ describe("DroparJogador", () => {
         });
 
         expect(resultado.dropped).toBe(true);
-        expect(resultado.jogador).toEqual({ id: "u-1", nome: "João" });
+        expect(resultado.jogador).toEqual({ id: "u-1", nome: "JoÃ£o" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
@@ -54,7 +54,7 @@ describe("DroparJogador", () => {
         expect(resultado.jogador.id).toBe("u-1");
     });
 
-    it("deve lançar erro se não for o próprio jogador, nem dono, nem admin", async () => {
+    it("deve lanÃ§ar erro se nÃ£o for o prÃ³prio jogador, nem dono, nem admin", async () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
@@ -86,7 +86,7 @@ describe("DroparJogador", () => {
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("deve lançar erro se torneio finalizado", async () => {
+    it("deve lanÃ§ar erro se torneio finalizado", async () => {
         const torneioFinalizado = { ...torneio, status: "finalizado" as const };
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
@@ -100,7 +100,7 @@ describe("DroparJogador", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se jogador não estiver inscrito", async () => {
+    it("deve lanÃ§ar erro se jogador nÃ£o estiver inscrito", async () => {
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
@@ -113,7 +113,7 @@ describe("DroparJogador", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se jogador já foi dropado", async () => {
+    it("deve lanÃ§ar erro se jogador jÃ¡ foi dropado", async () => {
         const inscricaoJaDropada = { ...inscricao, dropped: true };
         const uc = DroparJogador.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
@@ -127,9 +127,9 @@ describe("DroparJogador", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar 404 se torneio não encontrado", async () => {
+    it("deve lanÃ§ar 404 se torneio nÃ£o encontrado", async () => {
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway(), // retorna null por padrão
+            criarMockTorneioGateway(), // retorna null por padrÃ£o
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway(),
@@ -208,10 +208,10 @@ describe("DroparJogador", () => {
         expect(partidasAtualizadas[0].status).toBe("finalizada");
     });
 
-    it("deve dar WO 2-0 quando jogador2 é dropado (jogador1 vence 2-0)", async () => {
+    it("deve dar WO 2-0 quando jogador2 Ã© dropado (jogador1 vence 2-0)", async () => {
         const inscricaoJ2 = new Inscricao({
             id: "i-2", torneioId: "t-1", usuarioId: "u-2",
-            checkIn: true, checkInRodada: 0, dropped: false,
+            checkInRodada: 0, dropped: false,
         });
         const jogador2 = new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" });
         const partidaPendente = new Partida({
@@ -243,7 +243,7 @@ describe("DroparJogador", () => {
         expect(partidasAtualizadas[0].status).toBe("finalizada");
     });
 
-    it("não deve resolver partidas quando torneio está em inscricoes_abertas", async () => {
+    it("nÃ£o deve resolver partidas quando torneio estÃ¡ em inscricoes_abertas", async () => {
         const torneioAberto = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
@@ -264,12 +264,12 @@ describe("DroparJogador", () => {
         });
 
         expect(resultado.dropped).toBe(true);
-        // Não deve ter buscado nem atualizado partidas
+        // NÃ£o deve ter buscado nem atualizado partidas
         expect(partidaGw.listarPorTorneio).not.toHaveBeenCalled();
         expect(partidaGw.atualizar).not.toHaveBeenCalled();
     });
 
-    it("deve ignorar partidas já finalizadas ao resolver pendentes do jogador dropado", async () => {
+    it("deve ignorar partidas jÃ¡ finalizadas ao resolver pendentes do jogador dropado", async () => {
         const partidaFinalizada = new Partida({
             id: "p-f", torneioId: "t-1", rodada: 1,
             jogador1Id: "u-1", jogador2Id: "u-2",
