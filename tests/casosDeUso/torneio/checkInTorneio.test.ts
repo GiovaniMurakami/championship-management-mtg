@@ -146,14 +146,14 @@ describe("CheckInTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se já fez check-in para rodada futura (em_andamento)", async () => {
+    it("deve lançar erro se já fez check-in para a rodada atual (em_andamento)", async () => {
         const torneio = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 3,
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkInRodada: 3, dropped: false, byeCount: 0,
+            checkInRodada: 2, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(

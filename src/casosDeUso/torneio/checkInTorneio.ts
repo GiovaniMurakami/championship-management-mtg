@@ -85,7 +85,7 @@ export class CheckInTorneio
         });
       }
 
-      if (inscricao.checkInRodada > torneio.rodadaAtual) {
+      if (inscricao.checkInRodada >= torneio.rodadaAtual) {
         throw ErroPersonalizado.criar({
           mensagem: "Você já fez check-in para esta rodada.",
           status: StatusErro.erroParametro,
