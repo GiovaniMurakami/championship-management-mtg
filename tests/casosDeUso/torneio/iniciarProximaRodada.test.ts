@@ -304,7 +304,7 @@ describe("IniciarProximaRodada", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lanÃ§ar erro se menos de 2 jogadores fizeram check-in (nÃ£o Ã© Ãºltima rodada)", async () => {
+    it("deve lançar erro se menos de 2 jogadores ativos (não é última rodada)", async () => {
         const torneioRodada1 = new Torneio({
             ...torneio, rodadaAtual: 1, totalRodadas: 3,
         });

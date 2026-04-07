@@ -166,7 +166,7 @@ describe("CheckInTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve incrementar checkInRodada progressivamente (+1)", async () => {
+    it("deve setar checkInRodada igual à rodadaAtual (independente do valor anterior)", async () => {
         const torneio = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "d", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
@@ -182,6 +182,6 @@ describe("CheckInTorneio", () => {
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
-        expect(resultado.checkInRodada).toBe(2);
+        expect(resultado.checkInRodada).toBe(3);
     });
 });

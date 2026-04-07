@@ -132,11 +132,9 @@ export class IniciarProximaRodada
       )
     );
 
-    const inscricoesComCheckIn = inscricoes.filter(
-      (i) => i.checkInRodada >= torneio.rodadaAtual && !i.dropped
-    );
-    const jogadoresIds = inscricoesComCheckIn.map((i) => i.usuarioId);
-    const deckMap = new Map(inscricoesComCheckIn.map((i) => [i.usuarioId, i.deckId]));
+    const inscricoesAtivas = inscricoes.filter((i) => !i.dropped);
+    const jogadoresIds = inscricoesAtivas.map((i) => i.usuarioId);
+    const deckMap = new Map(inscricoesAtivas.map((i) => [i.usuarioId, i.deckId]));
     const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
     const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
     const estaNaUltimaRodada = torneio.rodadaAtual >= torneio.totalRodadas;
@@ -144,7 +142,7 @@ export class IniciarProximaRodada
 
     if (!torneio.emCorte && !estaNaUltimaRodada && jogadoresIds.length < 2) {
       throw ErroPersonalizado.criar({
-        mensagem: `Apenas ${jogadoresIds.length} jogador(es) fez check-in para a próxima rodada. São necessários pelo menos 2.`,
+        mensagem: `Apenas ${jogadoresIds.length} jogador(es) ativo(s) no torneio. São necessários pelo menos 2.`,
         status: StatusErro.erroParametro,
       });
     }

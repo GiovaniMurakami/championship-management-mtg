@@ -91,7 +91,7 @@ export class CheckInTorneio
           status: StatusErro.erroParametro,
         });
       }
-      inscricao.checkInRodada = inscricao.checkInRodada + 1;
+      inscricao.checkInRodada = torneio.rodadaAtual;
     }
 
     await this.inscricaoGateway.atualizar(inscricao);
