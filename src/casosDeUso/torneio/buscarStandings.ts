@@ -14,6 +14,14 @@ import {
   gwp,
   ogwp,
 } from "./swiss";
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { Usuario } from "../../dominio/entidade/usuario";
+
+function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
+  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
+  if (modo === "nickArena") return u.nickArena ?? u.nome;
+  return u.nome;
+}
 
 export type BuscarStandingsInputDto = {
   torneioId: string;
@@ -98,9 +106,11 @@ export class BuscarStandings
     const deckMap = new Map(decks.map((d) => [d.id, d]));
 
     if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
-      const standings = inscricoes.map((i, idx) => ({
+      const standings = inscricoes.map((i, idx) => {
+        const u = usuarioMap.get(i.usuarioId);
+        return {
         posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId },
+        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId },
         pontosMesa: 0,
         vitoriasPartida: 0,
         empatesPartida: 0,
@@ -113,7 +123,8 @@ export class BuscarStandings
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
         dropped: i.dropped,
-      }));
+        };
+      });
 
       return {
         torneioId: torneio.id,
@@ -168,7 +179,7 @@ export class BuscarStandings
         const inscricao = inscricaoMap.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: usuarioMap.get(s.usuarioId)?.nome ?? s.usuarioId },
+          usuario: { id: s.usuarioId, nome: (() => { const u = usuarioMap.get(s.usuarioId); return u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId; })() },
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,
           empatesPartida: s.empatesPartida,

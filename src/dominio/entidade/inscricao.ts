@@ -5,6 +5,7 @@ export interface InscricaoProps {
   torneioId: string;
   usuarioId: string;
   deckId?: string;
+  timeId?: string;
   checkInRodada: number;
   dropped: boolean;
   byeCount: number;
@@ -16,6 +17,7 @@ export class Inscricao {
   public torneioId: string;
   public usuarioId: string;
   public deckId?: string;
+  public timeId?: string;
   public checkInRodada: number;
   public dropped: boolean;
   public byeCount: number;
@@ -26,6 +28,7 @@ export class Inscricao {
     this.torneioId = props.torneioId;
     this.usuarioId = props.usuarioId;
     this.deckId = props.deckId;
+    this.timeId = props.timeId;
     this.checkInRodada = props.checkInRodada;
     this.dropped = props.dropped;
     this.byeCount = props.byeCount ?? 0;

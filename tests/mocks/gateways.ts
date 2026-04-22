@@ -12,6 +12,7 @@ import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
 import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
 import { ImagemGateway } from "../../src/dominio/gateway/imagemGateway";
 import { LinkIngressoGateway } from "../../src/dominio/gateway/linkIngressoGateway";
+import { TimeGateway } from "../../src/dominio/gateway/timeGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -93,6 +94,8 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
         atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
         buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
+        confirmarResultado: jest.fn().mockResolvedValue(null),
+        atualizarMesa: jest.fn().mockResolvedValue(null),
         ...overrides,
     };
 }
@@ -162,6 +165,18 @@ export function criarMockImagemGateway(overrides: Partial<ImagemGateway> = {}): 
             uploadUrl: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg?sig=x",
             urlPublica: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg",
         }),
+        ...overrides,
+    };
+}
+
+export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): TimeGateway {
+    return {
+        salvar: jest.fn(),
+        buscarPorId: jest.fn().mockResolvedValue(null),
+        buscarVarios: jest.fn().mockResolvedValue([]),
+        listar: jest.fn().mockResolvedValue([]),
+        atualizar: jest.fn(),
+        excluir: jest.fn(),
         ...overrides,
     };
 }

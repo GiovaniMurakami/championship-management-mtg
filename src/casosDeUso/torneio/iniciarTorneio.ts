@@ -111,6 +111,7 @@ export class IniciarTorneio
           jogador2Id: j2,
           deckJogador1Id: deckMap.get(jogadores[i]),
           deckJogador2Id: j2 ? deckMap.get(j2) : null,
+          mesa: Math.floor(i / 2) + 1,
         })
       );
     }

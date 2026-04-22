@@ -1,6 +1,14 @@
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { Usuario } from "../../dominio/entidade/usuario";
+
+function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
+    if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
+    if (modo === "nickArena") return u.nickArena ?? u.nome;
+    return u.nome;
+}
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -26,6 +34,8 @@ export type ListarPartidasTorneioOutputDto = {
         vitoriasJogador2: number;
         status: string;
         contestado: boolean;
+        confirmadoPor: string[];
+        mesa: number | null;
     }>;
 };
 
@@ -71,7 +81,7 @@ export class ListarPartidasTorneio
             partidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])
         ));
         const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
-        const nomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+        const nomeMap = new Map(usuarios.map((u) => [u.id, resolverNome(u, torneio.exibirNomeJogador)]));
 
         return {
             torneioId: input.torneioId,
@@ -89,6 +99,8 @@ export class ListarPartidasTorneio
                 vitoriasJogador2: p.vitoriasJogador2,
                 status: p.status,
                 contestado: p.contestado,
+                confirmadoPor: p.confirmadoPor,
+                mesa: p.mesa,
             })),
         };
     }

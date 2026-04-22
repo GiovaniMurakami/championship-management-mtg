@@ -19,6 +19,9 @@ import { IniciarTorneio } from "../casosDeUso/torneio/iniciarTorneio";
 import { IniciarProximaRodada } from "../casosDeUso/torneio/iniciarProximaRodada";
 import { RegistrarResultado } from "../casosDeUso/torneio/registrarResultado";
 import { ContestarResultado } from "../casosDeUso/torneio/contestarResultado";
+import { ConfirmarResultado } from "../casosDeUso/torneio/confirmarResultado";
+import { InscreverTardeTorneio } from "../casosDeUso/torneio/inscreverTardeTorneio";
+import { AtualizarMesaPartida } from "../casosDeUso/torneio/atualizarMesaPartida";
 import { DroparJogador } from "../casosDeUso/torneio/droparJogador";
 import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
@@ -36,6 +39,13 @@ import { ExcluirLiga } from "../casosDeUso/liga/excluirLiga";
 import { ListarLigas } from "../casosDeUso/liga/listarLigas";
 import { BuscarLiga } from "../casosDeUso/liga/buscarLiga";
 import { RankingLiga } from "../casosDeUso/liga/rankingLiga";
+import { CriarTime } from "../casosDeUso/time/criarTime";
+import { ListarTimes } from "../casosDeUso/time/listarTimes";
+import { BuscarTime } from "../casosDeUso/time/buscarTime";
+import { AlterarTime } from "../casosDeUso/time/alterarTime";
+import { ExcluirTime } from "../casosDeUso/time/excluirTime";
+import { EntrarTime } from "../casosDeUso/time/entrarTime";
+import { SairTime } from "../casosDeUso/time/sairTime";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -68,6 +78,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
+    const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
+    const inscreverTardeTorneio = InscreverTardeTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const atualizarMesaPartida = AtualizarMesaPartida.criar(repos.torneio, repos.partida);
     const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
@@ -86,7 +99,16 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const excluirLiga = ExcluirLiga.criar(repos.liga);
     const listarLigas = ListarLigas.criar(repos.liga);
     const buscarLiga = BuscarLiga.criar(repos.liga, repos.torneio);
-    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario);
+    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time);
+
+    // --- Time ---
+    const criarTime = CriarTime.criar(repos.time);
+    const listarTimes = ListarTimes.criar(repos.time);
+    const buscarTime = BuscarTime.criar(repos.time, repos.usuario);
+    const alterarTime = AlterarTime.criar(repos.time);
+    const excluirTime = ExcluirTime.criar(repos.time);
+    const entrarTime = EntrarTime.criar(repos.time, repos.usuario);
+    const sairTime = SairTime.criar(repos.time);
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
@@ -94,11 +116,12 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
-        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado,
+        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, inscreverTardeTorneio, atualizarMesaPartida,
         droparJogador, listarTorneios, buscarTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
+        criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
     };
 }
 

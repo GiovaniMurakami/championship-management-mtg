@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 export type StatusTorneio = "inscricoes_abertas" | "em_andamento" | "finalizado";
+export type ExibirNomeJogador = "nome" | "nickMOL" | "nickArena";
 
 export interface TorneioProps {
   id: string;
@@ -21,6 +22,7 @@ export interface TorneioProps {
   linkLive?: string;
   emCorte?: boolean;
   secreto?: boolean;
+  exibirNomeJogador?: ExibirNomeJogador;
   criadoEm?: Date;
   rodadaIniciadaEm?: Date;
 }
@@ -44,6 +46,7 @@ export class Torneio {
   public linkLive?: string;
   public emCorte: boolean = false;
   public secreto: boolean = false;
+  public exibirNomeJogador: ExibirNomeJogador;
   public criadoEm: Date;
   public rodadaIniciadaEm?: Date;
 
@@ -66,6 +69,7 @@ export class Torneio {
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
+    this.exibirNomeJogador = props.exibirNomeJogador ?? "nome";
     this.criadoEm = props.criadoEm || new Date();
     this.rodadaIniciadaEm = props.rodadaIniciadaEm;
   }

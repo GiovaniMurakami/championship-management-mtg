@@ -18,6 +18,9 @@ import { IniciarTorneioRota } from "../infra/api/express/rotas/torneio/iniciarTo
 import { IniciarProximaRodadaRota } from "../infra/api/express/rotas/torneio/iniciarProximaRodada.express.route";
 import { RegistrarResultadoRota } from "../infra/api/express/rotas/torneio/registrarResultado.express.route";
 import { ContestarResultadoRota } from "../infra/api/express/rotas/torneio/contestarResultado.express.route";
+import { ConfirmarResultadoRota } from "../infra/api/express/rotas/torneio/confirmarResultado.express.route";
+import { InscreverTardeTorneioRota } from "../infra/api/express/rotas/torneio/inscreverTardeTorneio.express.route";
+import { AtualizarMesaPartidaRota } from "../infra/api/express/rotas/torneio/atualizarMesaPartida.express.route";
 import { DroparJogadorRota } from "../infra/api/express/rotas/torneio/droparJogador.express.route";
 import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTorneios.express.route";
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
@@ -35,6 +38,13 @@ import { ExcluirLigaRota } from "../infra/api/express/rotas/liga/excluirLiga.exp
 import { ListarLigasRota } from "../infra/api/express/rotas/liga/listarLigas.express.route";
 import { BuscarLigaRota } from "../infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "../infra/api/express/rotas/liga/rankingLiga.express.route";
+import { CriarTimeRota } from "../infra/api/express/rotas/time/criarTime.express.route";
+import { ListarTimesRota } from "../infra/api/express/rotas/time/listarTimes.express.route";
+import { BuscarTimeRota } from "../infra/api/express/rotas/time/buscarTime.express.route";
+import { AlterarTimeRota } from "../infra/api/express/rotas/time/alterarTime.express.route";
+import { ExcluirTimeRota } from "../infra/api/express/rotas/time/excluirTime.express.route";
+import { EntrarTimeRota } from "../infra/api/express/rotas/time/entrarTime.express.route";
+import { SairTimeRota } from "../infra/api/express/rotas/time/sairTime.express.route";
 import { GerarUrlUploadImagemRota } from "../infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { type CasosDeUso } from "./casos";
@@ -62,6 +72,9 @@ export function criarRotas(casos: CasosDeUso) {
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
         RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
         ContestarResultadoRota.criar(casos.contestarResultado),
+        ConfirmarResultadoRota.criar(casos.confirmarResultado),
+        InscreverTardeTorneioRota.criar(casos.inscreverTardeTorneio),
+        AtualizarMesaPartidaRota.criar(casos.atualizarMesaPartida),
         ListarTorneiosRota.criar(casos.listarTorneios),
         BuscarTorneioRota.criar(casos.buscarTorneio),
         BuscarStandingsRota.criar(casos.buscarStandings),
@@ -78,6 +91,13 @@ export function criarRotas(casos: CasosDeUso) {
         AlterarLigaRota.criar(casos.alterarLiga),
         ExcluirLigaRota.criar(casos.excluirLiga),
         RankingLigaRota.criar(casos.rankingLiga),
+        CriarTimeRota.criar(casos.criarTime),
+        ListarTimesRota.criar(casos.listarTimes),
+        BuscarTimeRota.criar(casos.buscarTime),
+        AlterarTimeRota.criar(casos.alterarTime),
+        ExcluirTimeRota.criar(casos.excluirTime),
+        EntrarTimeRota.criar(casos.entrarTime),
+        SairTimeRota.criar(casos.sairTime),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
         HealthRota.criar(),
     ];

@@ -1,3 +1,4 @@
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -19,6 +20,7 @@ export type AlterarTorneioInputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto?: boolean;
+  exibirNomeJogador?: ExibirNomeJogador;
 };
 
 export type AlterarTorneioOutputDto = {
@@ -37,6 +39,7 @@ export type AlterarTorneioOutputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto: boolean;
+  exibirNomeJogador: ExibirNomeJogador;
   criadoEm: Date;
 };
 
@@ -84,6 +87,7 @@ export class AlterarTorneio
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
     if (input.linkLive !== undefined) torneio.linkLive = input.linkLive?.trim();
     if (input.secreto !== undefined) torneio.secreto = input.secreto;
+    if (input.exibirNomeJogador !== undefined) torneio.exibirNomeJogador = input.exibirNomeJogador;
 
     await this.torneioGateway.atualizar(torneio);
 
@@ -103,6 +107,7 @@ export class AlterarTorneio
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      exibirNomeJogador: torneio.exibirNomeJogador,
       criadoEm: torneio.criadoEm,
     };
   }

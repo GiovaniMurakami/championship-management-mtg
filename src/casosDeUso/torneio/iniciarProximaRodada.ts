@@ -188,6 +188,7 @@ export class IniciarProximaRodada
             jogador2Id: j2,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: deckMapCompleto.get(j2),
+            mesa: i + 1,
           })
         );
       }
@@ -257,6 +258,7 @@ export class IniciarProximaRodada
             jogador2Id: j2,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: j2 ? deckMapCompleto.get(j2) : null,
+            mesa: Math.floor(i / 2) + 1,
           })
         );
       }
@@ -298,7 +300,7 @@ export class IniciarProximaRodada
     );
     const pares = gerarPareamentos(statsParaPareamento, historico, jaRecebeuBye);
 
-    const novasPartidas: Partida[] = pares.map((par) =>
+    const novasPartidas: Partida[] = pares.map((par, idx) =>
       Partida.criar({
         torneioId: input.torneioId,
         rodada: proximaRodada,
@@ -306,6 +308,7 @@ export class IniciarProximaRodada
         jogador2Id: par.jogador2Id,
         deckJogador1Id: deckMap.get(par.jogador1Id),
         deckJogador2Id: par.jogador2Id ? deckMap.get(par.jogador2Id) : null,
+        mesa: idx + 1,
       })
     );
 

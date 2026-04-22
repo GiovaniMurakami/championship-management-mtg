@@ -28,7 +28,16 @@ export class RankingLigaRota implements Rotas {
     ): Promise<void> => {
       try {
         const ligaId = request.params.id as string;
-        const resultado = await this.rankingLigaServico.executar({ ligaId });
+        const parseLimit = (val: unknown, max = 200) => {
+          const n = Number(val);
+          return Number.isInteger(n) && n > 0 ? Math.min(n, max) : 10;
+        };
+        const resultado = await this.rankingLigaServico.executar({
+          ligaId,
+          limiteJogadores: parseLimit(request.query.limiteJogadores),
+          limiteDecks: parseLimit(request.query.limiteDecks),
+          limiteCartas: parseLimit(request.query.limiteCartas),
+        });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

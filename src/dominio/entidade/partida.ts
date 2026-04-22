@@ -16,6 +16,8 @@ export interface PartidaProps {
   status: StatusPartida;
   contestado?: boolean;
   tipoBye?: TipoBye;
+  confirmadoPor?: string[];
+  mesa?: number | null;
   criadoEm?: Date;
 }
 
@@ -32,6 +34,8 @@ export class Partida {
   public status: StatusPartida;
   public contestado: boolean;
   public tipoBye: TipoBye;
+  public confirmadoPor: string[];
+  public mesa: number | null;
   public criadoEm: Date;
 
   constructor(props: PartidaProps) {
@@ -47,6 +51,8 @@ export class Partida {
     this.status = props.status;
     this.contestado = props.contestado ?? false;
     this.tipoBye = props.tipoBye ?? null;
+    this.confirmadoPor = props.confirmadoPor ?? [];
+    this.mesa = props.mesa ?? null;
     this.criadoEm = props.criadoEm || new Date();
   }
 

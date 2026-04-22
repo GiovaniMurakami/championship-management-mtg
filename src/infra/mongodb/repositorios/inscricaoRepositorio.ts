@@ -8,6 +8,7 @@ interface InscricaoDocument extends Document {
   torneioId: string;
   usuarioId: string;
   deckId?: string;
+  timeId?: string;
   checkInRodada: number;
   dropped: boolean;
   byeCount: number;
@@ -19,6 +20,7 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   torneioId: { type: String, required: true },
   usuarioId: { type: String, required: true },
   deckId: { type: String },
+  timeId: { type: String },
   checkInRodada: { type: Number, required: true, default: -1 },
   dropped: { type: Boolean, required: true, default: false },
   byeCount: { type: Number, required: true, default: 0 },
@@ -39,6 +41,7 @@ function docParaInscricao(doc: InscricaoDocument): Inscricao {
     torneioId: doc.get("torneioId"),
     usuarioId: doc.get("usuarioId"),
     deckId: doc.get("deckId"),
+    timeId: doc.get("timeId") ?? undefined,
     checkInRodada: doc.get("checkInRodada") ?? -1,
     dropped: doc.get("dropped") ?? false,
     byeCount: doc.get("byeCount") ?? 0,
@@ -60,6 +63,7 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
       deckId: inscricao.deckId,
+      timeId: inscricao.timeId,
       checkInRodada: inscricao.checkInRodada,
       dropped: inscricao.dropped,
       byeCount: inscricao.byeCount,
@@ -108,6 +112,7 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
       { id: inscricao.id },
       {
         deckId: inscricao.deckId,
+        timeId: inscricao.timeId,
         checkInRodada: inscricao.checkInRodada,
         dropped: inscricao.dropped,
         byeCount: inscricao.byeCount,

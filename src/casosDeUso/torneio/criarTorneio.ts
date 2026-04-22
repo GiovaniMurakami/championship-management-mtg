@@ -1,4 +1,4 @@
-import { Torneio } from "../../dominio/entidade/torneio";
+import { ExibirNomeJogador, Torneio } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -20,6 +20,7 @@ export type CriarTorneioInputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto?: boolean;
+  exibirNomeJogador?: ExibirNomeJogador;
 };
 
 export type CriarTorneioOutputDto = {
@@ -38,6 +39,7 @@ export type CriarTorneioOutputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto: boolean;
+  exibirNomeJogador: ExibirNomeJogador;
   criadoEm: Date;
 };
 
@@ -73,6 +75,7 @@ export class CriarTorneio
       corteTop: input.corteTop,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
+      exibirNomeJogador: input.exibirNomeJogador ?? "nome",
     });
 
     await this.torneioGateway.salvar(torneio);
@@ -93,6 +96,7 @@ export class CriarTorneio
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      exibirNomeJogador: torneio.exibirNomeJogador,
       criadoEm: torneio.criadoEm,
     };
   }

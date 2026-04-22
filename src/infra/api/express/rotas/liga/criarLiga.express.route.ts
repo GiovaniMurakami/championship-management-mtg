@@ -34,13 +34,14 @@ export class CriarLigaRota implements Rotas {
         const dados = validarBody(criarLigaSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, descricao, torneioIds } = dados;
+        const { nome, descricao, torneioIds, tipo } = dados;
 
         const resultado = await this.criarLigaServico.executar({
           nome,
           descricao,
           donoId,
           torneioIds,
+          tipo,
         });
 
         response.status(201).json(resultado);
