@@ -119,11 +119,13 @@ export const alterarLigaSchema = z.object({
 export const criarTimeSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
 });
 
 export const alterarTimeSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
 });
 
 export const gerarUrlUploadImagemSchema = z.object({

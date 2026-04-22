@@ -1,6 +1,7 @@
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
+import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -36,6 +37,7 @@ export type BuscarStandingsOutputDto = {
   standings: Array<{
     posicao: number;
     usuario: { id: string; nome: string };
+    time: { id: string; nome: string; imagemUrl?: string } | null;
     pontosMesa: number;
     vitoriasPartida: number;
     empatesPartida: number;
@@ -58,7 +60,8 @@ export class BuscarStandings
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly deckGateway: DeckGateway
+    private readonly deckGateway: DeckGateway,
+    private readonly timeGateway: TimeGateway
   ) { }
 
   public static criar(
@@ -66,9 +69,10 @@ export class BuscarStandings
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
     usuarioGateway: UsuarioGateway,
-    deckGateway: DeckGateway
+    deckGateway: DeckGateway,
+    timeGateway: TimeGateway
   ) {
-    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway);
+    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway);
   }
 
   public async executar(
@@ -105,12 +109,18 @@ export class BuscarStandings
       : [];
     const deckMap = new Map(decks.map((d) => [d.id, d]));
 
+    const timeIds = Array.from(new Set(inscricoes.map((i) => i.timeId).filter((id): id is string => !!id)));
+    const times = timeIds.length > 0 ? await this.timeGateway.buscarVarios(timeIds) : [];
+    const timeMap = new Map(times.map((t) => [t.id, t]));
+
     if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
       const standings = inscricoes.map((i, idx) => {
         const u = usuarioMap.get(i.usuarioId);
+        const t = i.timeId ? timeMap.get(i.timeId) : undefined;
         return {
         posicao: idx + 1,
         usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId },
+        time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
         pontosMesa: 0,
         vitoriasPartida: 0,
         empatesPartida: 0,
@@ -177,9 +187,11 @@ export class BuscarStandings
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
+        const t = inscricao?.timeId ? timeMap.get(inscricao.timeId) : undefined;
         return {
           posicao: idx + 1,
           usuario: { id: s.usuarioId, nome: (() => { const u = usuarioMap.get(s.usuarioId); return u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId; })() },
+          time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,
           empatesPartida: s.empatesPartida,

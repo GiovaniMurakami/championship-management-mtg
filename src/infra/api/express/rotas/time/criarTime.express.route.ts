@@ -36,6 +36,7 @@ export class CriarTimeRota implements Rotas {
         const resultado = await this.criarTimeServico.executar({
           nome: dados.nome,
           descricao: dados.descricao,
+          imagemUrl: dados.imagemUrl,
           donoId,
         });
 

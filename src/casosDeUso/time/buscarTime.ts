@@ -10,6 +10,7 @@ export type BuscarTimeOutputDto = {
     id: string;
     nome: string;
     descricao?: string;
+    imagemUrl?: string;
     donoId: string;
     membros: Array<{ id: string; nome: string }>;
     criadoEm: Date;
@@ -43,6 +44,7 @@ export class BuscarTime implements CasoDeUso<BuscarTimeInputDto, BuscarTimeOutpu
             id: time.id,
             nome: time.nome,
             descricao: time.descricao,
+            imagemUrl: time.imagemUrl,
             donoId: time.donoId,
             membros: time.membroIds.map((id) => ({ id, nome: nomeMap.get(id) ?? id })),
             criadoEm: time.criadoEm,

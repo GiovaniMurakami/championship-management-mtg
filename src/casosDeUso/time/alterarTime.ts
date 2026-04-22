@@ -9,12 +9,14 @@ export type AlterarTimeInputDto = {
     isAdmin: boolean;
     nome?: string;
     descricao?: string;
+    imagemUrl?: string;
 };
 
 export type AlterarTimeOutputDto = {
     id: string;
     nome: string;
     descricao?: string;
+    imagemUrl?: string;
     donoId: string;
     membroIds: string[];
     criadoEm: Date;
@@ -45,6 +47,7 @@ export class AlterarTime implements CasoDeUso<AlterarTimeInputDto, AlterarTimeOu
 
         if (input.nome !== undefined) time.nome = input.nome.trim();
         if (input.descricao !== undefined) time.descricao = input.descricao?.trim();
+        if (input.imagemUrl !== undefined) time.imagemUrl = input.imagemUrl;
 
         await this.timeGateway.atualizar(time);
 
@@ -52,6 +55,7 @@ export class AlterarTime implements CasoDeUso<AlterarTimeInputDto, AlterarTimeOu
             id: time.id,
             nome: time.nome,
             descricao: time.descricao,
+            imagemUrl: time.imagemUrl,
             donoId: time.donoId,
             membroIds: time.membroIds,
             criadoEm: time.criadoEm,

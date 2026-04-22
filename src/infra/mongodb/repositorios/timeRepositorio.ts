@@ -7,6 +7,7 @@ interface TimeDocument extends Document {
     id: string;
     nome: string;
     descricao?: string;
+    imagemUrl?: string;
     donoId: string;
     membroIds: string[];
     criadoEm: Date;
@@ -16,6 +17,7 @@ const timeSchema = new Schema<TimeDocument>({
     id: { type: String, required: true, unique: true },
     nome: { type: String, required: true, maxlength: 100 },
     descricao: { type: String, maxlength: 500 },
+    imagemUrl: { type: String },
     donoId: { type: String, required: true },
     membroIds: { type: [String], default: [] },
     criadoEm: { type: Date, default: Date.now },
@@ -32,6 +34,7 @@ function docParaTime(doc: TimeDocument): Time {
         id: doc.get("id"),
         nome: doc.get("nome"),
         descricao: doc.get("descricao") ?? undefined,
+        imagemUrl: doc.get("imagemUrl") ?? undefined,
         donoId: doc.get("donoId"),
         membroIds: doc.get("membroIds") ?? [],
         criadoEm: doc.get("criadoEm"),
@@ -51,6 +54,7 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
             id: time.id,
             nome: time.nome,
             descricao: time.descricao,
+            imagemUrl: time.imagemUrl,
             donoId: time.donoId,
             membroIds: time.membroIds,
             criadoEm: time.criadoEm,
@@ -84,6 +88,7 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
             {
                 nome: time.nome,
                 descricao: time.descricao,
+                imagemUrl: time.imagemUrl,
                 membroIds: time.membroIds,
             }
         );

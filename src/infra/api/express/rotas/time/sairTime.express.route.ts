@@ -28,7 +28,7 @@ export class SairTimeRota implements Rotas {
     ): Promise<void> => {
       try {
         const resultado = await this.sairTimeServico.executar({
-          timeId: request.params.id,
+          timeId: request.params.id as string,
           usuarioId: request.usuario!.id,
         });
 

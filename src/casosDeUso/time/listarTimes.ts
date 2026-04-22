@@ -11,6 +11,7 @@ export type ListarTimesOutputDto = {
         id: string;
         nome: string;
         descricao?: string;
+        imagemUrl?: string;
         donoId: string;
         membroIds: string[];
         criadoEm: Date;
@@ -33,6 +34,7 @@ export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOu
                 id: t.id,
                 nome: t.nome,
                 descricao: t.descricao,
+                imagemUrl: t.imagemUrl,
                 donoId: t.donoId,
                 membroIds: t.membroIds,
                 criadoEm: t.criadoEm,

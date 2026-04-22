@@ -29,7 +29,7 @@ export class AlterarTimeRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id;
+        const id = request.params.id as string;
         const requisitanteId = request.usuario!.id;
         const dados = validarBody(alterarTimeSchema, request.body, response);
         if (!dados) return;
@@ -40,6 +40,7 @@ export class AlterarTimeRota implements Rotas {
           isAdmin: request.usuario!.role === "admin",
           nome: dados.nome,
           descricao: dados.descricao,
+          imagemUrl: dados.imagemUrl,
         });
 
         response.status(200).json(resultado);

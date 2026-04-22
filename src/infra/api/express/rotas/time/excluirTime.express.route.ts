@@ -28,7 +28,7 @@ export class ExcluirTimeRota implements Rotas {
     ): Promise<void> => {
       try {
         const resultado = await this.excluirTimeServico.executar({
-          id: request.params.id,
+          id: request.params.id as string,
           requisitanteId: request.usuario!.id,
           isAdmin: request.usuario!.role === "admin",
         });
