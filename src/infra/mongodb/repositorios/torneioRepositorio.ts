@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
+import { ExibirNomeJogador, Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
 import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
@@ -24,7 +24,9 @@ interface TorneioDocument extends Document {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  exibirNomeJogador: ExibirNomeJogador;
   criadoEm: Date;
+  rodadaIniciadaEm?: Date;
 }
 
 const torneioSchema = new Schema<TorneioDocument>({
@@ -46,7 +48,9 @@ const torneioSchema = new Schema<TorneioDocument>({
   linkLive: { type: String, maxlength: 500 },
   emCorte: { type: Boolean, default: false },
   secreto: { type: Boolean, default: false },
+  exibirNomeJogador: { type: String, default: "nome" },
   criadoEm: { type: Date, default: Date.now },
+  rodadaIniciadaEm: { type: Date },
 });
 
 torneioSchema.index({ criadoEm: -1 });
@@ -77,7 +81,9 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     linkLive: doc.get("linkLive") ?? undefined,
     emCorte: doc.get("emCorte") ?? false,
     secreto: doc.get("secreto") ?? false,
+    exibirNomeJogador: (doc.get("exibirNomeJogador") as ExibirNomeJogador) ?? "nome",
     criadoEm: doc.get("criadoEm"),
+    rodadaIniciadaEm: doc.get("rodadaIniciadaEm") ?? undefined,
   });
 }
 
@@ -109,6 +115,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
+      exibirNomeJogador: torneio.exibirNomeJogador,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -164,6 +171,8 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         linkLive: torneio.linkLive,
         emCorte: torneio.emCorte,
         secreto: torneio.secreto,
+        exibirNomeJogador: torneio.exibirNomeJogador,
+        rodadaIniciadaEm: torneio.rodadaIniciadaEm,
       }
     );
   }
@@ -188,6 +197,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
           rodadaAtual: torneio.rodadaAtual,
           totalRodadas: torneio.totalRodadas,
           emCorte: torneio.emCorte,
+          rodadaIniciadaEm: torneio.rodadaIniciadaEm,
         },
         { session }
       );
@@ -205,6 +215,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
             vitoriasJogador1: p.vitoriasJogador1,
             vitoriasJogador2: p.vitoriasJogador2,
             status: p.status,
+            mesa: p.mesa,
             criadoEm: p.criadoEm,
           })),
           { session }

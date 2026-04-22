@@ -74,7 +74,7 @@ export class IniciarTorneio
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
     );
-    const comCheckIn = inscricoes.filter((i) => i.checkIn && !i.dropped);
+    const comCheckIn = inscricoes.filter((i) => i.checkInRodada >= 0 && !i.dropped);
 
     if (comCheckIn.length < 2) {
       throw ErroPersonalizado.criar({
@@ -111,6 +111,7 @@ export class IniciarTorneio
           jogador2Id: j2,
           deckJogador1Id: deckMap.get(jogadores[i]),
           deckJogador2Id: j2 ? deckMap.get(j2) : null,
+          mesa: Math.floor(i / 2) + 1,
         })
       );
     }

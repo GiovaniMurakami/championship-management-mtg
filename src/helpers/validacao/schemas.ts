@@ -69,6 +69,7 @@ export const criarTorneioSchema = z.object({
   corteTop: z.number().int().min(2).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
 });
 
 export const alterarTorneioSchema = z.object({
@@ -84,6 +85,7 @@ export const alterarTorneioSchema = z.object({
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
 });
 
 export const escolherDeckTorneioSchema = z.object({
@@ -104,12 +106,26 @@ export const criarLigaSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
   torneioIds: z.array(z.string()).optional(),
+  tipo: z.enum(["individual", "times"]).optional(),
 });
 
 export const alterarLigaSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
   torneioIds: z.array(z.string()).optional(),
+  tipo: z.enum(["individual", "times"]).optional(),
+});
+
+export const criarTimeSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório."),
+  descricao: z.string().optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
+});
+
+export const alterarTimeSchema = z.object({
+  nome: z.string().min(1).optional(),
+  descricao: z.string().optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
 });
 
 export const gerarUrlUploadImagemSchema = z.object({

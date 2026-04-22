@@ -16,7 +16,7 @@ export type InscreverTorneioOutputDto = {
   id: string;
   torneioId: string;
   usuario: { id: string; nome: string };
-  checkIn: boolean;
+  checkInRodada: number;
   criadoEm: Date;
 };
 
@@ -120,7 +120,7 @@ export class InscreverTorneio
       id: inscricao.id,
       torneioId: inscricao.torneioId,
       usuario: { id: inscricao.usuarioId, nome: usuarioNome },
-      checkIn: inscricao.checkIn,
+      checkInRodada: inscricao.checkInRodada,
       criadoEm: inscricao.criadoEm,
     };
   }

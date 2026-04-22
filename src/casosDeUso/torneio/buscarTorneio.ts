@@ -81,7 +81,7 @@ export class BuscarTorneio
     ]);
 
     const totalInscritos = inscricoes.length;
-    const totalCheckin = inscricoes.filter((i) => i.checkIn).length;
+    const totalCheckin = inscricoes.filter((i) => i.checkInRodada >= 0).length;
 
     const jogadorIds = new Set<string>();
     for (const p of partidas) {

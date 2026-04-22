@@ -54,10 +54,30 @@ export class ContestarResultado
             });
         }
 
+        // Impedir contestação de partidas BYE (jogador2Id === null)
+        if (partida.jogador2Id === null) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Partidas de BYE não podem ser contestadas.",
+                status: StatusErro.erroParametro,
+            });
+        }
+
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
         if (!torneio || torneio.status !== "em_andamento") {
             throw ErroPersonalizado.criar({
                 mensagem: "Contestações só são permitidas enquanto o torneio está em andamento.",
+                status: StatusErro.erroParametro,
+            });
+        }
+
+        // Impedir contestação se já existem rodadas posteriores geradas
+        const existeRodadaPosterior = await this.partidaGateway.existePartidaRodadaPosterior(
+            partida.torneioId,
+            partida.rodada
+        );
+        if (existeRodadaPosterior) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Não é possível contestar partida de rodada anterior. Rodadas subsequentes já foram geradas.",
                 status: StatusErro.erroParametro,
             });
         }

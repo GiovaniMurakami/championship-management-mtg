@@ -45,8 +45,28 @@ export class IniciarProximaRodadaRota implements Rotas {
           eventosTorneio.emit("rodada_iniciada", {
             torneioId,
             rodadaAtual: resultado.rodadaAtual,
+            emCorte: resultado.emCorte,
             partidas: resultado.partidas,
           });
+
+          if (!resultado.emCorte) {
+            eventosTorneio.emit("checkin_rodada_aberto", {
+              torneioId,
+              rodadaAtual: resultado.rodadaAtual,
+            });
+          }
+
+          if (resultado.emCorte) {
+            eventosTorneio.emit("corte_iniciado", {
+              torneioId,
+              corteTop: resultado.partidas.length * 2,
+              rodadaAtual: resultado.rodadaAtual,
+              jogadoresClassificados: resultado.partidas.flatMap((p) => [
+                { usuarioId: p.jogador1Id, nome: p.jogador1Nome },
+                ...(p.jogador2Id ? [{ usuarioId: p.jogador2Id, nome: p.jogador2Nome }] : []),
+              ]),
+            });
+          }
         } else {
           eventosTorneio.emit("torneio_finalizado", {
             torneioId,

@@ -38,11 +38,17 @@ export function calcularEstatisticas(
     if (partida.jogador2Id === null) {
       const s = statsMap.get(partida.jogador1Id);
       if (s) {
-        s.pontosMesa += 3;
-        s.vitoriasPartida += 1;
+        const v1 = partida.vitoriasJogador1;
+        const v2 = partida.vitoriasJogador2;
+        const ehVitoria = v1 > v2;
+        const ehEmpate = v1 === v2 && v1 > 0;
+        s.pontosMesa += ehVitoria ? 3 : ehEmpate ? 1 : 0;
+        s.vitoriasPartida += ehVitoria ? 1 : 0;
+        s.empatesPartida += ehEmpate ? 1 : 0;
+        s.derrotasPartida += (!ehVitoria && !ehEmpate) ? 1 : 0;
         s.totalPartidasJogadas += 1;
-        s.vitoriasJogo += 2;
-        s.totalJogosJogados += 2;
+        s.vitoriasJogo += v1;
+        s.totalJogosJogados += v1 + v2;
       }
       continue;
     }
@@ -80,7 +86,7 @@ export const MIN_PERCENTUAL = 0.33;
 
 export function mwp(s: EstatisticasJogador): number {
   if (s.totalPartidasJogadas === 0) return MIN_PERCENTUAL;
-  return Math.max(MIN_PERCENTUAL, s.vitoriasPartida / s.totalPartidasJogadas);
+  return Math.max(MIN_PERCENTUAL, s.pontosMesa / (3 * s.totalPartidasJogadas));
 }
 
 export function gwp(s: EstatisticasJogador): number {
@@ -122,7 +128,10 @@ export function ordenarPorDesempate(
     if (Math.abs(omwpDiff) > 1e-9) return omwpDiff;
     const gwpDiff = gwp(b) - gwp(a);
     if (Math.abs(gwpDiff) > 1e-9) return gwpDiff;
-    return ogwp(b, statsMap) - ogwp(a, statsMap);
+    const ogwpDiff = ogwp(b, statsMap) - ogwp(a, statsMap);
+    if (Math.abs(ogwpDiff) > 1e-9) return ogwpDiff;
+    // Critério final determinístico: ordem lexicográfica do ID
+    return a.usuarioId.localeCompare(b.usuarioId);
   });
 }
 
@@ -132,7 +141,8 @@ export function parKey(id1: string, id2: string): string {
 
 export function gerarPareamentos(
   ordenados: EstatisticasJogador[],
-  historico: Set<string>
+  historico: Set<string>,
+  jaRecebeuBye: Set<string> = new Set()
 ): Array<{ jogador1Id: string; jogador2Id: string | null }> {
   const fila = [...ordenados];
   const pares: Array<{ jogador1Id: string; jogador2Id: string | null }> = [];
@@ -152,6 +162,33 @@ export function gerarPareamentos(
 
     const oponente = fila.splice(idxOponente, 1)[0];
     pares.push({ jogador1Id: atual.usuarioId, jogador2Id: oponente.usuarioId });
+  }
+
+  // Se há BYE e o jogador que recebeu já teve BYE antes, tentar trocar
+  if (fila.length === 0 && pares.length > 0) {
+    const ultimoPar = pares[pares.length - 1];
+    if (ultimoPar.jogador2Id === null && jaRecebeuBye.has(ultimoPar.jogador1Id) && pares.length > 1) {
+      // Tentar trocar com alguém do par anterior que nunca recebeu BYE
+      const penultimoPar = pares[pares.length - 2];
+      const candidatos = [penultimoPar.jogador2Id, penultimoPar.jogador1Id].filter(
+        (id): id is string => id !== null && !jaRecebeuBye.has(id)
+      );
+      if (candidatos.length > 0) {
+        const substituto = candidatos[0];
+        // Remover substituto do par anterior e recriar os dois últimos pares
+        const outroDoParAnterior = penultimoPar.jogador1Id === substituto
+          ? penultimoPar.jogador2Id!
+          : penultimoPar.jogador1Id;
+        pares[pares.length - 2] = {
+          jogador1Id: outroDoParAnterior,
+          jogador2Id: ultimoPar.jogador1Id,
+        };
+        pares[pares.length - 1] = {
+          jogador1Id: substituto,
+          jogador2Id: null,
+        };
+      }
+    }
   }
 
   return pares;

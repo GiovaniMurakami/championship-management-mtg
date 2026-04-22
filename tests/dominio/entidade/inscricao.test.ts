@@ -7,7 +7,6 @@ describe("Inscricao", () => {
             torneioId: "torneio-1",
             usuarioId: "user-1",
             deckId: "deck-1",
-            checkIn: true,
             checkInRodada: 1,
             dropped: false,
             criadoEm: new Date("2025-01-01"),
@@ -17,7 +16,6 @@ describe("Inscricao", () => {
         expect(inscricao.torneioId).toBe("torneio-1");
         expect(inscricao.usuarioId).toBe("user-1");
         expect(inscricao.deckId).toBe("deck-1");
-        expect(inscricao.checkIn).toBe(true);
         expect(inscricao.checkInRodada).toBe(1);
         expect(inscricao.dropped).toBe(false);
         expect(inscricao.criadoEm).toEqual(new Date("2025-01-01"));
@@ -29,7 +27,6 @@ describe("Inscricao", () => {
             id: "insc-1",
             torneioId: "t",
             usuarioId: "u",
-            checkIn: false,
             checkInRodada: -1,
             dropped: false,
         });
@@ -50,7 +47,6 @@ describe("Inscricao", () => {
             expect(inscricao.id.length).toBeGreaterThan(0);
             expect(inscricao.torneioId).toBe("torneio-1");
             expect(inscricao.usuarioId).toBe("user-1");
-            expect(inscricao.checkIn).toBe(false);
             expect(inscricao.checkInRodada).toBe(-1);
             expect(inscricao.dropped).toBe(false);
             expect(inscricao.criadoEm).toBeInstanceOf(Date);

@@ -5,10 +5,12 @@ import {
     criarMockPartidaGateway,
     criarMockUsuarioGateway,
     criarMockLinkIngressoGateway,
+    criarMockDeckGateway,
 } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { Deck } from "../../../src/dominio/entidade/deck";
 import { LinkIngressoData } from "../../../src/dominio/gateway/linkIngressoGateway";
 
 describe("IngressarViaTorneio", () => {
@@ -29,13 +31,19 @@ describe("IngressarViaTorneio", () => {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // +1h
     };
 
+    const deckValido = new Deck({
+        id: "d-1", nome: "Deck Teste", formato: "legacy",
+        maindeck: [], sideboard: [], usuarioId: "u-novo",
+    });
+
     function criarUc(overrides: {
         linkData?: LinkIngressoData | null;
         byePartida?: Partida | null;
         jaInscrito?: boolean;
         inscricoes?: { dropped: boolean }[];
+        deck?: Deck | null;
     } = {}) {
-        const { linkData = linkValido, byePartida = null, jaInscrito = false, inscricoes = [{ dropped: false }] } = overrides;
+        const { linkData = linkValido, byePartida = null, jaInscrito = false, inscricoes = [{ dropped: false }], deck = deckValido } = overrides;
         return IngressarViaTorneio.criar(
             criarMockTorneioGateway({
                 buscarPorId: jest.fn().mockResolvedValue(torneio),
@@ -62,13 +70,16 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkData),
                 excluirPorToken: jest.fn(),
             }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deck),
+            }),
         );
     }
 
     it("deve inscrever jogador e receber penalidade (BYE 0-2) quando não há partida BYE disponível", async () => {
         const uc = criarUc({ byePartida: null });
 
-        const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(resultado.torneioId).toBe("t-1");
         expect(resultado.usuarioId).toBe("u-novo");
@@ -84,7 +95,7 @@ describe("IngressarViaTorneio", () => {
         });
         const uc = criarUc({ byePartida: byePartidaExistente });
 
-        const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(resultado.vitoriasJogador1).toBe(2);
         expect(resultado.vitoriasJogador2).toBe(0);
@@ -95,7 +106,7 @@ describe("IngressarViaTorneio", () => {
         const uc = criarUc({ linkData: null });
 
         await expect(
-            uc.executar({ token: "token-invalido", usuarioId: "u-novo" })
+            uc.executar({ token: "token-invalido", usuarioId: "u-novo", deckId: "d-1" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -107,7 +118,7 @@ describe("IngressarViaTorneio", () => {
         const uc = criarUc({ linkData: linkExpirado });
 
         await expect(
-            uc.executar({ token: "token-uuid", usuarioId: "u-novo" })
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -115,7 +126,7 @@ describe("IngressarViaTorneio", () => {
         const uc = criarUc({ jaInscrito: true });
 
         await expect(
-            uc.executar({ token: "token-uuid", usuarioId: "u-novo" })
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -132,10 +143,11 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
+            criarMockDeckGateway(),
         );
 
         await expect(
-            uc.executar({ token: "token-uuid", usuarioId: "u-novo" })
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -154,9 +166,12 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: excluirMock,
             }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+            }),
         );
 
-        await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(excluirMock).toHaveBeenCalledWith("token-uuid");
     });
@@ -188,9 +203,12 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+            }),
         );
 
-        await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         // totalRodadas deve ter sido atualizado para 3
         expect(atualizarMock).toHaveBeenCalledTimes(1);
@@ -223,9 +241,12 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+            }),
         );
 
-        await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(atualizarMock).not.toHaveBeenCalled();
         expect(torneio3.totalRodadas).toBe(2);
@@ -257,11 +278,107 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+            }),
         );
 
-        await uc.executar({ token: "token-uuid", usuarioId: "u-novo" });
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(atualizarMock).not.toHaveBeenCalled();
         expect(torneioComCap.totalRodadas).toBe(2);
+    });
+
+    it("deve lançar 400 se o torneio estiver em fase de corte", async () => {
+        const torneioEmCorte = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
+            emCorte: true, rodadaCorteInicio: 3, rodadaCorteFim: 5,
+        });
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway(),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se o torneio não estiver em andamento", async () => {
+        const torneioFinalizado = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "finalizado", rodadaAtual: 3, totalRodadas: 3,
+        });
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway(),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 404 se o usuário não existir", async () => {
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway(),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-inexistente", deckId: "d-1" })
+        ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve criar inscrição com checkInRodada igual à rodada atual e deckId", async () => {
+        const salvarMock = jest.fn();
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio), atualizar: jest.fn() }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
+                salvar: salvarMock,
+                listarPorTorneio: jest.fn().mockResolvedValue([{ dropped: false }]),
+            }),
+            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+            }),
+        );
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        expect(salvarMock).toHaveBeenCalledTimes(1);
+        const inscricaoSalva = salvarMock.mock.calls[0][0];
+        expect(inscricaoSalva.checkInRodada).toBe(torneio.rodadaAtual);
+        expect(inscricaoSalva.deckId).toBe("d-1");
     });
 });

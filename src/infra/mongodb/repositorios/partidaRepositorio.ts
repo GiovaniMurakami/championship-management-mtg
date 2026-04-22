@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { Partida, StatusPartida } from "../../../dominio/entidade/partida";
+import { Partida, StatusPartida, TipoBye } from "../../../dominio/entidade/partida";
 import { PartidaGateway } from "../../../dominio/gateway/partidaGateway";
 import { BaseRepositorio } from "./baseRepositorio";
 
@@ -15,6 +15,9 @@ interface PartidaDocument extends Document {
   vitoriasJogador2: number;
   status: StatusPartida;
   contestado: boolean;
+  tipoBye: TipoBye;
+  confirmadoPor: string[];
+  mesa: number | null;
   criadoEm: Date;
 }
 
@@ -30,6 +33,9 @@ const partidaSchema = new Schema<PartidaDocument>({
   vitoriasJogador2: { type: Number, required: true, default: 0, max: 3 },
   status: { type: String, required: true, default: "pendente" },
   contestado: { type: Boolean, default: false },
+  tipoBye: { type: String, default: null },
+  confirmadoPor: { type: [String], default: [] },
+  mesa: { type: Number, default: null },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -54,6 +60,9 @@ function docParaPartida(doc: PartidaDocument): Partida {
     vitoriasJogador2: doc.get("vitoriasJogador2"),
     status: doc.get("status"),
     contestado: doc.get("contestado") ?? false,
+    tipoBye: (doc.get("tipoBye") as TipoBye) ?? null,
+    confirmadoPor: (doc.get("confirmadoPor") as string[]) ?? [],
+    mesa: (doc.get("mesa") as number | null) ?? null,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -72,6 +81,9 @@ function leanParaPartida(doc: Record<string, unknown>): Partida {
     vitoriasJogador2: doc["vitoriasJogador2"] as number,
     status: doc["status"] as StatusPartida,
     contestado: (doc["contestado"] as boolean | undefined) ?? false,
+    tipoBye: (doc["tipoBye"] as TipoBye | undefined) ?? null,
+    confirmadoPor: (doc["confirmadoPor"] as string[] | undefined) ?? [],
+    mesa: (doc["mesa"] as number | null | undefined) ?? null,
     criadoEm: doc["criadoEm"] as Date,
   });
 }
@@ -96,6 +108,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
       vitoriasJogador1: partida.vitoriasJogador1,
       vitoriasJogador2: partida.vitoriasJogador2,
       status: partida.status,
+      tipoBye: partida.tipoBye,
       criadoEm: partida.criadoEm,
     });
   }
@@ -114,6 +127,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
+        tipoBye: p.tipoBye,
         criadoEm: p.criadoEm,
       }))
     );
@@ -265,5 +279,27 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     await this.conectar();
     const existe = await PartidaModel.exists({ torneioId, rodada: { $gt: rodada } });
     return existe !== null;
+  }
+
+  public async atualizarMesa(id: string, mesa: number | null): Promise<Partida | null> {
+    await this.conectar();
+    const doc = await PartidaModel.findOneAndUpdate(
+      { id },
+      { mesa },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaPartida(doc as unknown as PartidaDocument);
+  }
+
+  public async confirmarResultado(id: string, userId: string): Promise<Partida | null> {
+    await this.conectar();
+    const doc = await PartidaModel.findOneAndUpdate(
+      { id, status: "finalizada", confirmadoPor: { $ne: userId } },
+      { $addToSet: { confirmadoPor: userId } },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaPartida(doc as unknown as PartidaDocument);
   }
 }

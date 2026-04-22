@@ -37,7 +37,7 @@ export class AlterarTorneioRota implements Rotas {
         const {
           nome, horario, formato, premio,
           bannerUrl, linkBanner, somRodada,
-          maxJogadores, maxRodadas, corteTop, linkLive, secreto,
+          maxJogadores, maxRodadas, corteTop, linkLive, secreto, exibirNomeJogador,
         } = dados;
 
         const resultado = await this.alterarTorneioServico.executar({
@@ -56,6 +56,7 @@ export class AlterarTorneioRota implements Rotas {
           corteTop,
           linkLive,
           secreto,
+          exibirNomeJogador,
         });
 
         response.status(200).json(resultado);

@@ -1,6 +1,10 @@
-import { Torneio } from "../../dominio/entidade/torneio";
+import { ExibirNomeJogador, Torneio } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { StatusErro } from "../../helpers/error/statusErro";
+
+const CORTES_VALIDOS = [2, 4, 8, 16];
 
 export type CriarTorneioInputDto = {
   nome: string;
@@ -16,6 +20,7 @@ export type CriarTorneioInputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto?: boolean;
+  exibirNomeJogador?: ExibirNomeJogador;
 };
 
 export type CriarTorneioOutputDto = {
@@ -34,6 +39,7 @@ export type CriarTorneioOutputDto = {
   corteTop?: number;
   linkLive?: string;
   secreto: boolean;
+  exibirNomeJogador: ExibirNomeJogador;
   criadoEm: Date;
 };
 
@@ -48,6 +54,13 @@ export class CriarTorneio
   public async executar(
     input: CriarTorneioInputDto
   ): Promise<CriarTorneioOutputDto> {
+    if (input.corteTop !== undefined && !CORTES_VALIDOS.includes(input.corteTop)) {
+      throw ErroPersonalizado.criar({
+        mensagem: `O corte deve ser 2, 4, 8 ou 16. Valor recebido: ${input.corteTop}.`,
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const torneio = Torneio.criar({
       nome: input.nome.trim(),
       horario: input.horario,
@@ -62,6 +75,7 @@ export class CriarTorneio
       corteTop: input.corteTop,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
+      exibirNomeJogador: input.exibirNomeJogador ?? "nome",
     });
 
     await this.torneioGateway.salvar(torneio);
@@ -82,6 +96,7 @@ export class CriarTorneio
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      exibirNomeJogador: torneio.exibirNomeJogador,
       criadoEm: torneio.criadoEm,
     };
   }

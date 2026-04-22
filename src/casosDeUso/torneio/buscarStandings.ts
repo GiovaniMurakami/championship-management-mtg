@@ -1,6 +1,7 @@
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
+import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -14,6 +15,14 @@ import {
   gwp,
   ogwp,
 } from "./swiss";
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { Usuario } from "../../dominio/entidade/usuario";
+
+function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
+  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
+  if (modo === "nickArena") return u.nickArena ?? u.nome;
+  return u.nome;
+}
 
 export type BuscarStandingsInputDto = {
   torneioId: string;
@@ -24,9 +33,11 @@ export type BuscarStandingsOutputDto = {
   rodadaAtual: number;
   totalRodadas: number;
   status: string;
+  rodadaIniciadaEm?: string;
   standings: Array<{
     posicao: number;
     usuario: { id: string; nome: string };
+    time: { id: string; nome: string; imagemUrl?: string } | null;
     pontosMesa: number;
     vitoriasPartida: number;
     empatesPartida: number;
@@ -35,10 +46,9 @@ export type BuscarStandingsOutputDto = {
     omwp: number;
     gwp: number;
     ogwp: number;
-    checkIn: boolean;
+    checkInRodada: number;
     deckId?: string | null;
     deckNome?: string | null;
-    checkInProximaRodada: boolean;
     dropped: boolean;
   }>;
 };
@@ -50,7 +60,8 @@ export class BuscarStandings
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly deckGateway: DeckGateway
+    private readonly deckGateway: DeckGateway,
+    private readonly timeGateway: TimeGateway
   ) { }
 
   public static criar(
@@ -58,9 +69,10 @@ export class BuscarStandings
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
     usuarioGateway: UsuarioGateway,
-    deckGateway: DeckGateway
+    deckGateway: DeckGateway,
+    timeGateway: TimeGateway
   ) {
-    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway);
+    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway);
   }
 
   public async executar(
@@ -73,6 +85,13 @@ export class BuscarStandings
         status: StatusErro.erroNaoEncontrado,
       });
     }
+
+    const toBrasiliaISO = (date?: Date): string | undefined => {
+      if (!date) return undefined;
+      const offset = -3 * 60;
+      const local = new Date(date.getTime() + offset * 60 * 1000);
+      return local.toISOString().replace("Z", "-03:00");
+    };
 
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
@@ -90,10 +109,22 @@ export class BuscarStandings
       : [];
     const deckMap = new Map(decks.map((d) => [d.id, d]));
 
+    const times = await this.timeGateway.buscarPorMembros(usuarioIds);
+    const timeByMembro = new Map<string, typeof times[0]>();
+    for (const t of times) {
+      for (const membroId of t.membroIds) {
+        if (!timeByMembro.has(membroId)) timeByMembro.set(membroId, t);
+      }
+    }
+
     if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
-      const standings = inscricoes.map((i, idx) => ({
+      const standings = inscricoes.map((i, idx) => {
+        const u = usuarioMap.get(i.usuarioId);
+        const t = timeByMembro.get(i.usuarioId);
+        return {
         posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: usuarioMap.get(i.usuarioId)?.nome ?? i.usuarioId },
+        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId },
+        time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
         pontosMesa: 0,
         vitoriasPartida: 0,
         empatesPartida: 0,
@@ -102,18 +133,19 @@ export class BuscarStandings
         omwp: 0,
         gwp: 0,
         ogwp: 0,
-        checkIn: i.checkIn,
+        checkInRodada: i.checkInRodada,
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
-        checkInProximaRodada: i.checkIn,
         dropped: i.dropped,
-      }));
+        };
+      });
 
       return {
         torneioId: torneio.id,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
         status: torneio.status,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
         standings,
       };
     }
@@ -126,9 +158,22 @@ export class BuscarStandings
       ? todasPartidas
       : todasPartidas.filter((p) => p.rodada < torneio.rodadaAtual);
 
-    const jogadoresIds = inscricoes
-      .filter((i) => i.checkIn)
+    // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
+    // para que omwp/ogwp use o MWP real de oponentes dropados
+    const jogadoresComCheckIn = inscricoes
+      .filter((i) => i.checkInRodada >= 0)
       .map((i) => i.usuarioId);
+
+    const idsComHistorico = Array.from(
+      new Set(
+        todasPartidas.flatMap((p) => [
+          p.jogador1Id,
+          ...(p.jogador2Id ? [p.jogador2Id] : []),
+        ])
+      )
+    );
+
+    const jogadoresIds = Array.from(new Set([...jogadoresComCheckIn, ...idsComHistorico]));
 
     const inscricaoMap = new Map(inscricoes.map((i) => [i.usuarioId, i]));
 
@@ -143,11 +188,14 @@ export class BuscarStandings
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
+        const t = timeByMembro.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: usuarioMap.get(s.usuarioId)?.nome ?? s.usuarioId },
+          usuario: { id: s.usuarioId, nome: (() => { const u = usuarioMap.get(s.usuarioId); return u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId; })() },
+          time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,
           empatesPartida: s.empatesPartida,
@@ -156,13 +204,11 @@ export class BuscarStandings
           omwp: omwp(s, statsMap),
           gwp: gwp(s),
           ogwp: ogwp(s, statsMap),
-          checkIn: inscricao?.checkIn ?? false,
+          checkInRodada: inscricao?.checkInRodada ?? -1,
           deckId: inscricao?.deckId ?? null,
           deckNome: inscricao?.deckId
             ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
-          checkInProximaRodada:
-            (inscricao?.checkInRodada ?? -1) >= torneio.rodadaAtual,
           dropped: inscricao?.dropped ?? false,
         };
       }),

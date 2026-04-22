@@ -132,25 +132,24 @@ export class IniciarProximaRodada
       )
     );
 
-    const inscricoesComCheckIn = inscricoes.filter(
-      (i) => i.checkIn && i.checkInRodada >= torneio.rodadaAtual && !i.dropped
-    );
-    const jogadoresIds = inscricoesComCheckIn.map((i) => i.usuarioId);
-    const deckMap = new Map(inscricoesComCheckIn.map((i) => [i.usuarioId, i.deckId]));
+    const inscricoesAtivas = inscricoes.filter((i) => !i.dropped);
+    const jogadoresIds = inscricoesAtivas.map((i) => i.usuarioId);
+    const deckMap = new Map(inscricoesAtivas.map((i) => [i.usuarioId, i.deckId]));
     const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
     const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
     const estaNaUltimaRodada = torneio.rodadaAtual >= torneio.totalRodadas;
+    const jogadoresIdsSet = new Set(jogadoresIds);
 
     if (!torneio.emCorte && !estaNaUltimaRodada && jogadoresIds.length < 2) {
       throw ErroPersonalizado.criar({
-        mensagem: `Apenas ${jogadoresIds.length} jogador(es) fez check-in para a próxima rodada. São necessários pelo menos 2.`,
+        mensagem: `Apenas ${jogadoresIds.length} jogador(es) ativo(s) no torneio. São necessários pelo menos 2.`,
         status: StatusErro.erroParametro,
       });
     }
 
-    const idsParaStats = torneio.emCorte || estaNaUltimaRodada
-      ? idsComHistorico
-      : jogadoresIds;
+    // Sempre calcular stats com TODOS os jogadores que possuem histórico
+    // para que omwp/ogwp use o MWP real de oponentes dropados (não MIN_PERCENTUAL)
+    const idsParaStats = Array.from(new Set([...idsComHistorico, ...jogadoresIds]));
 
     const statsMap = calcularEstatisticas(idsParaStats, todasPartidas);
     const statsOrdenados = ordenarPorDesempate(
@@ -159,14 +158,17 @@ export class IniciarProximaRodada
     );
 
     if (estaNaUltimaRodada && torneio.corteTop && !torneio.emCorte) {
-      if (statsOrdenados.length < torneio.corteTop) {
+      // Apenas jogadores ativos (não-dropados, com check-in) são elegíveis para o corte
+      const statsAtivos = statsOrdenados.filter(s => jogadoresIdsSet.has(s.usuarioId));
+
+      if (statsAtivos.length < torneio.corteTop) {
         throw ErroPersonalizado.criar({
-          mensagem: `Não há jogadores suficientes para o corte top ${torneio.corteTop}. Jogadores classificados: ${statsOrdenados.length}.`,
+          mensagem: `Não há jogadores suficientes para o corte top ${torneio.corteTop}. Jogadores classificados: ${statsAtivos.length}.`,
           status: StatusErro.erroParametro,
         });
       }
 
-      const topNIds = statsOrdenados.slice(0, torneio.corteTop).map((s) => s.usuarioId);
+      const topNIds = statsAtivos.slice(0, torneio.corteTop).map((s) => s.usuarioId);
       const rodadasCorte = Math.log2(torneio.corteTop); // top8=3, top4=2, top2=1, top16=4
       const proximaRodada = torneio.rodadaAtual + 1;
 
@@ -186,6 +188,7 @@ export class IniciarProximaRodada
             jogador2Id: j2,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: deckMapCompleto.get(j2),
+            mesa: i + 1,
           })
         );
       }
@@ -255,6 +258,7 @@ export class IniciarProximaRodada
             jogador2Id: j2,
             deckJogador1Id: deckMapCompleto.get(j1),
             deckJogador2Id: j2 ? deckMapCompleto.get(j2) : null,
+            mesa: Math.floor(i / 2) + 1,
           })
         );
       }
@@ -279,16 +283,24 @@ export class IniciarProximaRodada
     }
 
     const historico = new Set<string>();
+    const jaRecebeuBye = new Set<string>();
     for (const p of todasPartidas) {
       if (p.jogador2Id !== null) {
         historico.add(parKey(p.jogador1Id, p.jogador2Id));
+      } else if (p.vitoriasJogador1 > p.vitoriasJogador2) {
+        // BYE normal (vitória) — rastrear para evitar repetição
+        jaRecebeuBye.add(p.jogador1Id);
       }
     }
 
     const proximaRodada = torneio.rodadaAtual + 1;
-    const pares = gerarPareamentos(statsOrdenados, historico);
+    // Filtrar statsOrdenados para apenas jogadores com check-in ativo
+    const statsParaPareamento = statsOrdenados.filter(
+      (s) => jogadoresIdsSet.has(s.usuarioId)
+    );
+    const pares = gerarPareamentos(statsParaPareamento, historico, jaRecebeuBye);
 
-    const novasPartidas: Partida[] = pares.map((par) =>
+    const novasPartidas: Partida[] = pares.map((par, idx) =>
       Partida.criar({
         torneioId: input.torneioId,
         rodada: proximaRodada,
@@ -296,6 +308,7 @@ export class IniciarProximaRodada
         jogador2Id: par.jogador2Id,
         deckJogador1Id: deckMap.get(par.jogador1Id),
         deckJogador2Id: par.jogador2Id ? deckMap.get(par.jogador2Id) : null,
+        mesa: idx + 1,
       })
     );
 

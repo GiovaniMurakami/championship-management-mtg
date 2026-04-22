@@ -31,7 +31,7 @@ describe("InscreverTorneio", () => {
 
         expect(resultado.torneioId).toBe("t-1");
         expect(resultado.usuario.id).toBe("u-1");
-        expect(resultado.checkIn).toBe(false);
+        expect(resultado.checkInRodada).toBe(-1);
     });
 
     it("deve lançar erro se o torneio não for encontrado", async () => {
@@ -108,7 +108,7 @@ describe("InscreverTorneio", () => {
     it("deve lançar erro se o jogador já estiver inscrito", async () => {
         const inscricaoExistente = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false,
+            checkInRodada: -1, dropped: false,
         });
 
         const uc = InscreverTorneio.criar(
