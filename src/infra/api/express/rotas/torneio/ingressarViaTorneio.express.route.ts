@@ -33,10 +33,17 @@ export class IngressarViaTorneioRota implements Rotas {
             try {
                 const token = request.params.token as string;
                 const usuarioId = request.usuario!.id;
+                const deckId = request.body.deckId as string | undefined;
+
+                if (!deckId) {
+                    response.status(400).json({ mensagem: "É necessário selecionar um deck para ingressar no torneio.", erros: [] });
+                    return;
+                }
 
                 const resultado = await this.ingressarViaTorneioServico.executar({
                     token,
                     usuarioId,
+                    deckId,
                 });
 
                 response.status(201).json(resultado);

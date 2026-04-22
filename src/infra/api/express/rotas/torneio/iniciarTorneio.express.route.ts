@@ -41,6 +41,13 @@ export class IniciarTorneioRota implements Rotas {
           isAdmin: request.usuario!.role === "admin",
         });
 
+        eventosTorneio.emit("torneio_iniciado", {
+          torneioId: resultado.torneioId,
+          status: "em_andamento",
+          totalRodadas: resultado.totalRodadas,
+          totalPartidas: resultado.partidas.length,
+        });
+
         eventosTorneio.emit("rodada_iniciada", {
           torneioId: resultado.torneioId,
           rodadaAtual: resultado.rodadaAtual,

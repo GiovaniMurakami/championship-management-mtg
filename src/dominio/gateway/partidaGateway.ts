@@ -22,4 +22,8 @@ export interface PartidaGateway {
   existePartidaRodadaPosterior(torneioId: string, rodada: number): Promise<boolean>;
   /** Busca a partida BYE (jogador2Id=null) de uma rodada específica de um torneio, se existir. */
   buscarByePartidaRodada(torneioId: string, rodada: number): Promise<Partida | null>;
+  /** Adiciona userId ao array confirmadoPor — retorna null se já confirmado ou partida não existe. */
+  confirmarResultado(id: string, userId: string): Promise<Partida | null>;
+  /** Atualiza o número de mesa da partida. */
+  atualizarMesa(id: string, mesa: number | null): Promise<Partida | null>;
 }

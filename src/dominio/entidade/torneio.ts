@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 export type StatusTorneio = "inscricoes_abertas" | "em_andamento" | "finalizado";
+export type ExibirNomeJogador = "nome" | "nickMOL" | "nickArena";
 
 export interface TorneioProps {
   id: string;
@@ -21,7 +22,9 @@ export interface TorneioProps {
   linkLive?: string;
   emCorte?: boolean;
   secreto?: boolean;
+  exibirNomeJogador?: ExibirNomeJogador;
   criadoEm?: Date;
+  rodadaIniciadaEm?: Date;
 }
 
 export class Torneio {
@@ -43,7 +46,9 @@ export class Torneio {
   public linkLive?: string;
   public emCorte: boolean = false;
   public secreto: boolean = false;
+  public exibirNomeJogador: ExibirNomeJogador;
   public criadoEm: Date;
+  public rodadaIniciadaEm?: Date;
 
   constructor(props: TorneioProps) {
     this.id = props.id;
@@ -64,7 +69,9 @@ export class Torneio {
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
+    this.exibirNomeJogador = props.exibirNomeJogador ?? "nome";
     this.criadoEm = props.criadoEm || new Date();
+    this.rodadaIniciadaEm = props.rodadaIniciadaEm;
   }
 
   public static criar(
@@ -89,6 +96,7 @@ export class Torneio {
     this.status = "em_andamento";
     this.rodadaAtual = rodadaAtual;
     this.totalRodadas = totalRodadas;
+    this.rodadaIniciadaEm = new Date();
   }
 
   public avancarRodada(novaRodada: number, novoTotal?: number): void {
@@ -97,6 +105,7 @@ export class Torneio {
     }
     this.rodadaAtual = novaRodada;
     if (novoTotal !== undefined) this.totalRodadas = novoTotal;
+    this.rodadaIniciadaEm = new Date();
   }
 
   public entrarEmCorte(novaRodada: number, novoTotalRodadas: number): void {

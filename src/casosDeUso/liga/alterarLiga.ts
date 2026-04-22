@@ -1,3 +1,4 @@
+import { TipoLiga } from "../../dominio/entidade/liga";
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -11,6 +12,7 @@ export type AlterarLigaInputDto = {
   nome?: string;
   descricao?: string;
   torneioIds?: string[];
+  tipo?: TipoLiga;
 };
 
 export type AlterarLigaOutputDto = {
@@ -19,6 +21,7 @@ export type AlterarLigaOutputDto = {
   descricao?: string;
   donoId: string;
   torneioIds: string[];
+  tipo: TipoLiga;
   criadoEm: Date;
 };
 
@@ -64,6 +67,7 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
 
     if (input.nome !== undefined) liga.nome = input.nome.trim();
     if (input.descricao !== undefined) liga.descricao = input.descricao?.trim();
+    if (input.tipo !== undefined) liga.tipo = input.tipo;
 
     await this.ligaGateway.atualizar(liga);
 
@@ -73,6 +77,7 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
       descricao: liga.descricao,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
+      tipo: liga.tipo,
       criadoEm: liga.criadoEm,
     };
   }

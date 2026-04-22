@@ -9,6 +9,7 @@ interface LigaDocument extends Document {
   descricao?: string;
   donoId: string;
   torneioIds: string[];
+  tipo: string;
   criadoEm: Date;
 }
 
@@ -25,6 +26,7 @@ const ligaSchema = new Schema<LigaDocument>({
       message: "liga não pode ter mais de 25 torneios",
     },
   },
+  tipo: { type: String, enum: ["individual", "times"], default: "individual" },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -40,6 +42,7 @@ function docParaLiga(doc: LigaDocument): Liga {
     descricao: doc.get("descricao") ?? undefined,
     donoId: doc.get("donoId"),
     torneioIds: doc.get("torneioIds") ?? [],
+    tipo: doc.get("tipo") ?? "individual",
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -59,6 +62,7 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
       descricao: liga.descricao,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
+      tipo: liga.tipo,
       criadoEm: liga.criadoEm,
     });
   }
@@ -92,6 +96,7 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
         nome: liga.nome,
         descricao: liga.descricao,
         torneioIds: liga.torneioIds,
+        tipo: liga.tipo,
       }
     );
   }

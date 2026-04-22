@@ -73,8 +73,11 @@ describe("RankingLiga", () => {
         const resultado = await uc.executar({ ligaId: "liga-1" });
 
         expect(resultado.rankingJogadores).toEqual([]);
+        expect(resultado.totalJogadores).toBe(0);
         expect(resultado.rankingDecks).toEqual([]);
+        expect(resultado.totalDecks).toBe(0);
         expect(resultado.rankingCartas).toEqual([]);
+        expect(resultado.totalCartas).toBe(0);
     });
 
     it("deve calcular ranking de jogadores corretamente", async () => {
@@ -170,6 +173,19 @@ describe("RankingLiga", () => {
         expect(burnDeck).toBeDefined();
         expect(burnDeck!.totalUsos).toBe(1);
         expect(burnDeck!.vitorias).toBe(1);
+        expect(burnDeck!.derrotas).toBe(0);
+        expect(burnDeck!.empates).toBe(0);
+        expect(burnDeck!.winrate).toBe(100);
+        expect(burnDeck!.loserate).toBe(0);
+
+        const controlDeck = resultado.rankingDecks.find((d) => d.nome === "UW Control");
+        expect(controlDeck).toBeDefined();
+        expect(controlDeck!.vitorias).toBe(0);
+        expect(controlDeck!.derrotas).toBe(1);
+        expect(controlDeck!.winrate).toBe(0);
+        expect(controlDeck!.loserate).toBe(100);
+
+        expect(resultado.totalDecks).toBe(2);
     });
 
     it("deve calcular ranking de cartas somando cópias de todos os decks", async () => {
@@ -203,6 +219,68 @@ describe("RankingLiga", () => {
 
         // lightning bolt deve ser o primeiro (maior totalCopias)
         expect(resultado.rankingCartas[0].nome).toBe("lightning bolt");
+    });
+
+    it("deve calcular winrate de empate corretamente por arquétipo", async () => {
+        const partida = new Partida({
+            id: "partida-1",
+            torneioId: "torneio-1",
+            rodada: 1,
+            jogador1Id: "user-1",
+            jogador2Id: "user-2",
+            deckJogador1Id: "deck-1",
+            deckJogador2Id: "deck-2",
+            vitoriasJogador1: 1,
+            vitoriasJogador2: 1,
+            status: "finalizada",
+        });
+
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway(),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-1" });
+
+        const burnDeck = resultado.rankingDecks.find((d) => d.nome === "Boros Burn");
+        expect(burnDeck!.empates).toBe(1);
+        expect(burnDeck!.winrate).toBe(0);
+        expect(burnDeck!.loserate).toBe(0);
+    });
+
+    it("deve respeitar limite de exibição por seção", async () => {
+        const partida = new Partida({
+            id: "partida-1",
+            torneioId: "torneio-1",
+            rodada: 1,
+            jogador1Id: "user-1",
+            jogador2Id: "user-2",
+            deckJogador1Id: "deck-1",
+            deckJogador2Id: "deck-2",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+        });
+
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway(),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-1", limiteJogadores: 1, limiteDecks: 1, limiteCartas: 1 });
+
+        expect(resultado.rankingJogadores).toHaveLength(1);
+        expect(resultado.totalJogadores).toBe(2);
+        expect(resultado.rankingDecks).toHaveLength(1);
+        expect(resultado.totalDecks).toBe(2);
+        expect(resultado.rankingCartas).toHaveLength(1);
+        expect(resultado.totalCartas).toBeGreaterThan(1);
     });
 
     it("deve ignorar partidas pendentes no ranking", async () => {

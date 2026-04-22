@@ -93,4 +93,106 @@ describe("CriarTorneio", () => {
 
         expect(resultado.secreto).toBe(false);
     });
+
+    it("deve lançar 400 se corteTop não for potência de 2", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        await expect(
+            uc.executar({
+                nome: "Torneio Corte Invalido",
+                horario: new Date(),
+                formato: "legacy",
+                donoId: "user-1",
+                corteTop: 6,
+            })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve aceitar corteTop com potências de 2 válidas (2, 4, 8, 16)", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        for (const corteTop of [2, 4, 8, 16]) {
+            const resultado = await uc.executar({
+                nome: `Torneio Top ${corteTop}`,
+                horario: new Date(),
+                formato: "legacy",
+                donoId: "user-1",
+                corteTop,
+            });
+            expect(resultado.corteTop).toBe(corteTop);
+        }
+    });
+
+    it("deve lançar 400 se corteTop for 0", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        await expect(
+            uc.executar({
+                nome: "Torneio", horario: new Date(), formato: "legacy",
+                donoId: "user-1", corteTop: 0,
+            })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se corteTop for 1", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        await expect(
+            uc.executar({
+                nome: "Torneio", horario: new Date(), formato: "legacy",
+                donoId: "user-1", corteTop: 1,
+            })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se corteTop for 32", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        await expect(
+            uc.executar({
+                nome: "Torneio", horario: new Date(), formato: "legacy",
+                donoId: "user-1", corteTop: 32,
+            })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve aplicar trim no nome e formato", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "   Torneio com Espaços   ",
+            horario: new Date(),
+            formato: "  MODERN  ",
+            donoId: "user-1",
+        });
+
+        expect(resultado.nome).toBe("Torneio com Espaços");
+        expect(resultado.formato).toBe("modern");
+    });
+
+    it("deve aceitar torneio sem campos opcionais (nenhum campo opcional)", async () => {
+        const gateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "Torneio Básico",
+            horario: new Date(),
+            formato: "standard",
+            donoId: "user-1",
+        });
+
+        expect(resultado.corteTop).toBeUndefined();
+        expect(resultado.maxRodadas).toBeUndefined();
+        expect(resultado.maxJogadores).toBeUndefined();
+        expect(resultado.bannerUrl).toBeUndefined();
+        expect(resultado.somRodada).toBeUndefined();
+        expect(resultado.linkLive).toBeUndefined();
+        expect(resultado.linkBanner).toBeUndefined();
+    });
 });

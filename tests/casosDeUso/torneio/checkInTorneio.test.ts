@@ -16,7 +16,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const inscricaoGw = criarMockInscricaoGateway({
@@ -29,7 +29,6 @@ describe("CheckInTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
 
-        expect(resultado.checkIn).toBe(true);
         expect(resultado.checkInRodada).toBe(0);
         expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
@@ -42,7 +41,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -62,7 +61,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: true, checkInRodada: 1, dropped: false,
+            checkInRodada: 1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -113,7 +112,7 @@ describe("CheckInTorneio", () => {
         });
         const inscricao = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
-            checkIn: false, checkInRodada: -1, dropped: false,
+            checkInRodada: -1, dropped: false, byeCount: 0,
         });
 
         const uc = CheckInTorneio.criar(
@@ -124,5 +123,65 @@ describe("CheckInTorneio", () => {
         await expect(
             uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
         ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar erro se já realizou check-in inicial (inscricoes_abertas)", async () => {
+        const agora = new Date();
+        const torneio = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(agora.getTime() + 30 * 60 * 1000), formato: "f",
+            donoId: "d", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+        });
+        const inscricao = new Inscricao({
+            id: "i-1", torneioId: "t-1", usuarioId: "u-1",
+            checkInRodada: 0, dropped: false, byeCount: 0,
+        });
+
+        const uc = CheckInTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar erro se já fez check-in para a rodada atual (em_andamento)", async () => {
+        const torneio = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 3,
+        });
+        const inscricao = new Inscricao({
+            id: "i-1", torneioId: "t-1", usuarioId: "u-1",
+            checkInRodada: 2, dropped: false, byeCount: 0,
+        });
+
+        const uc = CheckInTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve setar checkInRodada igual à rodadaAtual (independente do valor anterior)", async () => {
+        const torneio = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "d", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
+        });
+        const inscricao = new Inscricao({
+            id: "i-1", torneioId: "t-1", usuarioId: "u-1",
+            checkInRodada: 1, dropped: false, byeCount: 0,
+        });
+
+        const uc = CheckInTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "João" });
+        expect(resultado.checkInRodada).toBe(3);
     });
 });

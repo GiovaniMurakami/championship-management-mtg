@@ -130,4 +130,71 @@ describe("ContestarResultado", () => {
 
         expect(resultado.contestado).toBe(true);
     });
+
+    it("deve lançar 400 ao tentar contestar partida de BYE", async () => {
+        const partidaBye = new Partida({
+            id: "p-bye", torneioId: "t-1", rodada: 1,
+            jogador1Id: "u-1", jogador2Id: null,
+            vitoriasJogador1: 2, vitoriasJogador2: 0,
+            status: "finalizada",
+        });
+
+        const uc = ContestarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBye) }),
+        );
+
+        await expect(
+            uc.executar({ partidaId: "p-bye", usuarioId: "u-1", isAdmin: false })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se já existem rodadas posteriores geradas", async () => {
+        const uc = ContestarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({
+                buscarPorId: jest.fn().mockResolvedValue(partida),
+                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(true),
+            }),
+        );
+
+        await expect(
+            uc.executar({ partidaId: "p-1", usuarioId: "u-1", isAdmin: false })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 400 se a partida já estiver contestada e contestarPartida retorna null", async () => {
+        const uc = ContestarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({
+                buscarPorId: jest.fn().mockResolvedValue(partida),
+                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
+                contestarPartida: jest.fn().mockResolvedValue(null),
+            }),
+        );
+
+        await expect(
+            uc.executar({ partidaId: "p-1", usuarioId: "u-1", isAdmin: false })
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve permitir contestar partida da rodada atual quando não há rodada posterior", async () => {
+        const partidaRodada2 = new Partida({
+            ...partida, rodada: 2,
+        });
+        const partidaContestada = new Partida({ ...partidaRodada2, contestado: true });
+
+        const uc = ContestarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({
+                buscarPorId: jest.fn().mockResolvedValue(partidaRodada2),
+                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
+                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+            }),
+        );
+
+        const resultado = await uc.executar({ partidaId: "p-1", usuarioId: "u-1", isAdmin: false });
+
+        expect(resultado.contestado).toBe(true);
+    });
 });

@@ -34,7 +34,7 @@ export class AlterarLigaRota implements Rotas {
         const dados = validarBody(alterarLigaSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, descricao, torneioIds } = dados;
+        const { nome, descricao, torneioIds, tipo } = dados;
 
         const resultado = await this.alterarLigaServico.executar({
           id,
@@ -43,6 +43,7 @@ export class AlterarLigaRota implements Rotas {
           nome,
           descricao,
           torneioIds,
+          tipo,
         });
 
         response.status(200).json(resultado);

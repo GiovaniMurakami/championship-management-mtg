@@ -1,4 +1,4 @@
-import { Liga } from "../../dominio/entidade/liga";
+import { Liga, TipoLiga } from "../../dominio/entidade/liga";
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -10,6 +10,7 @@ export type CriarLigaInputDto = {
   donoId: string;
   descricao?: string;
   torneioIds?: string[];
+  tipo?: TipoLiga;
 };
 
 export type CriarLigaOutputDto = {
@@ -18,6 +19,7 @@ export type CriarLigaOutputDto = {
   descricao?: string;
   donoId: string;
   torneioIds: string[];
+  tipo: TipoLiga;
   criadoEm: Date;
 };
 
@@ -49,6 +51,7 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
       descricao: input.descricao?.trim(),
       donoId: input.donoId,
       torneioIds,
+      tipo: input.tipo,
     });
 
     await this.ligaGateway.salvar(liga);
@@ -59,6 +62,7 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
       descricao: liga.descricao,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
+      tipo: liga.tipo,
       criadoEm: liga.criadoEm,
     };
   }

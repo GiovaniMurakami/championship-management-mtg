@@ -15,7 +15,6 @@ export type CheckInTorneioOutputDto = {
   id: string;
   torneioId: string;
   usuario: { id: string; nome: string };
-  checkIn: boolean;
   checkInRodada: number;
 };
 
@@ -71,12 +70,24 @@ export class CheckInTorneio
           status: StatusErro.erroParametro,
         });
       }
-      inscricao.checkIn = true;
+      if (inscricao.checkInRodada >= 0) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Você já realizou o check-in para este torneio.",
+          status: StatusErro.erroParametro,
+        });
+      }
       inscricao.checkInRodada = 0;
     } else {
-      if (!inscricao.checkIn) {
+      if (inscricao.checkInRodada < 0) {
         throw ErroPersonalizado.criar({
           mensagem: "Você não completou o check-in inicial deste torneio.",
+          status: StatusErro.erroParametro,
+        });
+      }
+
+      if (inscricao.checkInRodada >= torneio.rodadaAtual) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Você já fez check-in para esta rodada.",
           status: StatusErro.erroParametro,
         });
       }
@@ -95,7 +106,6 @@ export class CheckInTorneio
       id: inscricao.id,
       torneioId: inscricao.torneioId,
       usuario: { id: inscricao.usuarioId, nome: input.usuarioNome },
-      checkIn: inscricao.checkIn,
       checkInRodada: inscricao.checkInRodada,
     };
   }

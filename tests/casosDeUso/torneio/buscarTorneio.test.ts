@@ -13,8 +13,8 @@ describe("BuscarTorneio", () => {
 
     it("deve retornar detalhes do torneio com partidas e inscrições", async () => {
         const inscricoes = [
-            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkIn: true, checkInRodada: 0, dropped: false }),
-            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkIn: true, checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 0, dropped: false }),
         ];
         const partidas = [
             new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente" }),

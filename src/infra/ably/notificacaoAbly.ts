@@ -69,5 +69,33 @@ export class NotificacaoAbly {
     eventosTorneio.on("deck_inserido", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "deck_inserido", payload);
     });
+
+    eventosTorneio.on("jogador_dropou", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "jogador_dropou", payload);
+    });
+
+    eventosTorneio.on("resultado_ajustado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "resultado_ajustado", payload);
+    });
+
+    eventosTorneio.on("corte_iniciado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "corte_iniciado", payload);
+    });
+
+    eventosTorneio.on("jogador_ingressou", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "jogador_ingressou", payload);
+    });
+
+    eventosTorneio.on("torneio_iniciado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "torneio_iniciado", payload);
+    });
+
+    eventosTorneio.on("total_rodadas_alterado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "total_rodadas_alterado", payload);
+    });
+
+    eventosTorneio.on("checkin_rodada_aberto", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "checkin_rodada_aberto", payload);
+    });
   }
 }

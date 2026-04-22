@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 export type StatusPartida = "pendente" | "finalizada";
+export type TipoBye = "normal" | "penalidade" | null;
 
 export interface PartidaProps {
   id: string;
@@ -14,6 +15,9 @@ export interface PartidaProps {
   vitoriasJogador2: number;
   status: StatusPartida;
   contestado?: boolean;
+  tipoBye?: TipoBye;
+  confirmadoPor?: string[];
+  mesa?: number | null;
   criadoEm?: Date;
 }
 
@@ -29,6 +33,9 @@ export class Partida {
   public vitoriasJogador2: number;
   public status: StatusPartida;
   public contestado: boolean;
+  public tipoBye: TipoBye;
+  public confirmadoPor: string[];
+  public mesa: number | null;
   public criadoEm: Date;
 
   constructor(props: PartidaProps) {
@@ -43,13 +50,16 @@ export class Partida {
     this.vitoriasJogador2 = props.vitoriasJogador2;
     this.status = props.status;
     this.contestado = props.contestado ?? false;
+    this.tipoBye = props.tipoBye ?? null;
+    this.confirmadoPor = props.confirmadoPor ?? [];
+    this.mesa = props.mesa ?? null;
     this.criadoEm = props.criadoEm || new Date();
   }
 
   public static criar(
     props: Omit<
       PartidaProps,
-      "id" | "vitoriasJogador1" | "vitoriasJogador2" | "status" | "criadoEm"
+      "id" | "vitoriasJogador1" | "vitoriasJogador2" | "status" | "criadoEm" | "tipoBye"
     >
   ) {
     const isBye = props.jogador2Id === null;
@@ -58,6 +68,7 @@ export class Partida {
       vitoriasJogador1: isBye ? 2 : 0,
       vitoriasJogador2: 0,
       status: isBye ? "finalizada" : "pendente",
+      tipoBye: isBye ? "normal" : null,
       criadoEm: new Date(),
       ...props,
     });
