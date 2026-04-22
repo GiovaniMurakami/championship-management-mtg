@@ -45,6 +45,11 @@ import { AlterarTimeRota } from "../infra/api/express/rotas/time/alterarTime.exp
 import { ExcluirTimeRota } from "../infra/api/express/rotas/time/excluirTime.express.route";
 import { EntrarTimeRota } from "../infra/api/express/rotas/time/entrarTime.express.route";
 import { SairTimeRota } from "../infra/api/express/rotas/time/sairTime.express.route";
+import { GerarConviteTimeRota } from "../infra/api/express/rotas/time/gerarConviteTime.express.route";
+import { EntrarPorConviteTimeRota } from "../infra/api/express/rotas/time/entrarPorConviteTime.express.route";
+import { SolicitarEntradaTimeRota } from "../infra/api/express/rotas/time/solicitarEntradaTime.express.route";
+import { AprovarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/aprovarSolicitacaoTime.express.route";
+import { RejeitarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/rejeitarSolicitacaoTime.express.route";
 import { GerarUrlUploadImagemRota } from "../infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { type CasosDeUso } from "./casos";
@@ -96,8 +101,12 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarTimeRota.criar(casos.buscarTime),
         AlterarTimeRota.criar(casos.alterarTime),
         ExcluirTimeRota.criar(casos.excluirTime),
-        EntrarTimeRota.criar(casos.entrarTime),
         SairTimeRota.criar(casos.sairTime),
+        GerarConviteTimeRota.criar(casos.gerarConviteTime),
+        EntrarPorConviteTimeRota.criar(casos.entrarPorConviteTime),
+        SolicitarEntradaTimeRota.criar(casos.solicitarEntradaTime),
+        AprovarSolicitacaoTimeRota.criar(casos.aprovarSolicitacaoTime),
+        RejeitarSolicitacaoTimeRota.criar(casos.rejeitarSolicitacaoTime),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
         HealthRota.criar(),
     ];

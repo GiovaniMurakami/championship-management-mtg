@@ -174,6 +174,8 @@ export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): Time
         salvar: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
+        buscarPorMembros: jest.fn().mockResolvedValue([]),
+        buscarPorConviteToken: jest.fn().mockResolvedValue(null),
         listar: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
         excluir: jest.fn(),

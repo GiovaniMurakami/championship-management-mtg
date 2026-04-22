@@ -109,14 +109,18 @@ export class BuscarStandings
       : [];
     const deckMap = new Map(decks.map((d) => [d.id, d]));
 
-    const timeIds = Array.from(new Set(inscricoes.map((i) => i.timeId).filter((id): id is string => !!id)));
-    const times = timeIds.length > 0 ? await this.timeGateway.buscarVarios(timeIds) : [];
-    const timeMap = new Map(times.map((t) => [t.id, t]));
+    const times = await this.timeGateway.buscarPorMembros(usuarioIds);
+    const timeByMembro = new Map<string, typeof times[0]>();
+    for (const t of times) {
+      for (const membroId of t.membroIds) {
+        if (!timeByMembro.has(membroId)) timeByMembro.set(membroId, t);
+      }
+    }
 
     if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
       const standings = inscricoes.map((i, idx) => {
         const u = usuarioMap.get(i.usuarioId);
-        const t = i.timeId ? timeMap.get(i.timeId) : undefined;
+        const t = timeByMembro.get(i.usuarioId);
         return {
         posicao: idx + 1,
         usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId },
@@ -187,7 +191,7 @@ export class BuscarStandings
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
-        const t = inscricao?.timeId ? timeMap.get(inscricao.timeId) : undefined;
+        const t = timeByMembro.get(s.usuarioId);
         return {
           posicao: idx + 1,
           usuario: { id: s.usuarioId, nome: (() => { const u = usuarioMap.get(s.usuarioId); return u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId; })() },

@@ -7,6 +7,8 @@ export type TimeProps = {
     imagemUrl?: string;
     donoId: string;
     membroIds?: string[];
+    solicitacoesPendentes?: string[];
+    conviteToken?: string;
     criadoEm?: Date;
 };
 
@@ -17,6 +19,8 @@ export class Time {
     public imagemUrl?: string;
     public donoId: string;
     public membroIds: string[];
+    public solicitacoesPendentes: string[];
+    public conviteToken?: string;
     public criadoEm: Date;
 
     constructor(props: TimeProps) {
@@ -26,6 +30,8 @@ export class Time {
         this.imagemUrl = props.imagemUrl;
         this.donoId = props.donoId;
         this.membroIds = props.membroIds ?? [];
+        this.solicitacoesPendentes = props.solicitacoesPendentes ?? [];
+        this.conviteToken = props.conviteToken;
         this.criadoEm = props.criadoEm ?? new Date();
     }
 

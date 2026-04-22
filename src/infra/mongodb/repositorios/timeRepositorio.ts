@@ -10,6 +10,8 @@ interface TimeDocument extends Document {
     imagemUrl?: string;
     donoId: string;
     membroIds: string[];
+    solicitacoesPendentes: string[];
+    conviteToken?: string;
     criadoEm: Date;
 }
 
@@ -20,6 +22,8 @@ const timeSchema = new Schema<TimeDocument>({
     imagemUrl: { type: String },
     donoId: { type: String, required: true },
     membroIds: { type: [String], default: [] },
+    solicitacoesPendentes: { type: [String], default: [] },
+    conviteToken: { type: String },
     criadoEm: { type: Date, default: Date.now },
 });
 
@@ -37,6 +41,8 @@ function docParaTime(doc: TimeDocument): Time {
         imagemUrl: doc.get("imagemUrl") ?? undefined,
         donoId: doc.get("donoId"),
         membroIds: doc.get("membroIds") ?? [],
+        solicitacoesPendentes: doc.get("solicitacoesPendentes") ?? [],
+        conviteToken: doc.get("conviteToken") ?? undefined,
         criadoEm: doc.get("criadoEm"),
     });
 }
@@ -57,6 +63,8 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
             imagemUrl: time.imagemUrl,
             donoId: time.donoId,
             membroIds: time.membroIds,
+            solicitacoesPendentes: time.solicitacoesPendentes,
+            conviteToken: time.conviteToken,
             criadoEm: time.criadoEm,
         });
     }
@@ -75,6 +83,20 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
         return docs.map((doc) => docParaTime(doc as unknown as TimeDocument));
     }
 
+    public async buscarPorMembros(usuarioIds: string[]): Promise<Time[]> {
+        if (usuarioIds.length === 0) return [];
+        await this.conectar();
+        const docs = await TimeModel.find({ membroIds: { $in: usuarioIds } });
+        return docs.map((doc) => docParaTime(doc as unknown as TimeDocument));
+    }
+
+    public async buscarPorConviteToken(token: string): Promise<Time | null> {
+        await this.conectar();
+        const doc = await TimeModel.findOne({ conviteToken: token });
+        if (!doc) return null;
+        return docParaTime(doc as unknown as TimeDocument);
+    }
+
     public async listar(): Promise<Time[]> {
         await this.conectar();
         const docs = await TimeModel.find().sort({ criadoEm: -1 });
@@ -90,6 +112,8 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
                 descricao: time.descricao,
                 imagemUrl: time.imagemUrl,
                 membroIds: time.membroIds,
+                solicitacoesPendentes: time.solicitacoesPendentes,
+                conviteToken: time.conviteToken,
             }
         );
     }

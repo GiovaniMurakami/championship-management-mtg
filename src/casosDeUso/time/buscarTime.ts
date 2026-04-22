@@ -13,6 +13,7 @@ export type BuscarTimeOutputDto = {
     imagemUrl?: string;
     donoId: string;
     membros: Array<{ id: string; nome: string }>;
+    solicitacoesPendentes: Array<{ id: string; nome: string }>;
     criadoEm: Date;
 };
 
@@ -35,8 +36,9 @@ export class BuscarTime implements CasoDeUso<BuscarTimeInputDto, BuscarTimeOutpu
             });
         }
 
-        const usuarios = time.membroIds.length > 0
-            ? await this.usuarioGateway.buscarVarios(time.membroIds)
+        const todosIds = Array.from(new Set([...time.membroIds, ...time.solicitacoesPendentes]));
+        const usuarios = todosIds.length > 0
+            ? await this.usuarioGateway.buscarVarios(todosIds)
             : [];
         const nomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
 
@@ -47,6 +49,7 @@ export class BuscarTime implements CasoDeUso<BuscarTimeInputDto, BuscarTimeOutpu
             imagemUrl: time.imagemUrl,
             donoId: time.donoId,
             membros: time.membroIds.map((id) => ({ id, nome: nomeMap.get(id) ?? id })),
+            solicitacoesPendentes: time.solicitacoesPendentes.map((id) => ({ id, nome: nomeMap.get(id) ?? id })),
             criadoEm: time.criadoEm,
         };
     }

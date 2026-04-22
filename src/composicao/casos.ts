@@ -46,6 +46,11 @@ import { AlterarTime } from "../casosDeUso/time/alterarTime";
 import { ExcluirTime } from "../casosDeUso/time/excluirTime";
 import { EntrarTime } from "../casosDeUso/time/entrarTime";
 import { SairTime } from "../casosDeUso/time/sairTime";
+import { GerarConviteTime } from "../casosDeUso/time/gerarConviteTime";
+import { EntrarPorConviteTime } from "../casosDeUso/time/entrarPorConviteTime";
+import { SolicitarEntradaTime } from "../casosDeUso/time/solicitarEntradaTime";
+import { AprovarSolicitacaoTime } from "../casosDeUso/time/aprovarSolicitacaoTime";
+import { RejeitarSolicitacaoTime } from "../casosDeUso/time/rejeitarSolicitacaoTime";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -109,6 +114,11 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const excluirTime = ExcluirTime.criar(repos.time);
     const entrarTime = EntrarTime.criar(repos.time, repos.usuario);
     const sairTime = SairTime.criar(repos.time);
+    const gerarConviteTime = GerarConviteTime.criar(repos.time);
+    const entrarPorConviteTime = EntrarPorConviteTime.criar(repos.time, repos.usuario);
+    const solicitarEntradaTime = SolicitarEntradaTime.criar(repos.time);
+    const aprovarSolicitacaoTime = AprovarSolicitacaoTime.criar(repos.time, repos.usuario);
+    const rejeitarSolicitacaoTime = RejeitarSolicitacaoTime.criar(repos.time);
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
@@ -122,6 +132,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
+        gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
     };
 }
 
