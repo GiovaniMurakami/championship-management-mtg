@@ -27,7 +27,7 @@ export class BuscarTimeRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const resultado = await this.buscarTimeServico.executar({ id: request.params.id });
+        const resultado = await this.buscarTimeServico.executar({ id: request.params.id as string });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
