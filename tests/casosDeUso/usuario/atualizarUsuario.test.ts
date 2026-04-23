@@ -71,4 +71,15 @@ describe("AtualizarUsuario", () => {
         const resultado = await uc.executar({ id: "user-1", telefone: "" });
         expect(resultado.telefone).toBeUndefined();
     });
+
+    it("deve limpar nickMTGO e nickArena com string vazia", async () => {
+        const gateway = criarMockUsuarioGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente, nickMTGO: "old", nickArena: "old" }),
+        });
+        const uc = AtualizarUsuario.criar(gateway);
+
+        const resultado = await uc.executar({ id: "user-1", nickMTGO: "  ", nickArena: "" });
+        expect(resultado.nickMTGO).toBeUndefined();
+        expect(resultado.nickArena).toBeUndefined();
+    });
 });

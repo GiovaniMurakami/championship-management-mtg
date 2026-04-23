@@ -13,12 +13,20 @@ module.exports = {
             { tsconfig: "tsconfig.test.json", diagnostics: false },
         ],
     },
+    collectCoverageFrom: [
+        "src/casosDeUso/**/*.ts",
+        "src/dominio/entidade/**/*.ts",
+        "src/helpers/**/*.ts",
+        "src/middlewares/**/*.ts",
+        "!src/helpers/logger.ts",
+        "!src/middlewares/express/rateLimiter.ts",
+    ],
     coverageThreshold: {
         global: {
-            statements: 80,
-            branches: 80,
-            functions: 80,
-            lines: 80,
+            statements: 95,
+            branches: 85,
+            functions: 95,
+            lines: 95,
         },
     },
 };

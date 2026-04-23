@@ -55,6 +55,18 @@ describe("LogoutUsuario", () => {
         expect(blacklist.adicionar).not.toHaveBeenCalled();
     });
 
+    it("usa expiresAt padrão quando token não tem campo exp", async () => {
+        const tokenSemExp = jwt.sign({ id: "u-1", email: "a@a.com", nome: "User", role: "user" }, JWT_SECRET);
+        const blacklist = criarMockBlacklist();
+        const refreshToken = criarMockRefreshToken();
+        const casoDeUso = LogoutUsuario.criar(blacklist, refreshToken);
+
+        const resultado = await casoDeUso.executar({ token: tokenSemExp, usuarioId: "u-1" });
+
+        expect(blacklist.adicionar).toHaveBeenCalledWith(tokenSemExp, expect.any(Date));
+        expect(resultado.mensagem).toContain("sucesso");
+    });
+
     it("lanca ErroPersonalizado com 401 quando JWT_SECRET nao configurado", async () => {
         delete process.env.JWT_SECRET;
         const blacklist = criarMockBlacklist();

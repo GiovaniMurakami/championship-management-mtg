@@ -1,4 +1,4 @@
-import { signToken, verifyToken, JwtPayload } from "../../src/helpers/jwt";
+import { signToken, verifyToken, preloadJwtKeys, JwtPayload } from "../../src/helpers/jwt";
 import crypto from "crypto";
 
 const payload: JwtPayload = { id: "u-1", email: "a@a.com", nome: "Teste", role: "user" };
@@ -51,5 +51,33 @@ describe("jwt helpers", () => {
         expect(token).not.toBeNull();
         const decoded = verifyToken(token!);
         expect(decoded).toMatchObject({ id: "u-1", email: "a@a.com", role: "user" });
+    });
+
+    describe("preloadJwtKeys", () => {
+        it("carrega chaves RSA a partir de variáveis Base64", async () => {
+            const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+                modulusLength: 2048,
+                publicKeyEncoding: { type: "spki", format: "pem" },
+                privateKeyEncoding: { type: "pkcs8", format: "pem" },
+            });
+
+            process.env.JWT_PRIVATE_KEY_BASE64 = Buffer.from(privateKey).toString("base64");
+            process.env.JWT_PUBLIC_KEY_BASE64 = Buffer.from(publicKey).toString("base64");
+
+            await preloadJwtKeys();
+
+            const token = signToken(payload, "1h");
+            expect(token).not.toBeNull();
+            const decoded = verifyToken(token!);
+            expect(decoded).toMatchObject({ id: "u-1" });
+        });
+
+        it("retorna sem erro quando nenhuma variável de chave está definida", async () => {
+            await expect(preloadJwtKeys()).resolves.toBeUndefined();
+        });
+
+        it("preloadJwtKeys com vars ausentes não falha", async () => {
+            await expect(preloadJwtKeys()).resolves.toBeUndefined();
+        });
     });
 });

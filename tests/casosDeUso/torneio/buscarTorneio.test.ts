@@ -43,6 +43,25 @@ describe("BuscarTorneio", () => {
         expect(resultado.partidas[0].contestado).toBe(false);
     });
 
+    it("deve retornar null para jogador2Nome em partida BYE", async () => {
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: null, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+        ];
+        const usuarios = [new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })];
+
+        const uc = BuscarTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+
+        expect(resultado.partidas[0].jogador2Nome).toBeNull();
+        expect(resultado.partidas[0].jogador2Id).toBeNull();
+    });
+
     it("deve lançar erro se o torneio não for encontrado", async () => {
         const uc = BuscarTorneio.criar(
             criarMockTorneioGateway(),

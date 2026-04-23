@@ -1,5 +1,5 @@
 ﻿import { BuscarStandings } from "../../../src/casosDeUso/torneio/buscarStandings";
-import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGateway, criarMockUsuarioGateway, criarMockDeckGateway } from "../../mocks/gateways";
+import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGateway, criarMockUsuarioGateway, criarMockDeckGateway, criarMockTimeGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Partida } from "../../../src/dominio/entidade/partida";
@@ -40,6 +40,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -69,6 +70,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -95,6 +97,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-2" });
@@ -124,6 +127,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -139,6 +143,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         await expect(
@@ -171,6 +176,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -200,6 +206,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -232,6 +239,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -269,6 +277,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -279,6 +288,35 @@ describe("BuscarStandings", () => {
         expect(sU3.vitoriasPartida).toBe(1);
     });
 
+    it("deve preencher rodadaIniciadaEm em horário de Brasília e incluir time do membro", async () => {
+        const torneioComData = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "legacy",
+            donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 3,
+            rodadaIniciadaEm: new Date("2025-06-01T15:00:00Z"),
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
+        ];
+        const usuarios = [new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })];
+        const { Time: TimeEntidade } = require("../../../src/dominio/entidade/time");
+        const timeComMembro = new TimeEntidade({ id: "time-1", nome: "Team", donoId: "u-1", membroIds: ["u-1"] });
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioComData) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway(),
+            criarMockTimeGateway({ buscarPorMembros: jest.fn().mockResolvedValue([timeComMembro]) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+
+        expect(resultado.rodadaIniciadaEm).toBeDefined();
+        expect(resultado.rodadaIniciadaEm).toContain("-03:00");
+        expect(resultado.standings[0].time).toBeDefined();
+    });
+
     it("deve retornar standings vazios quando nÃ£o hÃ¡ inscriÃ§Ãµes", async () => {
         const uc = BuscarStandings.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
@@ -286,6 +324,7 @@ describe("BuscarStandings", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
             criarMockDeckGateway(),
+            criarMockTimeGateway(),
         );
 
         const resultado = await uc.executar({ torneioId: "t-2" });

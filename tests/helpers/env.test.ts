@@ -1,4 +1,4 @@
-import { getCorsOrigin, getFrontendUrl, isExecucaoLocal } from "../../src/helpers/env";
+import { getCorsOrigin, getFrontendUrl, isExecucaoLocal, getS3Bucket, getS3Region, getS3BaseUrl } from "../../src/helpers/env";
 
 describe("env helpers", () => {
     const originalEnv = { ...process.env };
@@ -36,5 +36,45 @@ describe("env helpers", () => {
         process.env.FRONTEND_URL = "https://app.exemplo.com";
 
         expect(getCorsOrigin()).toBe("https://app.exemplo.com");
+    });
+
+    it("IS_LOCAL=1 também é reconhecido como execução local", () => {
+        process.env.IS_LOCAL = "1";
+        expect(isExecucaoLocal()).toBe(true);
+    });
+
+    it("IS_LOCAL ausente retorna false", () => {
+        expect(isExecucaoLocal()).toBe(false);
+    });
+
+    describe("S3 helpers", () => {
+        beforeEach(() => {
+            delete process.env.AWS_S3_BUCKET;
+            delete process.env.AWS_S3_REGION;
+        });
+
+        it("getS3Bucket retorna string vazia quando não configurado", () => {
+            expect(getS3Bucket()).toBe("");
+        });
+
+        it("getS3Bucket retorna o valor do env quando configurado", () => {
+            process.env.AWS_S3_BUCKET = "meu-bucket";
+            expect(getS3Bucket()).toBe("meu-bucket");
+        });
+
+        it("getS3Region retorna us-east-1 como padrão", () => {
+            expect(getS3Region()).toBe("us-east-1");
+        });
+
+        it("getS3Region retorna o valor do env quando configurado", () => {
+            process.env.AWS_S3_REGION = "sa-east-1";
+            expect(getS3Region()).toBe("sa-east-1");
+        });
+
+        it("getS3BaseUrl monta a URL corretamente", () => {
+            process.env.AWS_S3_BUCKET = "meu-bucket";
+            process.env.AWS_S3_REGION = "us-east-1";
+            expect(getS3BaseUrl()).toBe("https://meu-bucket.s3.us-east-1.amazonaws.com");
+        });
     });
 });
