@@ -33,6 +33,23 @@
 - Nomes populados em standings e partidas
 - Notificações em tempo real via Ably (7 eventos)
 
+### [Liga](./liga.md)
+
+- Estrutura da entidade
+- Criação e gerenciamento de ligas (somente admin)
+- Associação de torneios a uma liga
+- Tipos: `individual` e `times`
+- Endpoint de ranking: jogadores, decks, cartas e times
+- Cálculo de pontuação e critérios de ordenação
+
+### [Time](./time.md)
+
+- Estrutura da entidade
+- CRUD de times e gerenciamento de membros
+- Fluxo de convite por token
+- Fluxo de solicitação com aprovação/rejeição pelo dono
+- Regras: um usuário por time, dono não pode sair
+
 ### [Imagem](./imagem.md)
 
 - Fluxo de upload via presigned URL ao S3
