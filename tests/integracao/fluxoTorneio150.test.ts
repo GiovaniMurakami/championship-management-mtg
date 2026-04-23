@@ -34,7 +34,7 @@ import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProxim
 import { BuscarStandings } from "../../src/casosDeUso/torneio/buscarStandings";
 import { DroparJogador } from "../../src/casosDeUso/torneio/droparJogador";
 
-import { criarMockEmailGateway, criarMockChatGptGateway } from "../mocks/gateways";
+import { criarMockEmailGateway, criarMockChatGptGateway, criarMockTimeGateway } from "../mocks/gateways";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -250,7 +250,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     // Lazily-constructed use cases (gateways are ready at construction time)
     const mkRegistrar = () => RegistrarResultado.criar(torneioGw, partidaGw);
     const mkProxima = () => IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
-    const mkStandings = () => BuscarStandings.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, deckGw);
+    const mkStandings = () => BuscarStandings.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, deckGw, criarMockTimeGateway());
 
     // ── 1. Setup ──────────────────────────────────────────────────────────────
 

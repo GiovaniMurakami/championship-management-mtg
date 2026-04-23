@@ -39,6 +39,33 @@ describe("ListarDecks", () => {
         expect(resultado.total).toBe(0);
     });
 
+    it("deve usar defaults quando limite e offset não são passados", async () => {
+        const deckGateway = criarMockDeckGateway();
+        const uc = ListarDecks.criar(deckGateway, criarMockUsuarioGateway());
+
+        await uc.executar({});
+
+        const chamada = (deckGateway.listar as jest.Mock).mock.calls[0][0];
+        expect(chamada.limite).toBeGreaterThan(0);
+        expect(chamada.offset).toBe(0);
+    });
+
+    it("deve usar id do usuário quando usuário não está no mapa", async () => {
+        const decks = [
+            new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-desconhecido" }),
+        ];
+        const deckGateway = criarMockDeckGateway({
+            listar: jest.fn().mockResolvedValue(decks),
+            listarTotal: jest.fn().mockResolvedValue(1),
+        });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) });
+        const uc = ListarDecks.criar(deckGateway, usuarioGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u-desconhecido" });
+
+        expect(resultado.decks[0].usuario.nome).toBe("u-desconhecido");
+    });
+
     it("deve converter filtros de data corretamente", async () => {
         const deckGateway = criarMockDeckGateway();
         const uc = ListarDecks.criar(deckGateway, criarMockUsuarioGateway());
