@@ -11,6 +11,8 @@ A documentação completa está organizada por entidade:
 - **[Usuário](./usuario.md)** - Autenticação, cadastro e gerenciamento de usuários
 - **[Deck](./deck.md)** - CRUD de decks de Magic: The Gathering
 - **[Torneio](./torneio.md)** - Criação e gerenciamento de torneios com sistema Swiss
+- **[Liga](./liga.md)** - Agrupamento de torneios e rankings consolidados (admin)
+- **[Time](./time.md)** - Criação e gerenciamento de equipes com fluxo de convite/solicitação
 
 ## Resumo dos Endpoints
 
@@ -45,6 +47,30 @@ A documentação completa está organizada por entidade:
 - `POST /torneio/:torneioId/drop` - Dropar jogador
 - `GET /torneio/:torneioId/standings` - Ver classificação atual (inclui `nome` e `deckNome`)
 - `GET /torneio/:torneioId/meu-historico` - Ver histórico de partidas do jogador autenticado
+
+### Ligas (🔒 JWT obrigatório)
+
+- `POST /liga/criar` - _(admin)_ Criar nova liga
+- `GET /liga/listar` - Listar todas as ligas
+- `GET /liga/:id` - Buscar liga por ID
+- `PUT /liga/:id` - _(admin)_ Atualizar liga
+- `DELETE /liga/:id` - _(admin)_ Excluir liga
+- `GET /liga/:id/ranking` - Ranking da liga (jogadores, decks, cartas; times se `tipo=times`)
+
+### Times (🔒 JWT obrigatório)
+
+- `POST /time/criar` - Criar novo time
+- `GET /time/listar` - Listar todos os times
+- `GET /time/:id` - Buscar time por ID
+- `PUT /time/:id` - _(dono)_ Atualizar time
+- `DELETE /time/:id` - _(dono)_ Excluir time
+- `POST /time/:id/entrar` - Entrar no time diretamente
+- `POST /time/:id/sair` - Sair do time
+- `POST /time/:id/gerar-convite` - _(dono)_ Gerar token de convite
+- `POST /time/:id/entrar-por-convite` - Entrar via token de convite
+- `POST /time/:id/solicitar` - Solicitar entrada no time
+- `POST /time/:id/aprovar` - _(dono)_ Aprovar solicitação
+- `POST /time/:id/rejeitar` - _(dono)_ Rejeitar solicitação
 
 > **⚠️ Importante:** Todos os endpoints marcados com 🔒 requerem token JWT no header `Authorization: Bearer {token}`
 
