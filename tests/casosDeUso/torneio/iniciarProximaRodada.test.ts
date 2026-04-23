@@ -419,4 +419,129 @@ describe("IniciarProximaRodada", () => {
             uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false })
         ).rejects.toMatchObject({ status: 400 });
     });
+
+    it("deve reconhecer vitória do jogador2 em partida de corte", async () => {
+        const torneioEmCorte = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
+            corteTop: 4, emCorte: true,
+        });
+        const inscricoesCorte = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false }),
+        ];
+        const todasPartidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 1, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            // Semifinais: jogador2 vence em ambas as partidas
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-4", vitoriasJogador1: 0, vitoriasJogador2: 2, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 3, jogador1Id: "u-3", jogador2Id: "u-2", vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" }),
+        ];
+        const partidasSemis = todasPartidas.filter(p => p.rodada === 3);
+
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesCorte) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasSemis),
+                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.emCorte).toBe(true);
+            expect(resultado.partidas).toHaveLength(1);
+            const finalistas = [resultado.partidas[0].jogador1Id, resultado.partidas[0].jogador2Id];
+            expect(finalistas).toContain("u-4");
+            expect(finalistas).toContain("u-2");
+        }
+    });
+
+    it("deve usar tiebreaker por ranking em empate em partida de corte", async () => {
+        const torneioEmCorte = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
+            corteTop: 4, emCorte: true,
+        });
+        const inscricoesCorte = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false }),
+        ];
+        const todasPartidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 1, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            // Semifinais: empate (draw) em ambas — tiebreaker por ranking
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-4", vitoriasJogador1: 0, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 3, jogador1Id: "u-2", jogador2Id: "u-3", vitoriasJogador1: 0, vitoriasJogador2: 0, status: "finalizada" }),
+        ];
+        const partidasSemis = todasPartidas.filter(p => p.rodada === 3);
+
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesCorte) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasSemis),
+                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.emCorte).toBe(true);
+            expect(resultado.partidas).toHaveLength(1);
+        }
+    });
+
+    it("deve rastrear jogador que recebeu BYE por vitória em rodada anterior", async () => {
+        // Partidas históricas incluem um BYE vencido — cobre o else if de jaRecebeuBye
+        const torneioRodada2 = new Torneio({
+            ...torneio, rodadaAtual: 2, totalRodadas: 3,
+        });
+        const inscricoesRodada2 = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false }),
+        ];
+        // Histórico: u-1 recebeu BYE na rodada 1 (jogador2Id null, venceu)
+        const historicoComBye = [
+            new Partida({ id: "pb", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: null, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 1, jogador1Id: "u-2", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 2, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+        ];
+        const partidasRodada2Atual = historicoComBye.filter(p => p.rodada === 2);
+
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRodada2) });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesRodada2) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada2Atual),
+                listarPorTorneio: jest.fn().mockResolvedValue(historicoComBye),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.rodadaAtual).toBe(3);
+            expect(resultado.partidas).toHaveLength(2);
+        }
+    });
 });

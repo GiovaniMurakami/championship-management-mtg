@@ -80,4 +80,35 @@ describe("Torneio", () => {
             expect(t1.id).not.toBe(t2.id);
         });
     });
+
+    describe("máquina de estados", () => {
+        it("avancarParaEmAndamento lança erro se status não for inscricoes_abertas", () => {
+            const t = Torneio.criar({ nome: "T", horario: new Date(), formato: "f", donoId: "u" });
+            t.status = "em_andamento";
+            expect(() => t.avancarParaEmAndamento(1, 3)).toThrow("Transição inválida");
+        });
+
+        it("avancarRodada lança erro se status não for em_andamento", () => {
+            const t = Torneio.criar({ nome: "T", horario: new Date(), formato: "f", donoId: "u" });
+            expect(() => t.avancarRodada(2)).toThrow("Transição inválida");
+        });
+
+        it("entrarEmCorte lança erro se status não for em_andamento", () => {
+            const t = Torneio.criar({ nome: "T", horario: new Date(), formato: "f", donoId: "u" });
+            expect(() => t.entrarEmCorte(1, 2)).toThrow("Transição inválida");
+        });
+
+        it("finalizar lança erro se status não for em_andamento", () => {
+            const t = Torneio.criar({ nome: "T", horario: new Date(), formato: "f", donoId: "u" });
+            expect(() => t.finalizar()).toThrow("Transição inválida");
+        });
+
+        it("avancarRodada atualiza totalRodadas quando fornecido", () => {
+            const t = Torneio.criar({ nome: "T", horario: new Date(), formato: "f", donoId: "u" });
+            t.avancarParaEmAndamento(1, 3);
+            t.avancarRodada(2, 5);
+            expect(t.rodadaAtual).toBe(2);
+            expect(t.totalRodadas).toBe(5);
+        });
+    });
 });
