@@ -1,6 +1,8 @@
 import { Time } from "../../dominio/entidade/time";
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { StatusErro } from "../../helpers/error/statusErro";
 
 export type CriarTimeInputDto = {
     nome: string;
@@ -27,6 +29,14 @@ export class CriarTime implements CasoDeUso<CriarTimeInputDto, CriarTimeOutputDt
     }
 
     public async executar(input: CriarTimeInputDto): Promise<CriarTimeOutputDto> {
+        const timesDoUsuario = await this.timeGateway.buscarPorMembros([input.donoId]);
+        if (timesDoUsuario.length > 0) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Você já faz parte de um time. Saia dele antes de criar outro.",
+                status: StatusErro.erroParametro,
+            });
+        }
+
         const time = Time.criar({
             nome: input.nome.trim(),
             descricao: input.descricao?.trim(),
