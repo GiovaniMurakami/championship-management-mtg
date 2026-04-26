@@ -9,6 +9,7 @@ const LIMITE_PADRAO_DECKS = 20;
 export type ListarDecksInputDto = {
   usuarioId?: string;
   formato?: string;
+  nome?: string;
   criadoApos?: string; // ISO string
   criadoAntes?: string; // ISO string
   limite?: number;
@@ -50,12 +51,13 @@ export class ListarDecks
     const filtros: FiltrosListarDecks = { limite, offset };
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
     if (input.formato) filtros.formato = input.formato;
+    if (input.nome) filtros.nome = input.nome;
     if (input.criadoApos) filtros.criadoApos = new Date(input.criadoApos);
     if (input.criadoAntes) filtros.criadoAntes = new Date(input.criadoAntes);
 
     const [decks, total] = await Promise.all([
       this.deckGateway.listar(filtros),
-      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, formato: filtros.formato }),
+      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, formato: filtros.formato, nome: filtros.nome }),
     ]);
 
     const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];

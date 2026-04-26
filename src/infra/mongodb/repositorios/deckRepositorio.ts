@@ -110,6 +110,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
     if (filtros.formato) query.formato = { $regex: this.escaparRegex(filtros.formato), $options: "i" };
+    if (filtros.nome) query.nome = { $regex: this.escaparRegex(filtros.nome), $options: "i" };
     if (filtros.criadoApos || filtros.criadoAntes) {
       query.criadoEm = {};
       if (filtros.criadoApos) query.criadoEm.$gte = filtros.criadoApos;
