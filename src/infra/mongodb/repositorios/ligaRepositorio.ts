@@ -76,16 +76,29 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
 
   public async listar(filtros: FiltrosListarLigas = {}): Promise<Liga[]> {
     await this.conectar();
-    let find = LigaModel.find().sort({ criadoEm: -1 });
+    const filtroQuery: Record<string, unknown> = {};
+    if (filtros.tipo) filtroQuery.tipo = filtros.tipo;
+    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+    let find = LigaModel.find(filtroQuery).sort({ criadoEm: -1 });
     if (filtros.offset !== undefined) find = find.skip(filtros.offset);
     if (filtros.limite !== undefined) find = find.limit(filtros.limite);
     const docs = await find;
     return docs.map((doc) => docParaLiga(doc as unknown as LigaDocument));
   }
 
-  public async listarTotal(): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarLigas, 'tipo' | 'nome'> = {}): Promise<number> {
     await this.conectar();
-    return LigaModel.countDocuments();
+    const filtroQuery: Record<string, unknown> = {};
+    if (filtros.tipo) filtroQuery.tipo = filtros.tipo;
+    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+    return LigaModel.countDocuments(filtroQuery);
+  }
+
+  public async buscarPorTorneioIds(torneioIds: string[]): Promise<Liga[]> {
+    if (torneioIds.length === 0) return [];
+    await this.conectar();
+    const docs = await LigaModel.find({ torneioIds: { $in: torneioIds } }).sort({ criadoEm: -1 });
+    return docs.map((doc) => docParaLiga(doc as unknown as LigaDocument));
   }
 
   public async atualizar(liga: Liga): Promise<void> {

@@ -27,10 +27,11 @@ export class ListarTimesRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset } = request.query as Record<string, string | undefined>;
+        const { limite, offset, nome } = request.query as Record<string, string | undefined>;
         const resultado = await this.listarTimesServico.executar({
           limite: limite !== undefined ? Number(limite) : undefined,
           offset: offset !== undefined ? Number(offset) : undefined,
+          nome,
         });
         response.status(200).json(resultado);
       } catch (error) {

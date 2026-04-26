@@ -27,10 +27,12 @@ export class ListarLigasRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset } = request.query as Record<string, string | undefined>;
+        const { limite, offset, tipo, nome } = request.query as Record<string, string | undefined>;
         const resultado = await this.listarLigasServico.executar({
           limite: limite !== undefined ? Number(limite) : undefined,
           offset: offset !== undefined ? Number(offset) : undefined,
+          tipo: tipo as Parameters<typeof this.listarLigasServico.executar>[0]["tipo"],
+          nome,
         });
         response.status(200).json(resultado);
       } catch (error) {

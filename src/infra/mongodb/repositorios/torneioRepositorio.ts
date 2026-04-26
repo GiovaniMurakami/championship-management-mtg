@@ -131,6 +131,8 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
     if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    if (filtros.status) filtroQuery.status = filtros.status;
+    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
     let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1 });
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
@@ -138,10 +140,12 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     return docs.map((doc) => docParaTorneio(doc as unknown as TorneioDocument));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarTorneios, 'incluirSecretos'> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarTorneios, 'incluirSecretos' | 'status' | 'nome'> = {}): Promise<number> {
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
     if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    if (filtros.status) filtroQuery.status = filtros.status;
+    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
     return TorneioModel.countDocuments(filtroQuery);
   }
 

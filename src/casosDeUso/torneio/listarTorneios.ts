@@ -1,11 +1,14 @@
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
+import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 
 export type ListarTorneiosInputDto = {
   usuarioId: string;
   limite?: number;
   offset?: number;
+  status?: StatusTorneio;
+  nome?: string;
 };
 
 export type ListarTorneiosOutputDto = {
@@ -48,10 +51,10 @@ export class ListarTorneios
     return new ListarTorneios(torneioGateway, inscricaoGateway);
   }
 
-  public async executar({ usuarioId, limite = 20, offset = 0 }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+  public async executar({ usuarioId, limite = 20, offset = 0, status, nome }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
     const [torneios, total, inscricoes] = await Promise.all([
-      this.torneioGateway.listar({ limite, offset, incluirSecretos: false }),
-      this.torneioGateway.listarTotal({ incluirSecretos: false }),
+      this.torneioGateway.listar({ limite, offset, incluirSecretos: false, status, nome }),
+      this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome }),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
 

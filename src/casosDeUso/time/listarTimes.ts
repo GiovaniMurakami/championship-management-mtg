@@ -1,9 +1,13 @@
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { CasoDeUso } from "../casoDeUso";
 
+const LIMITE_MAXIMO_TIMES = 100;
+const LIMITE_PADRAO_TIMES = 20;
+
 export type ListarTimesInputDto = {
     limite?: number;
     offset?: number;
+    nome?: string;
 };
 
 export type ListarTimesOutputDto = {
@@ -16,6 +20,9 @@ export type ListarTimesOutputDto = {
         membroIds: string[];
         criadoEm: Date;
     }>;
+    total: number;
+    limite: number;
+    offset: number;
 };
 
 export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOutputDto> {
@@ -26,9 +33,15 @@ export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOu
     }
 
     public async executar(input: ListarTimesInputDto): Promise<ListarTimesOutputDto> {
-        let times = await this.timeGateway.listar();
-        if (input.offset !== undefined) times = times.slice(input.offset);
-        if (input.limite !== undefined) times = times.slice(0, input.limite);
+        const limite = Math.min(input.limite ?? LIMITE_PADRAO_TIMES, LIMITE_MAXIMO_TIMES);
+        const offset = Math.max(input.offset ?? 0, 0);
+        const { nome } = input;
+
+        const [times, total] = await Promise.all([
+            this.timeGateway.listar({ limite, offset, nome }),
+            this.timeGateway.listarTotal({ nome }),
+        ]);
+
         return {
             times: times.map((t) => ({
                 id: t.id,
@@ -39,6 +52,9 @@ export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOu
                 membroIds: t.membroIds,
                 criadoEm: t.criadoEm,
             })),
+            total,
+            limite,
+            offset,
         };
     }
 }

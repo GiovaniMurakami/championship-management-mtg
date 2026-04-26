@@ -1,4 +1,5 @@
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
+import { TipoLiga } from "../../dominio/entidade/liga";
 import { CasoDeUso } from "../casoDeUso";
 
 const LIMITE_MAXIMO_LIGAS = 100;
@@ -7,6 +8,8 @@ const LIMITE_PADRAO_LIGAS = 20;
 export type ListarLigasInputDto = {
   limite?: number;
   offset?: number;
+  tipo?: TipoLiga;
+  nome?: string;
 };
 
 export type ListarLigasOutputDto = {
@@ -33,10 +36,11 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
   public async executar(input: ListarLigasInputDto): Promise<ListarLigasOutputDto> {
     const limite = Math.min(input.limite ?? LIMITE_PADRAO_LIGAS, LIMITE_MAXIMO_LIGAS);
     const offset = Math.max(input.offset ?? 0, 0);
+    const { tipo, nome } = input;
 
     const [ligas, total] = await Promise.all([
-      this.ligaGateway.listar({ limite, offset }),
-      this.ligaGateway.listarTotal(),
+      this.ligaGateway.listar({ limite, offset, tipo, nome }),
+      this.ligaGateway.listarTotal({ tipo, nome }),
     ]);
 
     return {
