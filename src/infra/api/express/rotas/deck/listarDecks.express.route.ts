@@ -40,11 +40,12 @@ export class ListarDecksRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { usuarioId, formato, criadoApos, criadoAntes, limite, offset } = request.query as Record<string, string | undefined>;
+        const { usuarioId, formato, nome, criadoApos, criadoAntes, limite, offset } = request.query as Record<string, string | undefined>;
 
         const resultado = await this.listarDecksServico.executar({
           usuarioId,
           formato,
+          nome,
           criadoApos,
           criadoAntes,
           limite: limite !== undefined ? Number(limite) : undefined,

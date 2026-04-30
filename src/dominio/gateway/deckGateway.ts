@@ -3,6 +3,7 @@ import { Deck } from "../entidade/deck";
 export interface FiltrosListarDecks {
   usuarioId?: string;
   formato?: string;
+  nome?: string;
   criadoApos?: Date;
   criadoAntes?: Date;
   limite?: number;
@@ -15,7 +16,7 @@ export interface DeckGateway {
   buscarVarios(ids: string[]): Promise<Deck[]>;
   listarPorUsuario(usuarioId: string): Promise<Deck[]>;
   listar(filtros: FiltrosListarDecks): Promise<Deck[]>;
-  listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "formato">): Promise<number>;
+  listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "formato" | "nome">): Promise<number>;
   atualizar(deck: Deck): Promise<void>;
   excluir(id: string): Promise<void>;
 }

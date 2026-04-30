@@ -80,4 +80,62 @@ describe("jwt helpers", () => {
             await expect(preloadJwtKeys()).resolves.toBeUndefined();
         });
     });
+    describe("preloadJwtKeys com SSM", () => {
+        afterEach(() => {
+            jest.dontMock("@aws-sdk/client-ssm");
+            jest.resetModules();
+            delete process.env.JWT_SSM_PRIVATE_KEY_PARAM;
+            delete process.env.JWT_SSM_PUBLIC_KEY_PARAM;
+            delete process.env.JWT_SECRET;
+            process.env.NODE_ENV = originalEnv.NODE_ENV;
+        });
+
+        it("carrega chaves RSA a partir do SSM", async () => {
+            const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+                modulusLength: 2048,
+                publicKeyEncoding: { type: "spki", format: "pem" },
+                privateKeyEncoding: { type: "pkcs8", format: "pem" },
+            });
+            jest.resetModules();
+            jest.doMock("@aws-sdk/client-ssm", () => ({
+                SSMClient: jest.fn().mockImplementation(() => ({
+                    send: jest.fn((cmd) => Promise.resolve({
+                        Parameter: {
+                            Value: cmd.input.Name.includes("private") ? privateKey : publicKey,
+                        },
+                    })),
+                })),
+                GetParameterCommand: jest.fn().mockImplementation((input) => ({ input })),
+            }));
+            process.env.JWT_SSM_PRIVATE_KEY_PARAM = "/jwt/private";
+            process.env.JWT_SSM_PUBLIC_KEY_PARAM = "/jwt/public";
+            const jwtHelpers = require("../../src/helpers/jwt") as typeof import("../../src/helpers/jwt");
+
+            await jwtHelpers.preloadJwtKeys();
+            const token = jwtHelpers.signToken(payload, "1h");
+
+            expect(token).not.toBeNull();
+            expect(jwtHelpers.verifyToken(token!)).toMatchObject({ id: "u-1" });
+        });
+
+        it("retorna null em producao quando SSM falha e nao ha chaves carregadas", async () => {
+            jest.resetModules();
+            jest.doMock("@aws-sdk/client-ssm", () => ({
+                SSMClient: jest.fn().mockImplementation(() => ({
+                    send: jest.fn().mockRejectedValue(new Error("ssm indisponivel")),
+                })),
+                GetParameterCommand: jest.fn().mockImplementation((input) => ({ input })),
+            }));
+            process.env.NODE_ENV = "production";
+            process.env.JWT_SECRET = "segredo-prod-nao-deve-ser-usado";
+            process.env.JWT_SSM_PRIVATE_KEY_PARAM = "/jwt/private";
+            process.env.JWT_SSM_PUBLIC_KEY_PARAM = "/jwt/public";
+            const jwtHelpers = require("../../src/helpers/jwt") as typeof import("../../src/helpers/jwt");
+
+            await jwtHelpers.preloadJwtKeys();
+
+            expect(jwtHelpers.signToken(payload, "1h")).toBeNull();
+            expect(jwtHelpers.verifyToken("token.invalido")).toBeNull();
+        });
+    });
 });

@@ -5,12 +5,14 @@ import {
     criarMockInscricaoGateway,
     criarMockDeckGateway,
     criarMockUsuarioGateway,
+    criarMockTimeGateway,
 } from "../../mocks/gateways";
 import { Liga } from "../../../src/dominio/entidade/liga";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Deck } from "../../../src/dominio/entidade/deck";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { Time } from "../../../src/dominio/entidade/time";
 
 describe("RankingLiga", () => {
     const liga = new Liga({
@@ -306,5 +308,220 @@ describe("RankingLiga", () => {
         const resultado = await uc.executar({ ligaId: "liga-1" });
 
         expect(resultado.rankingJogadores).toHaveLength(0);
+    });
+
+    it("deve calcular bye como vitória, empate ou derrota apenas para jogador1", async () => {
+        const partidas = [
+            new Partida({
+                id: "bye-vitoria",
+                torneioId: "torneio-1",
+                rodada: 1,
+                jogador1Id: "user-1",
+                jogador2Id: null,
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 0,
+                status: "finalizada",
+            }),
+            new Partida({
+                id: "bye-empate",
+                torneioId: "torneio-1",
+                rodada: 2,
+                jogador1Id: "user-2",
+                jogador2Id: null,
+                vitoriasJogador1: 1,
+                vitoriasJogador2: 1,
+                status: "finalizada",
+            }),
+            new Partida({
+                id: "bye-derrota",
+                torneioId: "torneio-1",
+                rodada: 3,
+                jogador1Id: "user-3",
+                jogador2Id: null,
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 1,
+                status: "finalizada",
+            }),
+        ];
+        const usuario3 = new Usuario({ id: "user-3", nome: "Carol", email: "c@c.com", senha: "hash" });
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
+            criarMockInscricaoGateway(),
+            criarMockDeckGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway()
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-1" });
+
+        const alice = resultado.rankingJogadores.find((r) => r.jogador.id === "user-1")!;
+        const bob = resultado.rankingJogadores.find((r) => r.jogador.id === "user-2")!;
+        const carol = resultado.rankingJogadores.find((r) => r.jogador.id === "user-3")!;
+        expect(alice.vitorias).toBe(1);
+        expect(alice.pontos).toBe(3);
+        expect(bob.empates).toBe(1);
+        expect(bob.pontos).toBe(1);
+        expect(carol.derrotas).toBe(1);
+        expect(carol.pontos).toBe(0);
+    });
+
+    it("deve calcular ranking por times agregando estatísticas dos membros", async () => {
+        const ligaTimes = new Liga({
+            id: "liga-times",
+            nome: "Liga Times",
+            donoId: "user-admin",
+            torneioIds: ["torneio-1"],
+            tipo: "times",
+        });
+        const partida = new Partida({
+            id: "partida-1",
+            torneioId: "torneio-1",
+            rodada: 1,
+            jogador1Id: "user-1",
+            jogador2Id: "user-2",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", timeId: "time-1" }),
+            new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", timeId: "time-2" }),
+            new Inscricao({ id: "i-3", torneioId: "torneio-1", usuarioId: "sem-stats", timeId: "time-1" }),
+            new Inscricao({ id: "i-4", torneioId: "torneio-1", usuarioId: "sem-time" }),
+        ];
+        const times = [
+            new Time({ id: "time-1", nome: "Alpha", donoId: "user-1" }),
+            new Time({ id: "time-2", nome: "Beta", donoId: "user-2" }),
+        ];
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockDeckGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue(times) })
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-times", limiteJogadores: 1 });
+
+        expect(resultado.tipo).toBe("times");
+        expect(resultado.totalTimes).toBe(2);
+        expect(resultado.rankingTimes).toEqual([
+            {
+                posicao: 1,
+                time: { id: "time-1", nome: "Alpha" },
+                vitorias: 1,
+                derrotas: 0,
+                empates: 0,
+                pontos: 3,
+            },
+        ]);
+    });
+
+    it("deve usar nomes desconhecidos quando usuário, time ou deck não forem encontrados", async () => {
+        const ligaTimes = new Liga({
+            id: "liga-times",
+            nome: "Liga Times",
+            donoId: "user-admin",
+            torneioIds: ["torneio-1"],
+            tipo: "times",
+        });
+        const partida = new Partida({
+            id: "partida-1",
+            torneioId: "torneio-1",
+            rodada: 1,
+            jogador1Id: "user-1",
+            jogador2Id: "user-2",
+            deckJogador1Id: "deck-nao-encontrado",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", timeId: "time-sem-nome" }),
+        ];
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
+            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue([]) })
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-times" });
+
+        expect(resultado.rankingJogadores[0].jogador.nome).toBe("Desconhecido");
+        expect(resultado.rankingDecks[0].nome).toBe("deck-nao-encontrado");
+        expect(resultado.rankingTimes![0].time.nome).toBe("Desconhecido");
+    });
+
+    it("deve acumular usos do mesmo deck e agrupar decks pelo mesmo nome consolidado", async () => {
+        const usuario3 = new Usuario({ id: "user-3", nome: "Carol", email: "c@c.com", senha: "hash" });
+        const deck3 = new Deck({
+            id: "deck-3",
+            nome: "Burn Variant",
+            nomeConsolidado: "Boros Burn",
+            formato: "modern",
+            maindeck: [{ nome: "lightning bolt", quantidade: 4 }],
+            sideboard: [],
+            usuarioId: "user-3",
+        });
+        const partidas = [
+            new Partida({
+                id: "partida-1",
+                torneioId: "torneio-1",
+                rodada: 1,
+                jogador1Id: "user-1",
+                jogador2Id: "user-2",
+                deckJogador1Id: "deck-1",
+                deckJogador2Id: "deck-2",
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 2,
+                status: "finalizada",
+            }),
+            new Partida({
+                id: "partida-2",
+                torneioId: "torneio-1",
+                rodada: 2,
+                jogador1Id: "user-1",
+                jogador2Id: "user-3",
+                deckJogador1Id: "deck-1",
+                deckJogador2Id: "deck-3",
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 0,
+                status: "finalizada",
+            }),
+            new Partida({
+                id: "partida-3",
+                torneioId: "torneio-1",
+                rodada: 3,
+                jogador1Id: "user-1",
+                jogador2Id: "user-3",
+                deckJogador1Id: "deck-1",
+                deckJogador2Id: "deck-3",
+                vitoriasJogador1: 1,
+                vitoriasJogador2: 1,
+                status: "finalizada",
+            }),
+        ];
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
+            criarMockInscricaoGateway(),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2, deck3]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway()
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-1" });
+
+        const boros = resultado.rankingDecks.find((d) => d.nome === "Boros Burn")!;
+        expect(boros.totalUsos).toBe(5);
+        expect(boros.vitorias).toBe(1);
+        expect(boros.derrotas).toBe(2);
+        expect(boros.empates).toBe(2);
+        expect(resultado.rankingJogadores.find((r) => r.jogador.id === "user-2")!.vitorias).toBe(1);
     });
 });
