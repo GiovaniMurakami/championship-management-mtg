@@ -62,7 +62,33 @@ describe("ListarTorneios", () => {
 
         await uc.executar({ usuarioId: "u1", limite: 5, offset: 10 });
 
-        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10, incluirSecretos: false });
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ limite: 5, offset: 10, incluirSecretos: false }));
+    });
+
+    it("deve repassar filtro por data de inicio e fim ao gateway", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarTotalMock = jest.fn().mockResolvedValue(0);
+        const torneioGateway = criarMockTorneioGateway({
+            listar: listarMock,
+            listarTotal: listarTotalMock,
+        });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+        const dataInicio = new Date("2026-04-01T00:00:00.000Z");
+        const dataFim = new Date("2026-04-30T23:59:59.999Z");
+
+        await uc.executar({ usuarioId: "u1", dataInicio, dataFim });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({
+            incluirSecretos: false,
+            dataInicio,
+            dataFim,
+        }));
+        expect(listarTotalMock).toHaveBeenCalledWith(expect.objectContaining({
+            incluirSecretos: false,
+            dataInicio,
+            dataFim,
+        }));
     });
 
     it("nÃ£o deve incluir torneios secretos na listagem pÃºblica", async () => {

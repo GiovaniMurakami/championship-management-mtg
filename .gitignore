@@ -6,4 +6,6 @@ dist/
 *.js.map
 package-lock.json
 .claude
+.codex
+coverage
 copilot-instructions.md

@@ -35,7 +35,7 @@ A documentação completa está organizada por entidade:
 ### Torneios (🔒 JWT obrigatório)
 
 - `POST /torneio/criar` - Criar novo torneio (aceita campo opcional `premio`)
-- `GET /torneio/listar` - Listar todos os torneios
+- `GET /torneio/listar` - Listar todos os torneios (aceita `?dataInicio=YYYY-MM-DD&dataFim=YYYY-MM-DD` para filtrar pelo `horario`)
 - `GET /torneio/:torneioId` - Buscar torneio por ID (inclui `partidas` com nomes, `totalInscritos`, `totalCheckin`)
 - `GET /torneio/:torneioId/partidas` - Listar partidas do torneio com IDs e nomes dos jogadores (aceita `?rodada=N`)
 - `POST /torneio/:torneioId/inscrever` - Inscrever-se em um torneio

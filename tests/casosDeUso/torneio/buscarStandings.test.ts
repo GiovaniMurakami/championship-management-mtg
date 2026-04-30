@@ -331,5 +331,80 @@ describe("BuscarStandings", () => {
 
         expect(resultado.standings).toHaveLength(0);
     });
+
+    it("deve resolver nomes por nick MTGO e nome de deck consolidado na fase de inscricoes", async () => {
+        const torneioNickMtgo = new Torneio({
+            id: "t-nick", nome: "T", horario: new Date(), formato: "legacy",
+            donoId: "d", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
+            exibirNomeJogador: "nickMOL",
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-nick", usuarioId: "u-1", deckId: "d-1", checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-nick", usuarioId: "u-2", deckId: "d-2", checkInRodada: -1, dropped: true }),
+        ];
+        const usuarios = [
+            new Usuario({ id: "u-1", nome: "Nome 1", email: "u1@e.com", senha: "s", nickMTGO: "mtgo-1" }),
+            new Usuario({ id: "u-2", nome: "Nome 2", email: "u2@e.com", senha: "s" }),
+        ];
+        const decks = [
+            new Deck({ id: "d-1", nome: "Burn", nomeConsolidado: "Boros Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-1" }),
+        ];
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNickMtgo) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockTimeGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-nick" });
+
+        expect(resultado.standings[0].usuario.nome).toBe("mtgo-1");
+        expect(resultado.standings[0].deckNome).toBe("Boros Burn");
+        expect(resultado.standings[1].usuario.nome).toBe("Nome 2");
+        expect(resultado.standings[1].deckNome).toBeNull();
+        expect(resultado.standings[1].dropped).toBe(true);
+    });
+
+    it("deve resolver nomes por nick Arena e fallback para id quando usuario nao for encontrado", async () => {
+        const torneioNickArena = new Torneio({
+            id: "t-arena", nome: "T", horario: new Date(), formato: "legacy",
+            donoId: "d", status: "finalizado", rodadaAtual: 2, totalRodadas: 2,
+            exibirNomeJogador: "nickArena",
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-arena", usuarioId: "u-1", deckId: "d-1", checkInRodada: 1, dropped: false }),
+        ];
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "t-arena", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 0, vitoriasJogador2: 2, status: "finalizada" }),
+        ];
+        const usuarios = [
+            new Usuario({ id: "u-1", nome: "Nome 1", email: "u1@e.com", senha: "s", nickArena: "arena-1" }),
+        ];
+        const decks = [
+            new Deck({ id: "d-1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-1" }),
+        ];
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNickArena) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockTimeGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-arena" });
+
+        const jogadorComUsuario = resultado.standings.find((s) => s.usuario.id === "u-1")!;
+        const jogadorSemUsuario = resultado.standings.find((s) => s.usuario.id === "u-2")!;
+        expect(jogadorComUsuario.usuario.nome).toBe("arena-1");
+        expect(jogadorComUsuario.deckNome).toBe("Burn");
+        expect(jogadorSemUsuario.usuario.nome).toBe("u-2");
+        expect(jogadorSemUsuario.checkInRodada).toBe(-1);
+        expect(jogadorSemUsuario.dropped).toBe(false);
+    });
 });
 

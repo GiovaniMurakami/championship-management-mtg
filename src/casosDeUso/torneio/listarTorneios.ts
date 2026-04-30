@@ -9,6 +9,8 @@ export type ListarTorneiosInputDto = {
   offset?: number;
   status?: StatusTorneio;
   nome?: string;
+  dataInicio?: Date;
+  dataFim?: Date;
 };
 
 export type ListarTorneiosOutputDto = {
@@ -51,10 +53,18 @@ export class ListarTorneios
     return new ListarTorneios(torneioGateway, inscricaoGateway);
   }
 
-  public async executar({ usuarioId, limite = 20, offset = 0, status, nome }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+  public async executar({
+    usuarioId,
+    limite = 20,
+    offset = 0,
+    status,
+    nome,
+    dataInicio,
+    dataFim,
+  }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
     const [torneios, total, inscricoes] = await Promise.all([
-      this.torneioGateway.listar({ limite, offset, incluirSecretos: false, status, nome }),
-      this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome }),
+      this.torneioGateway.listar({ limite, offset, incluirSecretos: false, status, nome, dataInicio, dataFim }),
+      this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
 

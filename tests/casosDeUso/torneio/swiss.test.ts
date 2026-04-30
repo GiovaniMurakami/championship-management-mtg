@@ -461,4 +461,42 @@ describe("Swiss - gerarPareamentos", () => {
         const todosIds = pares.flatMap((p) => [p.jogador1Id, p.jogador2Id]);
         expect(new Set(todosIds).size).toBe(6);
     });
+
+    it("deve contabilizar bye empatado", () => {
+        const partidas = [
+            criarPartida({ jogador1Id: "j1", jogador2Id: null as unknown as string, vitoriasJogador1: 1, vitoriasJogador2: 1 }),
+        ];
+
+        const stats = calcularEstatisticas(["j1"], partidas);
+        const s = stats.get("j1")!;
+
+        expect(s.pontosMesa).toBe(1);
+        expect(s.empatesPartida).toBe(1);
+        expect(s.derrotasPartida).toBe(0);
+    });
+
+    it("deve ignorar partida finalizada de jogador fora da lista de estatisticas", () => {
+        const partidas = [
+            criarPartida({ jogador1Id: "j-fora", jogador2Id: "j2", vitoriasJogador1: 2, vitoriasJogador2: 0 }),
+        ];
+
+        const stats = calcularEstatisticas(["j1"], partidas);
+
+        expect(stats.get("j1")!.totalPartidasJogadas).toBe(0);
+        expect(stats.has("j-fora")).toBe(false);
+    });
+
+    it("deve manter bye repetido quando nao ha candidato para troca", () => {
+        const jogadores: EstatisticasJogador[] = [
+            { usuarioId: "j1", pontosMesa: 6, vitoriasPartida: 2, empatesPartida: 0, derrotasPartida: 0, totalPartidasJogadas: 2, vitoriasJogo: 4, totalJogosJogados: 4, oponentesIds: [] },
+            { usuarioId: "j2", pontosMesa: 3, vitoriasPartida: 1, empatesPartida: 0, derrotasPartida: 1, totalPartidasJogadas: 2, vitoriasJogo: 2, totalJogosJogados: 4, oponentesIds: [] },
+            { usuarioId: "j3", pontosMesa: 0, vitoriasPartida: 0, empatesPartida: 0, derrotasPartida: 2, totalPartidasJogadas: 2, vitoriasJogo: 0, totalJogosJogados: 4, oponentesIds: [] },
+        ];
+
+        const pares = gerarPareamentos(jogadores, new Set(), new Set(["j1", "j2", "j3"]));
+
+        const byes = pares.filter((p) => p.jogador2Id === null);
+        expect(byes).toHaveLength(1);
+        expect(byes[0].jogador1Id).toBe("j3");
+    });
 });
