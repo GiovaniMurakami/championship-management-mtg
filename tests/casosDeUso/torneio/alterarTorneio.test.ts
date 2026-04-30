@@ -157,4 +157,37 @@ describe("AlterarTorneio", () => {
         expect(resultado.secreto).toBe(true);
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
+
+    it("deve limpar campos textuais opcionais quando receber null em runtime", async () => {
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue({
+                ...torneioExistente,
+                premio: "Premio",
+                bannerUrl: "https://example.com/banner.jpg",
+                linkBanner: "https://example.com",
+                somRodada: "https://example.com/som.mp3",
+                linkLive: "https://twitch.tv/example",
+            }),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "torneio-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            premio: null,
+            bannerUrl: null,
+            linkBanner: null,
+            somRodada: null,
+            linkLive: null,
+            exibirNomeJogador: "nickArena",
+        } as any);
+
+        expect(resultado.premio).toBeUndefined();
+        expect(resultado.bannerUrl).toBeUndefined();
+        expect(resultado.linkBanner).toBeUndefined();
+        expect(resultado.somRodada).toBeUndefined();
+        expect(resultado.linkLive).toBeUndefined();
+        expect(resultado.exibirNomeJogador).toBe("nickArena");
+    });
 });

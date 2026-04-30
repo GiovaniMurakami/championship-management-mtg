@@ -41,6 +41,14 @@ export class EntrarTime implements CasoDeUso<EntrarTimeInputDto, EntrarTimeOutpu
             });
         }
 
+        const timesDoUsuario = await this.timeGateway.buscarPorMembros([input.usuarioId]);
+        if (timesDoUsuario.length > 0) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Você já faz parte de um time. Saia dele antes de entrar em outro.",
+                status: StatusErro.erroParametro,
+            });
+        }
+
         const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
         if (!usuario) {
             throw ErroPersonalizado.criar({

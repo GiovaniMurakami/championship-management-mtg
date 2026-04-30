@@ -21,7 +21,7 @@ describe("AlterarTime", () => {
         expect(timeGateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("deve alterar pelo admin mesmo não sendo dono", async () => {
+    it("deve alterar pelo admin mesmo nao sendo dono", async () => {
         const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
         const uc = AlterarTime.criar(timeGateway);
 
@@ -30,7 +30,7 @@ describe("AlterarTime", () => {
         ).resolves.toMatchObject({ nome: "Alterado" });
     });
 
-    it("deve lançar 403 se não for dono nem admin", async () => {
+    it("deve lancar 403 se nao for dono nem admin", async () => {
         const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
         const uc = AlterarTime.criar(timeGateway);
 
@@ -39,12 +39,60 @@ describe("AlterarTime", () => {
         ).rejects.toMatchObject({ status: 403 });
     });
 
-    it("deve lançar 404 se o time não existir", async () => {
+    it("deve lancar 404 se o time nao existir", async () => {
         const timeGateway = criarMockTimeGateway();
         const uc = AlterarTime.criar(timeGateway);
 
         await expect(
             uc.executar({ id: "nao-existe", requisitanteId: "user-1", isAdmin: false })
         ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve alterar descricao e imagemUrl quando informadas", async () => {
+        const time = new Time({
+            id: "time-1",
+            nome: "Time Original",
+            descricao: "Antiga",
+            imagemUrl: "https://example.com/old.png",
+            donoId: "user-1",
+            membroIds: ["user-1"],
+            criadoEm: new Date(),
+        });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const uc = AlterarTime.criar(timeGateway);
+
+        const resultado = await uc.executar({
+            id: "time-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            descricao: "  Nova descricao  ",
+            imagemUrl: "https://example.com/new.png",
+        });
+
+        expect(resultado.nome).toBe("Time Original");
+        expect(resultado.descricao).toBe("Nova descricao");
+        expect(resultado.imagemUrl).toBe("https://example.com/new.png");
+    });
+
+    it("deve permitir limpar descricao com string vazia", async () => {
+        const time = new Time({
+            id: "time-1",
+            nome: "Time Original",
+            descricao: "Antiga",
+            donoId: "user-1",
+            membroIds: ["user-1"],
+            criadoEm: new Date(),
+        });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const uc = AlterarTime.criar(timeGateway);
+
+        const resultado = await uc.executar({
+            id: "time-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            descricao: "   ",
+        });
+
+        expect(resultado.descricao).toBe("");
     });
 });

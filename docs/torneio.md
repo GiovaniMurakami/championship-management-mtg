@@ -200,6 +200,20 @@ Cria um novo torneio.
 
 ### GET /torneio/listar
 
+**Filtros por data:** este endpoint aceita `dataInicio` e `dataFim` como query params para filtrar torneios pelo campo `horario`, ou seja, pela data/hora em que o torneio ira comecar. Os valores podem ser enviados como ISO completo (`2026-04-01T10:00:00.000Z`) ou apenas data (`2026-04-01`). Quando enviado apenas `YYYY-MM-DD`, `dataInicio` usa o comeco do dia (`00:00:00.000Z`) e `dataFim` usa o fim do dia (`23:59:59.999Z`).
+
+Exemplos:
+
+```http
+GET /torneio/listar?dataInicio=2026-04-01&dataFim=2026-04-30
+GET /torneio/listar?dataInicio=2026-04-01T10:00:00.000Z&dataFim=2026-04-30T23:00:00.000Z
+```
+
+Erros de validacao:
+
+- `400` - `dataInicio` ou `dataFim` invalida
+- `400` - `dataInicio` maior que `dataFim`
+
 Lista todos os torneios existentes, ordenados por data de criação (mais recente primeiro).
 
 > **Torneios secretos (`secreto: true`) são automaticamente excluídos desta listagem.** Para acessar um torneio secreto, utilize `GET /torneio/:torneioId` diretamente com o UUID.
