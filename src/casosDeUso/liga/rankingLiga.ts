@@ -11,6 +11,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 export type RankingLigaInputDto = {
   ligaId: string;
   limiteJogadores?: number;
+  limiteTimes?: number;
   limiteDecks?: number;
   limiteCartas?: number;
 };
@@ -128,18 +129,28 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
 
     // Constrói mapa de deckPorJogador por torneio
     const deckPorTorneioEJogador = new Map<string, Map<string, string>>();
+    const timePorTorneioEJogador = new Map<string, Map<string, string>>();
     for (const inscricao of todasInscricoes) {
       if (!deckPorTorneioEJogador.has(inscricao.torneioId)) {
         deckPorTorneioEJogador.set(inscricao.torneioId, new Map());
+      }
+      if (!timePorTorneioEJogador.has(inscricao.torneioId)) {
+        timePorTorneioEJogador.set(inscricao.torneioId, new Map());
       }
       if (inscricao.deckId) {
         deckPorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.deckId);
         deckIdsUsados.add(inscricao.deckId);
       }
+      if (inscricao.timeId) {
+        timePorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.timeId);
+      }
     }
+
+    const statsTimesMap = new Map<string, StatsTime>();
 
     for (const partida of todasPartidas) {
       const deckPorJogador = deckPorTorneioEJogador.get(partida.torneioId) ?? new Map<string, string>();
+      const timePorJogador = timePorTorneioEJogador.get(partida.torneioId) ?? new Map<string, string>();
       if (partida.status !== "finalizada") continue;
 
       // Ignora byes (jogador2Id null)
@@ -163,6 +174,10 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         if (v1 > v2) { stats1.vitorias++; stats1.pontos += 3; }
         else if (v1 === v2 && v1 > 0) { stats1.empates++; stats1.pontos += 1; }
         else { stats1.derrotas++; }
+        if (liga.tipo === "times") {
+          const timeId = timePorJogador.get(jogador1Id);
+          if (timeId) this.registrarResultadoTime(statsTimesMap, timeId, v1 > v2 ? "vitoria" : v1 === v2 && v1 > 0 ? "empate" : "derrota");
+        }
         continue;
       }
 
@@ -183,6 +198,17 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         stats1.pontos += 1;
         stats2.empates++;
         stats2.pontos += 1;
+      }
+
+      if (liga.tipo === "times") {
+        const timeId1 = timePorJogador.get(jogador1Id);
+        const timeId2 = timePorJogador.get(jogador2Id!);
+        if (timeId1 && timeId2 && timeId1 === timeId2) {
+          // Partidas entre membros do mesmo time nÃ£o alteram o ranking coletivo.
+        } else {
+          if (timeId1) this.registrarResultadoTime(statsTimesMap, timeId1, v1 > v2 ? "vitoria" : v2 > v1 ? "derrota" : "empate");
+          if (timeId2) this.registrarResultadoTime(statsTimesMap, timeId2, v2 > v1 ? "vitoria" : v1 > v2 ? "derrota" : "empate");
+        }
       }
 
       // Stats de decks por resultado
@@ -302,34 +328,11 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     let totalTimes: number | undefined;
 
     if (liga.tipo === "times") {
-      const statsTimesMap = new Map<string, StatsTime>();
-
-      for (const inscricao of todasInscricoes) {
-        if (!inscricao.timeId) continue;
-        const jogadorStats = statsJogadores.get(inscricao.usuarioId);
-        if (!jogadorStats) continue;
-
-        const existing = statsTimesMap.get(inscricao.timeId);
-        if (existing) {
-          existing.vitorias += jogadorStats.vitorias;
-          existing.derrotas += jogadorStats.derrotas;
-          existing.empates += jogadorStats.empates;
-          existing.pontos += jogadorStats.pontos;
-        } else {
-          statsTimesMap.set(inscricao.timeId, {
-            vitorias: jogadorStats.vitorias,
-            derrotas: jogadorStats.derrotas,
-            empates: jogadorStats.empates,
-            pontos: jogadorStats.pontos,
-          });
-        }
-      }
-
       const timeIds = Array.from(statsTimesMap.keys());
       const times = timeIds.length > 0 ? await this.timeGateway.buscarVarios(timeIds) : [];
       const nomesPorTimeId = new Map(times.map((t) => [t.id, t.nome]));
 
-      const limTimes = input.limiteJogadores ?? 10;
+      const limTimes = input.limiteTimes ?? input.limiteJogadores ?? 10;
       const timesOrdenados = Array.from(statsTimesMap.entries())
         .sort(([, a], [, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias);
 
@@ -380,5 +383,26 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         empates: resultado === "empate" ? 1 : 0,
       });
     }
+  }
+
+  private registrarResultadoTime(
+    statsTimes: Map<string, StatsTime>,
+    timeId: string,
+    resultado: "vitoria" | "derrota" | "empate"
+  ): void {
+    const existing = statsTimes.get(timeId);
+    if (existing) {
+      if (resultado === "vitoria") { existing.vitorias++; existing.pontos += 3; }
+      else if (resultado === "derrota") existing.derrotas++;
+      else { existing.empates++; existing.pontos += 1; }
+      return;
+    }
+
+    statsTimes.set(timeId, {
+      vitorias: resultado === "vitoria" ? 1 : 0,
+      derrotas: resultado === "derrota" ? 1 : 0,
+      empates: resultado === "empate" ? 1 : 0,
+      pontos: resultado === "vitoria" ? 3 : resultado === "empate" ? 1 : 0,
+    });
   }
 }
