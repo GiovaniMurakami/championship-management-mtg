@@ -26,7 +26,7 @@ Uma Liga agrupa torneios e gera rankings consolidados de jogadores, decks e cart
 - Byes não contam como derrota do adversário.
 - Pontuação: vitória = 3pts, empate = 1pt, derrota = 0pt.
 - Rankings de decks agrupam por `nomeConsolidado` (quando disponível) ou `nome`.
-- Rankings de times só aparecem em ligas do tipo `times` e são calculados pela soma de pontos dos membros.
+- Rankings de times só aparecem em ligas do tipo `times` e são calculados diretamente por partida finalizada.
 
 ---
 
@@ -138,6 +138,7 @@ Retorna o ranking consolidado da liga. Suporta parâmetros de query para limitar
 | Parâmetro | Tipo | Default | Máximo |
 |---|---|---|---|
 | `limiteJogadores` | number | `10` | `200` |
+| `limiteTimes` | number | `10` | `200` |
 | `limiteDecks` | number | `10` | `200` |
 | `limiteCartas` | number | `10` | `200` |
 
@@ -216,7 +217,7 @@ Retorna o ranking consolidado da liga. Suporta parâmetros de query para limitar
 - **Jogadores**: ordenados por pontos (desc), depois vitórias (desc).
 - **Decks**: agrupados por `nomeConsolidado` (ou `nome`), ordenados por `totalUsos` (desc), depois vitórias (desc). `winrate` e `loserate` em porcentagem com 1 casa decimal.
 - **Cartas**: contagem de cópias no maindeck de todos os decks usados na liga, ordenadas por `totalCopias` (desc).
-- **Times**: soma dos pontos e resultados de todos os membros, ordenados por pontos (desc), depois vitórias (desc). Apenas para `tipo: "times"`.
+- **Times**: calculados diretamente por partida finalizada, usando o `timeId` da inscrição do jogador naquele torneio. Vitória soma 3 pontos, empate soma 1 e derrota soma 0. Partidas entre membros do mesmo time não alteram o ranking coletivo. Apenas para `tipo: "times"`.
 
 ---
 

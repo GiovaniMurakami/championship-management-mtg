@@ -35,6 +35,7 @@ export class RankingLigaRota implements Rotas {
         const resultado = await this.rankingLigaServico.executar({
           ligaId,
           limiteJogadores: parseLimit(request.query.limiteJogadores),
+          limiteTimes: parseLimit(request.query.limiteTimes),
           limiteDecks: parseLimit(request.query.limiteDecks),
           limiteCartas: parseLimit(request.query.limiteCartas),
         });
