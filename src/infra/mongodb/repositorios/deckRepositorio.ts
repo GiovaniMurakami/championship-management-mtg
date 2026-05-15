@@ -122,7 +122,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
     await this.conectar();
     const query = this.construirQueryDeck(filtros);
-    let find = DeckModel.find(query).sort({ criadoEm: -1 });
+    let find = DeckModel.find(query).sort({ criadoEm: -1, id: 1 });
     if (filtros.offset !== undefined) find = find.skip(filtros.offset);
     if (filtros.limite !== undefined) find = find.limit(filtros.limite);
     const docs = await find;

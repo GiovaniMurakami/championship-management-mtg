@@ -11,35 +11,79 @@ export type JwtPayload = {
 let cachedPrivateKey: string | undefined;
 let cachedPublicKey: string | undefined;
 
+export function resetJwtKeyCache(): void {
+  cachedPrivateKey = undefined;
+  cachedPublicKey = undefined;
+}
+
+function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+function hasBase64KeyPair(): boolean {
+  return !!(process.env.JWT_PRIVATE_KEY_BASE64 && process.env.JWT_PUBLIC_KEY_BASE64);
+}
+
+function hasSsmKeyPair(): boolean {
+  return !!(process.env.JWT_SSM_PRIVATE_KEY_PARAM && process.env.JWT_SSM_PUBLIC_KEY_PARAM);
+}
+
+function hasPartialKeyConfig(): boolean {
+  return (
+    (!!process.env.JWT_PRIVATE_KEY_BASE64 !== !!process.env.JWT_PUBLIC_KEY_BASE64) ||
+    (!!process.env.JWT_SSM_PRIVATE_KEY_PARAM !== !!process.env.JWT_SSM_PUBLIC_KEY_PARAM)
+  );
+}
+
+export function assertJwtConfig(): void {
+  if (hasPartialKeyConfig()) {
+    throw new Error(
+      "Configuração JWT inválida. Configure o par completo de chaves RSA em Base64 ou via SSM."
+    );
+  }
+
+  if (hasBase64KeyPair() || hasSsmKeyPair()) {
+    return;
+  }
+
+  if (!isProductionRuntime() && process.env.JWT_SECRET) {
+    return;
+  }
+
+  throw new Error(
+    isProductionRuntime()
+      ? "Configuração JWT ausente. Em produção, configure o par RSA via Base64 ou SSM."
+      : "Configuração JWT ausente. Use JWT_SECRET em desenvolvimento local ou configure um par RSA."
+  );
+}
+
 function loadKeyFromEnv(envVar: string): string | undefined {
   const raw = process.env[envVar];
   if (!raw) return undefined;
   return Buffer.from(raw, "base64").toString("utf-8");
 }
 
-async function fetchFromSSM(paramName: string): Promise<string | undefined> {
-  try {
-    const client = new SSMClient({});
-    const res = await client.send(new GetParameterCommand({ Name: paramName, WithDecryption: true }));
-    return res.Parameter?.Value;
-  } catch {
-    return undefined;
+async function fetchFromSSM(paramName: string): Promise<string> {
+  const client = new SSMClient({});
+  const res = await client.send(new GetParameterCommand({ Name: paramName, WithDecryption: true }));
+  if (!res.Parameter?.Value) {
+    throw new Error(`Parâmetro SSM ${paramName} não retornou valor.`);
   }
+  return res.Parameter.Value;
 }
 
 export async function preloadJwtKeys(): Promise<void> {
-  const privateBase64 = process.env.JWT_PRIVATE_KEY_BASE64;
-  if (privateBase64) {
-    cachedPrivateKey = Buffer.from(privateBase64, "base64").toString("utf-8");
-  } else if (process.env.JWT_SSM_PRIVATE_KEY_PARAM) {
-    cachedPrivateKey = await fetchFromSSM(process.env.JWT_SSM_PRIVATE_KEY_PARAM);
+  resetJwtKeyCache();
+
+  if (hasBase64KeyPair()) {
+    cachedPrivateKey = Buffer.from(process.env.JWT_PRIVATE_KEY_BASE64!, "base64").toString("utf-8");
+    cachedPublicKey = Buffer.from(process.env.JWT_PUBLIC_KEY_BASE64!, "base64").toString("utf-8");
+    return;
   }
 
-  const publicBase64 = process.env.JWT_PUBLIC_KEY_BASE64;
-  if (publicBase64) {
-    cachedPublicKey = Buffer.from(publicBase64, "base64").toString("utf-8");
-  } else if (process.env.JWT_SSM_PUBLIC_KEY_PARAM) {
-    cachedPublicKey = await fetchFromSSM(process.env.JWT_SSM_PUBLIC_KEY_PARAM);
+  if (hasSsmKeyPair()) {
+    cachedPrivateKey = await fetchFromSSM(process.env.JWT_SSM_PRIVATE_KEY_PARAM!);
+    cachedPublicKey = await fetchFromSSM(process.env.JWT_SSM_PUBLIC_KEY_PARAM!);
   }
 }
 

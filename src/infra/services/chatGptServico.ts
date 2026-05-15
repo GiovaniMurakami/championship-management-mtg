@@ -5,6 +5,16 @@ import { comRetry } from "../../helpers/retry";
 
 const TENTATIVAS = 3;
 const DELAY_INICIAL_MS = 500;
+const TIMEOUT_MS = 3500;
+
+class ChatGptHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string
+  ) {
+    super(message);
+  }
+}
 
 export class ChatGptServico implements ChatGptGateway {
   private constructor(private readonly apiKey: string) { }
@@ -40,7 +50,13 @@ export class ChatGptServico implements ChatGptGateway {
       return await comRetry(
         () => this.chamarApi(prompt),
         TENTATIVAS,
-        DELAY_INICIAL_MS
+        DELAY_INICIAL_MS,
+        (err) => {
+          if (err instanceof ChatGptHttpError) {
+            return err.status === 429 || err.status >= 500;
+          }
+          return true;
+        }
       );
     } catch (err) {
       logger.error({ err }, "[ChatGptServico] falhou após todas as tentativas");
@@ -49,6 +65,9 @@ export class ChatGptServico implements ChatGptGateway {
   }
 
   private async chamarApi(prompt: string): Promise<string | null> {
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), TIMEOUT_MS);
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -61,11 +80,12 @@ export class ChatGptServico implements ChatGptGateway {
         response_format: { type: "json_object" },
         max_tokens: 50,
       }),
-    });
+      signal: abortController.signal,
+    }).finally(() => clearTimeout(timeout));
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => "");
-      throw new Error(`HTTP ${response.status}: ${errBody}`);
+      throw new ChatGptHttpError(response.status, `HTTP ${response.status}: ${errBody}`);
     }
 
     const data = (await response.json()) as {

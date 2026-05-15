@@ -1,15 +1,18 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { ResetSenhaGateway, ResetSenhaData } from "../../../dominio/gateway/resetSenhaGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { hashToken } from "../../../helpers/tokenHash";
 
 interface ResetSenhaDocument extends Document {
-    token: string;
+    token?: string;
+    tokenHash: string;
     usuarioId: string;
     expiresAt: Date;
 }
 
 const resetSenhaSchema = new Schema<ResetSenhaDocument>({
-    token: { type: String, required: true, unique: true },
+    token: { type: String, required: false, unique: true, sparse: true },
+    tokenHash: { type: String, required: true, unique: true },
     usuarioId: { type: String, required: true, index: true },
     expiresAt: { type: Date, required: true },
 });
@@ -29,8 +32,10 @@ export class ResetSenhaRepositorio extends BaseRepositorio implements ResetSenha
 
     public async salvar(dados: ResetSenhaData): Promise<void> {
         await this.conectar();
+        const tokenHash = hashToken(dados.token);
         await ResetSenhaModel.create({
-            token: dados.token,
+            token: tokenHash,
+            tokenHash,
             usuarioId: dados.usuarioId,
             expiresAt: dados.expiresAt,
         });
@@ -38,10 +43,17 @@ export class ResetSenhaRepositorio extends BaseRepositorio implements ResetSenha
 
     public async buscarPorToken(token: string): Promise<ResetSenhaData | null> {
         await this.conectar();
-        const doc = await ResetSenhaModel.findOne({ token });
+        const tokenHash = hashToken(token);
+        const doc = await ResetSenhaModel.findOne({
+            $or: [
+                { tokenHash },
+                { token: tokenHash },
+                { token },
+            ],
+        });
         if (!doc) return null;
         return {
-            token: doc.token,
+            token,
             usuarioId: doc.usuarioId,
             expiresAt: doc.expiresAt,
         };
@@ -49,7 +61,14 @@ export class ResetSenhaRepositorio extends BaseRepositorio implements ResetSenha
 
     public async excluirPorToken(token: string): Promise<void> {
         await this.conectar();
-        await ResetSenhaModel.deleteOne({ token });
+        const tokenHash = hashToken(token);
+        await ResetSenhaModel.deleteOne({
+            $or: [
+                { tokenHash },
+                { token: tokenHash },
+                { token },
+            ],
+        });
     }
 
     public async excluirPorUsuario(usuarioId: string): Promise<void> {

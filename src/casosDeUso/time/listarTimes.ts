@@ -1,5 +1,6 @@
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
 const LIMITE_MAXIMO_TIMES = 100;
 const LIMITE_PADRAO_TIMES = 20;
@@ -33,8 +34,12 @@ export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOu
     }
 
     public async executar(input: ListarTimesInputDto): Promise<ListarTimesOutputDto> {
-        const limite = Math.min(input.limite ?? LIMITE_PADRAO_TIMES, LIMITE_MAXIMO_TIMES);
-        const offset = Math.max(input.offset ?? 0, 0);
+        const { limite, offset } = normalizarPaginacaoOffset(
+            input.limite,
+            input.offset,
+            LIMITE_PADRAO_TIMES,
+            LIMITE_MAXIMO_TIMES
+        );
         const { nome } = input;
 
         const [times, total] = await Promise.all([

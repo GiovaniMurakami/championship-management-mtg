@@ -1,7 +1,10 @@
-import { app } from "./app";
+import { app, inicializarDependenciasDeProcesso } from "./app";
 
 export async function iniciarServidor() {
-  await app();
+  inicializarDependenciasDeProcesso();
+  const aplicacao = app();
+  const port = Number(process.env.PORT) || 3000;
+  aplicacao.listen(port);
 }
 
 iniciarServidor();

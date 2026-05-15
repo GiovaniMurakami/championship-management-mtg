@@ -1,15 +1,18 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { RefreshTokenGateway, RefreshTokenData } from "../../../dominio/gateway/refreshTokenGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { hashToken } from "../../../helpers/tokenHash";
 
 interface RefreshTokenDocument extends Document {
-  token: string;
+  token?: string;
+  tokenHash: string;
   usuarioId: string;
   expiresAt: Date;
 }
 
 const refreshTokenSchema = new Schema<RefreshTokenDocument>({
-  token: { type: String, required: true, unique: true },
+  token: { type: String, required: false, unique: true, sparse: true },
+  tokenHash: { type: String, required: true, unique: true },
   usuarioId: { type: String, required: true, index: true },
   expiresAt: { type: Date, required: true },
 });
@@ -29,8 +32,10 @@ export class RefreshTokenRepositorio extends BaseRepositorio implements RefreshT
 
   public async salvar(dados: RefreshTokenData): Promise<void> {
     await this.conectar();
+    const tokenHash = hashToken(dados.token);
     await RefreshTokenModel.create({
-      token: dados.token,
+      token: tokenHash,
+      tokenHash,
       usuarioId: dados.usuarioId,
       expiresAt: dados.expiresAt,
     });
@@ -38,11 +43,18 @@ export class RefreshTokenRepositorio extends BaseRepositorio implements RefreshT
 
   public async consumir(token: string): Promise<RefreshTokenData | null> {
     await this.conectar();
-    const doc = await RefreshTokenModel.findOneAndDelete({ token });
+    const tokenHash = hashToken(token);
+    const doc = await RefreshTokenModel.findOneAndDelete({
+      $or: [
+        { tokenHash },
+        { token: tokenHash },
+        { token },
+      ],
+    });
     if (!doc) return null;
     if (doc.expiresAt < new Date()) return null;
     return {
-      token: doc.token,
+      token,
       usuarioId: doc.usuarioId,
       expiresAt: doc.expiresAt,
     };

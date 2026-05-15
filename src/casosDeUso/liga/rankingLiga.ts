@@ -120,12 +120,36 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const statsDecks = new Map<string, StatsDeck>();
     const statsCartas = new Map<string, StatsCarta>();
     const deckIdsUsados = new Set<string>();
+    const timeIdsInscritos = new Set<string>();
 
     // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)
     const [todasPartidas, todasInscricoes] = await Promise.all([
       this.partidaGateway.listarPorTorneios(liga.torneioIds),
       this.inscricaoGateway.listarPorTorneios(liga.torneioIds),
     ]);
+
+    const timePorMembro = new Map<string, string>();
+    if (liga.tipo === "times") {
+      const usuarioIds = Array.from(new Set([
+        ...todasInscricoes.map((inscricao) => inscricao.usuarioId),
+        ...todasPartidas.flatMap((partida) => [
+          partida.jogador1Id,
+          ...(partida.jogador2Id ? [partida.jogador2Id] : []),
+        ]),
+      ]));
+
+      const times = usuarioIds.length > 0
+        ? await this.timeGateway.buscarPorMembros(usuarioIds)
+        : [];
+
+      for (const time of times) {
+        for (const membroId of time.membroIds) {
+          if (!timePorMembro.has(membroId)) {
+            timePorMembro.set(membroId, time.id);
+          }
+        }
+      }
+    }
 
     // Constrói mapa de deckPorJogador por torneio
     const deckPorTorneioEJogador = new Map<string, Map<string, string>>();
@@ -141,8 +165,10 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         deckPorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.deckId);
         deckIdsUsados.add(inscricao.deckId);
       }
-      if (inscricao.timeId) {
-        timePorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.timeId);
+      const timeId = inscricao.timeId ?? timePorMembro.get(inscricao.usuarioId);
+      if (timeId) {
+        timePorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, timeId);
+        timeIdsInscritos.add(timeId);
       }
     }
 
@@ -328,13 +354,19 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     let totalTimes: number | undefined;
 
     if (liga.tipo === "times") {
+      for (const timeId of timeIdsInscritos) {
+        if (!statsTimesMap.has(timeId)) {
+          statsTimesMap.set(timeId, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
+        }
+      }
+
       const timeIds = Array.from(statsTimesMap.keys());
       const times = timeIds.length > 0 ? await this.timeGateway.buscarVarios(timeIds) : [];
       const nomesPorTimeId = new Map(times.map((t) => [t.id, t.nome]));
 
       const limTimes = input.limiteTimes ?? input.limiteJogadores ?? 10;
       const timesOrdenados = Array.from(statsTimesMap.entries())
-        .sort(([, a], [, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias);
+        .sort(([timeIdA, a], [timeIdB, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias || timeIdA.localeCompare(timeIdB));
 
       totalTimes = timesOrdenados.length;
       rankingTimes = timesOrdenados

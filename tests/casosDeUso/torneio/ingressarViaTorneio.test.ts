@@ -381,4 +381,27 @@ describe("IngressarViaTorneio", () => {
         expect(inscricaoSalva.checkInRodada).toBe(torneio.rodadaAtual);
         expect(inscricaoSalva.deckId).toBe("d-1");
     });
+
+    it("nÃ£o deve consumir o token quando o deck Ã© invÃ¡lido", async () => {
+        const excluirMock = jest.fn();
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: excluirMock,
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(null),
+            }),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-invalido" })
+        ).rejects.toMatchObject({ status: 404 });
+
+        expect(excluirMock).not.toHaveBeenCalled();
+    });
 });

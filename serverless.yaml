@@ -36,14 +36,9 @@ build:
   esbuild: false
 
 plugins:
-  - serverless-esbuild
   # - serverless-offline
 
 custom:
-  esbuild:
-    external:
-      - ably
-      - aws-sdk
   # serverless-offline:
   #   httpPort: 4000
 
@@ -55,7 +50,7 @@ package:
 functions:
   # Auth, deck, imagem e health — operações leves, sem cálculos pesados
   api-auth:
-    handler: src/handler.handler
+    handler: build/handler.handler
     memorySize: 256
     timeout: 15
     events:
@@ -118,7 +113,7 @@ functions:
 
   # Torneio e liga — Swiss pairing e ranking são CPU e memória intensivos
   api-torneio:
-    handler: src/handler.handler
+    handler: build/handler.handler
     memorySize: 512
     timeout: 29
     events:

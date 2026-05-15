@@ -1,4 +1,11 @@
-import { signToken, verifyToken, preloadJwtKeys, JwtPayload } from "../../src/helpers/jwt";
+import {
+    signToken,
+    verifyToken,
+    preloadJwtKeys,
+    JwtPayload,
+    assertJwtConfig,
+    resetJwtKeyCache,
+} from "../../src/helpers/jwt";
 import crypto from "crypto";
 
 const payload: JwtPayload = { id: "u-1", email: "a@a.com", nome: "Teste", role: "user" };
@@ -7,9 +14,13 @@ describe("jwt helpers", () => {
     const originalEnv = { ...process.env };
 
     beforeEach(() => {
+        resetJwtKeyCache();
         delete process.env.JWT_PRIVATE_KEY_BASE64;
         delete process.env.JWT_PUBLIC_KEY_BASE64;
+        delete process.env.JWT_SSM_PRIVATE_KEY_PARAM;
+        delete process.env.JWT_SSM_PUBLIC_KEY_PARAM;
         delete process.env.JWT_SECRET;
+        process.env.NODE_ENV = originalEnv.NODE_ENV;
     });
 
     afterAll(() => {
@@ -27,6 +38,16 @@ describe("jwt helpers", () => {
     it("verifyToken retorna null para token inválido com JWT_SECRET", () => {
         process.env.JWT_SECRET = "segredo-teste";
         expect(verifyToken("token.invalido.aqui")).toBeNull();
+    });
+
+    it("assertJwtConfig aceita JWT_SECRET fora de produção", () => {
+        process.env.JWT_SECRET = "segredo-teste";
+        expect(() => assertJwtConfig()).not.toThrow();
+    });
+
+    it("assertJwtConfig falha com par RSA parcial", () => {
+        process.env.JWT_PRIVATE_KEY_BASE64 = Buffer.from("private").toString("base64");
+        expect(() => assertJwtConfig()).toThrow(/par completo/i);
     });
 
     it("signToken e verifyToken funcionam com JWT_SECRET (HS256)", () => {
@@ -72,14 +93,11 @@ describe("jwt helpers", () => {
             expect(decoded).toMatchObject({ id: "u-1" });
         });
 
-        it("retorna sem erro quando nenhuma variável de chave está definida", async () => {
-            await expect(preloadJwtKeys()).resolves.toBeUndefined();
-        });
-
         it("preloadJwtKeys com vars ausentes não falha", async () => {
             await expect(preloadJwtKeys()).resolves.toBeUndefined();
         });
     });
+
     describe("preloadJwtKeys com SSM", () => {
         afterEach(() => {
             jest.dontMock("@aws-sdk/client-ssm");
@@ -118,7 +136,7 @@ describe("jwt helpers", () => {
             expect(jwtHelpers.verifyToken(token!)).toMatchObject({ id: "u-1" });
         });
 
-        it("retorna null em producao quando SSM falha e nao ha chaves carregadas", async () => {
+        it("falha em produção quando SSM falha", async () => {
             jest.resetModules();
             jest.doMock("@aws-sdk/client-ssm", () => ({
                 SSMClient: jest.fn().mockImplementation(() => ({
@@ -132,10 +150,7 @@ describe("jwt helpers", () => {
             process.env.JWT_SSM_PUBLIC_KEY_PARAM = "/jwt/public";
             const jwtHelpers = require("../../src/helpers/jwt") as typeof import("../../src/helpers/jwt");
 
-            await jwtHelpers.preloadJwtKeys();
-
-            expect(jwtHelpers.signToken(payload, "1h")).toBeNull();
-            expect(jwtHelpers.verifyToken("token.invalido")).toBeNull();
+            await expect(jwtHelpers.preloadJwtKeys()).rejects.toThrow(/ssm indisponivel/i);
         });
     });
 });

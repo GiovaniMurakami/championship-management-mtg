@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { autenticarJwt } from "../../src/middlewares/express/autenticarJwt";
+import { resetJwtKeyCache } from "../../src/helpers/jwt";
 
 jest.mock("jsonwebtoken");
 jest.mock("../../src/infra/mongodb/repositorios/tokenBlacklistRepositorio", () => ({
@@ -17,6 +18,7 @@ describe("autenticarJwt middleware", () => {
     let next: NextFunction;
 
     beforeEach(() => {
+        resetJwtKeyCache();
         req = { headers: {} };
         res = {
             status: jest.fn().mockReturnThis(),

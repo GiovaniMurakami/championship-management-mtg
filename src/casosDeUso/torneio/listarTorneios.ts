@@ -2,6 +2,10 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
+
+const LIMITE_MAXIMO_TORNEIOS = 100;
+const LIMITE_PADRAO_TORNEIOS = 20;
 
 export type ListarTorneiosInputDto = {
   usuarioId: string;
@@ -55,15 +59,30 @@ export class ListarTorneios
 
   public async executar({
     usuarioId,
-    limite = 20,
-    offset = 0,
+    limite,
+    offset,
     status,
     nome,
     dataInicio,
     dataFim,
   }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+    const paginacao = normalizarPaginacaoOffset(
+      limite,
+      offset,
+      LIMITE_PADRAO_TORNEIOS,
+      LIMITE_MAXIMO_TORNEIOS
+    );
+
     const [torneios, total, inscricoes] = await Promise.all([
-      this.torneioGateway.listar({ limite, offset, incluirSecretos: false, status, nome, dataInicio, dataFim }),
+      this.torneioGateway.listar({
+        limite: paginacao.limite,
+        offset: paginacao.offset,
+        incluirSecretos: false,
+        status,
+        nome,
+        dataInicio,
+        dataFim,
+      }),
       this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
@@ -99,8 +118,8 @@ export class ListarTorneios
         totalInscritos: contagemInscritos[t.id] ?? 0,
       })),
       total,
-      limite,
-      offset,
+      limite: paginacao.limite,
+      offset: paginacao.offset,
     };
   }
 }

@@ -2,6 +2,7 @@ import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
 const LIMITE_MAXIMO_DECKS = 100;
 const LIMITE_PADRAO_DECKS = 20;
@@ -45,8 +46,12 @@ export class ListarDecks
   public async executar(
     input: ListarDecksInputDto
   ): Promise<ListarDecksOutputDto> {
-    const limite = Math.min(input.limite ?? LIMITE_PADRAO_DECKS, LIMITE_MAXIMO_DECKS);
-    const offset = Math.max(input.offset ?? 0, 0);
+    const { limite, offset } = normalizarPaginacaoOffset(
+      input.limite,
+      input.offset,
+      LIMITE_PADRAO_DECKS,
+      LIMITE_MAXIMO_DECKS
+    );
 
     const filtros: FiltrosListarDecks = { limite, offset };
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;

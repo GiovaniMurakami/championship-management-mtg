@@ -60,7 +60,6 @@ export class IngressarViaTorneio
     public async executar(
         input: IngressarViaTorneioInputDto
     ): Promise<IngressarViaTorneioOutputDto> {
-        // 1. Validar token
         const linkData = await this.linkIngressoGateway.buscarPorToken(input.token);
         if (!linkData) {
             throw ErroPersonalizado.criar({
@@ -77,7 +76,6 @@ export class IngressarViaTorneio
             });
         }
 
-        // 2. Validar torneio
         const torneio = await this.torneioGateway.buscarPorId(linkData.torneioId);
         if (!torneio || torneio.status !== "em_andamento") {
             throw ErroPersonalizado.criar({
@@ -86,7 +84,6 @@ export class IngressarViaTorneio
             });
         }
 
-        // Bloquear entrada tardia durante fase de corte
         if (torneio.emCorte) {
             throw ErroPersonalizado.criar({
                 mensagem: "Não é possível ingressar durante a fase eliminatória (corte).",
@@ -94,7 +91,6 @@ export class IngressarViaTorneio
             });
         }
 
-        // 3. Validar usuário
         const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
         if (!usuario) {
             throw ErroPersonalizado.criar({
@@ -110,7 +106,6 @@ export class IngressarViaTorneio
             });
         }
 
-        // 4. Verificar se já está inscrito
         const inscricaoExistente = await this.inscricaoGateway.buscarPorTorneioEUsuario(
             torneio.id,
             input.usuarioId
@@ -122,10 +117,6 @@ export class IngressarViaTorneio
             });
         }
 
-        // 5. Consumir token (uso único)
-        await this.linkIngressoGateway.excluirPorToken(input.token);
-
-        // 5.1. Validar deck obrigatório
         const deck = await this.deckGateway.buscarPorId(input.deckId);
         if (!deck) {
             throw ErroPersonalizado.criar({
@@ -140,7 +131,8 @@ export class IngressarViaTorneio
             });
         }
 
-        // 6. Criar inscrição com check-in para rodada atual e deck
+        await this.linkIngressoGateway.excluirPorToken(input.token);
+
         const inscricao = Inscricao.criar({
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
@@ -150,7 +142,6 @@ export class IngressarViaTorneio
 
         await this.inscricaoGateway.salvar(inscricao);
 
-        // Verificar se o novo total de jogadores ativos exige uma rodada adicional
         if (!torneio.emCorte) {
             const todasInscricoes = await this.inscricaoGateway.listarPorTorneio(torneio.id);
             const jogadoresAtivos = todasInscricoes.filter((i) => !i.dropped).length;
@@ -172,7 +163,6 @@ export class IngressarViaTorneio
             }
         }
 
-        // 7. Verificar se existe partida BYE na rodada atual
         const byePartida = await this.partidaGateway.buscarByePartidaRodada(
             torneio.id,
             torneio.rodadaAtual
@@ -181,9 +171,6 @@ export class IngressarViaTorneio
         let partida: Partida;
 
         if (byePartida) {
-            // Caso A: Existe jogador com BYE — novo jogador substitui o BYE.
-            // O jogador que tinha o BYE vence 2-0 e o novo jogador perde 0-2.
-            // Atualizamos o jogador2 da partida BYE existente.
             const partidaAtualizada = await this.partidaGateway.atualizarJogador2Partida(
                 byePartida.id,
                 input.usuarioId
@@ -196,16 +183,14 @@ export class IngressarViaTorneio
             }
             partida = partidaAtualizada;
         } else {
-            // Caso B: Não existe BYE — novo jogador recebe BYE mas PERDE 0-2
-            // (penalidade por entrada tardia no torneio).
             partida = new Partida({
                 id: uuidv4(),
                 torneioId: torneio.id,
                 rodada: torneio.rodadaAtual,
                 jogador1Id: input.usuarioId,
-                jogador2Id: null, // BYE
+                jogador2Id: null,
                 vitoriasJogador1: 0,
-                vitoriasJogador2: 2, // "bye" ganha 2-0
+                vitoriasJogador2: 2,
                 status: "finalizada",
                 tipoBye: "penalidade",
                 criadoEm: new Date(),

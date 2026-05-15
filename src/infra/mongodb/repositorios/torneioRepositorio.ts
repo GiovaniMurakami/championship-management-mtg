@@ -4,6 +4,7 @@ import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
 import { PartidaModel } from "./partidaRepositorio";
+import { escaparRegex } from "../../../helpers/regex";
 
 interface TorneioDocument extends Document {
   id: string;
@@ -133,14 +134,14 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     const filtroQuery: Record<string, unknown> = {};
     if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
     if (filtros.status) filtroQuery.status = filtros.status;
-    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+    if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
     if (filtros.dataInicio || filtros.dataFim) {
       filtroQuery.horario = {
         ...(filtros.dataInicio ? { $gte: filtros.dataInicio } : {}),
         ...(filtros.dataFim ? { $lte: filtros.dataFim } : {}),
       };
     }
-    let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1 });
+    let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1, id: 1 });
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;
@@ -154,7 +155,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     const filtroQuery: Record<string, unknown> = {};
     if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
     if (filtros.status) filtroQuery.status = filtros.status;
-    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+    if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
     if (filtros.dataInicio || filtros.dataFim) {
       filtroQuery.horario = {
         ...(filtros.dataInicio ? { $gte: filtros.dataInicio } : {}),
