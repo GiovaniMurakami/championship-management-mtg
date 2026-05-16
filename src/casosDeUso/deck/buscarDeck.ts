@@ -14,6 +14,7 @@ export type BuscarDeckOutputDto = {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander: Carta[];
   usuario: { id: string; nome: string };
   criadoEm: Date;
 };
@@ -34,7 +35,7 @@ export class BuscarDeck
 
     if (!deck) {
       throw ErroPersonalizado.criar({
-        mensagem: "Deck não encontrado",
+        mensagem: "Deck nÃ£o encontrado",
         status: 404,
       });
     }
@@ -48,6 +49,7 @@ export class BuscarDeck
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
+      commander: deck.commander,
       usuario: {
         id: deck.usuarioId,
         nome: usuario?.nome ?? deck.usuarioId,

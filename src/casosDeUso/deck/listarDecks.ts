@@ -1,4 +1,4 @@
-import { Carta, Deck } from "../../dominio/entidade/deck";
+import { Carta } from "../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -11,8 +11,8 @@ export type ListarDecksInputDto = {
   usuarioId?: string;
   formato?: string;
   nome?: string;
-  criadoApos?: string; // ISO string
-  criadoAntes?: string; // ISO string
+  criadoApos?: string;
+  criadoAntes?: string;
   limite?: number;
   offset?: number;
 };
@@ -24,6 +24,7 @@ export type ListarDecksOutputDto = {
     formato: string;
     maindeck: Carta[];
     sideboard: Carta[];
+    commander: Carta[];
     usuario: { id: string; nome: string };
     criadoEm: Date;
   }[];
@@ -78,6 +79,7 @@ export class ListarDecks
         formato: deck.formato,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
+        commander: deck.commander,
         usuario: {
           id: deck.usuarioId,
           nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,

@@ -12,6 +12,7 @@ export interface DeckProps {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander?: Carta[] | null;
   usuarioId: string;
   criadoEm?: Date;
 }
@@ -23,6 +24,7 @@ export class Deck {
   public formato: string;
   public maindeck: Carta[];
   public sideboard: Carta[];
+  public commander: Carta[];
   public usuarioId: string;
   public criadoEm: Date;
 
@@ -33,6 +35,7 @@ export class Deck {
     formato,
     maindeck,
     sideboard,
+    commander,
     usuarioId,
     criadoEm,
   }: DeckProps) {
@@ -42,6 +45,7 @@ export class Deck {
     this.formato = formato;
     this.maindeck = maindeck;
     this.sideboard = sideboard;
+    this.commander = commander ?? [];
     this.usuarioId = usuarioId;
     this.criadoEm = criadoEm || new Date();
   }

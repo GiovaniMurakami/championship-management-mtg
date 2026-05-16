@@ -10,6 +10,7 @@ interface DeckDocument extends Document {
   formato: string;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander?: Carta[];
   usuarioId: string;
   criadoEm: Date;
 }
@@ -32,7 +33,7 @@ const deckSchema = new Schema<DeckDocument>({
     default: [],
     validate: {
       validator: (arr: Carta[]) => arr.length <= 100,
-      message: "maindeck não pode ter mais de 100 entradas",
+      message: "maindeck nÃ£o pode ter mais de 100 entradas",
     },
   },
   sideboard: {
@@ -40,7 +41,15 @@ const deckSchema = new Schema<DeckDocument>({
     default: [],
     validate: {
       validator: (arr: Carta[]) => arr.length <= 15,
-      message: "sideboard não pode ter mais de 15 entradas",
+      message: "sideboard nÃ£o pode ter mais de 15 entradas",
+    },
+  },
+  commander: {
+    type: [cartaSchema],
+    default: [],
+    validate: {
+      validator: (arr: Carta[]) => arr.length <= 3,
+      message: "commander nÃ£o pode ter mais de 3 entradas",
     },
   },
   usuarioId: { type: String, required: true },
@@ -63,6 +72,7 @@ function docParaDeck(doc: Document): Deck {
     formato: doc.get("formato"),
     maindeck: doc.get("maindeck"),
     sideboard: doc.get("sideboard"),
+    commander: doc.get("commander") ?? [],
     usuarioId: doc.get("usuarioId"),
     criadoEm: doc.get("criadoEm"),
   });
@@ -84,6 +94,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       formato: deck.formato,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
+      commander: deck.commander,
       usuarioId: deck.usuarioId,
       criadoEm: deck.criadoEm,
     });
@@ -145,6 +156,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
         formato: deck.formato,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
+        commander: deck.commander,
       }
     );
   }

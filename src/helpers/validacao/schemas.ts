@@ -4,7 +4,7 @@ import { getS3BaseUrl } from "../env";
 function s3ImagemUrl() {
   return z
     .string()
-    .url("URL inválida.")
+    .url("URL invÃ¡lida.")
     .refine(
       (url) => {
         const base = getS3BaseUrl();
@@ -19,15 +19,17 @@ const cartaSchema = z.object({
   quantidade: z.number().int().min(1),
 });
 
+const commanderSchema = z.array(cartaSchema).nullable().optional();
+
 export const cadastrarUsuarioSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório."),
-  email: z.email("E-mail inválido."),
-  senha: z.string().min(8, "A senha deve ter no mínimo 8 caracteres."),
+  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
+  email: z.email("E-mail invÃ¡lido."),
+  senha: z.string().min(8, "A senha deve ter no mÃ­nimo 8 caracteres."),
 });
 
 export const loginUsuarioSchema = z.object({
-  email: z.string().min(1, "E-mail é obrigatório."),
-  senha: z.string().min(1, "Senha é obrigatória."),
+  email: z.string().min(1, "E-mail Ã© obrigatÃ³rio."),
+  senha: z.string().min(1, "Senha Ã© obrigatÃ³ria."),
 });
 
 export const atualizarUsuarioSchema = z.object({
@@ -38,28 +40,30 @@ export const atualizarUsuarioSchema = z.object({
 });
 
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, "refreshToken é obrigatório."),
+  refreshToken: z.string().min(1, "refreshToken Ã© obrigatÃ³rio."),
 });
 
 export const cadastrarDeckSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório."),
-  formato: z.string().min(1, "Formato é obrigatório."),
+  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
+  formato: z.string().min(1, "Formato Ã© obrigatÃ³rio."),
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
+  commander: commanderSchema,
 });
 
 export const atualizarDeckSchema = z.object({
   nome: z.string().min(1).optional(),
-  nomeConsolidado: z.string().optional(),
+  nomeConsolidado: z.string().optional().nullable(),
   formato: z.string().min(1).optional(),
   maindeck: z.array(cartaSchema).min(1).optional(),
   sideboard: z.array(cartaSchema).optional(),
+  commander: commanderSchema,
 });
 
 export const criarTorneioSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório."),
-  horario: z.string().min(1, "Horário é obrigatório."),
-  formato: z.string().min(1, "Formato é obrigatório."),
+  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
+  horario: z.string().min(1, "HorÃ¡rio Ã© obrigatÃ³rio."),
+  formato: z.string().min(1, "Formato Ã© obrigatÃ³rio."),
   premio: z.string().optional(),
   bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
@@ -89,7 +93,7 @@ export const alterarTorneioSchema = z.object({
 });
 
 export const escolherDeckTorneioSchema = z.object({
-  deckId: z.string().min(1, "deckId é obrigatório."),
+  deckId: z.string().min(1, "deckId Ã© obrigatÃ³rio."),
   jogadorId: z.string().optional(),
 });
 
@@ -103,7 +107,7 @@ export const droparJogadorSchema = z.object({
 });
 
 export const criarLigaSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório."),
+  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
   descricao: z.string().optional(),
   torneioIds: z.array(z.string()).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
@@ -117,15 +121,15 @@ export const alterarLigaSchema = z.object({
 });
 
 export const criarTimeSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório."),
+  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
   descricao: z.string().optional(),
-  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL vÃ¡lida.").optional(),
 });
 
 export const alterarTimeSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
-  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL vÃ¡lida.").optional(),
 });
 
 export const gerarUrlUploadImagemSchema = z.object({
@@ -136,5 +140,5 @@ export const gerarUrlUploadImagemSchema = z.object({
     .number()
     .int()
     .min(1, "tamanhoBytes deve ser maior que 0.")
-    .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
+    .max(5 * 1024 * 1024, "tamanhoBytes nÃ£o pode exceder 5 MB."),
 });

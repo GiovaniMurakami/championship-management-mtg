@@ -33,7 +33,7 @@ describe("CadastrarDeckRota", () => {
     });
 
     it("retorna 201 com deck criado", async () => {
-        const saida = { id: "d-1", nome: "Burn", formato: "Modern" };
+        const saida = { id: "d-1", nome: "Burn", formato: "Modern", commander: [] };
         servico.executar.mockResolvedValue(saida);
         const { req, res, next } = makeReqRes({ nome: "Burn", formato: "Modern", maindeck });
         await rota.getHandler()(req, res, next);
@@ -50,9 +50,19 @@ describe("CadastrarDeckRota", () => {
         );
     });
 
+    it("encaminha commander quando informado", async () => {
+        servico.executar.mockResolvedValue({ id: "d-1" });
+        const commander = [{ nome: "Atraxa, Praetors' Voice", quantidade: 1 }];
+        const { req, res, next } = makeReqRes({ nome: "Atraxa", formato: "Commander", maindeck, commander });
+        await rota.getHandler()(req, res, next);
+        expect(servico.executar).toHaveBeenCalledWith(
+            expect.objectContaining({ commander })
+        );
+    });
+
     it("retorna status do ErroPersonalizado quando lancado", async () => {
         servico.executar.mockRejectedValue(
-            ErroPersonalizado.criar({ mensagem: "Deck inválido.", status: StatusErro.erroParametro })
+            ErroPersonalizado.criar({ mensagem: "Deck invÃ¡lido.", status: StatusErro.erroParametro })
         );
         const { req, res, next } = makeReqRes({ nome: "Burn", formato: "Modern", maindeck });
         await rota.getHandler()(req, res, next);
