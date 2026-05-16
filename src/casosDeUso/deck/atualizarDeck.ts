@@ -49,7 +49,7 @@ export class AtualizarDeck
 
     if (!deck || (deck.usuarioId !== input.usuarioIdRequisitante && !input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Deck nÃ£o encontrado.",
+        mensagem: "Deck não encontrado.",
         status: StatusErro.erroNaoEncontrado,
       });
     }

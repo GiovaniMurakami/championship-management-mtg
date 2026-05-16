@@ -73,7 +73,7 @@ describe("AtualizarDeck", () => {
         expect(resultado.nomeConsolidado).toBeNull();
     });
 
-    it("nÃ£o deve alterar nomeConsolidado se nÃ£o for enviado", async () => {
+    it("não deve alterar nomeConsolidado se não for enviado", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -138,7 +138,7 @@ describe("AtualizarDeck", () => {
         expect(resultado.commander).toEqual([]);
     });
 
-    it("deve lanÃ§ar erro se o deck nÃ£o for encontrado", async () => {
+    it("deve lançar erro se o deck não for encontrado", async () => {
         const gateway = criarMockDeckGateway();
         const uc = AtualizarDeck.criar(gateway);
 
@@ -147,7 +147,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lanÃ§ar erro se o usuÃ¡rio nÃ£o for dono do deck e nÃ£o for admin", async () => {
+    it("deve lançar erro se o usuário não for dono do deck e não for admin", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -158,7 +158,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("admin pode atualizar deck de outro usuÃ¡rio", async () => {
+    it("admin pode atualizar deck de outro usuário", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -176,7 +176,7 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("deve lanÃ§ar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
+    it("deve lançar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -193,7 +193,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lanÃ§ar erro se o sideboard atualizado tiver mais de 15 cartas", async () => {
+    it("deve lançar erro se o sideboard atualizado tiver mais de 15 cartas", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -210,7 +210,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lanÃ§ar erro ao limpar commander de um deck commander", async () => {
+    it("deve lançar erro ao limpar commander de um deck commander", async () => {
         const deckCommander = new Deck({
             ...deckExistente,
             formato: "commander",
@@ -230,7 +230,7 @@ describe("AtualizarDeck", () => {
                 usuarioNome: "Jogador Teste",
                 commander: [],
             });
-            fail("Era esperado erro de validaÃ§Ã£o");
+            fail("Era esperado erro de validação");
         } catch (error: any) {
             expect(error.status).toBe(400);
             expect(error.message).toContain("commander expl");

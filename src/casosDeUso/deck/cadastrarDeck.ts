@@ -51,7 +51,7 @@ export class CadastrarDeck
     const totalDecksUsuario = await this.deckGateway.listarTotal({ usuarioId: input.usuarioId });
     if (totalDecksUsuario >= MAXIMO_DECKS_POR_USUARIO) {
       throw ErroPersonalizado.criar({
-        mensagem: `Limite de ${MAXIMO_DECKS_POR_USUARIO} decks por usuÃ¡rio atingido.`,
+        mensagem: `Limite de ${MAXIMO_DECKS_POR_USUARIO} decks por usuário atingido.`,
         status: StatusErro.erroParametro,
       });
     }

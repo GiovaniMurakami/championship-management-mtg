@@ -44,12 +44,12 @@ export class ChatGptServico implements ChatGptGateway {
         : "";
 
     const prompt =
-      `VocÃª Ã© um especialista em Magic: The Gathering. Analise a lista de deck abaixo no formato "${formato}" ` +
-      `e retorne APENAS um JSON vÃ¡lido com a chave "nomeConsolidado" contendo o nome de arquÃ©tipo mais ` +
+      `Você é um especialista em Magic: The Gathering. Analise a lista de deck abaixo no formato "${formato}" ` +
+      `e retorne APENAS um JSON válido com a chave "nomeConsolidado" contendo o nome de arquétipo mais ` +
       `conhecido para esse deck, conforme os nomes utilizados em sites como MTGGoldfish, MTGTop8 e EDHREC ` +
       `Priorize o nome exato como aparece nos metagame reports do MTGGoldfish para o formato "${formato}".\n\n` +
       `Maindeck:\n${listaMain}${listaSide}${listaCommander}\n\n` +
-      `Responda apenas com JSON vÃ¡lido, sem texto adicional. Exemplo: {"nomeConsolidado": "Monored Burn"}`;
+      `Responda apenas com JSON válido, sem texto adicional. Exemplo: {"nomeConsolidado": "Monored Burn"}`;
 
     try {
       return await comRetry(
@@ -64,7 +64,7 @@ export class ChatGptServico implements ChatGptGateway {
         }
       );
     } catch (err) {
-      logger.error({ err }, "[ChatGptServico] falhou apÃ³s todas as tentativas");
+      logger.error({ err }, "[ChatGptServico] falhou após todas as tentativas");
       return null;
     }
   }

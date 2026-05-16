@@ -8,7 +8,7 @@ describe("Deck", () => {
     const sideboard: Carta[] = [{ nome: "Red Elemental Blast", quantidade: 3 }];
     const commander: Carta[] = [{ nome: "Atraxa, Praetors' Voice", quantidade: 1 }];
 
-    it("deve criar uma instÃ¢ncia com todos os campos", () => {
+    it("deve criar uma instância com todos os campos", () => {
         const deck = new Deck({
             id: "deck-1",
             nome: "Burn",
@@ -30,7 +30,7 @@ describe("Deck", () => {
         expect(deck.criadoEm).toEqual(new Date("2025-06-01"));
     });
 
-    it("deve definir commander vazio automaticamente quando nÃ£o informado", () => {
+    it("deve definir commander vazio automaticamente quando não informado", () => {
         const deck = new Deck({
             id: "deck-1",
             nome: "Burn",
@@ -43,7 +43,7 @@ describe("Deck", () => {
         expect(deck.commander).toEqual([]);
     });
 
-    it("deve definir criadoEm automaticamente quando nÃ£o informado", () => {
+    it("deve definir criadoEm automaticamente quando não informado", () => {
         const antes = new Date();
         const deck = new Deck({
             id: "deck-1",
@@ -78,7 +78,7 @@ describe("Deck", () => {
             expect(deck.criadoEm).toBeInstanceOf(Date);
         });
 
-        it("deve gerar ids Ãºnicos", () => {
+        it("deve gerar ids únicos", () => {
             const d1 = Deck.criar({ nome: "A", formato: "f", maindeck: [], sideboard: [], usuarioId: "u" });
             const d2 = Deck.criar({ nome: "B", formato: "f", maindeck: [], sideboard: [], usuarioId: "u" });
             expect(d1.id).not.toBe(d2.id);

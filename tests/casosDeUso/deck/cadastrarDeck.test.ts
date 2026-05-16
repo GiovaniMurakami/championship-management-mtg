@@ -41,7 +41,7 @@ describe("CadastrarDeck", () => {
         expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledTimes(1);
     });
 
-    it("deve exigir commander explÃ­cito para o formato commander", async () => {
+    it("deve exigir commander explícito para o formato commander", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -55,7 +55,7 @@ describe("CadastrarDeck", () => {
                 usuarioId: "user-1",
                 usuarioNome: "Jogador Teste",
             });
-            fail("Era esperado erro de validaÃ§Ã£o");
+            fail("Era esperado erro de validação");
         } catch (error: any) {
             expect(error.status).toBe(400);
             expect(error.message).toContain("commander expl");
@@ -81,7 +81,7 @@ describe("CadastrarDeck", () => {
         expect(resultado.sideboard).toEqual([{ nome: "veil of summer", quantidade: 1 }]);
     });
 
-    it("deve lanÃ§ar erro se o maindeck tiver menos de 60 cartas em formatos sem commander", async () => {
+    it("deve lançar erro se o maindeck tiver menos de 60 cartas em formatos sem commander", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -98,7 +98,7 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lanÃ§ar erro se o sideboard tiver mais de 15 cartas quando houver limite", async () => {
+    it("deve lançar erro se o sideboard tiver mais de 15 cartas quando houver limite", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -115,7 +115,7 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lanÃ§ar erro se commander tradicional tiver mais de uma entrada", async () => {
+    it("deve lançar erro se commander tradicional tiver mais de uma entrada", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -133,7 +133,7 @@ describe("CadastrarDeck", () => {
                 usuarioId: "user-1",
                 usuarioNome: "Jogador Teste",
             });
-            fail("Era esperado erro de validaÃ§Ã£o");
+            fail("Era esperado erro de validação");
         } catch (error: any) {
             expect(error.status).toBe(400);
             expect(error.message).toContain("no m");
@@ -141,7 +141,7 @@ describe("CadastrarDeck", () => {
         }
     });
 
-    it("deve normalizar nomes de cartas para minÃºsculas", async () => {
+    it("deve normalizar nomes de cartas para minúsculas", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -153,7 +153,7 @@ describe("CadastrarDeck", () => {
             sideboard: [{ nome: "  SIDEBOARD Card ", quantidade: 1 }],
             commander: [{ nome: "  COMMANDER Card ", quantidade: 1 }],
             usuarioId: "u",
-            usuarioNome: "UsuÃ¡rio",
+            usuarioNome: "Usuário",
         });
 
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
@@ -201,13 +201,13 @@ describe("CadastrarDeck", () => {
             maindeck: maindeckValido,
             sideboard: [],
             usuarioId: "u",
-            usuarioNome: "UsuÃ¡rio",
+            usuarioNome: "Usuário",
         });
 
         expect(resultado.nomeConsolidado).toBeNull();
     });
 
-    it("deve lanÃ§ar 400 quando usuÃ¡rio jÃ¡ atingiu o limite de 50 decks", async () => {
+    it("deve lançar 400 quando usuário já atingiu o limite de 50 decks", async () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(50),
         });
@@ -226,7 +226,7 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("50") });
     });
 
-    it("deve permitir cadastro quando usuÃ¡rio tem exatamente 49 decks", async () => {
+    it("deve permitir cadastro quando usuário tem exatamente 49 decks", async () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(49),
         });

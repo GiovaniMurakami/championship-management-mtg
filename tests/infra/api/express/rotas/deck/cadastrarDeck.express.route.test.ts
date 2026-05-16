@@ -62,7 +62,7 @@ describe("CadastrarDeckRota", () => {
 
     it("retorna status do ErroPersonalizado quando lancado", async () => {
         servico.executar.mockRejectedValue(
-            ErroPersonalizado.criar({ mensagem: "Deck invÃ¡lido.", status: StatusErro.erroParametro })
+            ErroPersonalizado.criar({ mensagem: "Deck inválido.", status: StatusErro.erroParametro })
         );
         const { req, res, next } = makeReqRes({ nome: "Burn", formato: "Modern", maindeck });
         await rota.getHandler()(req, res, next);

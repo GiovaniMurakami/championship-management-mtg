@@ -35,7 +35,7 @@ export class BuscarDeck
 
     if (!deck) {
       throw ErroPersonalizado.criar({
-        mensagem: "Deck nÃ£o encontrado",
+        mensagem: "Deck não encontrado",
         status: 404,
       });
     }

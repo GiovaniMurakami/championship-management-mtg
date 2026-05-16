@@ -33,7 +33,7 @@ const deckSchema = new Schema<DeckDocument>({
     default: [],
     validate: {
       validator: (arr: Carta[]) => arr.length <= 100,
-      message: "maindeck nÃ£o pode ter mais de 100 entradas",
+      message: "maindeck não pode ter mais de 100 entradas",
     },
   },
   sideboard: {
@@ -41,7 +41,7 @@ const deckSchema = new Schema<DeckDocument>({
     default: [],
     validate: {
       validator: (arr: Carta[]) => arr.length <= 15,
-      message: "sideboard nÃ£o pode ter mais de 15 entradas",
+      message: "sideboard não pode ter mais de 15 entradas",
     },
   },
   commander: {
@@ -49,7 +49,7 @@ const deckSchema = new Schema<DeckDocument>({
     default: [],
     validate: {
       validator: (arr: Carta[]) => arr.length <= 3,
-      message: "commander nÃ£o pode ter mais de 3 entradas",
+      message: "commander não pode ter mais de 3 entradas",
     },
   },
   usuarioId: { type: String, required: true },
