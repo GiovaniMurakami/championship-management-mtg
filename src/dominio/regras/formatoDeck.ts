@@ -38,11 +38,30 @@ const REGRAS_FORMATO: Record<string, RegraFormatoDeck> = {
       quantidadePorCartaMax: 1,
     },
   },
-  "commander 500": {
-    chave: "commander 500",
+  commander500: {
+    chave: "commander500",
     exigeCommander: true,
+    minimoMaindeck: 99,
+    maximoSideboard: 15,
     commander: {
       minEntradas: 1,
+      maxEntradas: 1,
+      totalCopiasExato: 1,
+      quantidadePorCartaMin: 1,
+      quantidadePorCartaMax: 1,
+    },
+  },
+  "commander 500": {
+    chave: "commander500",
+    exigeCommander: true,
+    minimoMaindeck: 99,
+    maximoSideboard: 15,
+    commander: {
+      minEntradas: 1,
+      maxEntradas: 1,
+      totalCopiasExato: 1,
+      quantidadePorCartaMin: 1,
+      quantidadePorCartaMax: 1,
     },
   },
 };
@@ -59,7 +78,41 @@ export function normalizarListaCartas(cartas: Carta[] = []): Carta[] {
 }
 
 export function normalizarFormatoDeck(formato: string): string {
-  return formato.toLowerCase().trim();
+  const formatoNormalizado = formato.toLowerCase().trim().replace(/\s+/g, " ");
+  if (formatoNormalizado === "commander 500") return "commander500";
+  return formatoNormalizado;
+}
+
+export function normalizarLinkLigaMagic(linkLigaMagic?: string | null): string | null {
+  if (linkLigaMagic === undefined || linkLigaMagic === null) return null;
+
+  const linkNormalizado = linkLigaMagic.trim();
+  return linkNormalizado.length > 0 ? linkNormalizado : null;
+}
+
+export function validarLinkLigaMagic(formato: string, linkLigaMagic?: string | null): void {
+  const formatoNormalizado = normalizarFormatoDeck(formato);
+  const linkNormalizado = normalizarLinkLigaMagic(linkLigaMagic);
+
+  if (formatoNormalizado !== "commander500") {
+    return;
+  }
+
+  if (!linkNormalizado) {
+    throw ErroPersonalizado.criar({
+      mensagem: "linkLigaMagic é obrigatório para o formato commander500.",
+      status: StatusErro.erroParametro,
+    });
+  }
+
+  try {
+    new URL(linkNormalizado);
+  } catch {
+    throw ErroPersonalizado.criar({
+      mensagem: "linkLigaMagic deve ser uma URL válida para o formato commander500.",
+      status: StatusErro.erroParametro,
+    });
+  }
 }
 
 export function obterRegraFormatoDeck(formato: string): RegraFormatoDeck {

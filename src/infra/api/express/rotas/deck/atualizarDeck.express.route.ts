@@ -49,7 +49,7 @@ export class AtualizarDeckRota implements Rotas {
         const dados = validarBody(atualizarDeckSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, nomeConsolidado, formato, maindeck, sideboard, commander } = dados;
+        const { nome, nomeConsolidado, formato, linkLigaMagic, maindeck, sideboard, commander } = dados;
 
         const resultado = await this.atualizarDeckServico.executar({
           id,
@@ -59,6 +59,7 @@ export class AtualizarDeckRota implements Rotas {
           nome,
           nomeConsolidado,
           formato,
+          linkLigaMagic,
           maindeck,
           sideboard,
           commander,

@@ -6,8 +6,10 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import {
   normalizarFormatoDeck,
+  normalizarLinkLigaMagic,
   normalizarListaCartas,
   validarDeckPorFormato,
+  validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
 
 const MAXIMO_DECKS_POR_USUARIO = 50;
@@ -15,6 +17,7 @@ const MAXIMO_DECKS_POR_USUARIO = 50;
 export type CadastrarDeckInputDto = {
   nome: string;
   formato: string;
+  linkLigaMagic?: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
   commander?: Carta[] | null;
@@ -27,6 +30,7 @@ export type CadastrarDeckOutputDto = {
   nome: string;
   nomeConsolidado: string | null;
   formato: string;
+  linkLigaMagic: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
   commander: Carta[];
@@ -57,10 +61,12 @@ export class CadastrarDeck
     }
 
     const formato = normalizarFormatoDeck(input.formato);
+    const linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
     const maindeckNormalizado = normalizarListaCartas(input.maindeck);
     const sideboardNormalizado = normalizarListaCartas(input.sideboard ?? []);
     const commanderNormalizado = normalizarListaCartas(input.commander ?? []);
 
+    validarLinkLigaMagic(formato, linkLigaMagic);
     validarDeckPorFormato({
       formato,
       maindeck: maindeckNormalizado,
@@ -79,6 +85,7 @@ export class CadastrarDeck
       nome: input.nome.trim(),
       nomeConsolidado,
       formato,
+      linkLigaMagic,
       maindeck: maindeckNormalizado,
       sideboard: sideboardNormalizado,
       commander: commanderNormalizado,
@@ -92,6 +99,7 @@ export class CadastrarDeck
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,

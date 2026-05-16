@@ -33,6 +33,7 @@ describe("CadastrarDeck", () => {
         expect(resultado.id).toBeDefined();
         expect(resultado.nome).toBe("Burn");
         expect(resultado.formato).toBe("legacy");
+        expect(resultado.linkLigaMagic).toBeNull();
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
         expect(resultado.commander).toEqual([]);
         expect(resultado.usuario).toEqual({ id: "user-1", nome: "Jogador Teste" });
@@ -41,25 +42,21 @@ describe("CadastrarDeck", () => {
         expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledTimes(1);
     });
 
-    it("deve exigir commander explícito para o formato commander", async () => {
+    it("deve exigir commander explicito para o formato commander", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
 
-        try {
-            await uc.executar({
+        await expect(
+            uc.executar({
                 nome: "Atraxa",
                 formato: "commander",
                 maindeck: [{ nome: "Sol Ring", quantidade: 99 }],
                 sideboard: [],
                 usuarioId: "user-1",
                 usuarioNome: "Jogador Teste",
-            });
-            fail("Era esperado erro de validação");
-        } catch (error: any) {
-            expect(error.status).toBe(400);
-            expect(error.message).toContain("commander expl");
-        }
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("commander") });
     });
 
     it("deve aceitar deck commander com commander separado do sideboard", async () => {
@@ -81,7 +78,45 @@ describe("CadastrarDeck", () => {
         expect(resultado.sideboard).toEqual([{ nome: "veil of summer", quantidade: 1 }]);
     });
 
-    it("deve lançar erro se o maindeck tiver menos de 60 cartas em formatos sem commander", async () => {
+    it("deve cadastrar deck commander500 com linkLigaMagic", async () => {
+        const gateway = criarMockDeckGateway();
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        const resultado = await uc.executar({
+            nome: "Meu Deck C500",
+            formato: "commander500",
+            linkLigaMagic: " https://www.ligamagic.com.br/?view=dks/deck&id=123456 ",
+            maindeck: [{ nome: "Sol Ring", quantidade: 99 }],
+            sideboard: [],
+            commander: commanderValido,
+            usuarioId: "user-1",
+            usuarioNome: "Jogador Teste",
+        });
+
+        expect(resultado.formato).toBe("commander500");
+        expect(resultado.linkLigaMagic).toBe("https://www.ligamagic.com.br/?view=dks/deck&id=123456");
+    });
+
+    it("deve exigir linkLigaMagic para commander500", async () => {
+        const gateway = criarMockDeckGateway();
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        await expect(
+            uc.executar({
+                nome: "Meu Deck C500",
+                formato: "commander500",
+                maindeck: [{ nome: "Sol Ring", quantidade: 99 }],
+                sideboard: [],
+                commander: commanderValido,
+                usuarioId: "user-1",
+                usuarioNome: "Jogador Teste",
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("linkLigaMagic") });
+    });
+
+    it("deve lancar erro se o maindeck tiver menos de 60 cartas em formatos sem commander", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -98,7 +133,7 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se o sideboard tiver mais de 15 cartas quando houver limite", async () => {
+    it("deve lancar erro se o sideboard tiver mais de 15 cartas quando houver limite", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -115,13 +150,13 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se commander tradicional tiver mais de uma entrada", async () => {
+    it("deve lancar erro se commander tradicional tiver mais de uma entrada", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
 
-        try {
-            await uc.executar({
+        await expect(
+            uc.executar({
                 nome: "Partners?",
                 formato: "commander",
                 maindeck: [{ nome: "Island", quantidade: 99 }],
@@ -132,16 +167,30 @@ describe("CadastrarDeck", () => {
                 ],
                 usuarioId: "user-1",
                 usuarioNome: "Jogador Teste",
-            });
-            fail("Era esperado erro de validação");
-        } catch (error: any) {
-            expect(error.status).toBe(400);
-            expect(error.message).toContain("no m");
-            expect(error.message).toContain("1");
-        }
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("1") });
     });
 
-    it("deve normalizar nomes de cartas para minúsculas", async () => {
+    it("deve validar URL de linkLigaMagic em commander500", async () => {
+        const gateway = criarMockDeckGateway();
+        const chatGpt = criarMockChatGptGateway();
+        const uc = CadastrarDeck.criar(gateway, chatGpt);
+
+        await expect(
+            uc.executar({
+                nome: "Meu Deck C500",
+                formato: "commander500",
+                linkLigaMagic: "nao-e-url",
+                maindeck: [{ nome: "Sol Ring", quantidade: 99 }],
+                sideboard: [],
+                commander: commanderValido,
+                usuarioId: "user-1",
+                usuarioNome: "Jogador Teste",
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("URL") });
+    });
+
+    it("deve normalizar nomes de cartas para minusculas", async () => {
         const gateway = criarMockDeckGateway();
         const chatGpt = criarMockChatGptGateway();
         const uc = CadastrarDeck.criar(gateway, chatGpt);
@@ -153,7 +202,7 @@ describe("CadastrarDeck", () => {
             sideboard: [{ nome: "  SIDEBOARD Card ", quantidade: 1 }],
             commander: [{ nome: "  COMMANDER Card ", quantidade: 1 }],
             usuarioId: "u",
-            usuarioNome: "Usuário",
+            usuarioNome: "Usuario",
         });
 
         expect(resultado.maindeck[0].nome).toBe("lightning bolt");
@@ -201,13 +250,13 @@ describe("CadastrarDeck", () => {
             maindeck: maindeckValido,
             sideboard: [],
             usuarioId: "u",
-            usuarioNome: "Usuário",
+            usuarioNome: "Usuario",
         });
 
         expect(resultado.nomeConsolidado).toBeNull();
     });
 
-    it("deve lançar 400 quando usuário já atingiu o limite de 50 decks", async () => {
+    it("deve lancar 400 quando usuario ja atingiu o limite de 50 decks", async () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(50),
         });
@@ -226,7 +275,7 @@ describe("CadastrarDeck", () => {
         ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("50") });
     });
 
-    it("deve permitir cadastro quando usuário tem exatamente 49 decks", async () => {
+    it("deve permitir cadastro quando usuario tem exatamente 49 decks", async () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(49),
         });

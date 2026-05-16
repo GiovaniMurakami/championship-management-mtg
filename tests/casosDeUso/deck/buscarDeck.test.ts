@@ -5,9 +5,17 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
 
 describe("BuscarDeck", () => {
-    it("deve retornar o deck com dados do usuário", async () => {
-        const deck = new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u1" });
-        const usuario = new Usuario({ id: "u1", nome: "João", email: "j@e.com", senha: "s" });
+    it("deve retornar o deck com dados do usuario", async () => {
+        const deck = new Deck({
+            id: "d1",
+            nome: "Burn",
+            formato: "legacy",
+            linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=123456",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+        });
+        const usuario = new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" });
 
         const deckGateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(deck),
@@ -22,10 +30,11 @@ describe("BuscarDeck", () => {
         expect(resultado.id).toBe("d1");
         expect(resultado.nome).toBe("Burn");
         expect(resultado.formato).toBe("legacy");
-        expect(resultado.usuario).toEqual({ id: "u1", nome: "João" });
+        expect(resultado.linkLigaMagic).toBe("https://www.ligamagic.com.br/?view=dks/deck&id=123456");
+        expect(resultado.usuario).toEqual({ id: "u1", nome: "Joao" });
     });
 
-    it("deve lançar 404 quando deck não existe", async () => {
+    it("deve lancar 404 quando deck nao existe", async () => {
         const uc = BuscarDeck.criar(criarMockDeckGateway(), criarMockUsuarioGateway());
 
         await expect(uc.executar({ id: "inexistente" })).rejects.toThrow();
@@ -38,7 +47,7 @@ describe("BuscarDeck", () => {
         }
     });
 
-    it("deve usar o usuarioId como fallback de nome quando usuário não é encontrado", async () => {
+    it("deve usar o usuarioId como fallback de nome quando usuario nao e encontrado", async () => {
         const deck = new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-desconhecido" });
 
         const deckGateway = criarMockDeckGateway({

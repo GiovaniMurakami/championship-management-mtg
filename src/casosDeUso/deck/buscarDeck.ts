@@ -12,6 +12,7 @@ export type BuscarDeckOutputDto = {
   id: string;
   nome: string;
   formato: string;
+  linkLigaMagic: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
   commander: Carta[];
@@ -47,6 +48,7 @@ export class BuscarDeck
       id: deck.id,
       nome: deck.nome,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,

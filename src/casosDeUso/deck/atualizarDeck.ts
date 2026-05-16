@@ -5,8 +5,10 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import {
   normalizarFormatoDeck,
+  normalizarLinkLigaMagic,
   normalizarListaCartas,
   validarDeckPorFormato,
+  validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
 
 export type AtualizarDeckInputDto = {
@@ -17,6 +19,7 @@ export type AtualizarDeckInputDto = {
   nome?: string;
   nomeConsolidado?: string | null;
   formato?: string;
+  linkLigaMagic?: string | null;
   maindeck?: Carta[];
   sideboard?: Carta[];
   commander?: Carta[] | null;
@@ -27,6 +30,7 @@ export type AtualizarDeckOutputDto = {
   nome: string;
   nomeConsolidado: string | null;
   formato: string;
+  linkLigaMagic: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
   commander: Carta[];
@@ -57,10 +61,12 @@ export class AtualizarDeck
     if (input.nome !== undefined) deck.nome = input.nome.trim();
     if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
     if (input.formato !== undefined) deck.formato = normalizarFormatoDeck(input.formato);
+    if (input.linkLigaMagic !== undefined) deck.linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
     if (input.maindeck !== undefined) deck.maindeck = normalizarListaCartas(input.maindeck);
     if (input.sideboard !== undefined) deck.sideboard = normalizarListaCartas(input.sideboard);
     if (input.commander !== undefined) deck.commander = normalizarListaCartas(input.commander ?? []);
 
+    validarLinkLigaMagic(deck.formato, deck.linkLigaMagic);
     validarDeckPorFormato({
       formato: deck.formato,
       maindeck: deck.maindeck,
@@ -75,6 +81,7 @@ export class AtualizarDeck
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,

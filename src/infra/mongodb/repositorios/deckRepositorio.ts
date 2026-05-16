@@ -8,6 +8,7 @@ interface DeckDocument extends Document {
   nome: string;
   nomeConsolidado?: string | null;
   formato: string;
+  linkLigaMagic?: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
   commander?: Carta[];
@@ -28,6 +29,7 @@ const deckSchema = new Schema<DeckDocument>({
   nome: { type: String, required: true, maxlength: 100 },
   nomeConsolidado: { type: String, default: null, maxlength: 100 },
   formato: { type: String, required: true, maxlength: 50 },
+  linkLigaMagic: { type: String, default: null, maxlength: 500 },
   maindeck: {
     type: [cartaSchema],
     default: [],
@@ -70,6 +72,7 @@ function docParaDeck(doc: Document): Deck {
     nome: doc.get("nome"),
     nomeConsolidado: doc.get("nomeConsolidado") ?? null,
     formato: doc.get("formato"),
+    linkLigaMagic: doc.get("linkLigaMagic") ?? null,
     maindeck: doc.get("maindeck"),
     sideboard: doc.get("sideboard"),
     commander: doc.get("commander") ?? [],
@@ -92,6 +95,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,
@@ -154,6 +158,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
         nome: deck.nome,
         nomeConsolidado: deck.nomeConsolidado,
         formato: deck.formato,
+        linkLigaMagic: deck.linkLigaMagic,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
         commander: deck.commander,

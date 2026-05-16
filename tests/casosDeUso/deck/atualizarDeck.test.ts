@@ -73,7 +73,7 @@ describe("AtualizarDeck", () => {
         expect(resultado.nomeConsolidado).toBeNull();
     });
 
-    it("não deve alterar nomeConsolidado se não for enviado", async () => {
+    it("nao deve alterar nomeConsolidado se nao for enviado", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -113,6 +113,30 @@ describe("AtualizarDeck", () => {
         expect(resultado.commander).toEqual([{ nome: "atraxa, praetors' voice", quantidade: 1 }]);
     });
 
+    it("deve atualizar linkLigaMagic em deck commander500", async () => {
+        const deckCommander500 = new Deck({
+            ...deckExistente,
+            formato: "commander500",
+            maindeck: [{ nome: "sol ring", quantidade: 99 }],
+            commander: [{ nome: "old commander", quantidade: 1 }],
+            linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=1",
+        });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deckCommander500),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            linkLigaMagic: " https://www.ligamagic.com.br/?view=dks/deck&id=2 ",
+        });
+
+        expect(resultado.linkLigaMagic).toBe("https://www.ligamagic.com.br/?view=dks/deck&id=2");
+    });
+
     it("deve tratar deck legado sem commander salvo", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({
@@ -138,7 +162,7 @@ describe("AtualizarDeck", () => {
         expect(resultado.commander).toEqual([]);
     });
 
-    it("deve lançar erro se o deck não for encontrado", async () => {
+    it("deve lancar erro se o deck nao for encontrado", async () => {
         const gateway = criarMockDeckGateway();
         const uc = AtualizarDeck.criar(gateway);
 
@@ -147,7 +171,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("deve lançar erro se o usuário não for dono do deck e não for admin", async () => {
+    it("deve lancar erro se o usuario nao for dono do deck e nao for admin", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -158,7 +182,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
-    it("admin pode atualizar deck de outro usuário", async () => {
+    it("admin pode atualizar deck de outro usuario", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -176,7 +200,7 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
-    it("deve lançar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
+    it("deve lancar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -193,7 +217,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro se o sideboard atualizado tiver mais de 15 cartas", async () => {
+    it("deve lancar erro se o sideboard atualizado tiver mais de 15 cartas", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
@@ -210,7 +234,7 @@ describe("AtualizarDeck", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro ao limpar commander de um deck commander", async () => {
+    it("deve lancar erro ao limpar commander de um deck commander", async () => {
         const deckCommander = new Deck({
             ...deckExistente,
             formato: "commander",
@@ -222,18 +246,59 @@ describe("AtualizarDeck", () => {
         });
         const uc = AtualizarDeck.criar(gateway);
 
-        try {
-            await uc.executar({
+        await expect(
+            uc.executar({
                 id: "deck-1",
                 usuarioIdRequisitante: "user-1",
                 isAdmin: false,
                 usuarioNome: "Jogador Teste",
                 commander: [],
-            });
-            fail("Era esperado erro de validação");
-        } catch (error: any) {
-            expect(error.status).toBe(400);
-            expect(error.message).toContain("commander expl");
-        }
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("commander") });
+    });
+
+    it("deve exigir linkLigaMagic ao converter deck para commander500", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Deck({
+                ...deckExistente,
+                maindeck: [{ nome: "sol ring", quantidade: 99 }],
+                commander: [{ nome: "atraxa", quantidade: 1 }],
+            })),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        await expect(
+            uc.executar({
+                id: "deck-1",
+                usuarioIdRequisitante: "user-1",
+                isAdmin: false,
+                usuarioNome: "Jogador Teste",
+                formato: "commander500",
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("linkLigaMagic") });
+    });
+
+    it("deve validar URL de linkLigaMagic em deck commander500", async () => {
+        const deckCommander500 = new Deck({
+            ...deckExistente,
+            formato: "commander500",
+            maindeck: [{ nome: "sol ring", quantidade: 99 }],
+            commander: [{ nome: "old commander", quantidade: 1 }],
+            linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=1",
+        });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deckCommander500),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        await expect(
+            uc.executar({
+                id: "deck-1",
+                usuarioIdRequisitante: "user-1",
+                isAdmin: false,
+                usuarioNome: "Jogador Teste",
+                linkLigaMagic: "invalido",
+            })
+        ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("URL") });
     });
 });
