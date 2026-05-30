@@ -5,6 +5,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 
 export type EscolherDeckTorneioInputDto = {
   torneioId: string;
@@ -89,7 +90,10 @@ export class EscolherDeckTorneio
       });
     }
 
-    inscricao.deckId = deck.id;
+    const deckTravado = clonarDeckParaTorneio(deck, torneio.id);
+    await this.deckGateway.salvar(deckTravado);
+
+    inscricao.deckId = deckTravado.id;
     await this.inscricaoGateway.atualizar(inscricao);
 
     eventosTorneio.emit("deck_inserido", {

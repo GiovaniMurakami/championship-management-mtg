@@ -27,6 +27,7 @@ export type ListarDecksOutputDto = {
     sideboard: Carta[];
     commander: Carta[];
     usuario: { id: string; nome: string };
+    visualizacoes: number;
     criadoEm: Date;
   }[];
   total: number;
@@ -86,6 +87,7 @@ export class ListarDecks
           id: deck.usuarioId,
           nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
         },
+        visualizacoes: deck.visualizacoes,
         criadoEm: deck.criadoEm,
       })),
       total,

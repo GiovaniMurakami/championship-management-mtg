@@ -230,7 +230,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         const timeId1 = timePorJogador.get(jogador1Id);
         const timeId2 = timePorJogador.get(jogador2Id!);
         if (timeId1 && timeId2 && timeId1 === timeId2) {
-          // Partidas entre membros do mesmo time nÃ£o alteram o ranking coletivo.
+          // Partidas entre membros do mesmo time não alteram o ranking coletivo.
         } else {
           if (timeId1) this.registrarResultadoTime(statsTimesMap, timeId1, v1 > v2 ? "vitoria" : v2 > v1 ? "derrota" : "empate");
           if (timeId2) this.registrarResultadoTime(statsTimesMap, timeId2, v2 > v1 ? "vitoria" : v1 > v2 ? "derrota" : "empate");
@@ -256,7 +256,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const decks = deckIds.length > 0 ? await this.deckGateway.buscarVarios(deckIds) : [];
     const deckPorId = new Map(decks.map((d) => [d.id, d]));
 
-    // Renomeia stats de decks: de deckId → nome consolidado (ou nome)
+    // Renomeia stats de decks: de deckId -> nome consolidado (ou nome)
     const statsDecksFinal = new Map<string, StatsDeck>();
     for (const [deckId, stats] of statsDecks.entries()) {
       const deck = deckPorId.get(deckId);
@@ -301,7 +301,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const limDecks = input.limiteDecks ?? 10;
     const limCartas = input.limiteCartas ?? 10;
 
-    // Ranking jogadores — ordenado por pontos desc, vitorias desc
+    // Ranking jogadores - ordenado por pontos desc, vitorias desc
     const jogadoresOrdenados = Array.from(statsJogadores.entries())
       .sort(([, a], [, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias);
 
@@ -316,7 +316,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         pontos: stats.pontos,
       }));
 
-    // Ranking decks — ordenado por totalUsos desc, vitorias desc
+    // Ranking decks - ordenado por totalUsos desc, vitorias desc
     const decksOrdenados = Array.from(statsDecksFinal.values())
       .sort((a, b) => b.totalUsos - a.totalUsos || b.vitorias - a.vitorias);
 
@@ -336,7 +336,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         };
       });
 
-    // Ranking cartas — ordenado por totalCopias desc
+    // Ranking cartas - ordenado por totalCopias desc
     const cartasOrdenadas = Array.from(statsCartas.entries())
       .sort(([, a], [, b]) => b.totalCopias - a.totalCopias || b.totalDecks - a.totalDecks);
 

@@ -36,9 +36,10 @@ describe("EscolherDeckTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "deck-1" });
 
-        expect(resultado.deckId).toBe("deck-1");
+        expect(resultado.deckId).not.toBe("deck-1");
         expect(resultado.usuario).toEqual({ id: "u-1", nome: "JoÃ£o" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
+        expect(inscricaoGw.atualizar).toHaveBeenCalledWith(expect.objectContaining({ deckId: resultado.deckId }));
     });
 
     it("deve lanÃ§ar erro se torneio nÃ£o encontrado", async () => {
@@ -116,7 +117,7 @@ describe("EscolherDeckTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "Admin", isAdmin: true, deckId: "deck-1" });
 
-        expect(resultado.deckId).toBe("deck-1");
+        expect(resultado.deckId).not.toBe("deck-1");
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
     });
 

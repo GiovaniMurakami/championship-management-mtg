@@ -1,21 +1,25 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { AlterarTorneio } from "../../../../../casosDeUso/torneio/alterarTorneio";
+import { AtualizarPareamentosRodada } from "../../../../../casosDeUso/torneio/atualizarPareamentosRodada";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { alterarTorneioSchema } from "../../../../../helpers/validacao/schemas";
+import { atualizarPareamentosRodadaSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
-export class AlterarTorneioRota implements Rotas {
+export class AtualizarPareamentosRodadaRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly alterarTorneioServico: AlterarTorneio
+    private readonly atualizarPareamentosRodadaServico: AtualizarPareamentosRodada
   ) { }
 
-  public static criar(alterarTorneioServico: AlterarTorneio) {
-    return new AlterarTorneioRota("/torneio/:id", HttpMethod.PUT, alterarTorneioServico);
+  public static criar(atualizarPareamentosRodadaServico: AtualizarPareamentosRodada) {
+    return new AtualizarPareamentosRodadaRota(
+      "/torneio/:torneioId/rodada/:rodada/pareamentos",
+      HttpMethod.PUT,
+      atualizarPareamentosRodadaServico
+    );
   }
 
   public getCaminho(): string { return this.caminho; }
@@ -29,35 +33,23 @@ export class AlterarTorneioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const id = request.params.id as string;
-        const requisitanteId = request.usuario!.id;
-        const dados = validarBody(alterarTorneioSchema, request.body, response);
+        const dados = validarBody(atualizarPareamentosRodadaSchema, request.body, response);
         if (!dados) return;
 
-        const {
-          nome, horario, formato, descricao, regras,
-          bannerUrl, linkBanner, somRodada,
-          maxJogadores, maxRodadas, corteTop, linkLive, secreto, exibirNomeJogador,
-        } = dados;
+        const torneioId = request.params.torneioId as string;
+        const rodada = Number(request.params.rodada as string);
 
-        const resultado = await this.alterarTorneioServico.executar({
-          id,
-          requisitanteId,
+        const resultado = await this.atualizarPareamentosRodadaServico.executar({
+          torneioId,
+          rodada,
+          requisitanteId: request.usuario!.id,
           isAdmin: request.usuario!.role === "admin",
-          nome,
-          horario: horario ? new Date(horario) : undefined,
-          formato,
-          descricao,
-          regras,
-          bannerUrl,
-          linkBanner,
-          somRodada,
-          maxJogadores,
-          maxRodadas,
-          corteTop,
-          linkLive,
-          secreto,
-          exibirNomeJogador,
+          partidas: dados.partidas.map((partida) => ({
+            id: partida.id,
+            jogador1Id: partida.jogador1Id,
+            jogador2Id: partida.jogador2Id ?? null,
+            mesa: partida.mesa ?? null,
+          })),
         });
 
         response.status(200).json(resultado);

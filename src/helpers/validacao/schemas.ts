@@ -4,7 +4,7 @@ import { getS3BaseUrl } from "../env";
 function s3ImagemUrl() {
   return z
     .string()
-    .url("URL invÃ¡lida.")
+    .url("URL inválida.")
     .refine(
       (url) => {
         const base = getS3BaseUrl();
@@ -24,14 +24,14 @@ const linkLigaMagicSchema = z.string().url("linkLigaMagic deve ser uma URL váli
 const ehFormatoCommander500 = (formato: string) => formato.toLowerCase().trim().replace(/\s+/g, "") === "commander500";
 
 export const cadastrarUsuarioSchema = z.object({
-  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
-  email: z.email("E-mail invÃ¡lido."),
-  senha: z.string().min(8, "A senha deve ter no mÃ­nimo 8 caracteres."),
+  nome: z.string().min(1, "Nome é obrigatório."),
+  email: z.email("E-mail inválido."),
+  senha: z.string().min(8, "A senha deve ter no mínimo 8 caracteres."),
 });
 
 export const loginUsuarioSchema = z.object({
-  email: z.string().min(1, "E-mail Ã© obrigatÃ³rio."),
-  senha: z.string().min(1, "Senha Ã© obrigatÃ³ria."),
+  email: z.string().min(1, "E-mail é obrigatório."),
+  senha: z.string().min(1, "Senha é obrigatória."),
 });
 
 export const atualizarUsuarioSchema = z.object({
@@ -42,12 +42,12 @@ export const atualizarUsuarioSchema = z.object({
 });
 
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, "refreshToken Ã© obrigatÃ³rio."),
+  refreshToken: z.string().min(1, "refreshToken é obrigatório."),
 });
 
 export const cadastrarDeckSchema = z.object({
-  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
-  formato: z.string().min(1, "Formato Ã© obrigatÃ³rio."),
+  nome: z.string().min(1, "Nome é obrigatório."),
+  formato: z.string().min(1, "Formato é obrigatório."),
   linkLigaMagic: linkLigaMagicSchema,
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
@@ -57,7 +57,7 @@ export const cadastrarDeckSchema = z.object({
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["linkLigaMagic"],
-      message: "linkLigaMagic Ã© obrigatÃ³rio quando formato for commander500.",
+      message: "linkLigaMagic é obrigatório quando formato for commander500.",
     });
   }
 });
@@ -73,10 +73,11 @@ export const atualizarDeckSchema = z.object({
 });
 
 export const criarTorneioSchema = z.object({
-  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
-  horario: z.string().min(1, "HorÃ¡rio Ã© obrigatÃ³rio."),
-  formato: z.string().min(1, "Formato Ã© obrigatÃ³rio."),
-  premio: z.string().optional(),
+  nome: z.string().min(1, "Nome é obrigatório."),
+  horario: z.string().min(1, "Horário é obrigatório."),
+  formato: z.string().min(1, "Formato é obrigatório."),
+  descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
+  regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
   bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
@@ -92,7 +93,8 @@ export const alterarTorneioSchema = z.object({
   nome: z.string().min(1).optional(),
   horario: z.string().optional(),
   formato: z.string().min(1).optional(),
-  premio: z.string().optional(),
+  descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
+  regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
   bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
@@ -105,8 +107,17 @@ export const alterarTorneioSchema = z.object({
 });
 
 export const escolherDeckTorneioSchema = z.object({
-  deckId: z.string().min(1, "deckId Ã© obrigatÃ³rio."),
+  deckId: z.string().min(1, "deckId é obrigatório."),
   jogadorId: z.string().optional(),
+});
+
+export const atualizarPareamentosRodadaSchema = z.object({
+  partidas: z.array(z.object({
+    id: z.string().min(1, "id da partida é obrigatório."),
+    jogador1Id: z.string().min(1, "jogador1Id é obrigatório."),
+    jogador2Id: z.string().nullable().optional(),
+    mesa: z.number().int().min(1, "mesa deve ser inteiro >= 1.").nullable().optional(),
+  })).min(1, "Informe ao menos uma partida para atualizar."),
 });
 
 export const registrarResultadoSchema = z.object({
@@ -119,7 +130,7 @@ export const droparJogadorSchema = z.object({
 });
 
 export const criarLigaSchema = z.object({
-  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
+  nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
   torneioIds: z.array(z.string()).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
@@ -133,15 +144,15 @@ export const alterarLigaSchema = z.object({
 });
 
 export const criarTimeSchema = z.object({
-  nome: z.string().min(1, "Nome Ã© obrigatÃ³rio."),
+  nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
-  imagemUrl: z.string().url("imagemUrl deve ser uma URL vÃ¡lida.").optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
 });
 
 export const alterarTimeSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
-  imagemUrl: z.string().url("imagemUrl deve ser uma URL vÃ¡lida.").optional(),
+  imagemUrl: z.string().url("imagemUrl deve ser uma URL válida.").optional(),
 });
 
 export const gerarUrlUploadImagemSchema = z.object({
@@ -152,5 +163,5 @@ export const gerarUrlUploadImagemSchema = z.object({
     .number()
     .int()
     .min(1, "tamanhoBytes deve ser maior que 0.")
-    .max(5 * 1024 * 1024, "tamanhoBytes nÃ£o pode exceder 5 MB."),
+    .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
 });

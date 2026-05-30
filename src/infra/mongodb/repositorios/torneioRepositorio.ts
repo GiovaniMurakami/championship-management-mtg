@@ -15,7 +15,8 @@ interface TorneioDocument extends Document {
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -26,6 +27,7 @@ interface TorneioDocument extends Document {
   emCorte: boolean;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
+  visualizacoes: number;
   criadoEm: Date;
   rodadaIniciadaEm?: Date;
 }
@@ -39,7 +41,8 @@ const torneioSchema = new Schema<TorneioDocument>({
   status: { type: String, required: true, default: "inscricoes_abertas" },
   rodadaAtual: { type: Number, required: true, default: 0 },
   totalRodadas: { type: Number, required: true, default: 0 },
-  premio: { type: String, maxlength: 200 },
+  descricao: { type: String, maxlength: 4000 },
+  regras: { type: String, maxlength: 4000 },
   bannerUrl: { type: String, maxlength: 500 },
   linkBanner: { type: String, maxlength: 500 },
   somRodada: { type: String, maxlength: 500 },
@@ -50,6 +53,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   emCorte: { type: Boolean, default: false },
   secreto: { type: Boolean, default: false },
   exibirNomeJogador: { type: String, default: "nome" },
+  visualizacoes: { type: Number, default: 0, min: 0 },
   criadoEm: { type: Date, default: Date.now },
   rodadaIniciadaEm: { type: Date },
 });
@@ -73,7 +77,8 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     status: doc.get("status"),
     rodadaAtual: doc.get("rodadaAtual"),
     totalRodadas: doc.get("totalRodadas"),
-    premio: doc.get("premio") ?? undefined,
+    descricao: doc.get("descricao") ?? doc.get("premio") ?? undefined,
+    regras: doc.get("regras") ?? undefined,
     bannerUrl: doc.get("bannerUrl") ?? undefined,
     linkBanner: doc.get("linkBanner") ?? undefined,
     somRodada: doc.get("somRodada") ?? undefined,
@@ -84,6 +89,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     emCorte: doc.get("emCorte") ?? false,
     secreto: doc.get("secreto") ?? false,
     exibirNomeJogador: (doc.get("exibirNomeJogador") as ExibirNomeJogador) ?? "nome",
+    visualizacoes: doc.get("visualizacoes") ?? 0,
     criadoEm: doc.get("criadoEm"),
     rodadaIniciadaEm: doc.get("rodadaIniciadaEm") ?? undefined,
   });
@@ -107,7 +113,8 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       status: torneio.status,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
-      premio: torneio.premio,
+      descricao: torneio.descricao,
+      regras: torneio.regras,
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
@@ -118,6 +125,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
+      visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm,
     });
   }
@@ -181,7 +189,8 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         status: torneio.status,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
-        premio: torneio.premio,
+        descricao: torneio.descricao,
+        regras: torneio.regras,
         bannerUrl: torneio.bannerUrl,
         linkBanner: torneio.linkBanner,
         somRodada: torneio.somRodada,
@@ -192,6 +201,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         emCorte: torneio.emCorte,
         secreto: torneio.secreto,
         exibirNomeJogador: torneio.exibirNomeJogador,
+        visualizacoes: torneio.visualizacoes,
         rodadaIniciadaEm: torneio.rodadaIniciadaEm,
       }
     );
@@ -249,5 +259,16 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     } finally {
       await session.endSession();
     }
+  }
+
+  public async incrementarVisualizacoes(id: string): Promise<Torneio | null> {
+    await this.conectar();
+    const doc = await TorneioModel.findOneAndUpdate(
+      { id },
+      { $inc: { visualizacoes: 1 } },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaTorneio(doc as unknown as TorneioDocument);
   }
 }

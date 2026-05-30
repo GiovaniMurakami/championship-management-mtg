@@ -287,7 +287,7 @@ export class IniciarProximaRodada
     for (const p of todasPartidas) {
       if (p.jogador2Id !== null) {
         historico.add(parKey(p.jogador1Id, p.jogador2Id));
-      } else if (p.vitoriasJogador1 > p.vitoriasJogador2) {
+      } else {
         // BYE normal (vitória) — rastrear para evitar repetição
         jaRecebeuBye.add(p.jogador1Id);
       }

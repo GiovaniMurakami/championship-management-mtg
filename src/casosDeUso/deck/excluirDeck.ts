@@ -33,6 +33,13 @@ export class ExcluirDeck
       });
     }
 
+    if (deck.travado) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Este deck está travado porque está vinculado a um torneio.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     await this.deckGateway.excluir(input.id);
 
     return { mensagem: "Deck excluído com sucesso." };

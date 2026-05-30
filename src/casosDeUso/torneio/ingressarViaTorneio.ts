@@ -11,6 +11,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 
 export type IngressarViaTorneioInputDto = {
     token: string;
@@ -133,12 +134,15 @@ export class IngressarViaTorneio
 
         await this.linkIngressoGateway.excluirPorToken(input.token);
 
+        const deckTravado = clonarDeckParaTorneio(deck, torneio.id);
+        await this.deckGateway.salvar(deckTravado);
+
         const inscricao = Inscricao.criar({
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
         });
         inscricao.checkInRodada = torneio.rodadaAtual;
-        inscricao.deckId = input.deckId;
+        inscricao.deckId = deckTravado.id;
 
         await this.inscricaoGateway.salvar(inscricao);
 
@@ -163,47 +167,33 @@ export class IngressarViaTorneio
             }
         }
 
-        const byePartida = await this.partidaGateway.buscarByePartidaRodada(
+        const partidasDaRodada = await this.partidaGateway.listarPorTorneioERodada(
             torneio.id,
             torneio.rodadaAtual
         );
+        const proximaMesa = this.calcularProximaMesa(partidasDaRodada);
 
-        let partida: Partida;
-
-        if (byePartida) {
-            const partidaAtualizada = await this.partidaGateway.atualizarJogador2Partida(
-                byePartida.id,
-                input.usuarioId
-            );
-            if (!partidaAtualizada) {
-                throw ErroPersonalizado.criar({
-                    mensagem: "Não foi possível associar o jogador à partida BYE existente.",
-                    status: StatusErro.erroParametro,
-                });
-            }
-            partida = partidaAtualizada;
-        } else {
-            partida = new Partida({
-                id: uuidv4(),
-                torneioId: torneio.id,
-                rodada: torneio.rodadaAtual,
-                jogador1Id: input.usuarioId,
-                jogador2Id: null,
-                vitoriasJogador1: 0,
-                vitoriasJogador2: 2,
-                status: "finalizada",
-                tipoBye: "penalidade",
-                criadoEm: new Date(),
-            });
-            await this.partidaGateway.salvar(partida);
-        }
+        const partida = new Partida({
+            id: uuidv4(),
+            torneioId: torneio.id,
+            rodada: torneio.rodadaAtual,
+            jogador1Id: input.usuarioId,
+            jogador2Id: null,
+            vitoriasJogador1: 0,
+            vitoriasJogador2: 2,
+            status: "finalizada",
+            tipoBye: "penalidade",
+            mesa: proximaMesa,
+            criadoEm: new Date(),
+        });
+        await this.partidaGateway.salvar(partida);
 
         eventosTorneio.emit("jogador_ingressou", {
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
             usuarioNome: usuario.nome,
             rodadaIngresso: torneio.rodadaAtual,
-            substituiuBye: !!byePartida,
+            substituiuBye: false,
         });
 
         return {
@@ -215,5 +205,14 @@ export class IngressarViaTorneio
             vitoriasJogador1: partida.vitoriasJogador1,
             vitoriasJogador2: partida.vitoriasJogador2,
         };
+    }
+
+    private calcularProximaMesa(partidas: Partida[]): number {
+        const maiorMesaAtual = partidas.reduce((maiorMesa, partida) => {
+            if (partida.mesa === null || partida.mesa === undefined) return maiorMesa;
+            return Math.max(maiorMesa, partida.mesa);
+        }, 0);
+
+        return maiorMesaAtual + 1;
     }
 }

@@ -11,7 +11,7 @@ describe("Torneio", () => {
             status: "em_andamento",
             rodadaAtual: 2,
             totalRodadas: 4,
-            premio: "Booster Box",
+            descricao: "Booster Box",
             criadoEm: new Date("2025-05-01"),
         });
 
@@ -22,7 +22,7 @@ describe("Torneio", () => {
         expect(torneio.status).toBe("em_andamento");
         expect(torneio.rodadaAtual).toBe(2);
         expect(torneio.totalRodadas).toBe(4);
-        expect(torneio.premio).toBe("Booster Box");
+        expect(torneio.descricao).toBe("Booster Box");
     });
 
     it("deve definir criadoEm automaticamente quando não informado", () => {
@@ -50,7 +50,7 @@ describe("Torneio", () => {
                 horario: new Date("2025-06-01T14:00:00Z"),
                 formato: "modern",
                 donoId: "user-1",
-                premio: "Playmat",
+                descricao: "Playmat",
             });
 
             expect(torneio.id).toBeDefined();
@@ -59,7 +59,7 @@ describe("Torneio", () => {
             expect(torneio.status).toBe("inscricoes_abertas");
             expect(torneio.rodadaAtual).toBe(0);
             expect(torneio.totalRodadas).toBe(0);
-            expect(torneio.premio).toBe("Playmat");
+            expect(torneio.descricao).toBe("Playmat");
             expect(torneio.criadoEm).toBeInstanceOf(Date);
         });
 
@@ -71,7 +71,7 @@ describe("Torneio", () => {
                 donoId: "user-2",
             });
 
-            expect(torneio.premio).toBeUndefined();
+            expect(torneio.descricao).toBeUndefined();
         });
 
         it("deve gerar ids únicos", () => {

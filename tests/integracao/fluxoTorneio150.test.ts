@@ -308,7 +308,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
             horario: new Date("2026-04-06T14:00:00Z"),
             formato: "legacy",
             donoId,
-            premio: "Booster Box",
+            descricao: "Booster Box",
         });
         torneioId = torneio.id;
         expect(torneio.status).toBe("inscricoes_abertas");
@@ -347,7 +347,12 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
         // Verify each player selected the correct deck
         for (let i = 0; i < TOTAL_JOGADORES; i++) {
             const insc = inscricoes.find((r) => r.usuarioId === jogadorIds[i]);
-            expect(insc?.deckId).toBe(deckIds[i]);
+            expect(insc?.deckId).toBeDefined();
+            expect(insc?.deckId).not.toBe(deckIds[i]);
+            const deckTravado = await deckGw.buscarPorId(insc!.deckId!);
+            expect(deckTravado?.deckOriginalId).toBe(deckIds[i]);
+            expect(deckTravado?.oculto).toBe(true);
+            expect(deckTravado?.travado).toBe(true);
         }
     }, 30_000);
 

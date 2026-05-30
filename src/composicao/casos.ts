@@ -20,8 +20,8 @@ import { IniciarProximaRodada } from "../casosDeUso/torneio/iniciarProximaRodada
 import { RegistrarResultado } from "../casosDeUso/torneio/registrarResultado";
 import { ContestarResultado } from "../casosDeUso/torneio/contestarResultado";
 import { ConfirmarResultado } from "../casosDeUso/torneio/confirmarResultado";
-import { InscreverTardeTorneio } from "../casosDeUso/torneio/inscreverTardeTorneio";
 import { AtualizarMesaPartida } from "../casosDeUso/torneio/atualizarMesaPartida";
+import { AtualizarPareamentosRodada } from "../casosDeUso/torneio/atualizarPareamentosRodada";
 import { DroparJogador } from "../casosDeUso/torneio/droparJogador";
 import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
@@ -84,8 +84,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
     const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
-    const inscreverTardeTorneio = InscreverTardeTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const atualizarMesaPartida = AtualizarMesaPartida.criar(repos.torneio, repos.partida);
+    const atualizarPareamentosRodada = AtualizarPareamentosRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
@@ -126,7 +126,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
-        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, inscreverTardeTorneio, atualizarMesaPartida,
+        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, listarTorneios, buscarTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,

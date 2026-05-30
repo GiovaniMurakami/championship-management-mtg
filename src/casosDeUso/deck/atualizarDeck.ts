@@ -58,6 +58,13 @@ export class AtualizarDeck
       });
     }
 
+    if (deck.travado) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Este deck está travado porque está vinculado a um torneio.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     if (input.nome !== undefined) deck.nome = input.nome.trim();
     if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
     if (input.formato !== undefined) deck.formato = normalizarFormatoDeck(input.formato);

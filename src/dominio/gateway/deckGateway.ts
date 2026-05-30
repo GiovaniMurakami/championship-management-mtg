@@ -4,6 +4,7 @@ export interface FiltrosListarDecks {
   usuarioId?: string;
   formato?: string;
   nome?: string;
+  incluirOcultos?: boolean;
   criadoApos?: Date;
   criadoAntes?: Date;
   limite?: number;
@@ -18,5 +19,6 @@ export interface DeckGateway {
   listar(filtros: FiltrosListarDecks): Promise<Deck[]>;
   listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "formato" | "nome">): Promise<number>;
   atualizar(deck: Deck): Promise<void>;
+  incrementarVisualizacoes(id: string): Promise<Deck | null>;
   excluir(id: string): Promise<void>;
 }

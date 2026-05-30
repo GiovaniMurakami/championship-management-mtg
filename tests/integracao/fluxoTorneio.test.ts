@@ -203,7 +203,7 @@ describe("Integração - Fluxo completo de torneio", () => {
             horario: new Date("2025-06-01T14:00:00Z"),
             formato: "legacy",
             donoId,
-            premio: "Booster Box",
+            descricao: "Booster Box",
         });
 
         torneioId = resultado.id;

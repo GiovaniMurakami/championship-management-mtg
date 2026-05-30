@@ -13,6 +13,11 @@ interface DeckDocument extends Document {
   sideboard: Carta[];
   commander?: Carta[];
   usuarioId: string;
+  visualizacoes: number;
+  oculto: boolean;
+  travado: boolean;
+  torneioId?: string | null;
+  deckOriginalId?: string | null;
   criadoEm: Date;
 }
 
@@ -55,6 +60,11 @@ const deckSchema = new Schema<DeckDocument>({
     },
   },
   usuarioId: { type: String, required: true },
+  visualizacoes: { type: Number, default: 0, min: 0 },
+  oculto: { type: Boolean, default: false },
+  travado: { type: Boolean, default: false },
+  torneioId: { type: String, default: null },
+  deckOriginalId: { type: String, default: null },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -77,6 +87,11 @@ function docParaDeck(doc: Document): Deck {
     sideboard: doc.get("sideboard"),
     commander: doc.get("commander") ?? [],
     usuarioId: doc.get("usuarioId"),
+    visualizacoes: doc.get("visualizacoes") ?? 0,
+    oculto: doc.get("oculto") ?? false,
+    travado: doc.get("travado") ?? false,
+    torneioId: doc.get("torneioId") ?? null,
+    deckOriginalId: doc.get("deckOriginalId") ?? null,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -100,6 +115,11 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       sideboard: deck.sideboard,
       commander: deck.commander,
       usuarioId: deck.usuarioId,
+      visualizacoes: deck.visualizacoes,
+      oculto: deck.oculto,
+      travado: deck.travado,
+      torneioId: deck.torneioId,
+      deckOriginalId: deck.deckOriginalId,
       criadoEm: deck.criadoEm,
     });
   }
@@ -113,7 +133,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {
     await this.conectar();
-    const docs = await DeckModel.find({ usuarioId });
+    const docs = await DeckModel.find({ usuarioId, oculto: { $ne: true } });
     return docs.map(docParaDeck);
   }
 
@@ -124,6 +144,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   private construirQueryDeck(filtros: FiltrosListarDecks): FilterQuery<DeckDocument> {
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
+    if (!filtros.incluirOcultos) query.oculto = { $ne: true };
     if (filtros.formato) query.formato = { $regex: this.escaparRegex(filtros.formato), $options: "i" };
     if (filtros.nome) query.nome = { $regex: this.escaparRegex(filtros.nome), $options: "i" };
     if (filtros.criadoApos || filtros.criadoAntes) {
@@ -162,6 +183,11 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
         commander: deck.commander,
+        visualizacoes: deck.visualizacoes,
+        oculto: deck.oculto,
+        travado: deck.travado,
+        torneioId: deck.torneioId,
+        deckOriginalId: deck.deckOriginalId,
       }
     );
   }
@@ -175,5 +201,16 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   public async excluir(id: string): Promise<void> {
     await this.conectar();
     await DeckModel.deleteOne({ id });
+  }
+
+  public async incrementarVisualizacoes(id: string): Promise<Deck | null> {
+    await this.conectar();
+    const doc = await DeckModel.findOneAndUpdate(
+      { id },
+      { $inc: { visualizacoes: 1 } },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaDeck(doc);
   }
 }

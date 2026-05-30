@@ -108,6 +108,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
       vitoriasJogador1: partida.vitoriasJogador1,
       vitoriasJogador2: partida.vitoriasJogador2,
       status: partida.status,
+      mesa: partida.mesa,
       tipoBye: partida.tipoBye,
       criadoEm: partida.criadoEm,
     });
@@ -127,6 +128,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
+        mesa: p.mesa,
         tipoBye: p.tipoBye,
         criadoEm: p.criadoEm,
       }))
@@ -179,10 +181,17 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     await PartidaModel.updateOne(
       { id: partida.id },
       {
+        jogador1Id: partida.jogador1Id,
+        jogador2Id: partida.jogador2Id,
+        deckJogador1Id: partida.deckJogador1Id,
+        deckJogador2Id: partida.deckJogador2Id,
         vitoriasJogador1: partida.vitoriasJogador1,
         vitoriasJogador2: partida.vitoriasJogador2,
         status: partida.status,
         contestado: partida.contestado,
+        tipoBye: partida.tipoBye,
+        confirmadoPor: partida.confirmadoPor,
+        mesa: partida.mesa,
       }
     );
   }

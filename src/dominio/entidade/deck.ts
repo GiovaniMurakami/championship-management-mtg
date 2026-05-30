@@ -15,6 +15,11 @@ export interface DeckProps {
   sideboard: Carta[];
   commander?: Carta[] | null;
   usuarioId: string;
+  visualizacoes?: number;
+  oculto?: boolean;
+  travado?: boolean;
+  torneioId?: string | null;
+  deckOriginalId?: string | null;
   criadoEm?: Date;
 }
 
@@ -28,6 +33,11 @@ export class Deck {
   public sideboard: Carta[];
   public commander: Carta[];
   public usuarioId: string;
+  public visualizacoes: number;
+  public oculto: boolean;
+  public travado: boolean;
+  public torneioId: string | null;
+  public deckOriginalId: string | null;
   public criadoEm: Date;
 
   constructor({
@@ -40,6 +50,11 @@ export class Deck {
     sideboard,
     commander,
     usuarioId,
+    visualizacoes,
+    oculto,
+    travado,
+    torneioId,
+    deckOriginalId,
     criadoEm,
   }: DeckProps) {
     this.id = id;
@@ -51,6 +66,11 @@ export class Deck {
     this.sideboard = sideboard;
     this.commander = commander ?? [];
     this.usuarioId = usuarioId;
+    this.visualizacoes = visualizacoes ?? 0;
+    this.oculto = oculto ?? false;
+    this.travado = travado ?? false;
+    this.torneioId = torneioId ?? null;
+    this.deckOriginalId = deckOriginalId ?? null;
     this.criadoEm = criadoEm || new Date();
   }
 

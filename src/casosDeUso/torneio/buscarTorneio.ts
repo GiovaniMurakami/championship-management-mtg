@@ -19,7 +19,8 @@ export type BuscarTorneioOutputDto = {
   status: string;
   rodadaAtual: number;
   totalRodadas: number;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -29,6 +30,7 @@ export type BuscarTorneioOutputDto = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  visualizacoes: number;
   totalInscritos: number;
   totalCheckin: number;
   criadoEm: Date;
@@ -75,6 +77,8 @@ export class BuscarTorneio
       });
     }
 
+    const torneioAtual = await this.torneioGateway.incrementarVisualizacoes(input.torneioId) ?? torneio;
+
     const [inscricoes, partidas] = await Promise.all([
       this.inscricaoGateway.listarPorTorneio(input.torneioId),
       this.partidaGateway.listarPorTorneio(input.torneioId),
@@ -94,27 +98,29 @@ export class BuscarTorneio
     const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
     return {
-      id: torneio.id,
-      nome: torneio.nome,
-      horario: torneio.horario,
-      formato: torneio.formato,
-      donoId: torneio.donoId,
-      status: torneio.status,
-      rodadaAtual: torneio.rodadaAtual,
-      totalRodadas: torneio.totalRodadas,
-      premio: torneio.premio,
-      bannerUrl: torneio.bannerUrl,
-      linkBanner: torneio.linkBanner,
-      somRodada: torneio.somRodada,
-      maxJogadores: torneio.maxJogadores,
-      maxRodadas: torneio.maxRodadas,
-      corteTop: torneio.corteTop,
-      linkLive: torneio.linkLive,
-      emCorte: torneio.emCorte,
-      secreto: torneio.secreto,
+      id: torneioAtual.id,
+      nome: torneioAtual.nome,
+      horario: torneioAtual.horario,
+      formato: torneioAtual.formato,
+      donoId: torneioAtual.donoId,
+      status: torneioAtual.status,
+      rodadaAtual: torneioAtual.rodadaAtual,
+      totalRodadas: torneioAtual.totalRodadas,
+      descricao: torneioAtual.descricao,
+      regras: torneioAtual.regras,
+      bannerUrl: torneioAtual.bannerUrl,
+      linkBanner: torneioAtual.linkBanner,
+      somRodada: torneioAtual.somRodada,
+      maxJogadores: torneioAtual.maxJogadores,
+      maxRodadas: torneioAtual.maxRodadas,
+      corteTop: torneioAtual.corteTop,
+      linkLive: torneioAtual.linkLive,
+      emCorte: torneioAtual.emCorte,
+      secreto: torneioAtual.secreto,
+      visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,
       totalCheckin,
-      criadoEm: torneio.criadoEm,
+      criadoEm: torneioAtual.criadoEm,
       partidas: partidas.map((p) => ({
         id: p.id,
         rodada: p.rodada,

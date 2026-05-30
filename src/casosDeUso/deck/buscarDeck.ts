@@ -17,6 +17,7 @@ export type BuscarDeckOutputDto = {
   sideboard: Carta[];
   commander: Carta[];
   usuario: { id: string; nome: string };
+  visualizacoes: number;
   criadoEm: Date;
 };
 
@@ -41,22 +42,24 @@ export class BuscarDeck
       });
     }
 
-    const usuarios = await this.usuarioGateway.buscarVarios([deck.usuarioId]);
+    const deckAtual = await this.deckGateway.incrementarVisualizacoes(input.id) ?? deck;
+    const usuarios = await this.usuarioGateway.buscarVarios([deckAtual.usuarioId]);
     const usuario = usuarios[0];
 
     return {
-      id: deck.id,
-      nome: deck.nome,
-      formato: deck.formato,
-      linkLigaMagic: deck.linkLigaMagic,
-      maindeck: deck.maindeck,
-      sideboard: deck.sideboard,
-      commander: deck.commander,
+      id: deckAtual.id,
+      nome: deckAtual.nome,
+      formato: deckAtual.formato,
+      linkLigaMagic: deckAtual.linkLigaMagic,
+      maindeck: deckAtual.maindeck,
+      sideboard: deckAtual.sideboard,
+      commander: deckAtual.commander,
       usuario: {
-        id: deck.usuarioId,
-        nome: usuario?.nome ?? deck.usuarioId,
+        id: deckAtual.usuarioId,
+        nome: usuario?.nome ?? deckAtual.usuarioId,
       },
-      criadoEm: deck.criadoEm,
+      visualizacoes: deckAtual.visualizacoes,
+      criadoEm: deckAtual.criadoEm,
     };
   }
 }

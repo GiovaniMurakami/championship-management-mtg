@@ -10,6 +10,14 @@ import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
 import { getCorsOrigins } from "../../../helpers/env";
 
+function extrairErrosMongoose(err: unknown): string[] {
+  const erros = (err as { errors?: Record<string, { message?: string }> })?.errors;
+  if (!erros) return [];
+  return Object.values(erros)
+    .map((erro) => erro?.message)
+    .filter((mensagem): mensagem is string => Boolean(mensagem));
+}
+
 export class ApiExpress implements Api {
   private app: Express;
 
@@ -73,6 +81,11 @@ export class ApiExpress implements Api {
       (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
         if (err instanceof ErroPersonalizado) {
           res.status(err.status).json({ mensagem: err.message, erros: err.erros });
+          return;
+        }
+        const errosMongoose = extrairErrosMongoose(err);
+        if (errosMongoose.length > 0) {
+          res.status(400).json({ mensagem: errosMongoose[0], erros: errosMongoose });
           return;
         }
         logger.error({ err }, "erro nao tratado");
