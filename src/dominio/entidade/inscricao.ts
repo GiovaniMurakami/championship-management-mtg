@@ -6,9 +6,9 @@ export interface InscricaoProps {
   usuarioId: string;
   deckId?: string;
   timeId?: string;
-  checkInRodada: number;
-  dropped: boolean;
-  byeCount: number;
+  checkInRodada?: number;
+  dropped?: boolean;
+  byeCount?: number;
   criadoEm?: Date;
 }
 
@@ -29,8 +29,8 @@ export class Inscricao {
     this.usuarioId = props.usuarioId;
     this.deckId = props.deckId;
     this.timeId = props.timeId;
-    this.checkInRodada = props.checkInRodada;
-    this.dropped = props.dropped;
+    this.checkInRodada = props.checkInRodada ?? -1;
+    this.dropped = props.dropped ?? false;
     this.byeCount = props.byeCount ?? 0;
     this.criadoEm = props.criadoEm || new Date();
   }
