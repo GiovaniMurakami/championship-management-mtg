@@ -214,6 +214,8 @@ export class IniciarProximaRodada
 
     if (estaNaUltimaRodada) {
       torneio.finalizar();
+      const top8Ids = statsOrdenados.slice(0, 8).map((s) => s.usuarioId);
+      await this.usuarioGateway.incrementarResultadosExpressivos(top8Ids, 1);
       await this.torneioGateway.atualizar(torneio);
 
       const classificacao = statsOrdenados.map((s, idx) => ({
@@ -287,7 +289,7 @@ export class IniciarProximaRodada
     for (const p of todasPartidas) {
       if (p.jogador2Id !== null) {
         historico.add(parKey(p.jogador1Id, p.jogador2Id));
-      } else if (p.vitoriasJogador1 > p.vitoriasJogador2) {
+      } else {
         // BYE normal (vitória) — rastrear para evitar repetição
         jaRecebeuBye.add(p.jogador1Id);
       }

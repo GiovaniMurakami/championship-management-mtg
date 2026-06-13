@@ -1,7 +1,8 @@
-import { Carta, Deck } from "../../dominio/entidade/deck";
+import { Carta } from "../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
 const LIMITE_MAXIMO_DECKS = 100;
 const LIMITE_PADRAO_DECKS = 20;
@@ -10,8 +11,8 @@ export type ListarDecksInputDto = {
   usuarioId?: string;
   formato?: string;
   nome?: string;
-  criadoApos?: string; // ISO string
-  criadoAntes?: string; // ISO string
+  criadoApos?: string;
+  criadoAntes?: string;
   limite?: number;
   offset?: number;
 };
@@ -21,9 +22,12 @@ export type ListarDecksOutputDto = {
     id: string;
     nome: string;
     formato: string;
+    linkLigaMagic: string | null;
     maindeck: Carta[];
     sideboard: Carta[];
+    commander: Carta[];
     usuario: { id: string; nome: string };
+    visualizacoes: number;
     criadoEm: Date;
   }[];
   total: number;
@@ -45,8 +49,12 @@ export class ListarDecks
   public async executar(
     input: ListarDecksInputDto
   ): Promise<ListarDecksOutputDto> {
-    const limite = Math.min(input.limite ?? LIMITE_PADRAO_DECKS, LIMITE_MAXIMO_DECKS);
-    const offset = Math.max(input.offset ?? 0, 0);
+    const { limite, offset } = normalizarPaginacaoOffset(
+      input.limite,
+      input.offset,
+      LIMITE_PADRAO_DECKS,
+      LIMITE_MAXIMO_DECKS
+    );
 
     const filtros: FiltrosListarDecks = { limite, offset };
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
@@ -71,12 +79,15 @@ export class ListarDecks
         id: deck.id,
         nome: deck.nome,
         formato: deck.formato,
+        linkLigaMagic: deck.linkLigaMagic,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
+        commander: deck.commander,
         usuario: {
           id: deck.usuarioId,
           nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
         },
+        visualizacoes: deck.visualizacoes,
         criadoEm: deck.criadoEm,
       })),
       total,

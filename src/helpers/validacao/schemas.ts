@@ -19,6 +19,10 @@ const cartaSchema = z.object({
   quantidade: z.number().int().min(1),
 });
 
+const commanderSchema = z.array(cartaSchema).nullable().optional();
+const linkLigaMagicSchema = z.string().url("linkLigaMagic deve ser uma URL válida.").nullable().optional();
+const ehFormatoCommander500 = (formato: string) => formato.toLowerCase().trim().replace(/\s+/g, "") === "commander500";
+
 export const cadastrarUsuarioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   email: z.email("E-mail inválido."),
@@ -44,23 +48,36 @@ export const refreshTokenSchema = z.object({
 export const cadastrarDeckSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   formato: z.string().min(1, "Formato é obrigatório."),
+  linkLigaMagic: linkLigaMagicSchema,
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
+  commander: commanderSchema,
+}).superRefine((dados, ctx) => {
+  if (ehFormatoCommander500(dados.formato) && !dados.linkLigaMagic) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["linkLigaMagic"],
+      message: "linkLigaMagic é obrigatório quando formato for commander500.",
+    });
+  }
 });
 
 export const atualizarDeckSchema = z.object({
   nome: z.string().min(1).optional(),
-  nomeConsolidado: z.string().optional(),
+  nomeConsolidado: z.string().optional().nullable(),
   formato: z.string().min(1).optional(),
+  linkLigaMagic: linkLigaMagicSchema,
   maindeck: z.array(cartaSchema).min(1).optional(),
   sideboard: z.array(cartaSchema).optional(),
+  commander: commanderSchema,
 });
 
 export const criarTorneioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   horario: z.string().min(1, "Horário é obrigatório."),
   formato: z.string().min(1, "Formato é obrigatório."),
-  premio: z.string().optional(),
+  descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
+  regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
   bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
@@ -76,7 +93,8 @@ export const alterarTorneioSchema = z.object({
   nome: z.string().min(1).optional(),
   horario: z.string().optional(),
   formato: z.string().min(1).optional(),
-  premio: z.string().optional(),
+  descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
+  regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
   bannerUrl: s3ImagemUrl().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
@@ -91,6 +109,15 @@ export const alterarTorneioSchema = z.object({
 export const escolherDeckTorneioSchema = z.object({
   deckId: z.string().min(1, "deckId é obrigatório."),
   jogadorId: z.string().optional(),
+});
+
+export const atualizarPareamentosRodadaSchema = z.object({
+  partidas: z.array(z.object({
+    id: z.string().min(1, "id da partida é obrigatório."),
+    jogador1Id: z.string().min(1, "jogador1Id é obrigatório."),
+    jogador2Id: z.string().nullable().optional(),
+    mesa: z.number().int().min(1, "mesa deve ser inteiro >= 1.").nullable().optional(),
+  })).min(1, "Informe ao menos uma partida para atualizar."),
 });
 
 export const registrarResultadoSchema = z.object({

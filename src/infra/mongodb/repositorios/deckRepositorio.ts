@@ -8,9 +8,16 @@ interface DeckDocument extends Document {
   nome: string;
   nomeConsolidado?: string | null;
   formato: string;
+  linkLigaMagic?: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander?: Carta[];
   usuarioId: string;
+  visualizacoes: number;
+  oculto: boolean;
+  travado: boolean;
+  torneioId?: string | null;
+  deckOriginalId?: string | null;
   criadoEm: Date;
 }
 
@@ -27,6 +34,7 @@ const deckSchema = new Schema<DeckDocument>({
   nome: { type: String, required: true, maxlength: 100 },
   nomeConsolidado: { type: String, default: null, maxlength: 100 },
   formato: { type: String, required: true, maxlength: 50 },
+  linkLigaMagic: { type: String, default: null, maxlength: 500 },
   maindeck: {
     type: [cartaSchema],
     default: [],
@@ -43,7 +51,20 @@ const deckSchema = new Schema<DeckDocument>({
       message: "sideboard não pode ter mais de 15 entradas",
     },
   },
+  commander: {
+    type: [cartaSchema],
+    default: [],
+    validate: {
+      validator: (arr: Carta[]) => arr.length <= 3,
+      message: "commander não pode ter mais de 3 entradas",
+    },
+  },
   usuarioId: { type: String, required: true },
+  visualizacoes: { type: Number, default: 0, min: 0 },
+  oculto: { type: Boolean, default: false },
+  travado: { type: Boolean, default: false },
+  torneioId: { type: String, default: null },
+  deckOriginalId: { type: String, default: null },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -61,9 +82,16 @@ function docParaDeck(doc: Document): Deck {
     nome: doc.get("nome"),
     nomeConsolidado: doc.get("nomeConsolidado") ?? null,
     formato: doc.get("formato"),
+    linkLigaMagic: doc.get("linkLigaMagic") ?? null,
     maindeck: doc.get("maindeck"),
     sideboard: doc.get("sideboard"),
+    commander: doc.get("commander") ?? [],
     usuarioId: doc.get("usuarioId"),
+    visualizacoes: doc.get("visualizacoes") ?? 0,
+    oculto: doc.get("oculto") ?? false,
+    travado: doc.get("travado") ?? false,
+    torneioId: doc.get("torneioId") ?? null,
+    deckOriginalId: doc.get("deckOriginalId") ?? null,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -82,9 +110,16 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
+      commander: deck.commander,
       usuarioId: deck.usuarioId,
+      visualizacoes: deck.visualizacoes,
+      oculto: deck.oculto,
+      travado: deck.travado,
+      torneioId: deck.torneioId,
+      deckOriginalId: deck.deckOriginalId,
       criadoEm: deck.criadoEm,
     });
   }
@@ -98,7 +133,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {
     await this.conectar();
-    const docs = await DeckModel.find({ usuarioId });
+    const docs = await DeckModel.find({ usuarioId, oculto: { $ne: true } });
     return docs.map(docParaDeck);
   }
 
@@ -109,6 +144,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   private construirQueryDeck(filtros: FiltrosListarDecks): FilterQuery<DeckDocument> {
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
+    if (!filtros.incluirOcultos) query.oculto = { $ne: true };
     if (filtros.formato) query.formato = { $regex: this.escaparRegex(filtros.formato), $options: "i" };
     if (filtros.nome) query.nome = { $regex: this.escaparRegex(filtros.nome), $options: "i" };
     if (filtros.criadoApos || filtros.criadoAntes) {
@@ -122,7 +158,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   public async listar(filtros: FiltrosListarDecks): Promise<Deck[]> {
     await this.conectar();
     const query = this.construirQueryDeck(filtros);
-    let find = DeckModel.find(query).sort({ criadoEm: -1 });
+    let find = DeckModel.find(query).sort({ criadoEm: -1, id: 1 });
     if (filtros.offset !== undefined) find = find.skip(filtros.offset);
     if (filtros.limite !== undefined) find = find.limit(filtros.limite);
     const docs = await find;
@@ -143,8 +179,15 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
         nome: deck.nome,
         nomeConsolidado: deck.nomeConsolidado,
         formato: deck.formato,
+        linkLigaMagic: deck.linkLigaMagic,
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
+        commander: deck.commander,
+        visualizacoes: deck.visualizacoes,
+        oculto: deck.oculto,
+        travado: deck.travado,
+        torneioId: deck.torneioId,
+        deckOriginalId: deck.deckOriginalId,
       }
     );
   }
@@ -158,5 +201,16 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   public async excluir(id: string): Promise<void> {
     await this.conectar();
     await DeckModel.deleteOne({ id });
+  }
+
+  public async incrementarVisualizacoes(id: string): Promise<Deck | null> {
+    await this.conectar();
+    const doc = await DeckModel.findOneAndUpdate(
+      { id },
+      { $inc: { visualizacoes: 1 } },
+      { new: true }
+    );
+    if (!doc) return null;
+    return docParaDeck(doc);
   }
 }

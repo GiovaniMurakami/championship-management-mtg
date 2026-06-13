@@ -35,7 +35,7 @@ export class AlterarTorneioRota implements Rotas {
         if (!dados) return;
 
         const {
-          nome, horario, formato, premio,
+          nome, horario, formato, descricao, regras,
           bannerUrl, linkBanner, somRodada,
           maxJogadores, maxRodadas, corteTop, linkLive, secreto, exibirNomeJogador,
         } = dados;
@@ -47,7 +47,8 @@ export class AlterarTorneioRota implements Rotas {
           nome,
           horario: horario ? new Date(horario) : undefined,
           formato,
-          premio,
+          descricao,
+          regras,
           bannerUrl,
           linkBanner,
           somRodada,

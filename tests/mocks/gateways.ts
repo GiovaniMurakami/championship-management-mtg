@@ -21,6 +21,7 @@ export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {})
         buscarPorId: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
+        incrementarResultadosExpressivos: jest.fn(),
         ...overrides,
     };
 }
@@ -33,6 +34,7 @@ export function criarMockDeckGateway(overrides: Partial<DeckGateway> = {}): Deck
         listarPorUsuario: jest.fn().mockResolvedValue([]),
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
+        incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
         atualizar: jest.fn(),
         excluir: jest.fn(),
         ...overrides,
@@ -45,6 +47,7 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         buscarPorId: jest.fn().mockResolvedValue(null),
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
+        incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
         atualizar: jest.fn(),
         atualizarECriarPartidas: jest.fn(),
         excluir: jest.fn(),

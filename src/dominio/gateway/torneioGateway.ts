@@ -17,6 +17,7 @@ export interface TorneioGateway {
   listar(filtros?: FiltrosListarTorneios): Promise<Torneio[]>;
   listarTotal(filtros?: Pick<FiltrosListarTorneios, 'incluirSecretos' | 'status' | 'nome' | 'dataInicio' | 'dataFim'>): Promise<number>;
   atualizar(torneio: Torneio): Promise<void>;
+  incrementarVisualizacoes(id: string): Promise<Torneio | null>;
   /** Atualiza torneio e cria novas partidas atomicamente numa transação MongoDB. */
   atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void>;
   excluir(id: string): Promise<void>;

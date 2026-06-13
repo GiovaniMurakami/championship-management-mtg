@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { Liga } from "../../../dominio/entidade/liga";
 import { FiltrosListarLigas, LigaGateway } from "../../../dominio/gateway/ligaGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { escaparRegex } from "../../../helpers/regex";
 
 interface LigaDocument extends Document {
   id: string;
@@ -78,8 +79,8 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
     if (filtros.tipo) filtroQuery.tipo = filtros.tipo;
-    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
-    let find = LigaModel.find(filtroQuery).sort({ criadoEm: -1 });
+    if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+    let find = LigaModel.find(filtroQuery).sort({ criadoEm: -1, id: 1 });
     if (filtros.offset !== undefined) find = find.skip(filtros.offset);
     if (filtros.limite !== undefined) find = find.limit(filtros.limite);
     const docs = await find;
@@ -90,14 +91,14 @@ export class LigaRepositorio extends BaseRepositorio implements LigaGateway {
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
     if (filtros.tipo) filtroQuery.tipo = filtros.tipo;
-    if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+    if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
     return LigaModel.countDocuments(filtroQuery);
   }
 
   public async buscarPorTorneioIds(torneioIds: string[]): Promise<Liga[]> {
     if (torneioIds.length === 0) return [];
     await this.conectar();
-    const docs = await LigaModel.find({ torneioIds: { $in: torneioIds } }).sort({ criadoEm: -1 });
+    const docs = await LigaModel.find({ torneioIds: { $in: torneioIds } }).sort({ criadoEm: -1, id: 1 });
     return docs.map((doc) => docParaLiga(doc as unknown as LigaDocument));
   }
 

@@ -11,7 +11,8 @@ export type CriarTorneioInputDto = {
   horario: Date;
   formato: string;
   donoId: string;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -30,7 +31,8 @@ export type CriarTorneioOutputDto = {
   formato: string;
   donoId: string;
   status: string;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -66,7 +68,8 @@ export class CriarTorneio
       horario: input.horario,
       formato: input.formato.toLowerCase().trim(),
       donoId: input.donoId,
-      premio: input.premio?.trim(),
+      descricao: input.descricao?.trim(),
+      regras: input.regras?.trim(),
       bannerUrl: input.bannerUrl?.trim(),
       linkBanner: input.linkBanner?.trim(),
       somRodada: input.somRodada?.trim(),
@@ -87,7 +90,8 @@ export class CriarTorneio
       formato: torneio.formato,
       donoId: torneio.donoId,
       status: torneio.status,
-      premio: torneio.premio,
+      descricao: torneio.descricao,
+      regras: torneio.regras,
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,

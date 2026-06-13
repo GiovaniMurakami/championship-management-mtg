@@ -5,6 +5,14 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { Usuario } from "../../dominio/entidade/usuario";
+
+function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
+  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
+  if (modo === "nickArena") return u.nickArena ?? u.nome;
+  return u.nome;
+}
 
 export type BuscarTorneioInputDto = {
   torneioId: string;
@@ -19,7 +27,8 @@ export type BuscarTorneioOutputDto = {
   status: string;
   rodadaAtual: number;
   totalRodadas: number;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -29,6 +38,8 @@ export type BuscarTorneioOutputDto = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  exibirNomeJogador: string;
+  visualizacoes: number;
   totalInscritos: number;
   totalCheckin: number;
   criadoEm: Date;
@@ -43,6 +54,8 @@ export type BuscarTorneioOutputDto = {
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    confirmadoPor: string[];
+    mesa: number | null;
   }>;
 };
 
@@ -75,6 +88,8 @@ export class BuscarTorneio
       });
     }
 
+    const torneioAtual = await this.torneioGateway.incrementarVisualizacoes(input.torneioId) ?? torneio;
+
     const [inscricoes, partidas] = await Promise.all([
       this.inscricaoGateway.listarPorTorneio(input.torneioId),
       this.partidaGateway.listarPorTorneio(input.torneioId),
@@ -94,40 +109,49 @@ export class BuscarTorneio
     const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
     return {
-      id: torneio.id,
-      nome: torneio.nome,
-      horario: torneio.horario,
-      formato: torneio.formato,
-      donoId: torneio.donoId,
-      status: torneio.status,
-      rodadaAtual: torneio.rodadaAtual,
-      totalRodadas: torneio.totalRodadas,
-      premio: torneio.premio,
-      bannerUrl: torneio.bannerUrl,
-      linkBanner: torneio.linkBanner,
-      somRodada: torneio.somRodada,
-      maxJogadores: torneio.maxJogadores,
-      maxRodadas: torneio.maxRodadas,
-      corteTop: torneio.corteTop,
-      linkLive: torneio.linkLive,
-      emCorte: torneio.emCorte,
-      secreto: torneio.secreto,
+      id: torneioAtual.id,
+      nome: torneioAtual.nome,
+      horario: torneioAtual.horario,
+      formato: torneioAtual.formato,
+      donoId: torneioAtual.donoId,
+      status: torneioAtual.status,
+      rodadaAtual: torneioAtual.rodadaAtual,
+      totalRodadas: torneioAtual.totalRodadas,
+      descricao: torneioAtual.descricao,
+      regras: torneioAtual.regras,
+      bannerUrl: torneioAtual.bannerUrl,
+      linkBanner: torneioAtual.linkBanner,
+      somRodada: torneioAtual.somRodada,
+      maxJogadores: torneioAtual.maxJogadores,
+      maxRodadas: torneioAtual.maxRodadas,
+      corteTop: torneioAtual.corteTop,
+      linkLive: torneioAtual.linkLive,
+      emCorte: torneioAtual.emCorte,
+      secreto: torneioAtual.secreto,
+      exibirNomeJogador: torneioAtual.exibirNomeJogador,
+      visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,
       totalCheckin,
-      criadoEm: torneio.criadoEm,
+      criadoEm: torneioAtual.criadoEm,
       partidas: partidas.map((p) => ({
         id: p.id,
         rodada: p.rodada,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: usuarioMap.get(p.jogador1Id)?.nome ?? p.jogador1Id,
+        jogador1Nome: usuarioMap.get(p.jogador1Id)
+          ? resolverNome(usuarioMap.get(p.jogador1Id)!, torneioAtual.exibirNomeJogador)
+          : p.jogador1Id,
         jogador2Id: p.jogador2Id,
         jogador2Nome: p.jogador2Id
-          ? (usuarioMap.get(p.jogador2Id)?.nome ?? p.jogador2Id)
+          ? (usuarioMap.get(p.jogador2Id)
+            ? resolverNome(usuarioMap.get(p.jogador2Id)!, torneioAtual.exibirNomeJogador)
+            : p.jogador2Id)
           : null,
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
         contestado: p.contestado,
+        confirmadoPor: p.confirmadoPor,
+        mesa: p.mesa,
       })),
     };
   }

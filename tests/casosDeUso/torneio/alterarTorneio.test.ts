@@ -44,12 +44,12 @@ describe("AlterarTorneio", () => {
             id: "torneio-1",
             requisitanteId: "user-1",
             isAdmin: false,
-            premio: "R$ 500",
+            descricao: "R$ 500",
         });
 
         expect(resultado.nome).toBe("Grand Prix SP");
         expect(resultado.formato).toBe("modern");
-        expect(resultado.premio).toBe("R$ 500");
+        expect(resultado.descricao).toBe("R$ 500");
     });
 
     it("deve lançar 404 se torneio não existir", async () => {
@@ -117,7 +117,7 @@ describe("AlterarTorneio", () => {
             nome: "Novo Nome",
             horario: novoHorario,
             formato: "Vintage",
-            premio: "R$ 1000",
+            descricao: "R$ 1000",
             bannerUrl: "https://example.com/banner.jpg",
             linkBanner: "https://example.com",
             somRodada: "https://example.com/som.mp3",
@@ -130,7 +130,7 @@ describe("AlterarTorneio", () => {
         expect(resultado.nome).toBe("Novo Nome");
         expect(resultado.horario).toEqual(novoHorario);
         expect(resultado.formato).toBe("vintage");
-        expect(resultado.premio).toBe("R$ 1000");
+        expect(resultado.descricao).toBe("R$ 1000");
         expect(resultado.bannerUrl).toBe("https://example.com/banner.jpg");
         expect(resultado.linkBanner).toBe("https://example.com");
         expect(resultado.somRodada).toBe("https://example.com/som.mp3");
@@ -162,7 +162,7 @@ describe("AlterarTorneio", () => {
         const gateway = criarMockTorneioGateway({
             buscarPorId: jest.fn().mockResolvedValue({
                 ...torneioExistente,
-                premio: "Premio",
+                descricao: "Premio",
                 bannerUrl: "https://example.com/banner.jpg",
                 linkBanner: "https://example.com",
                 somRodada: "https://example.com/som.mp3",
@@ -175,7 +175,7 @@ describe("AlterarTorneio", () => {
             id: "torneio-1",
             requisitanteId: "user-1",
             isAdmin: false,
-            premio: null,
+            descricao: null,
             bannerUrl: null,
             linkBanner: null,
             somRodada: null,
@@ -183,7 +183,7 @@ describe("AlterarTorneio", () => {
             exibirNomeJogador: "nickArena",
         } as any);
 
-        expect(resultado.premio).toBeUndefined();
+        expect(resultado.descricao).toBeUndefined();
         expect(resultado.bannerUrl).toBeUndefined();
         expect(resultado.linkBanner).toBeUndefined();
         expect(resultado.somRodada).toBeUndefined();

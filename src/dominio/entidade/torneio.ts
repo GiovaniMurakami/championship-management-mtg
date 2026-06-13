@@ -12,7 +12,8 @@ export interface TorneioProps {
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -23,6 +24,7 @@ export interface TorneioProps {
   emCorte?: boolean;
   secreto?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
+  visualizacoes?: number;
   criadoEm?: Date;
   rodadaIniciadaEm?: Date;
 }
@@ -36,7 +38,8 @@ export class Torneio {
   public status: StatusTorneio;
   public rodadaAtual: number;
   public totalRodadas: number;
-  public premio?: string;
+  public descricao?: string;
+  public regras?: string;
   public bannerUrl?: string;
   public linkBanner?: string;
   public somRodada?: string;
@@ -47,6 +50,7 @@ export class Torneio {
   public emCorte: boolean = false;
   public secreto: boolean = false;
   public exibirNomeJogador: ExibirNomeJogador;
+  public visualizacoes: number;
   public criadoEm: Date;
   public rodadaIniciadaEm?: Date;
 
@@ -59,7 +63,8 @@ export class Torneio {
     this.status = props.status;
     this.rodadaAtual = props.rodadaAtual;
     this.totalRodadas = props.totalRodadas;
-    this.premio = props.premio;
+    this.descricao = props.descricao;
+    this.regras = props.regras;
     this.bannerUrl = props.bannerUrl;
     this.linkBanner = props.linkBanner;
     this.somRodada = props.somRodada;
@@ -70,6 +75,7 @@ export class Torneio {
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
     this.exibirNomeJogador = props.exibirNomeJogador ?? "nome";
+    this.visualizacoes = props.visualizacoes ?? 0;
     this.criadoEm = props.criadoEm || new Date();
     this.rodadaIniciadaEm = props.rodadaIniciadaEm;
   }

@@ -180,7 +180,41 @@ describe("IniciarProximaRodada", () => {
 
         await expect(
             uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false })
-        ).rejects.toMatchObject({ status: 400 });
+        ).rejects.toMatchObject({
+            status: 400,
+            message: "Ainda há 1 partida(s) pendente(s) na rodada 1.",
+        });
+    });
+
+    it("não deve impedir a próxima rodada quando existirem jogadores ativos sem check-in na rodada atual", async () => {
+        const inscricoesSemCheckInAtual = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 0, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 1, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: -1, dropped: false }),
+        ];
+
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+        });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesSemCheckInAtual) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.rodadaAtual).toBe(2);
+            expect(resultado.partidas.length).toBeGreaterThan(0);
+        }
+        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
     });
 
     it("deve iniciar o corte top 4 ao fim do Swiss", async () => {

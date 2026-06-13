@@ -5,20 +5,34 @@ import { criarRepositorios } from "./composicao/repositorios";
 import { criarServicos } from "./composicao/servicos";
 import { criarCasosDeUso } from "./composicao/casos";
 import { criarRotas } from "./composicao/rotas";
+import { assertJwtConfig } from "./helpers/jwt";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET"] as const;
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Variável de ambiente obrigatória não definida: ${envVar}`);
+let runtimeInicializado = false;
+
+function validarConfiguracaoRuntime(): void {
+  if (!process.env.MONGODB_URI) {
+    throw new Error("Variável de ambiente obrigatória não definida: MONGODB_URI");
   }
+
+  assertJwtConfig();
 }
 
-NotificacaoAbly.iniciar();
+export function inicializarDependenciasDeProcesso(): void {
+  if (runtimeInicializado) return;
+
+  if (process.env.ABLY_API_KEY) {
+    NotificacaoAbly.iniciar();
+  }
+
+  runtimeInicializado = true;
+}
 
 export function app() {
+  validarConfiguracaoRuntime();
+
   const repos = criarRepositorios();
   const servicos = criarServicos();
   const casos = criarCasosDeUso(repos, servicos);
@@ -26,9 +40,6 @@ export function app() {
 
   inicializarAutenticarJwt(repos.tokenBlacklist);
 
-  const port = Number(process.env.PORT) || 0;
   const api = ApiExpress.criar(rotas);
-  api.start(port);
-
   return api.retornarAplicacao();
 }

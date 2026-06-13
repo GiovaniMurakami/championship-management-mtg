@@ -44,6 +44,12 @@ function criarUsuarioGatewayMemoria(): UsuarioGateway {
         buscarPorId: async (id) => store.get(id) ?? null,
         buscarVarios: async (ids) => ids.map((id) => store.get(id)).filter(Boolean) as Usuario[],
         atualizar: async (u) => { store.set(u.id, u); },
+        incrementarResultadosExpressivos: async (ids, incremento) => {
+            ids.forEach((id) => {
+                const usuario = store.get(id);
+                if (usuario) usuario.resultadosExpressivos = (usuario.resultadosExpressivos ?? 0) + incremento;
+            });
+        },
     };
 }
 
@@ -203,7 +209,7 @@ describe("Integração - Fluxo completo de torneio", () => {
             horario: new Date("2025-06-01T14:00:00Z"),
             formato: "legacy",
             donoId,
-            premio: "Booster Box",
+            descricao: "Booster Box",
         });
 
         torneioId = resultado.id;

@@ -6,4 +6,5 @@ export interface UsuarioGateway {
   buscarPorId(id: string): Promise<Usuario | null>;
   buscarVarios(ids: string[]): Promise<Usuario[]>;
   atualizar(usuario: Usuario): Promise<void>;
+  incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void>;
 }

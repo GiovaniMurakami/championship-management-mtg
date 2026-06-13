@@ -33,10 +33,11 @@ export type BuscarStandingsOutputDto = {
   rodadaAtual: number;
   totalRodadas: number;
   status: string;
+  totalInscritos: number;
   rodadaIniciadaEm?: string;
   standings: Array<{
     posicao: number;
-    usuario: { id: string; nome: string };
+    usuario: { id: string; nome: string; resultadosExpressivos: number };
     time: { id: string; nome: string; imagemUrl?: string } | null;
     pontosMesa: number;
     vitoriasPartida: number;
@@ -50,6 +51,7 @@ export type BuscarStandingsOutputDto = {
     deckId?: string | null;
     deckNome?: string | null;
     dropped: boolean;
+    resultadosExpressivos: number;
   }>;
 };
 
@@ -117,13 +119,13 @@ export class BuscarStandings
       }
     }
 
-    if (torneio.status === "inscricoes_abertas" || torneio.rodadaAtual <= 1) {
+    if (torneio.status === "inscricoes_abertas" || (torneio.status !== "finalizado" && torneio.rodadaAtual <= 1)) {
       const standings = inscricoes.map((i, idx) => {
         const u = usuarioMap.get(i.usuarioId);
         const t = timeByMembro.get(i.usuarioId);
         return {
         posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId },
+        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
         time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
         pontosMesa: 0,
         vitoriasPartida: 0,
@@ -137,6 +139,7 @@ export class BuscarStandings
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
         dropped: i.dropped,
+        resultadosExpressivos: u?.resultadosExpressivos ?? 0,
         };
       });
 
@@ -145,6 +148,7 @@ export class BuscarStandings
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
         status: torneio.status,
+        totalInscritos: inscricoes.length,
         rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
         standings,
       };
@@ -188,13 +192,15 @@ export class BuscarStandings
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
+      totalInscritos: inscricoes.length,
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
         const t = timeByMembro.get(s.usuarioId);
+        const u = usuarioMap.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: (() => { const u = usuarioMap.get(s.usuarioId); return u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId; })() },
+          usuario: { id: s.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
           time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,
@@ -210,6 +216,7 @@ export class BuscarStandings
             ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
           dropped: inscricao?.dropped ?? false,
+          resultadosExpressivos: u?.resultadosExpressivos ?? 0,
         };
       }),
     };

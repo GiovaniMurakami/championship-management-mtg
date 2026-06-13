@@ -1,6 +1,7 @@
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { TipoLiga } from "../../dominio/entidade/liga";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
 const LIMITE_MAXIMO_LIGAS = 100;
 const LIMITE_PADRAO_LIGAS = 20;
@@ -34,8 +35,12 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
   }
 
   public async executar(input: ListarLigasInputDto): Promise<ListarLigasOutputDto> {
-    const limite = Math.min(input.limite ?? LIMITE_PADRAO_LIGAS, LIMITE_MAXIMO_LIGAS);
-    const offset = Math.max(input.offset ?? 0, 0);
+    const { limite, offset } = normalizarPaginacaoOffset(
+      input.limite,
+      input.offset,
+      LIMITE_PADRAO_LIGAS,
+      LIMITE_MAXIMO_LIGAS
+    );
     const { tipo, nome } = input;
 
     const [ligas, total] = await Promise.all([

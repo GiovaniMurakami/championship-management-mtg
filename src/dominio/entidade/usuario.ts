@@ -11,6 +11,7 @@ export interface UsuarioProps {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  resultadosExpressivos?: number;
   criadoEm?: Date;
 }
 
@@ -23,9 +24,10 @@ export class Usuario {
   public telefone?: string;
   public nickMTGO?: string;
   public nickArena?: string;
+  public resultadosExpressivos: number;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, resultadosExpressivos, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -34,6 +36,7 @@ export class Usuario {
     this.telefone = telefone;
     this.nickMTGO = nickMTGO;
     this.nickArena = nickArena;
+    this.resultadosExpressivos = resultadosExpressivos ?? 0;
     this.criadoEm = criadoEm || new Date();
   }
 
