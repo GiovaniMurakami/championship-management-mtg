@@ -52,6 +52,8 @@ import { EntrarPorConviteTime } from "../casosDeUso/time/entrarPorConviteTime";
 import { SolicitarEntradaTime } from "../casosDeUso/time/solicitarEntradaTime";
 import { AprovarSolicitacaoTime } from "../casosDeUso/time/aprovarSolicitacaoTime";
 import { RejeitarSolicitacaoTime } from "../casosDeUso/time/rejeitarSolicitacaoTime";
+import { BuscarAnuncios } from "../casosDeUso/site/buscarAnuncios";
+import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -122,6 +124,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const aprovarSolicitacaoTime = AprovarSolicitacaoTime.criar(repos.time, repos.usuario);
     const rejeitarSolicitacaoTime = RejeitarSolicitacaoTime.criar(repos.time);
 
+    // --- Site ---
+    const buscarAnuncios = BuscarAnuncios.criar(repos.siteConfig);
+    const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig);
+
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
         solicitarResetSenha, confirmarResetSenha,
@@ -135,6 +141,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
+        buscarAnuncios, salvarAnuncios,
     };
 }
 

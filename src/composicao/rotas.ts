@@ -52,6 +52,8 @@ import { SolicitarEntradaTimeRota } from "../infra/api/express/rotas/time/solici
 import { AprovarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/aprovarSolicitacaoTime.express.route";
 import { RejeitarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/rejeitarSolicitacaoTime.express.route";
 import { GerarUrlUploadImagemRota } from "../infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
+import { BuscarAnunciosRota } from "../infra/api/express/rotas/site/buscarAnuncios.express.route";
+import { SalvarAnunciosRota } from "../infra/api/express/rotas/site/salvarAnuncios.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { type CasosDeUso } from "./casos";
 
@@ -109,6 +111,8 @@ export function criarRotas(casos: CasosDeUso) {
         SolicitarEntradaTimeRota.criar(casos.solicitarEntradaTime),
         AprovarSolicitacaoTimeRota.criar(casos.aprovarSolicitacaoTime),
         RejeitarSolicitacaoTimeRota.criar(casos.rejeitarSolicitacaoTime),
+        BuscarAnunciosRota.criar(casos.buscarAnuncios),
+        SalvarAnunciosRota.criar(casos.salvarAnuncios),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
         HealthRota.criar(),
     ];
