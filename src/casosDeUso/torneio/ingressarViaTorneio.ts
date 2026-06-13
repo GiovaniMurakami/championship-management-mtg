@@ -149,7 +149,12 @@ export class IngressarViaTorneio
         if (!torneio.emCorte) {
             const todasInscricoes = await this.inscricaoGateway.listarPorTorneio(torneio.id);
             const jogadoresAtivos = todasInscricoes.filter((i) => !i.dropped).length;
-            const novoTotal = Math.ceil(Math.log2(Math.max(jogadoresAtivos, 2)));
+            const rodadasPorQuantidade = Math.ceil(Math.log2(Math.max(jogadoresAtivos, 2)));
+            const limiteFaixaAtual = Math.pow(2, torneio.totalRodadas);
+            const rodadasComEntradaTardia = jogadoresAtivos >= limiteFaixaAtual
+                ? torneio.totalRodadas + 1
+                : rodadasPorQuantidade;
+            const novoTotal = Math.max(rodadasPorQuantidade, rodadasComEntradaTardia);
             const totalComCap = torneio.maxRodadas
                 ? Math.min(novoTotal, torneio.maxRodadas)
                 : novoTotal;

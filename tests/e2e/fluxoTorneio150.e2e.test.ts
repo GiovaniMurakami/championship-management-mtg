@@ -46,6 +46,7 @@ dotenv.config();
 
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
+process.env.LOG_LEVEL = "silent";
 
 import { app } from "../../src/app";
 
@@ -55,6 +56,11 @@ interface PartidaInfo {
     id: string;
     jogador1Id: string;
     jogador2Id: string | null;
+    status?: string;
+    vitoriasJogador1?: number;
+    vitoriasJogador2?: number;
+    confirmadoPor?: string[];
+    contestado?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -102,6 +108,10 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     const PREFIX = `e2e_${Date.now()}_`;
     const SENHA = "Senha@12345";
     const N_PLAYERS = 150;
+    const LATE_PLAYERS = 4;
+    const TOTAL_INSCRITOS_FINAL = N_PLAYERS + LATE_PLAYERS;
+    const TOTAL_DROPS_REALISTAS = 10;
+    const TOTAL_ATIVOS_APOS_DROPS = TOTAL_INSCRITOS_FINAL - TOTAL_DROPS_REALISTAS;
 
     let req: ReturnType<typeof supertest>;
 
@@ -111,11 +121,104 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     let torneioId: string;
     let playerIds: string[] = [];
     let playerTokens: string[] = [];
+    let latePlayerIds: string[] = [];
+    let latePlayerTokens: string[] = [];
     let rodadaPartidas: PartidaInfo[] = [];
     /** IDs dos jogadores dropados na Fase 4 — usados para filtrar partidas já resolvidas. */
     let droppedIds: string[] = [];
     /** IDs de partidas da rodada 5 pré-registradas fora do lote normal — excluídas da Fase 5. */
     let excludedPartidaIds: string[] = [];
+    let confirmedPartidaIds: string[] = [];
+    let contestedPartidaIds: string[] = [];
+
+    const tokenDoJogador = (jogadorId: string) => {
+        const initialIdx = playerIds.indexOf(jogadorId);
+        if (initialIdx >= 0) return playerTokens[initialIdx];
+        const lateIdx = latePlayerIds.indexOf(jogadorId);
+        if (lateIdx >= 0) return latePlayerTokens[lateIdx];
+        throw new Error(`Token não encontrado para jogador ${jogadorId}`);
+    };
+
+    const criarDeckParaJogador = async (token: string, nome: string) => {
+        const deckRes = await req
+            .post("/deck/cadastrar")
+            .set("Authorization", `Bearer ${token}`)
+            .send({
+                nome,
+                formato: "Standard",
+                maindeck: MAINDECK_VALIDO,
+                sideboard: [],
+            })
+            .expect(201);
+        return deckRes.body.id as string;
+    };
+
+    const registrarResultadoRealista = async (
+        partida: PartidaInfo,
+        seed: number,
+        opcoes: { confirmar?: "um" | "ambos"; contestar?: boolean } = {}
+    ) => {
+        if (!partida.jogador2Id) return null;
+
+        const resultadoOriginal = resultadoAleatorio();
+        const reporterToken = seed % 3 === 0
+            ? adminToken
+            : tokenDoJogador(seed % 2 === 0 ? partida.jogador1Id : partida.jogador2Id);
+
+        const registrado = await req
+            .post(`/torneio/partida/${partida.id}/resultado`)
+            .set("Authorization", `Bearer ${reporterToken}`)
+            .send(resultadoOriginal)
+            .expect(200);
+
+        if (opcoes.contestar) {
+            const contestadorToken = tokenDoJogador(seed % 2 === 0 ? partida.jogador2Id : partida.jogador1Id);
+            const contestRes = await req
+                .post(`/torneio/partida/${partida.id}/contestar`)
+                .set("Authorization", `Bearer ${contestadorToken}`)
+                .expect(200);
+            expect(contestRes.body.contestado).toBe(true);
+
+            const resultadoAjustado = resultadoOriginal.vitoriasJogador1 === resultadoOriginal.vitoriasJogador2
+                ? { vitoriasJogador1: 2, vitoriasJogador2: 1 }
+                : {
+                    vitoriasJogador1: resultadoOriginal.vitoriasJogador2,
+                    vitoriasJogador2: resultadoOriginal.vitoriasJogador1,
+                };
+            const ajusteRes = await req
+                .put(`/torneio/partida/${partida.id}/ajustar`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send(resultadoAjustado)
+                .expect(200);
+            expect(ajusteRes.body.contestado).toBe(false);
+            expect(ajusteRes.body.status).toBe("finalizada");
+            contestedPartidaIds.push(partida.id);
+            return ajusteRes.body;
+        }
+
+        if (opcoes.confirmar) {
+            const confirmaJ1 = await req
+                .post(`/torneio/partida/${partida.id}/confirmar`)
+                .set("Authorization", `Bearer ${tokenDoJogador(partida.jogador1Id)}`)
+                .expect(200);
+            expect(confirmaJ1.body.confirmadoPor).toContain(partida.jogador1Id);
+            expect(confirmaJ1.body.confirmacao.count).toBeGreaterThanOrEqual(1);
+
+            if (opcoes.confirmar === "ambos") {
+                const confirmaJ2 = await req
+                    .post(`/torneio/partida/${partida.id}/confirmar`)
+                    .set("Authorization", `Bearer ${tokenDoJogador(partida.jogador2Id)}`)
+                    .expect(200);
+                expect(confirmaJ2.body.confirmadoPor).toEqual(
+                    expect.arrayContaining([partida.jogador1Id, partida.jogador2Id])
+                );
+                expect(confirmaJ2.body.confirmacao.fullyConfirmed).toBe(true);
+            }
+            confirmedPartidaIds.push(partida.id);
+        }
+
+        return registrado.body;
+    };
 
     // ── Setup global ───────────────────────────────────────────────────────────
     beforeAll(async () => {
@@ -319,15 +422,12 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
         for (let r = 1; r <= 4; r++) {
             const partidas = rodadaPartidas.filter((p) => p.jogador2Id !== null);
-            await Promise.all(
-                partidas.map((p) =>
-                    req
-                        .post(`/torneio/partida/${p.id}/resultado`)
-                        .set("Authorization", `Bearer ${adminToken}`)
-                        .send(resultadoAleatorio())
-                        .expect(200)
-                )
-            );
+            await lote(partidas, 12, async (p, idx) => {
+                await registrarResultadoRealista(p, r * 1000 + idx, {
+                    confirmar: idx % 11 === 0 ? "ambos" : idx % 7 === 0 ? "um" : undefined,
+                    contestar: idx % 19 === 0,
+                });
+            });
 
             // Check-in para a próxima rodada (checkInRodada: r-1 → r)
             await lote(allIndices, 15, async (i) => {
@@ -409,18 +509,85 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         excludedPartidaIds.push(partida.id);
     });
 
+    it("deve permitir ingresso tardio de jogadores durante a rodada 5", async () => {
+        for (let i = 0; i < LATE_PLAYERS; i++) {
+            const cadastro = await req
+                .post("/usuario/cadastrar")
+                .send({
+                    nome: `Late Player E2E ${i}`,
+                    email: `${PREFIX}late${i}@test.com`,
+                    senha: SENHA,
+                })
+                .expect(201);
+
+            const login = await req
+                .post("/usuario/login")
+                .send({ email: `${PREFIX}late${i}@test.com`, senha: SENHA })
+                .expect(200);
+
+            await req
+                .put("/usuario/atualizar")
+                .set("Authorization", `Bearer ${login.body.token}`)
+                .send({ nickMTGO: `e2elate${i}` })
+                .expect(200);
+
+            const deckId = await criarDeckParaJogador(login.body.token, `${PREFIX}Late Deck ${i}`);
+            const linkRes = await req
+                .post(`/torneio/${torneioId}/gerar-link-ingresso`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ validadeHoras: 2 })
+                .expect(201);
+
+            const ingresso = await req
+                .post(`/torneio/ingressar/${linkRes.body.token}`)
+                .set("Authorization", `Bearer ${login.body.token}`)
+                .send({ deckId })
+                .expect(201);
+
+            expect(ingresso.body.usuarioId).toBe(cadastro.body.id);
+            expect(ingresso.body.rodada).toBe(5);
+            expect(ingresso.body.vitoriasJogador1).toBe(0);
+            expect(ingresso.body.vitoriasJogador2).toBe(2);
+
+            latePlayerIds.push(cadastro.body.id);
+            latePlayerTokens.push(login.body.token);
+
+            const reusoLinkRes = await req
+                .post(`/torneio/ingressar/${linkRes.body.token}`)
+                .set("Authorization", `Bearer ${login.body.token}`)
+                .send({ deckId });
+            expect([400, 404]).toContain(reusoLinkRes.status);
+        }
+
+        const partidasR5 = await req
+            .get(`/torneio/${torneioId}/partidas?rodada=5`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        rodadaPartidas = partidasR5.body.partidas as PartidaInfo[];
+        expect(latePlayerIds).toHaveLength(LATE_PLAYERS);
+        expect(rodadaPartidas).toHaveLength(75 + LATE_PLAYERS);
+
+        for (const lateId of latePlayerIds) {
+            const partidaPenalidade = rodadaPartidas.find((p) => p.jogador1Id === lateId);
+            expect(partidaPenalidade).toBeDefined();
+            expect(partidaPenalidade!.jogador2Id).toBeNull();
+            expect(partidaPenalidade!.status).toBe("finalizada");
+        }
+    });
+
     // ═══════════════════════════════════════════════════════════════════════════
     // Fase 3: Standings intermediários (rodada 5 já criada → 4 rodadas contabilizadas)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    it("deve retornar standings com 150 jogadores após 4 rodadas consolidadas", async () => {
+    it("deve retornar standings com jogadores iniciais e tardios após 4 rodadas consolidadas", async () => {
         const res = await req
             .get(`/torneio/${torneioId}/standings`)
             .set("Authorization", `Bearer ${adminToken}`)
             .expect(200);
 
         const { standings } = res.body;
-        expect(standings).toHaveLength(N_PLAYERS);
+        expect(standings).toHaveLength(TOTAL_INSCRITOS_FINAL);
 
         // Posição 1 deve existir e ter pontuação >= 0
         const lider = standings[0];
@@ -458,10 +625,10 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     });
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Fase 4: Drop dos 10 últimos colocados
+    // Fase 4: Jogadores aleatórios somem e são dropados
     // ═══════════════════════════════════════════════════════════════════════════
 
-    it("deve dropar os 10 últimos colocados antes da rodada 5", async () => {
+    it("deve dropar 10 jogadores iniciais que sumiram antes de reportar a rodada 5", async () => {
         const standingsRes = await req
             .get(`/torneio/${torneioId}/standings`)
             .set("Authorization", `Bearer ${adminToken}`)
@@ -470,11 +637,15 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         const standings: Array<{ usuario: { id: string; nome: string }; posicao: number }> =
             standingsRes.body.standings;
 
-        const ultimos = standings.slice(-10);
-        droppedIds = ultimos.map((entry) => entry.usuario.id);
+        const ausentes = standings
+            .filter((entry) => playerIds.includes(entry.usuario.id))
+            .filter((_, idx) => idx % 9 === 0)
+            .slice(0, TOTAL_DROPS_REALISTAS);
+        expect(ausentes).toHaveLength(TOTAL_DROPS_REALISTAS);
+        droppedIds = ausentes.map((entry) => entry.usuario.id);
 
         const dropResults = await Promise.all(
-            ultimos.map((entry) =>
+            ausentes.map((entry) =>
                 req
                     .post(`/torneio/${torneioId}/drop`)
                     .set("Authorization", `Bearer ${adminToken}`)
@@ -570,10 +741,17 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     it("deve completar rodadas 5-8 e finalizar o torneio", async () => {
         const droppedSet = new Set(droppedIds);
 
-        // Índices dos jogadores ativos (não dropados)
+        // Jogadores ativos (não dropados), incluindo os que entraram tardiamente.
         const activeIndices = Array.from({ length: N_PLAYERS }, (_, i) => i)
             .filter((i) => !droppedSet.has(playerIds[i]));
-        expect(activeIndices).toHaveLength(N_PLAYERS - 10);
+        const activePlayers = [
+            ...activeIndices.map((i) => ({ id: playerIds[i], token: playerTokens[i], late: false })),
+            ...latePlayerIds
+                .map((id, idx) => ({ id, token: latePlayerTokens[idx] }))
+                .filter((player) => !droppedSet.has(player.id))
+                .map((player) => ({ ...player, late: true })),
+        ];
+        expect(activePlayers).toHaveLength(TOTAL_ATIVOS_APOS_DROPS);
 
         for (let r = 5; r <= 8; r++) {
             // Excluir: byes, partidas de dropados (auto-resolvidas) e as pré-registradas manualmente
@@ -581,27 +759,28 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             const partidas = rodadaPartidas.filter(
                 (p) =>
                     p.jogador2Id !== null &&
+                    p.status !== "finalizada" &&
                     !droppedSet.has(p.jogador1Id) &&
                     !droppedSet.has(p.jogador2Id) &&
                     !excludedSet.has(p.id)
             );
 
-            await Promise.all(
-                partidas.map((p) =>
-                    req
-                        .post(`/torneio/partida/${p.id}/resultado`)
-                        .set("Authorization", `Bearer ${adminToken}`)
-                        .send(resultadoAleatorio())
-                        .expect(200)
-                )
-            );
+            await lote(partidas, 12, async (p, idx) => {
+                await registrarResultadoRealista(p, r * 1000 + idx, {
+                    confirmar: idx % 13 === 0 ? "ambos" : idx % 5 === 0 ? "um" : undefined,
+                    contestar: idx % 23 === 0,
+                });
+            });
 
             if (r < 8) {
                 // Check-in dos jogadores ativos para a próxima rodada
-                await lote(activeIndices, 15, async (i) => {
+                const jogadoresParaCheckin = r === 5
+                    ? activePlayers.filter((player) => !player.late)
+                    : activePlayers;
+                await lote(jogadoresParaCheckin, 15, async (player) => {
                     await req
                         .post(`/torneio/${torneioId}/checkin`)
-                        .set("Authorization", `Bearer ${playerTokens[i]}`)
+                        .set("Authorization", `Bearer ${player.token}`)
                         .send()
                         .expect(200);
                 });
@@ -615,11 +794,11 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             if (r < 8) {
                 expect(avancRes.body.finalizado).toBe(false);
                 rodadaPartidas = avancRes.body.partidas as PartidaInfo[];
-                // Rodada 6 em diante: apenas os 140 ativos
+                // Rodada 6 em diante: apenas os ativos, incluindo tardios que não sumiram
                 if (r === 5) {
                     expect(avancRes.body.rodadaAtual).toBe(6);
-                    // 140 jogadores pares → 70 partidas
-                    expect(avancRes.body.partidas).toHaveLength(70);
+                    // 144 jogadores pares → 72 partidas
+                    expect(avancRes.body.partidas).toHaveLength(TOTAL_ATIVOS_APOS_DROPS / 2);
                 }
                 // Nenhum dropado deve aparecer nas novas partidas
                 for (const p of rodadaPartidas) {
@@ -675,7 +854,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     // Fase 6: Standings finais
     // ═══════════════════════════════════════════════════════════════════════════
 
-    it("deve retornar standings finais com todos os 150 jogadores ordenados", async () => {
+    it("deve retornar standings finais com todos os jogadores ordenados", async () => {
         const res = await req
             .get(`/torneio/${torneioId}/standings`)
             .set("Authorization", `Bearer ${adminToken}`)
@@ -683,8 +862,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
         const { standings } = res.body;
 
-        // Todos os 150 jogadores (incluindo droppados)
-        expect(standings).toHaveLength(N_PLAYERS);
+        // Todos os jogadores, incluindo tardios e droppados.
+        expect(standings).toHaveLength(TOTAL_INSCRITOS_FINAL);
 
         // Posições não-decrescentes
         for (let i = 0; i < standings.length - 1; i++) {
@@ -693,11 +872,16 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
         // Exatamente 10 droppados
         const droppados = standings.filter((e: { dropped?: boolean }) => e.dropped === true);
-        expect(droppados.length).toBe(10);
+        expect(droppados.length).toBe(TOTAL_DROPS_REALISTAS);
         // Os IDs dos droppados batem com os que registramos
         const droppedIdsNoStandings = droppados.map((e: { usuario: { id: string } }) => e.usuario.id);
         for (const id of droppedIds) {
             expect(droppedIdsNoStandings).toContain(id);
+        }
+        for (const id of latePlayerIds) {
+            const lateEntry = standings.find((e: { usuario: { id: string } }) => e.usuario.id === id);
+            expect(lateEntry).toBeDefined();
+            expect(lateEntry!.dropped).toBe(false);
         }
 
         // Líder geral tem pontos >= quaisquer outros
@@ -737,24 +921,24 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         expect(res.body.status).toBe("finalizado");
         expect(res.body.rodadaAtual).toBe(8);
         expect(res.body.totalRodadas).toBe(8);
-        expect(res.body.totalInscritos).toBe(N_PLAYERS);
+        expect(res.body.totalInscritos).toBe(TOTAL_INSCRITOS_FINAL);
         // Todas as partidas do torneio são retornadas no GET /torneio/:id
-        // 5 rodadas×75 + 3 rodadas×70 = 585
-        expect(res.body.partidas.length).toBe(585);
+        // 5 rodadas×75 + 4 penalidades tardias + 3 rodadas×72 = 595
+        expect(res.body.partidas.length).toBe(595);
         // Nenhuma partida deve estar pendente ao final
         const pendentes = res.body.partidas.filter((p: { status: string }) => p.status === "pendente");
         expect(pendentes).toHaveLength(0);
     });
 
-    it("GET /torneio/:id/partidas sem filtro deve retornar todas as 585 partidas do torneio", async () => {
+    it("GET /torneio/:id/partidas sem filtro deve retornar todas as partidas do torneio", async () => {
         const res = await req
             .get(`/torneio/${torneioId}/partidas`)
             .set("Authorization", `Bearer ${adminToken}`)
             .expect(200);
 
         expect(res.body.torneioId).toBe(torneioId);
-        // 75×5 + 70×3 = 585
-        expect(res.body.partidas).toHaveLength(585);
+        // 75×5 + 4 penalidades tardias + 72×3 = 595
+        expect(res.body.partidas).toHaveLength(595);
 
         // Todas finalizadas
         for (const p of res.body.partidas) {
@@ -772,8 +956,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     });
 
     it("GET /torneio/:id/partidas?rodada=X deve retornar apenas as partidas daquela rodada", async () => {
-        // Rodadas 1-5: 75 partidas cada
-        for (const rodada of [1, 2, 3, 4, 5]) {
+        // Rodadas 1-4: 75 partidas cada
+        for (const rodada of [1, 2, 3, 4]) {
             const res = await req
                 .get(`/torneio/${torneioId}/partidas?rodada=${rodada}`)
                 .set("Authorization", `Bearer ${adminToken}`)
@@ -783,13 +967,23 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 expect(p.rodada).toBe(rodada);
             }
         }
-        // Rodadas 6-8: 70 partidas cada
+
+        const rodada5 = await req
+            .get(`/torneio/${torneioId}/partidas?rodada=5`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(rodada5.body.partidas).toHaveLength(75 + LATE_PLAYERS);
+        for (const p of rodada5.body.partidas) {
+            expect(p.rodada).toBe(5);
+        }
+
+        // Rodadas 6-8: 72 partidas cada
         for (const rodada of [6, 7, 8]) {
             const res = await req
                 .get(`/torneio/${torneioId}/partidas?rodada=${rodada}`)
                 .set("Authorization", `Bearer ${adminToken}`)
                 .expect(200);
-            expect(res.body.partidas).toHaveLength(70);
+            expect(res.body.partidas).toHaveLength(TOTAL_ATIVOS_APOS_DROPS / 2);
             for (const p of res.body.partidas) {
                 expect(p.rodada).toBe(rodada);
             }
