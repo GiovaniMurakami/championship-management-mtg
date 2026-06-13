@@ -4,20 +4,23 @@ import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import {
+  normalizarFormatoDeck,
+  normalizarLinkLigaMagic,
+  normalizarListaCartas,
+  validarDeckPorFormato,
+  validarLinkLigaMagic,
+} from "../../dominio/regras/formatoDeck";
 
-const MINIMO_MAINDECK = 60;
-const MAXIMO_SIDEBOARD = 15;
 const MAXIMO_DECKS_POR_USUARIO = 50;
-
-function totalCartas(cartas: Carta[]): number {
-  return cartas.reduce((acc, carta) => acc + carta.quantidade, 0);
-}
 
 export type CadastrarDeckInputDto = {
   nome: string;
   formato: string;
+  linkLigaMagic?: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander?: Carta[] | null;
   usuarioId: string;
   usuarioNome: string;
 };
@@ -27,8 +30,10 @@ export type CadastrarDeckOutputDto = {
   nome: string;
   nomeConsolidado: string | null;
   formato: string;
+  linkLigaMagic: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander: Carta[];
   usuario: { id: string; nome: string };
   criadoEm: Date;
 };
@@ -55,37 +60,24 @@ export class CadastrarDeck
       });
     }
 
-    const totalMaindeck = totalCartas(input.maindeck);
-    if (totalMaindeck < MINIMO_MAINDECK) {
-      throw ErroPersonalizado.criar({
-        mensagem: `O maindeck precisa ter no mínimo ${MINIMO_MAINDECK} cartas. Atual: ${totalMaindeck}.`,
-        status: StatusErro.erroParametro,
-      });
-    }
+    const formato = normalizarFormatoDeck(input.formato);
+    const linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
+    const maindeckNormalizado = normalizarListaCartas(input.maindeck);
+    const sideboardNormalizado = normalizarListaCartas(input.sideboard ?? []);
+    const commanderNormalizado = normalizarListaCartas(input.commander ?? []);
 
-    const totalSideboard = totalCartas(input.sideboard ?? []);
-    if (totalSideboard > MAXIMO_SIDEBOARD) {
-      throw ErroPersonalizado.criar({
-        mensagem: `O sideboard pode ter no máximo ${MAXIMO_SIDEBOARD} cartas. Atual: ${totalSideboard}.`,
-        status: StatusErro.erroParametro,
-      });
-    }
-
-    const maindeckNormalizado = input.maindeck.map((carta) => ({
-      nome: carta.nome.toLowerCase().trim(),
-      quantidade: carta.quantidade,
-    }));
-
-    const sideboardNormalizado = input.sideboard.map((carta) => ({
-      nome: carta.nome.toLowerCase().trim(),
-      quantidade: carta.quantidade,
-    }));
-
-    const formato = input.formato.toLowerCase().trim();
+    validarLinkLigaMagic(formato, linkLigaMagic);
+    validarDeckPorFormato({
+      formato,
+      maindeck: maindeckNormalizado,
+      sideboard: sideboardNormalizado,
+      commander: commanderNormalizado,
+    });
 
     const nomeConsolidado = await this.chatGptGateway.obterNomeConsolidado(
       maindeckNormalizado,
       sideboardNormalizado,
+      commanderNormalizado,
       formato
     );
 
@@ -93,8 +85,10 @@ export class CadastrarDeck
       nome: input.nome.trim(),
       nomeConsolidado,
       formato,
+      linkLigaMagic,
       maindeck: maindeckNormalizado,
       sideboard: sideboardNormalizado,
+      commander: commanderNormalizado,
       usuarioId: input.usuarioId,
     });
 
@@ -105,8 +99,10 @@ export class CadastrarDeck
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
+      commander: deck.commander,
       usuario: { id: deck.usuarioId, nome: input.usuarioNome },
       criadoEm: deck.criadoEm,
     };

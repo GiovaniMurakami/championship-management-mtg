@@ -2,6 +2,10 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
+import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
+
+const LIMITE_MAXIMO_TORNEIOS = 100;
+const LIMITE_PADRAO_TORNEIOS = 20;
 
 export type ListarTorneiosInputDto = {
   usuarioId: string;
@@ -23,7 +27,7 @@ export type ListarTorneiosOutputDto = {
     status: string;
     rodadaAtual: number;
     totalRodadas: number;
-    premio?: string;
+    descricao?: string;
     bannerUrl?: string;
     linkBanner?: string;
     somRodada?: string;
@@ -33,6 +37,7 @@ export type ListarTorneiosOutputDto = {
     linkLive?: string;
     emCorte: boolean;
     secreto: boolean;
+    visualizacoes: number;
     criadoEm: Date;
     inscrito: boolean;
     totalInscritos: number;
@@ -55,15 +60,30 @@ export class ListarTorneios
 
   public async executar({
     usuarioId,
-    limite = 20,
-    offset = 0,
+    limite,
+    offset,
     status,
     nome,
     dataInicio,
     dataFim,
   }: ListarTorneiosInputDto): Promise<ListarTorneiosOutputDto> {
+    const paginacao = normalizarPaginacaoOffset(
+      limite,
+      offset,
+      LIMITE_PADRAO_TORNEIOS,
+      LIMITE_MAXIMO_TORNEIOS
+    );
+
     const [torneios, total, inscricoes] = await Promise.all([
-      this.torneioGateway.listar({ limite, offset, incluirSecretos: false, status, nome, dataInicio, dataFim }),
+      this.torneioGateway.listar({
+        limite: paginacao.limite,
+        offset: paginacao.offset,
+        incluirSecretos: false,
+        status,
+        nome,
+        dataInicio,
+        dataFim,
+      }),
       this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
       this.inscricaoGateway.listarPorUsuario(usuarioId),
     ]);
@@ -84,7 +104,7 @@ export class ListarTorneios
         status: t.status,
         rodadaAtual: t.rodadaAtual,
         totalRodadas: t.totalRodadas,
-        premio: t.premio,
+        descricao: t.descricao,
         bannerUrl: t.bannerUrl,
         linkBanner: t.linkBanner,
         somRodada: t.somRodada,
@@ -94,13 +114,14 @@ export class ListarTorneios
         linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
+        visualizacoes: t.visualizacoes,
         criadoEm: t.criadoEm,
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,
       })),
       total,
-      limite,
-      offset,
+      limite: paginacao.limite,
+      offset: paginacao.offset,
     };
   }
 }

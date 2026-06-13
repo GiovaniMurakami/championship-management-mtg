@@ -1,4 +1,4 @@
-import { getCorsOrigin, getFrontendUrl, isExecucaoLocal, getS3Bucket, getS3Region, getS3BaseUrl } from "../../src/helpers/env";
+import { getCorsOrigin, getCorsOrigins, getFrontendUrl, isExecucaoLocal, getS3Bucket, getS3Region, getS3BaseUrl } from "../../src/helpers/env";
 
 describe("env helpers", () => {
     const originalEnv = { ...process.env };
@@ -20,6 +20,10 @@ describe("env helpers", () => {
         expect(isExecucaoLocal()).toBe(true);
         expect(getFrontendUrl()).toBe("http://localhost:5173");
         expect(getCorsOrigin()).toBe("http://localhost:5173");
+        expect(getCorsOrigins()).toEqual([
+            "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "http://localhost:5173",
+        ]);
     });
 
     it("usa URLs configuradas quando não está local", () => {
@@ -36,6 +40,29 @@ describe("env helpers", () => {
         process.env.FRONTEND_URL = "https://app.exemplo.com";
 
         expect(getCorsOrigin()).toBe("https://app.exemplo.com");
+    });
+
+    it("combina múltiplas origens configuradas com localhost sem duplicar", () => {
+        process.env.IS_LOCAL = "false";
+        process.env.CORS_ORIGIN = "https://web.exemplo.com, https://admin.exemplo.com";
+        process.env.FRONTEND_URL = "https://web.exemplo.com";
+
+        expect(getCorsOrigins()).toEqual([
+            "https://web.exemplo.com",
+            "https://admin.exemplo.com",
+            "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "http://localhost:5173",
+        ]);
+    });
+
+    it("usa homolog como frontend padrão fora do ambiente local", () => {
+        process.env.IS_LOCAL = "false";
+
+        expect(getFrontendUrl()).toBe("https://homolog.d32mjk9mbam2cb.amplifyapp.com");
+        expect(getCorsOrigins()).toEqual([
+            "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "http://localhost:5173",
+        ]);
     });
 
     it("IS_LOCAL=1 também é reconhecido como execução local", () => {

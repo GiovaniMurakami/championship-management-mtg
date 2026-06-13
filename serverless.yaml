@@ -7,8 +7,8 @@ provider:
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     JWT_SECRET: ${env:JWT_SECRET}
-    JWT_SSM_PRIVATE_KEY_PARAM: /championship-mtg/${sls:stage}/jwt-private-key
-    JWT_SSM_PUBLIC_KEY_PARAM: /championship-mtg/${sls:stage}/jwt-public-key
+    JWT_SSM_PRIVATE_KEY_PARAM: ${env:JWT_SSM_PRIVATE_KEY_PARAM, self:custom.jwtSsmParams.private.${sls:stage}}
+    JWT_SSM_PUBLIC_KEY_PARAM: ${env:JWT_SSM_PUBLIC_KEY_PARAM, self:custom.jwtSsmParams.public.${sls:stage}}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
     CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
@@ -36,14 +36,19 @@ build:
   esbuild: false
 
 plugins:
-  - serverless-esbuild
   # - serverless-offline
 
 custom:
-  esbuild:
-    external:
-      - ably
-      - aws-sdk
+  jwtSsmParams:
+    private:
+      dev: /championship-mtg/dev/jwt-private-key
+      prod: /championship-mtg/prod/jwt-private-key
+    public:
+      dev: /championship-mtg/dev/jwt-public-key
+      prod: /championship-mtg/prod/jwt-public-key
+  corsOrigins: &corsOrigins
+    - ${env:FRONTEND_URL, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    - http://localhost:5173
   # serverless-offline:
   #   httpPort: 4000
 
@@ -55,7 +60,7 @@ package:
 functions:
   # Auth, deck, imagem e health — operações leves, sem cálculos pesados
   api-auth:
-    handler: src/handler.handler
+    handler: build/handler.handler
     memorySize: 256
     timeout: 15
     events:
@@ -63,62 +68,62 @@ functions:
           path: /usuario
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /usuario/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /deck
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /deck/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /imagem
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /imagem/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /health
           method: get
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
 
   # Torneio e liga — Swiss pairing e ranking são CPU e memória intensivos
   api-torneio:
-    handler: src/handler.handler
+    handler: build/handler.handler
     memorySize: 512
     timeout: 29
     events:
@@ -126,50 +131,50 @@ functions:
           path: /torneio
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /torneio/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /liga
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /liga/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /time
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
       - http:
           path: /time/{proxy+}
           method: any
           cors:
-            origins:
-              - "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+            origins: *corsOrigins
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
 
 outputs:
   usuarioCadastrar:

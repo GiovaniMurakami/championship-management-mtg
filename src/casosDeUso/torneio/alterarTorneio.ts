@@ -11,7 +11,8 @@ export type AlterarTorneioInputDto = {
   nome?: string;
   horario?: Date;
   formato?: string;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -30,7 +31,8 @@ export type AlterarTorneioOutputDto = {
   formato: string;
   donoId: string;
   status: string;
-  premio?: string;
+  descricao?: string;
+  regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
@@ -78,7 +80,8 @@ export class AlterarTorneio
     if (input.nome !== undefined) torneio.nome = input.nome.trim();
     if (input.horario !== undefined) torneio.horario = input.horario;
     if (input.formato !== undefined) torneio.formato = input.formato.toLowerCase().trim();
-    if (input.premio !== undefined) torneio.premio = input.premio?.trim();
+    if (input.descricao !== undefined) torneio.descricao = input.descricao?.trim();
+    if (input.regras !== undefined) torneio.regras = input.regras?.trim();
     if (input.bannerUrl !== undefined) torneio.bannerUrl = input.bannerUrl?.trim();
     if (input.linkBanner !== undefined) torneio.linkBanner = input.linkBanner?.trim();
     if (input.somRodada !== undefined) torneio.somRodada = input.somRodada?.trim();
@@ -98,7 +101,8 @@ export class AlterarTorneio
       formato: torneio.formato,
       donoId: torneio.donoId,
       status: torneio.status,
-      premio: torneio.premio,
+      descricao: torneio.descricao,
+      regras: torneio.regras,
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,

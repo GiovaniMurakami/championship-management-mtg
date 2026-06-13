@@ -17,12 +17,12 @@ import {
     gerarUrlUploadImagemSchema,
 } from "../../../src/helpers/validacao/schemas";
 
-describe("schemas de validação", () => {
+describe("schemas de validacao", () => {
     describe("cadastrarUsuarioSchema", () => {
-        it("aceita dados válidos", () => {
+        it("aceita dados validos", () => {
             expect(() => cadastrarUsuarioSchema.parse({ nome: "Alice", email: "a@a.com", senha: "senha123" })).not.toThrow();
         });
-        it("rejeita e-mail inválido", () => {
+        it("rejeita e-mail invalido", () => {
             expect(cadastrarUsuarioSchema.safeParse({ nome: "A", email: "nao-email", senha: "12345678" }).success).toBe(false);
         });
         it("rejeita senha menor que 8 caracteres", () => {
@@ -31,10 +31,10 @@ describe("schemas de validação", () => {
     });
 
     describe("loginUsuarioSchema", () => {
-        it("aceita dados válidos", () => {
+        it("aceita dados validos", () => {
             expect(() => loginUsuarioSchema.parse({ email: "a@a.com", senha: "123" })).not.toThrow();
         });
-        it("rejeita quando email é vazio", () => {
+        it("rejeita quando email e vazio", () => {
             expect(loginUsuarioSchema.safeParse({ email: "", senha: "123" }).success).toBe(false);
         });
     });
@@ -43,13 +43,13 @@ describe("schemas de validação", () => {
         it("aceita todos os campos opcionais", () => {
             expect(() => atualizarUsuarioSchema.parse({ nome: "Bob", telefone: "11999", nickMTGO: "bob", nickArena: "bob#123" })).not.toThrow();
         });
-        it("aceita objeto vazio (todos opcionais)", () => {
+        it("aceita objeto vazio", () => {
             expect(() => atualizarUsuarioSchema.parse({})).not.toThrow();
         });
     });
 
     describe("refreshTokenSchema", () => {
-        it("aceita token válido", () => {
+        it("aceita token valido", () => {
             expect(() => refreshTokenSchema.parse({ refreshToken: "token-abc" })).not.toThrow();
         });
         it("rejeita token vazio", () => {
@@ -59,15 +59,48 @@ describe("schemas de validação", () => {
 
     describe("cadastrarDeckSchema", () => {
         const carta = { nome: "Lightning Bolt", quantidade: 4 };
-        it("aceita deck válido", () => {
+
+        it("aceita deck valido", () => {
             expect(() => cadastrarDeckSchema.parse({ nome: "Burn", formato: "Modern", maindeck: [carta] })).not.toThrow();
         });
+
+        it("exige linkLigaMagic quando formato e commander500", () => {
+            expect(cadastrarDeckSchema.safeParse({
+                nome: "C500",
+                formato: "commander500",
+                maindeck: [carta],
+                commander: [{ nome: "Atraxa", quantidade: 1 }],
+            }).success).toBe(false);
+        });
+
+        it("aceita linkLigaMagic valido em commander500", () => {
+            expect(() => cadastrarDeckSchema.parse({
+                nome: "C500",
+                formato: "commander500",
+                linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=123456",
+                maindeck: [carta],
+                commander: [{ nome: "Atraxa", quantidade: 1 }],
+            })).not.toThrow();
+        });
+
         it("rejeita maindeck vazio", () => {
             expect(cadastrarDeckSchema.safeParse({ nome: "Burn", formato: "Modern", maindeck: [] }).success).toBe(false);
         });
-        it("usa sideboard vazio como padrão", () => {
+
+        it("usa sideboard vazio como padrao", () => {
             const r = cadastrarDeckSchema.parse({ nome: "Burn", formato: "Modern", maindeck: [carta] });
             expect(r.sideboard).toEqual([]);
+        });
+
+        it("aceita commander ausente, null ou array", () => {
+            expect(cadastrarDeckSchema.parse({ nome: "Burn", formato: "Modern", maindeck: [carta] }).commander).toBeUndefined();
+            expect(cadastrarDeckSchema.parse({ nome: "Burn", formato: "Modern", maindeck: [carta], commander: null }).commander).toBeNull();
+            expect(cadastrarDeckSchema.parse({
+                nome: "Atraxa",
+                formato: "Commander",
+                maindeck: [carta],
+                commander: [{ nome: "Atraxa", quantidade: 1 }],
+            }).commander).toHaveLength(1);
         });
     });
 
@@ -75,10 +108,16 @@ describe("schemas de validação", () => {
         it("aceita objeto vazio", () => {
             expect(() => atualizarDeckSchema.parse({})).not.toThrow();
         });
+        it("aceita commander null para limpeza explicita", () => {
+            expect(() => atualizarDeckSchema.parse({ commander: null })).not.toThrow();
+        });
+        it("rejeita linkLigaMagic invalido quando informado", () => {
+            expect(atualizarDeckSchema.safeParse({ linkLigaMagic: "nao-url" }).success).toBe(false);
+        });
     });
 
     describe("criarTorneioSchema (s3ImagemUrl)", () => {
-        it("rejeita bannerUrl que não pertence ao bucket S3 configurado", () => {
+        it("rejeita bannerUrl que nao pertence ao bucket S3 configurado", () => {
             process.env.AWS_S3_BUCKET = "meu-bucket";
             process.env.AWS_S3_REGION = "us-east-1";
             const result = criarTorneioSchema.safeParse({
@@ -103,16 +142,16 @@ describe("schemas de validação", () => {
     });
 
     describe("criarTorneioSchema", () => {
-        it("aceita campos obrigatórios", () => {
+        it("aceita campos obrigatorios", () => {
             expect(() => criarTorneioSchema.parse({ nome: "T", horario: "2025-01-01", formato: "Standard" })).not.toThrow();
         });
-        it("rejeita quando nome é vazio", () => {
+        it("rejeita quando nome e vazio", () => {
             expect(criarTorneioSchema.safeParse({ nome: "", horario: "h", formato: "f" }).success).toBe(false);
         });
-        it("aceita exibirNomeJogador válido", () => {
+        it("aceita exibirNomeJogador valido", () => {
             expect(() => criarTorneioSchema.parse({ nome: "T", horario: "h", formato: "f", exibirNomeJogador: "nome" })).not.toThrow();
         });
-        it("rejeita exibirNomeJogador inválido", () => {
+        it("rejeita exibirNomeJogador invalido", () => {
             expect(criarTorneioSchema.safeParse({ nome: "T", horario: "h", formato: "f", exibirNomeJogador: "invalido" }).success).toBe(false);
         });
     });
@@ -130,7 +169,7 @@ describe("schemas de validação", () => {
     });
 
     describe("escolherDeckTorneioSchema", () => {
-        it("aceita deckId válido", () => {
+        it("aceita deckId valido", () => {
             expect(() => escolherDeckTorneioSchema.parse({ deckId: "d-1" })).not.toThrow();
         });
         it("rejeita deckId vazio", () => {
@@ -139,7 +178,7 @@ describe("schemas de validação", () => {
     });
 
     describe("registrarResultadoSchema", () => {
-        it("aceita resultado válido", () => {
+        it("aceita resultado valido", () => {
             expect(() => registrarResultadoSchema.parse({ vitoriasJogador1: 2, vitoriasJogador2: 1 })).not.toThrow();
         });
         it("rejeita valores negativos", () => {
@@ -148,7 +187,7 @@ describe("schemas de validação", () => {
     });
 
     describe("droparJogadorSchema", () => {
-        it("aceita objeto vazio (jogadorId opcional)", () => {
+        it("aceita objeto vazio", () => {
             expect(() => droparJogadorSchema.parse({})).not.toThrow();
         });
         it("aceita jogadorId informado", () => {
@@ -157,13 +196,13 @@ describe("schemas de validação", () => {
     });
 
     describe("criarLigaSchema", () => {
-        it("aceita campos obrigatórios", () => {
+        it("aceita campos obrigatorios", () => {
             expect(() => criarLigaSchema.parse({ nome: "Liga" })).not.toThrow();
         });
         it("aceita tipo times", () => {
             expect(() => criarLigaSchema.parse({ nome: "Liga", tipo: "times" })).not.toThrow();
         });
-        it("rejeita tipo inválido", () => {
+        it("rejeita tipo invalido", () => {
             expect(criarLigaSchema.safeParse({ nome: "Liga", tipo: "invalido" }).success).toBe(false);
         });
     });
@@ -175,16 +214,16 @@ describe("schemas de validação", () => {
     });
 
     describe("criarTimeSchema", () => {
-        it("aceita nome válido", () => {
+        it("aceita nome valido", () => {
             expect(() => criarTimeSchema.parse({ nome: "Team Alpha" })).not.toThrow();
         });
         it("rejeita nome vazio", () => {
             expect(criarTimeSchema.safeParse({ nome: "" }).success).toBe(false);
         });
-        it("rejeita imagemUrl inválida", () => {
+        it("rejeita imagemUrl invalida", () => {
             expect(criarTimeSchema.safeParse({ nome: "T", imagemUrl: "nao-url" }).success).toBe(false);
         });
-        it("aceita imagemUrl válida", () => {
+        it("aceita imagemUrl valida", () => {
             expect(() => criarTimeSchema.parse({ nome: "T", imagemUrl: "https://example.com/img.png" })).not.toThrow();
         });
     });
@@ -196,10 +235,10 @@ describe("schemas de validação", () => {
     });
 
     describe("gerarUrlUploadImagemSchema", () => {
-        it("aceita image/jpeg com tamanho válido", () => {
+        it("aceita image/jpeg com tamanho valido", () => {
             expect(() => gerarUrlUploadImagemSchema.parse({ contentType: "image/jpeg", tamanhoBytes: 1024 })).not.toThrow();
         });
-        it("rejeita contentType inválido", () => {
+        it("rejeita contentType invalido", () => {
             expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/bmp", tamanhoBytes: 100 }).success).toBe(false);
         });
         it("rejeita tamanho acima de 5MB", () => {
@@ -214,6 +253,7 @@ describe("schemas de validação", () => {
             }
         });
     });
+
     describe("s3ImagemUrl sem base configurada", () => {
         afterEach(() => {
             jest.dontMock("../../../src/helpers/env");

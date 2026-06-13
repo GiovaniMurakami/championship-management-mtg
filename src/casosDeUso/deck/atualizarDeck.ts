@@ -3,13 +3,13 @@ import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-
-const MINIMO_MAINDECK = 60;
-const MAXIMO_SIDEBOARD = 15;
-
-function totalCartas(cartas: Carta[]): number {
-  return cartas.reduce((acc, carta) => acc + carta.quantidade, 0);
-}
+import {
+  normalizarFormatoDeck,
+  normalizarLinkLigaMagic,
+  normalizarListaCartas,
+  validarDeckPorFormato,
+  validarLinkLigaMagic,
+} from "../../dominio/regras/formatoDeck";
 
 export type AtualizarDeckInputDto = {
   id: string;
@@ -19,8 +19,10 @@ export type AtualizarDeckInputDto = {
   nome?: string;
   nomeConsolidado?: string | null;
   formato?: string;
+  linkLigaMagic?: string | null;
   maindeck?: Carta[];
   sideboard?: Carta[];
+  commander?: Carta[] | null;
 };
 
 export type AtualizarDeckOutputDto = {
@@ -28,8 +30,10 @@ export type AtualizarDeckOutputDto = {
   nome: string;
   nomeConsolidado: string | null;
   formato: string;
+  linkLigaMagic: string | null;
   maindeck: Carta[];
   sideboard: Carta[];
+  commander: Carta[];
   usuario: { id: string; nome: string };
   criadoEm: Date;
 };
@@ -54,37 +58,28 @@ export class AtualizarDeck
       });
     }
 
+    if (deck.travado) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Este deck está travado porque está vinculado a um torneio.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     if (input.nome !== undefined) deck.nome = input.nome.trim();
     if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
-    if (input.formato !== undefined) deck.formato = input.formato.toLowerCase().trim();
-    if (input.maindeck !== undefined) {
-      deck.maindeck = input.maindeck.map((carta) => ({
-        nome: carta.nome.toLowerCase().trim(),
-        quantidade: carta.quantidade,
-      }));
-    }
-    if (input.sideboard !== undefined) {
-      deck.sideboard = input.sideboard.map((carta) => ({
-        nome: carta.nome.toLowerCase().trim(),
-        quantidade: carta.quantidade,
-      }));
-    }
+    if (input.formato !== undefined) deck.formato = normalizarFormatoDeck(input.formato);
+    if (input.linkLigaMagic !== undefined) deck.linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
+    if (input.maindeck !== undefined) deck.maindeck = normalizarListaCartas(input.maindeck);
+    if (input.sideboard !== undefined) deck.sideboard = normalizarListaCartas(input.sideboard);
+    if (input.commander !== undefined) deck.commander = normalizarListaCartas(input.commander ?? []);
 
-    const totalMaindeck = totalCartas(deck.maindeck);
-    if (totalMaindeck < MINIMO_MAINDECK) {
-      throw ErroPersonalizado.criar({
-        mensagem: `O maindeck precisa ter no mínimo ${MINIMO_MAINDECK} cartas. Atual: ${totalMaindeck}.`,
-        status: StatusErro.erroParametro,
-      });
-    }
-
-    const totalSideboard = totalCartas(deck.sideboard);
-    if (totalSideboard > MAXIMO_SIDEBOARD) {
-      throw ErroPersonalizado.criar({
-        mensagem: `O sideboard pode ter no máximo ${MAXIMO_SIDEBOARD} cartas. Atual: ${totalSideboard}.`,
-        status: StatusErro.erroParametro,
-      });
-    }
+    validarLinkLigaMagic(deck.formato, deck.linkLigaMagic);
+    validarDeckPorFormato({
+      formato: deck.formato,
+      maindeck: deck.maindeck,
+      sideboard: deck.sideboard,
+      commander: deck.commander,
+    });
 
     await this.deckGateway.atualizar(deck);
 
@@ -93,8 +88,10 @@ export class AtualizarDeck
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
       formato: deck.formato,
+      linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
+      commander: deck.commander,
       usuario: { id: deck.usuarioId, nome: input.usuarioNome },
       criadoEm: deck.criadoEm,
     };

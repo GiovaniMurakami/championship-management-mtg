@@ -65,6 +65,19 @@ describe("ListarTorneios", () => {
         expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ limite: 5, offset: 10, incluirSecretos: false }));
     });
 
+    it("deve limitar paginação profunda para evitar skip excessivo", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u1", limite: 500, offset: 999999 });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ limite: 100, offset: 5000 }));
+        expect(resultado.limite).toBe(100);
+        expect(resultado.offset).toBe(5000);
+    });
+
     it("deve repassar filtro por data de inicio e fim ao gateway", async () => {
         const listarMock = jest.fn().mockResolvedValue([]);
         const listarTotalMock = jest.fn().mockResolvedValue(0);

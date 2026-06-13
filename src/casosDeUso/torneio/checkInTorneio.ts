@@ -78,13 +78,6 @@ export class CheckInTorneio
       }
       inscricao.checkInRodada = 0;
     } else {
-      if (inscricao.checkInRodada < 0) {
-        throw ErroPersonalizado.criar({
-          mensagem: "Você não completou o check-in inicial deste torneio.",
-          status: StatusErro.erroParametro,
-        });
-      }
-
       if (inscricao.checkInRodada >= torneio.rodadaAtual) {
         throw ErroPersonalizado.criar({
           mensagem: "Você já fez check-in para esta rodada.",

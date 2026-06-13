@@ -4,13 +4,13 @@ import { Deck } from "../../../src/dominio/entidade/deck";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 describe("ListarDecks", () => {
-    it("deve retornar lista de decks com dados do usuário", async () => {
+    it("deve retornar lista de decks com dados do usuario", async () => {
         const decks = [
             new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u1" }),
             new Deck({ id: "d2", nome: "Storm", formato: "modern", maindeck: [], sideboard: [], usuarioId: "u1" }),
         ];
         const usuarios = [
-            new Usuario({ id: "u1", nome: "João", email: "j@e.com", senha: "s" }),
+            new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" }),
         ];
         const deckGateway = criarMockDeckGateway({
             listar: jest.fn().mockResolvedValue(decks),
@@ -26,12 +26,13 @@ describe("ListarDecks", () => {
         expect(resultado.decks).toHaveLength(2);
         expect(resultado.total).toBe(2);
         expect(resultado.decks[0].nome).toBe("Burn");
-        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "João" });
+        expect(resultado.decks[0].linkLigaMagic).toBeNull();
+        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "Joao" });
         expect(resultado.decks[1].nome).toBe("Storm");
-        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "João" });
+        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "Joao" });
     });
 
-    it("deve retornar lista vazia quando não há decks", async () => {
+    it("deve retornar lista vazia quando nao ha decks", async () => {
         const uc = ListarDecks.criar(criarMockDeckGateway(), criarMockUsuarioGateway());
 
         const resultado = await uc.executar({});
@@ -39,7 +40,7 @@ describe("ListarDecks", () => {
         expect(resultado.total).toBe(0);
     });
 
-    it("deve usar defaults quando limite e offset não são passados", async () => {
+    it("deve usar defaults quando limite e offset nao sao passados", async () => {
         const deckGateway = criarMockDeckGateway();
         const uc = ListarDecks.criar(deckGateway, criarMockUsuarioGateway());
 
@@ -50,7 +51,7 @@ describe("ListarDecks", () => {
         expect(chamada.offset).toBe(0);
     });
 
-    it("deve usar id do usuário quando usuário não está no mapa", async () => {
+    it("deve usar id do usuario quando usuario nao esta no mapa", async () => {
         const decks = [
             new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-desconhecido" }),
         ];
@@ -80,5 +81,34 @@ describe("ListarDecks", () => {
         expect(chamada.formato).toBe("legacy");
         expect(chamada.criadoApos).toBeInstanceOf(Date);
         expect(chamada.criadoAntes).toBeInstanceOf(Date);
+    });
+
+    it("deve retornar linkLigaMagic na listagem", async () => {
+        const decks = [
+            new Deck({
+                id: "d1",
+                nome: "C500",
+                formato: "commander500",
+                linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=123456",
+                maindeck: [],
+                sideboard: [],
+                commander: [],
+                usuarioId: "u1",
+            }),
+        ];
+        const deckGateway = criarMockDeckGateway({
+            listar: jest.fn().mockResolvedValue(decks),
+            listarTotal: jest.fn().mockResolvedValue(1),
+        });
+        const usuarioGateway = criarMockUsuarioGateway({
+            buscarVarios: jest.fn().mockResolvedValue([
+                new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" }),
+            ]),
+        });
+        const uc = ListarDecks.criar(deckGateway, usuarioGateway);
+
+        const resultado = await uc.executar({ usuarioId: "u1", formato: "commander500" });
+
+        expect(resultado.decks[0].linkLigaMagic).toBe("https://www.ligamagic.com.br/?view=dks/deck&id=123456");
     });
 });

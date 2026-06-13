@@ -45,6 +45,7 @@ describe("BuscarStandings", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1" });
 
+        expect(resultado.totalInscritos).toBe(2);
         expect(resultado.standings).toHaveLength(2);
         expect(resultado.standings[0].pontosMesa).toBe(0);
         expect(resultado.standings[1].pontosMesa).toBe(0);
@@ -77,6 +78,7 @@ describe("BuscarStandings", () => {
 
         expect(resultado.standings).toHaveLength(2);
         expect(resultado.standings[0].usuario.nome).toBe("JoÃ£o");
+        expect(resultado.standings[0].resultadosExpressivos).toBe(0);
         expect(resultado.standings[0].pontosMesa).toBe(3);
         expect(resultado.standings[0].vitoriasPartida).toBe(1);
         expect(resultado.standings[1].usuario.nome).toBe("Maria");
@@ -185,6 +187,43 @@ describe("BuscarStandings", () => {
         expect(resultado.standings).toHaveLength(2);
         expect(resultado.standings[0].pontosMesa).toBe(3);
         expect(resultado.standings[1].pontosMesa).toBe(3);
+    });
+
+    it("deve calcular standings de torneio finalizado com apenas 1 rodada", async () => {
+        const torneioFinalizadoUmaRodada = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "legacy",
+            donoId: "d", status: "finalizado", rodadaAtual: 1, totalRodadas: 1,
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 1, dropped: false }),
+        ];
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" }),
+        ];
+        const usuarios = [
+            new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
+            new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
+        ];
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizadoUmaRodada) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway(),
+            criarMockTimeGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+
+        expect(resultado.standings).toHaveLength(2);
+        expect(resultado.standings[0].usuario.id).toBe("u-2");
+        expect(resultado.standings[0].pontosMesa).toBe(3);
+        expect(resultado.standings[0].vitoriasPartida).toBe(1);
+        expect(resultado.standings[1].usuario.id).toBe("u-1");
+        expect(resultado.standings[1].pontosMesa).toBe(0);
+        expect(resultado.standings[1].derrotasPartida).toBe(1);
     });
 
     it("deve incluir jogador dropado nos standings com suas estatÃ­sticas reais", async () => {

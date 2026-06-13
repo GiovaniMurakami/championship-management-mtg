@@ -11,7 +11,7 @@ describe("CriarTorneio", () => {
             horario: new Date("2025-06-01T14:00:00Z"),
             formato: "  LEGACY ",
             donoId: "user-1",
-            premio: " Booster Box ",
+            descricao: " Booster Box ",
         });
 
         expect(resultado.id).toBeDefined();
@@ -19,7 +19,7 @@ describe("CriarTorneio", () => {
         expect(resultado.formato).toBe("legacy");
         expect(resultado.donoId).toBe("user-1");
         expect(resultado.status).toBe("inscricoes_abertas");
-        expect(resultado.premio).toBe("Booster Box");
+        expect(resultado.descricao).toBe("Booster Box");
         expect(resultado.criadoEm).toBeInstanceOf(Date);
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
     });
@@ -35,7 +35,7 @@ describe("CriarTorneio", () => {
             donoId: "user-1",
         });
 
-        expect(resultado.premio).toBeUndefined();
+        expect(resultado.descricao).toBeUndefined();
     });
 
     it("deve criar torneio com todos os campos opcionais", async () => {

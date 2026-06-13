@@ -20,6 +20,8 @@ export type ConfirmarResultadoOutputDto = {
     status: string;
     contestado: boolean;
     confirmadoPor: string[];
+    confirmadoPeloUsuario: boolean;
+    confirmacao: { count: number; total: number; fullyConfirmed: boolean };
 };
 
 export class ConfirmarResultado
@@ -92,6 +94,8 @@ export class ConfirmarResultado
             });
         }
 
+        const confirmadoPor = partidaAtualizada.confirmadoPor ?? [];
+
         return {
             id: partidaAtualizada.id,
             torneioId: partidaAtualizada.torneioId,
@@ -102,7 +106,17 @@ export class ConfirmarResultado
             vitoriasJogador2: partidaAtualizada.vitoriasJogador2,
             status: partidaAtualizada.status,
             contestado: partidaAtualizada.contestado,
-            confirmadoPor: partidaAtualizada.confirmadoPor,
+            confirmadoPor,
+            confirmadoPeloUsuario: confirmadoPor.some((id) => String(id) === String(input.usuarioId)),
+            confirmacao: {
+                count: [partidaAtualizada.jogador1Id, partidaAtualizada.jogador2Id]
+                    .filter((id): id is string => !!id)
+                    .filter((id) => confirmadoPor.some((confirmadoId) => String(confirmadoId) === String(id))).length,
+                total: partidaAtualizada.jogador2Id ? 2 : 1,
+                fullyConfirmed: partidaAtualizada.jogador2Id
+                    ? [partidaAtualizada.jogador1Id, partidaAtualizada.jogador2Id].every((id) => confirmadoPor.some((confirmadoId) => String(confirmadoId) === String(id)))
+                    : true,
+            },
         };
     }
 }

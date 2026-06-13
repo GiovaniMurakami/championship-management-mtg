@@ -28,7 +28,7 @@ describe("IngressarViaTorneio", () => {
         token: "token-uuid",
         torneioId: "t-1",
         criadoPorId: "dono-1",
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // +1h
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     };
 
     const deckValido = new Deck({
@@ -38,12 +38,21 @@ describe("IngressarViaTorneio", () => {
 
     function criarUc(overrides: {
         linkData?: LinkIngressoData | null;
-        byePartida?: Partida | null;
         jaInscrito?: boolean;
         inscricoes?: { dropped: boolean }[];
         deck?: Deck | null;
+        partidasRodada?: Partida[];
+        salvarPartida?: jest.Mock;
     } = {}) {
-        const { linkData = linkValido, byePartida = null, jaInscrito = false, inscricoes = [{ dropped: false }], deck = deckValido } = overrides;
+        const {
+            linkData = linkValido,
+            jaInscrito = false,
+            inscricoes = [{ dropped: false }],
+            deck = deckValido,
+            partidasRodada = [],
+            salvarPartida = jest.fn(),
+        } = overrides;
+
         return IngressarViaTorneio.criar(
             criarMockTorneioGateway({
                 buscarPorId: jest.fn().mockResolvedValue(torneio),
@@ -55,15 +64,8 @@ describe("IngressarViaTorneio", () => {
                 listarPorTorneio: jest.fn().mockResolvedValue(inscricoes),
             }),
             criarMockPartidaGateway({
-                buscarByePartidaRodada: jest.fn().mockResolvedValue(byePartida),
-                atualizarJogador2Partida: jest.fn().mockImplementation((id: string, jogador2Id: string) =>
-                    Promise.resolve(new Partida({
-                        id, torneioId: "t-1", rodada: 2,
-                        jogador1Id: "bye-rival", jogador2Id: jogador2Id,
-                        vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada",
-                    }))
-                ),
-                salvar: jest.fn(),
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                salvar: salvarPartida,
             }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
@@ -72,12 +74,14 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deck),
+                salvar: jest.fn(),
             }),
         );
     }
 
-    it("deve inscrever jogador e receber penalidade (BYE 0-2) quando não há partida BYE disponível", async () => {
-        const uc = criarUc({ byePartida: null });
+    it("deve inscrever jogador e receber penalidade (BYE 0-2) quando não há BYE na rodada", async () => {
+        const salvarPartida = jest.fn();
+        const uc = criarUc({ salvarPartida });
 
         const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -85,21 +89,80 @@ describe("IngressarViaTorneio", () => {
         expect(resultado.usuarioId).toBe("u-novo");
         expect(resultado.vitoriasJogador1).toBe(0);
         expect(resultado.vitoriasJogador2).toBe(2);
+        const partidaCriada = salvarPartida.mock.calls[0][0] as Partida;
+        expect(partidaCriada.mesa).toBe(1);
     });
 
-    it("deve substituir BYE existente e o original mantém vitória 2-0", async () => {
+    it("deve criar nova partida de penalidade quando já existe um BYE na rodada", async () => {
         const byePartidaExistente = new Partida({
-            id: "bye-p-1", torneioId: "t-1", rodada: 2,
-            jogador1Id: "u-bye", jogador2Id: null,
-            vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada",
+            id: "bye-p-1",
+            torneioId: "t-1",
+            rodada: 2,
+            jogador1Id: "u-bye",
+            jogador2Id: null,
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+            mesa: 7,
         });
-        const uc = criarUc({ byePartida: byePartidaExistente });
+        const salvarPartida = jest.fn();
+        const uc = criarUc({
+            partidasRodada: [byePartidaExistente],
+            salvarPartida,
+        });
 
         const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
-        expect(resultado.vitoriasJogador1).toBe(2);
-        expect(resultado.vitoriasJogador2).toBe(0);
-        expect(resultado.partidaId).toBe("bye-p-1");
+        expect(resultado.vitoriasJogador1).toBe(0);
+        expect(resultado.vitoriasJogador2).toBe(2);
+        expect(resultado.partidaId).not.toBe("bye-p-1");
+        const partidaCriada = salvarPartida.mock.calls[0][0] as Partida;
+        expect(partidaCriada.jogador2Id).toBeNull();
+        expect(partidaCriada.tipoBye).toBe("penalidade");
+        expect(partidaCriada.mesa).toBe(8);
+    });
+
+    it("deve criar nova partida adicional mesmo quando já existem bye normal e byes de penalidade na rodada", async () => {
+        const byeNormal = new Partida({
+            id: "bye-normal",
+            torneioId: "t-1",
+            rodada: 2,
+            jogador1Id: "u-bye",
+            jogador2Id: null,
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+            tipoBye: "normal",
+            mesa: 4,
+        });
+        const byePenalidadeExistente = new Partida({
+            id: "bye-penalidade-1",
+            torneioId: "t-1",
+            rodada: 2,
+            jogador1Id: "u-tardio-1",
+            jogador2Id: null,
+            vitoriasJogador1: 0,
+            vitoriasJogador2: 2,
+            status: "finalizada",
+            tipoBye: "penalidade",
+            mesa: 5,
+        });
+        const salvarPartida = jest.fn();
+        const uc = criarUc({
+            partidasRodada: [byeNormal, byePenalidadeExistente],
+            salvarPartida,
+        });
+
+        const resultado = await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        expect(resultado.vitoriasJogador1).toBe(0);
+        expect(resultado.vitoriasJogador2).toBe(2);
+        const partidaCriada = salvarPartida.mock.calls[0][0] as Partida;
+        expect(partidaCriada.id).not.toBe("bye-normal");
+        expect(partidaCriada.id).not.toBe("bye-penalidade-1");
+        expect(partidaCriada.jogador2Id).toBeNull();
+        expect(partidaCriada.tipoBye).toBe("penalidade");
+        expect(partidaCriada.mesa).toBe(6);
     });
 
     it("deve lançar 404 se o token for inválido", async () => {
@@ -113,7 +176,7 @@ describe("IngressarViaTorneio", () => {
     it("deve lançar 400 se o token estiver expirado", async () => {
         const linkExpirado: LinkIngressoData = {
             ...linkValido,
-            expiresAt: new Date(Date.now() - 1000), // expirou há 1 segundo
+            expiresAt: new Date(Date.now() - 1000),
         };
         const uc = criarUc({ linkData: linkExpirado });
 
@@ -160,7 +223,7 @@ describe("IngressarViaTorneio", () => {
                 salvar: jest.fn(),
                 listarPorTorneio: jest.fn().mockResolvedValue([{ dropped: false }]),
             }),
-            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
@@ -168,6 +231,7 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
             }),
         );
 
@@ -177,8 +241,6 @@ describe("IngressarViaTorneio", () => {
     });
 
     it("deve aumentar totalRodadas quando o novo jogador eleva o mínimo necessário de rodadas", async () => {
-        // torneio com 4 jogadores ativos → ceil(log2(4)) = 2 rodadas (já definido)
-        // novo jogador entra → 5 ativos → ceil(log2(5)) = 3 rodadas
         const torneio4 = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 2,
@@ -197,7 +259,7 @@ describe("IngressarViaTorneio", () => {
                 salvar: jest.fn(),
                 listarPorTorneio: jest.fn().mockResolvedValue(inscricoes5Ativos),
             }),
-            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
@@ -205,18 +267,17 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
             }),
         );
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
-        // totalRodadas deve ter sido atualizado para 3
         expect(atualizarMock).toHaveBeenCalledTimes(1);
         expect(torneio4.totalRodadas).toBe(3);
     });
 
-    it("não deve alterar totalRodadas quando o novo jogador não muda o número de rodadas necessário", async () => {
-        // torneio com 3 jogadores ativos → ceil(log2(3)) = 2; com 4 → ceil(log2(4)) = 2 (sem mudança)
+    it("deve aumentar totalRodadas quando o novo jogador completa o limite da faixa atual", async () => {
         const torneio3 = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 2,
@@ -235,7 +296,7 @@ describe("IngressarViaTorneio", () => {
                 salvar: jest.fn(),
                 listarPorTorneio: jest.fn().mockResolvedValue(inscricoes4Ativos),
             }),
-            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
@@ -243,17 +304,54 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
             }),
         );
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
-        expect(atualizarMock).not.toHaveBeenCalled();
-        expect(torneio3.totalRodadas).toBe(2);
+        expect(atualizarMock).toHaveBeenCalledTimes(1);
+        expect(torneio3.totalRodadas).toBe(3);
+    });
+
+    it("deve aumentar de 3 para 4 rodadas quando o oitavo jogador entra tardiamente", async () => {
+        const torneio7 = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3,
+        });
+
+        const atualizarMock = jest.fn();
+        const inscricoes8Ativos = Array.from({ length: 8 }, (_, i) => ({ dropped: false, id: `i-${i}` }));
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(torneio7),
+                atualizar: atualizarMock,
+            }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
+                salvar: jest.fn(),
+                listarPorTorneio: jest.fn().mockResolvedValue(inscricoes8Ativos),
+            }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
+            }),
+        );
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        expect(atualizarMock).toHaveBeenCalledTimes(1);
+        expect(torneio7.totalRodadas).toBe(4);
     });
 
     it("deve respeitar o limite maxRodadas ao calcular rodada extra", async () => {
-        // 5 ativos → ceil(log2(5)) = 3, mas maxRodadas = 2 → não deve aumentar
         const torneioComCap = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 2, maxRodadas: 2,
@@ -272,7 +370,7 @@ describe("IngressarViaTorneio", () => {
                 salvar: jest.fn(),
                 listarPorTorneio: jest.fn().mockResolvedValue(inscricoes5Ativos),
             }),
-            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
@@ -280,6 +378,7 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
             }),
         );
 
@@ -293,7 +392,7 @@ describe("IngressarViaTorneio", () => {
         const torneioEmCorte = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "em_andamento", rodadaAtual: 3, totalRodadas: 4,
-            emCorte: true, rodadaCorteInicio: 3, rodadaCorteFim: 5,
+            emCorte: true,
         });
 
         const uc = IngressarViaTorneio.criar(
@@ -354,8 +453,21 @@ describe("IngressarViaTorneio", () => {
         ).rejects.toMatchObject({ status: 404 });
     });
 
+    it("deve lançar 403 se o deck não pertencer ao usuário", async () => {
+        const deckDeOutroUsuario = new Deck({
+            id: "d-2", nome: "Deck Alheio", formato: "legacy",
+            maindeck: [], sideboard: [], usuarioId: "u-outro",
+        });
+        const uc = criarUc({ deck: deckDeOutroUsuario });
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-2" })
+        ).rejects.toMatchObject({ status: 403 });
+    });
+
     it("deve criar inscrição com checkInRodada igual à rodada atual e deckId", async () => {
         const salvarMock = jest.fn();
+        const salvarDeckMock = jest.fn();
         const uc = IngressarViaTorneio.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio), atualizar: jest.fn() }),
             criarMockInscricaoGateway({
@@ -363,7 +475,7 @@ describe("IngressarViaTorneio", () => {
                 salvar: salvarMock,
                 listarPorTorneio: jest.fn().mockResolvedValue([{ dropped: false }]),
             }),
-            criarMockPartidaGateway({ salvar: jest.fn() }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
             criarMockLinkIngressoGateway({
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
@@ -371,14 +483,74 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: salvarDeckMock,
             }),
         );
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
         expect(salvarMock).toHaveBeenCalledTimes(1);
+        expect(salvarDeckMock).toHaveBeenCalledTimes(1);
         const inscricaoSalva = salvarMock.mock.calls[0][0];
         expect(inscricaoSalva.checkInRodada).toBe(torneio.rodadaAtual);
-        expect(inscricaoSalva.deckId).toBe("d-1");
+        expect(inscricaoSalva.deckId).toBeDefined();
+        expect(inscricaoSalva.deckId).not.toBe("d-1");
+    });
+
+    it("deve calcular a próxima mesa ignorando partidas sem mesa definida", async () => {
+        const partidasRodada = [
+            new Partida({
+                id: "p-sem-mesa",
+                torneioId: "t-1",
+                rodada: 2,
+                jogador1Id: "u-a",
+                jogador2Id: "u-b",
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 0,
+                status: "pendente",
+                mesa: null,
+            }),
+            new Partida({
+                id: "p-com-mesa",
+                torneioId: "t-1",
+                rodada: 2,
+                jogador1Id: "u-c",
+                jogador2Id: "u-d",
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 0,
+                status: "pendente",
+                mesa: 3,
+            }),
+        ];
+        const salvarPartida = jest.fn();
+        const uc = criarUc({ partidasRodada, salvarPartida });
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        const partidaCriada = salvarPartida.mock.calls[0][0] as Partida;
+        expect(partidaCriada.mesa).toBe(4);
+    });
+
+    it("não deve consumir o token quando o deck é inválido", async () => {
+        const excluirMock = jest.fn();
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: excluirMock,
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(null),
+            }),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-invalido" })
+        ).rejects.toMatchObject({ status: 404 });
+
+        expect(excluirMock).not.toHaveBeenCalled();
     });
 });

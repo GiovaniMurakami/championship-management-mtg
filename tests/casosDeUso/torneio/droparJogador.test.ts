@@ -243,7 +243,7 @@ describe("DroparJogador", () => {
         expect(partidasAtualizadas[0].status).toBe("finalizada");
     });
 
-    it("nÃ£o deve resolver partidas quando torneio estÃ¡ em inscricoes_abertas", async () => {
+    it("deve remover a inscricao quando torneio estÃ¡ em inscricoes_abertas", async () => {
         const torneioAberto = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
@@ -263,7 +263,9 @@ describe("DroparJogador", () => {
             torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1",
         });
 
-        expect(resultado.dropped).toBe(true);
+        expect(resultado.dropped).toBe(false);
+        expect(resultado.inscricaoRemovida).toBe(true);
+        expect(inscricaoGw.excluir).toHaveBeenCalledWith("i-1");
         // NÃ£o deve ter buscado nem atualizado partidas
         expect(partidaGw.listarPorTorneio).not.toHaveBeenCalled();
         expect(partidaGw.atualizar).not.toHaveBeenCalled();

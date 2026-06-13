@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { Time } from "../../../dominio/entidade/time";
 import { FiltrosListarTimes, TimeGateway } from "../../../dominio/gateway/timeGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { escaparRegex } from "../../../helpers/regex";
 
 interface TimeDocument extends Document {
     id: string;
@@ -100,8 +101,8 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
     public async listar(filtros: FiltrosListarTimes = {}): Promise<Time[]> {
         await this.conectar();
         const filtroQuery: Record<string, unknown> = {};
-        if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
-        let query = TimeModel.find(filtroQuery).sort({ criadoEm: -1 });
+        if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+        let query = TimeModel.find(filtroQuery).sort({ criadoEm: -1, id: 1 });
         if (filtros.offset !== undefined) query = query.skip(filtros.offset);
         if (filtros.limite !== undefined) query = query.limit(filtros.limite);
         const docs = await query;
@@ -111,7 +112,7 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
     public async listarTotal(filtros: Pick<FiltrosListarTimes, 'nome'> = {}): Promise<number> {
         await this.conectar();
         const filtroQuery: Record<string, unknown> = {};
-        if (filtros.nome) filtroQuery.nome = { $regex: filtros.nome, $options: "i" };
+        if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
         return TimeModel.countDocuments(filtroQuery);
     }
 

@@ -23,7 +23,7 @@ export async function conectarMongoDB(): Promise<mongoose.Connection> {
       family: 4,
       tls: true,
       retryWrites: true,
-      readPreference: "secondaryPreferred",
+      readPreference: "primary",
     });
   } catch (error) {
     const detalhes =
