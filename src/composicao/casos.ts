@@ -25,6 +25,7 @@ import { AtualizarPareamentosRodada } from "../casosDeUso/torneio/atualizarParea
 import { DroparJogador } from "../casosDeUso/torneio/droparJogador";
 import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
+import { BuscarSeoTorneio } from "../casosDeUso/torneio/buscarSeoTorneio";
 import { BuscarStandings } from "../casosDeUso/torneio/buscarStandings";
 import { MeuHistoricoTorneio } from "../casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "../casosDeUso/torneio/listarPartidasTorneio";
@@ -89,6 +90,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
     const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
@@ -127,7 +129,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
-        droparJogador, listarTorneios, buscarTorneio, buscarStandings,
+        droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,

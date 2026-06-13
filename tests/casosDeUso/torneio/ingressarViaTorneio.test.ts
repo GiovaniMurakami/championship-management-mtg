@@ -277,7 +277,7 @@ describe("IngressarViaTorneio", () => {
         expect(torneio4.totalRodadas).toBe(3);
     });
 
-    it("não deve alterar totalRodadas quando o novo jogador não muda o número de rodadas necessário", async () => {
+    it("deve aumentar totalRodadas quando o novo jogador completa o limite da faixa atual", async () => {
         const torneio3 = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 2,
@@ -310,8 +310,45 @@ describe("IngressarViaTorneio", () => {
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
-        expect(atualizarMock).not.toHaveBeenCalled();
-        expect(torneio3.totalRodadas).toBe(2);
+        expect(atualizarMock).toHaveBeenCalledTimes(1);
+        expect(torneio3.totalRodadas).toBe(3);
+    });
+
+    it("deve aumentar de 3 para 4 rodadas quando o oitavo jogador entra tardiamente", async () => {
+        const torneio7 = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3,
+        });
+
+        const atualizarMock = jest.fn();
+        const inscricoes8Ativos = Array.from({ length: 8 }, (_, i) => ({ dropped: false, id: `i-${i}` }));
+
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(torneio7),
+                atualizar: atualizarMock,
+            }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
+                salvar: jest.fn(),
+                listarPorTorneio: jest.fn().mockResolvedValue(inscricoes8Ativos),
+            }),
+            criarMockPartidaGateway({ salvar: jest.fn(), listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
+            }),
+        );
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        expect(atualizarMock).toHaveBeenCalledTimes(1);
+        expect(torneio7.totalRodadas).toBe(4);
     });
 
     it("deve respeitar o limite maxRodadas ao calcular rodada extra", async () => {
