@@ -214,6 +214,8 @@ export class IniciarProximaRodada
 
     if (estaNaUltimaRodada) {
       torneio.finalizar();
+      const top8Ids = statsOrdenados.slice(0, 8).map((s) => s.usuarioId);
+      await this.usuarioGateway.incrementarResultadosExpressivos(top8Ids, 1);
       await this.torneioGateway.atualizar(torneio);
 
       const classificacao = statsOrdenados.map((s, idx) => ({

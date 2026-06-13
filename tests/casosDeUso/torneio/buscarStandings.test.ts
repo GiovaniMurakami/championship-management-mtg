@@ -45,6 +45,7 @@ describe("BuscarStandings", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1" });
 
+        expect(resultado.totalInscritos).toBe(2);
         expect(resultado.standings).toHaveLength(2);
         expect(resultado.standings[0].pontosMesa).toBe(0);
         expect(resultado.standings[1].pontosMesa).toBe(0);
@@ -77,6 +78,7 @@ describe("BuscarStandings", () => {
 
         expect(resultado.standings).toHaveLength(2);
         expect(resultado.standings[0].usuario.nome).toBe("JoÃ£o");
+        expect(resultado.standings[0].resultadosExpressivos).toBe(0);
         expect(resultado.standings[0].pontosMesa).toBe(3);
         expect(resultado.standings[0].vitoriasPartida).toBe(1);
         expect(resultado.standings[1].usuario.nome).toBe("Maria");

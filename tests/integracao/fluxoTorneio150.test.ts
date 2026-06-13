@@ -57,6 +57,12 @@ function criarUsuarioGwMemoria(): UsuarioGateway {
         buscarPorId: async (id) => store.get(id) ?? null,
         buscarVarios: async (ids) => ids.map((id) => store.get(id)).filter(Boolean) as Usuario[],
         atualizar: async (u) => { store.set(u.id, u); },
+        incrementarResultadosExpressivos: async (ids, incremento) => {
+            ids.forEach((id) => {
+                const usuario = store.get(id);
+                if (usuario) usuario.resultadosExpressivos = (usuario.resultadosExpressivos ?? 0) + incremento;
+            });
+        },
     };
 }
 

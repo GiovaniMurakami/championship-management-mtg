@@ -12,6 +12,7 @@ interface UsuarioDocument extends Document {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  resultadosExpressivos?: number;
   criadoEm: Date;
 }
 
@@ -24,6 +25,7 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   telefone: { type: String, required: false, maxlength: 20 },
   nickMTGO: { type: String, required: false, maxlength: 50 },
   nickArena: { type: String, required: false, maxlength: 50 },
+  resultadosExpressivos: { type: Number, required: true, default: 0 },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -49,6 +51,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      resultadosExpressivos: usuario.resultadosExpressivos,
       criadoEm: usuario.criadoEm,
     });
   }
@@ -68,6 +71,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
+      resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -87,6 +91,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       telefone: doc.get("telefone"),
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
+      resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -105,6 +110,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
           telefone: doc.get("telefone"),
           nickMTGO: doc.get("nickMTGO"),
           nickArena: doc.get("nickArena"),
+          resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
           criadoEm: doc.get("criadoEm"),
         })
     );
@@ -121,7 +127,17 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
+        resultadosExpressivos: usuario.resultadosExpressivos,
       }
+    );
+  }
+
+  public async incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void> {
+    if (ids.length === 0 || incremento === 0) return;
+    await this.conectar();
+    await UsuarioModel.updateMany(
+      { id: { $in: ids } },
+      { $inc: { resultadosExpressivos: incremento } }
     );
   }
 }

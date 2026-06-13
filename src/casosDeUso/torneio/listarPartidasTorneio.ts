@@ -35,6 +35,7 @@ export type ListarPartidasTorneioOutputDto = {
         status: string;
         contestado: boolean;
         confirmadoPor: string[];
+        confirmacao: { count: number; total: number; fullyConfirmed: boolean };
         mesa: number | null;
     }>;
 };
@@ -83,6 +84,15 @@ export class ListarPartidasTorneio
         const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
         const nomeMap = new Map(usuarios.map((u) => [u.id, resolverNome(u, torneio.exibirNomeJogador)]));
 
+        const criarResumoConfirmacao = (p: typeof partidas[number]) => {
+            if (!p.jogador2Id) return { count: 0, total: 0, fullyConfirmed: true };
+            const confirmadoPor = p.confirmadoPor ?? [];
+            const count = [p.jogador1Id, p.jogador2Id]
+                .filter((id): id is string => !!id)
+                .filter((id) => confirmadoPor.some((confirmadoId) => String(confirmadoId) === String(id))).length;
+            return { count, total: 2, fullyConfirmed: count >= 2 };
+        };
+
         return {
             torneioId: input.torneioId,
             rodada: input.rodada,
@@ -100,6 +110,7 @@ export class ListarPartidasTorneio
                 status: p.status,
                 contestado: p.contestado,
                 confirmadoPor: p.confirmadoPor,
+                confirmacao: criarResumoConfirmacao(p),
                 mesa: p.mesa,
             })),
         };

@@ -5,6 +5,14 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { Usuario } from "../../dominio/entidade/usuario";
+
+function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
+  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
+  if (modo === "nickArena") return u.nickArena ?? u.nome;
+  return u.nome;
+}
 
 export type BuscarTorneioInputDto = {
   torneioId: string;
@@ -30,6 +38,7 @@ export type BuscarTorneioOutputDto = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  exibirNomeJogador: string;
   visualizacoes: number;
   totalInscritos: number;
   totalCheckin: number;
@@ -45,6 +54,8 @@ export type BuscarTorneioOutputDto = {
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    confirmadoPor: string[];
+    mesa: number | null;
   }>;
 };
 
@@ -117,6 +128,7 @@ export class BuscarTorneio
       linkLive: torneioAtual.linkLive,
       emCorte: torneioAtual.emCorte,
       secreto: torneioAtual.secreto,
+      exibirNomeJogador: torneioAtual.exibirNomeJogador,
       visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,
       totalCheckin,
@@ -125,15 +137,21 @@ export class BuscarTorneio
         id: p.id,
         rodada: p.rodada,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: usuarioMap.get(p.jogador1Id)?.nome ?? p.jogador1Id,
+        jogador1Nome: usuarioMap.get(p.jogador1Id)
+          ? resolverNome(usuarioMap.get(p.jogador1Id)!, torneioAtual.exibirNomeJogador)
+          : p.jogador1Id,
         jogador2Id: p.jogador2Id,
         jogador2Nome: p.jogador2Id
-          ? (usuarioMap.get(p.jogador2Id)?.nome ?? p.jogador2Id)
+          ? (usuarioMap.get(p.jogador2Id)
+            ? resolverNome(usuarioMap.get(p.jogador2Id)!, torneioAtual.exibirNomeJogador)
+            : p.jogador2Id)
           : null,
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
         contestado: p.contestado,
+        confirmadoPor: p.confirmadoPor,
+        mesa: p.mesa,
       })),
     };
   }

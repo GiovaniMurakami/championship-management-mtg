@@ -19,6 +19,7 @@ export type DroparJogadorOutputDto = {
   torneioId: string;
   jogador: { id: string; nome: string };
   dropped: boolean;
+  inscricaoRemovida?: boolean;
 };
 
 export class DroparJogador
@@ -86,11 +87,33 @@ export class DroparJogador
       });
     }
 
+    const partidasResolvidas: Array<{ partidaId: string; vencedorId: string }> = [];
+    const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
+
+    if (torneio.status === "inscricoes_abertas") {
+      await this.inscricaoGateway.excluir(inscricao.id);
+
+      eventosTorneio.emit("jogador_dropou", {
+        torneioId: input.torneioId,
+        jogadorId: input.jogadorId,
+        jogadorNome: jogador?.nome ?? input.jogadorId,
+        inscricaoRemovida: true,
+        partidasResolvidas,
+      });
+
+      return {
+        inscricaoId: inscricao.id,
+        torneioId: inscricao.torneioId,
+        jogador: { id: inscricao.usuarioId, nome: jogador?.nome ?? inscricao.usuarioId },
+        dropped: false,
+        inscricaoRemovida: true,
+      };
+    }
+
     inscricao.dropped = true;
     await this.inscricaoGateway.atualizar(inscricao);
 
     // Auto-resolve pending matches: give WO (2-0) to the opponent
-    const partidasResolvidas: Array<{ partidaId: string; vencedorId: string }> = [];
     if (torneio.status === "em_andamento") {
       const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
       const pendentes = partidas.filter(
@@ -116,8 +139,6 @@ export class DroparJogador
         await this.partidaGateway.atualizar(partida);
       }
     }
-
-    const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
 
     eventosTorneio.emit("jogador_dropou", {
       torneioId: input.torneioId,

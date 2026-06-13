@@ -21,6 +21,7 @@ export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {})
         buscarPorId: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
+        incrementarResultadosExpressivos: jest.fn(),
         ...overrides,
     };
 }
