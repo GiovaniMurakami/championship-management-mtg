@@ -26,6 +26,7 @@ const anuncioSchema = new Schema<AnuncioSite>({
   botaoTexto: { type: String, maxlength: 120 },
   ativo: { type: Boolean, default: true },
   ordem: { type: Number, default: 0 },
+  cliques: { type: Number, default: 0, min: 0 },
 }, { _id: false });
 
 const siteConfigSchema = new Schema<SiteConfigDocument>({
@@ -50,6 +51,7 @@ const docParaConfig = (doc: SiteConfigDocument): AnunciosSiteConfig => ({
     botaoTexto: item.botaoTexto ?? undefined,
     ativo: item.ativo !== false,
     ordem: item.ordem ?? 0,
+    cliques: Number.isFinite(item.cliques) ? Number(item.cliques) : 0,
   })),
   atualizadoEm: doc.get("atualizadoEm") ?? undefined,
 });
@@ -80,6 +82,18 @@ export class SiteConfigRepositorio extends BaseRepositorio implements SiteConfig
       { new: true, upsert: true }
     );
 
+    return docParaConfig(doc as unknown as SiteConfigDocument);
+  }
+
+  public async registrarCliqueAnuncio(anuncioId: string): Promise<AnunciosSiteConfig | null> {
+    await this.conectar();
+    const doc = await SiteConfigModel.findOneAndUpdate(
+      { chave: ANUNCIOS_KEY, "anuncios.id": anuncioId },
+      { $inc: { "anuncios.$.cliques": 1 } },
+      { new: true }
+    );
+
+    if (!doc) return null;
     return docParaConfig(doc as unknown as SiteConfigDocument);
   }
 }

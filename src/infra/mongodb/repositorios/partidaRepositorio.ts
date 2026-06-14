@@ -41,6 +41,13 @@ const partidaSchema = new Schema<PartidaDocument>({
 
 partidaSchema.index({ torneioId: 1 });
 partidaSchema.index({ torneioId: 1, rodada: 1 });
+partidaSchema.index({ torneioId: 1, rodada: 1, mesa: 1 });
+partidaSchema.index({ torneioId: 1, jogador1Id: 1, rodada: 1 });
+partidaSchema.index({ torneioId: 1, jogador2Id: 1, rodada: 1 });
+partidaSchema.index(
+  { torneioId: 1, rodada: 1, jogador2Id: 1 },
+  { partialFilterExpression: { jogador2Id: null } }
+);
 
 // Exportado para uso em transações compostas (ex: TorneioRepositorio)
 export const PartidaModel =

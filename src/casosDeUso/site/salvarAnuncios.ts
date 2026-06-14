@@ -42,10 +42,16 @@ export class SalvarAnuncios {
       });
     }
 
+    const configAtual = await this.siteConfigGateway.buscarAnuncios();
+    const cliquesPorId = new Map(
+      (configAtual?.anuncios ?? []).map((anuncio) => [anuncio.id, anuncio.cliques ?? 0])
+    );
+
     const anuncios = input.anuncios.map((item, index): AnuncioSite => {
       const tipo = normalizarTipo(item.tipo);
       const titulo = limpar(item.titulo, 180) ?? "";
       const imagemUrl = limpar(item.imagemUrl, 800);
+      const id = limpar(item.id, 180) ?? uuidv4();
 
       if (tipo === "banner" && !imagemUrl) {
         throw ErroPersonalizado.criar({
@@ -62,7 +68,7 @@ export class SalvarAnuncios {
       }
 
       return {
-        id: limpar(item.id, 180) ?? uuidv4(),
+        id,
         tipo,
         tag: limpar(item.tag, 80),
         titulo,
@@ -72,6 +78,7 @@ export class SalvarAnuncios {
         botaoTexto: limpar(item.botaoTexto, 120),
         ativo: item.ativo !== false,
         ordem: Number.isFinite(item.ordem) ? Number(item.ordem) : index,
+        cliques: cliquesPorId.get(id) ?? 0,
       };
     });
 
