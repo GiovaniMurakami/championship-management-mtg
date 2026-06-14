@@ -14,6 +14,10 @@ function s3ImagemUrl() {
     );
 }
 
+function s3ImagemUrlOuVazio() {
+  return z.union([s3ImagemUrl(), z.literal("")]);
+}
+
 const cartaSchema = z.object({
   nome: z.string().min(1),
   quantidade: z.number().int().min(1),
@@ -78,7 +82,7 @@ export const criarTorneioSchema = z.object({
   formato: z.string().min(1, "Formato é obrigatório."),
   descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
   regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
-  bannerUrl: s3ImagemUrl().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional(),
@@ -95,7 +99,7 @@ export const alterarTorneioSchema = z.object({
   formato: z.string().min(1).optional(),
   descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
   regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
-  bannerUrl: s3ImagemUrl().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),

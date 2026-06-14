@@ -123,6 +123,16 @@ export class Torneio {
     this.totalRodadas = novoTotalRodadas;
   }
 
+  public voltarRodada(rodadaAnterior: number, totalRodadas?: number, emCorte?: boolean): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`TransiÃ§Ã£o invÃ¡lida: rodada nÃ£o pode voltar com status ${this.status}`);
+    }
+    this.rodadaAtual = rodadaAnterior;
+    if (totalRodadas !== undefined) this.totalRodadas = totalRodadas;
+    if (emCorte !== undefined) this.emCorte = emCorte;
+    this.rodadaIniciadaEm = undefined;
+  }
+
   public finalizar(): void {
     if (this.status !== "em_andamento") {
       throw new Error(`Transição inválida: ${this.status} → finalizado`);

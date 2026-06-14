@@ -297,6 +297,12 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     return existe !== null;
   }
 
+  public async excluirPorTorneioERodada(torneioId: string, rodada: number): Promise<number> {
+    await this.conectar();
+    const result = await PartidaModel.deleteMany({ torneioId, rodada });
+    return result.deletedCount ?? 0;
+  }
+
   public async atualizarMesa(id: string, mesa: number | null): Promise<Partida | null> {
     await this.conectar();
     const doc = await PartidaModel.findOneAndUpdate(

@@ -96,6 +96,7 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
         ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
         atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
+        excluirPorTorneioERodada: jest.fn().mockResolvedValue(0),
         buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
         confirmarResultado: jest.fn().mockResolvedValue(null),
         atualizarMesa: jest.fn().mockResolvedValue(null),

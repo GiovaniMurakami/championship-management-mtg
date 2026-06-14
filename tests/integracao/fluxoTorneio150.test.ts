@@ -6,6 +6,7 @@
  *   - Inscrição e escolha de deck
  *   - Check-in e início do torneio
  *   - 8 rodadas Swiss (ceil(log2(150)) = 8)
+ *   - Corte Top 8 mata-mata em 3 rodadas
  *   - Drop de 10 jogadores após rodada 4
  *   - Standings com checkInRodada, rodadaIniciadaEm (Brasília), MWP/GWP
  *   - Finalização e classificação final completa
@@ -80,6 +81,13 @@ function criarDeckGwMemoria(): DeckGateway {
             return filtered.length;
         },
         atualizar: async (d) => { store.set(d.id, d); },
+        incrementarVisualizacoes: async (id) => {
+            const deck = store.get(id);
+            if (!deck) return null;
+            deck.visualizacoes = (deck.visualizacoes ?? 0) + 1;
+            store.set(id, deck);
+            return deck;
+        },
         excluir: async (id) => { store.delete(id); },
     };
 }
@@ -92,6 +100,13 @@ function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGa
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        incrementarVisualizacoes: async (id) => {
+            const torneio = store.get(id);
+            if (!torneio) return null;
+            torneio.visualizacoes = (torneio.visualizacoes ?? 0) + 1;
+            store.set(id, torneio);
+            return torneio;
+        },
         atualizarECriarPartidas: async (t, partidas) => {
             store.set(t.id, t);
             for (const p of partidas) partidaStoreRef.set(p.id, p);
@@ -167,10 +182,33 @@ function criarPartidaGwMemoria(store: Map<string, Partida>): PartidaGateway {
             store.set(id, p);
             return p;
         },
+        excluirPorTorneioERodada: async (torneioId, rodada) => {
+            const partidas = Array.from(store.values()).filter(
+                (p) => p.torneioId === torneioId && p.rodada === rodada,
+            );
+            for (const p of partidas) store.delete(p.id);
+            return partidas.length;
+        },
         buscarByePartidaRodada: async (torneioId, rodada) =>
             Array.from(store.values()).find(
                 (p) => p.torneioId === torneioId && p.rodada === rodada && p.jogador2Id === null,
             ) ?? null,
+        confirmarResultado: async (id, userId) => {
+            const p = store.get(id);
+            if (!p) return null;
+            const confirmados = new Set(p.confirmadoPor ?? []);
+            if (confirmados.has(userId)) return null;
+            p.confirmadoPor = [...confirmados, userId];
+            store.set(id, p);
+            return p;
+        },
+        atualizarMesa: async (id, mesa) => {
+            const p = store.get(id);
+            if (!p) return null;
+            p.mesa = mesa;
+            store.set(id, p);
+            return p;
+        },
     };
 }
 
@@ -179,11 +217,14 @@ function criarPartidaGwMemoria(store: Map<string, Partida>): PartidaGateway {
 const TOTAL_JOGADORES = 150;
 // ceil(log2(150)) = ceil(7.2274) = 8
 const TOTAL_RODADAS_ESPERADAS = 8;
+const TOP_CUT_SIZE = 8;
+const TOTAL_RODADAS_COM_CORTE = 11;
 const TOTAL_DROPS = 10;
 // Rodadas 1-4: 150 players (even) → 75 matches each, no BYE
 const PARTIDAS_POR_RODADA_FASE1 = 75;
 // After 10 drops: 140 players (even) → 70 matches each, no BYE
 const PARTIDAS_POR_RODADA_FASE2 = 70;
+const PARTIDAS_TOP8 = 4 + 2 + 1;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -252,6 +293,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     const deckIds: string[] = [];
     let torneioId: string;
     const jogadoresDropados: string[] = [];
+    let top8Ids: string[] = [];
 
     // Lazily-constructed use cases (gateways are ready at construction time)
     const mkRegistrar = () => RegistrarResultado.criar(torneioGw, partidaGw);
@@ -315,6 +357,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
             formato: "legacy",
             donoId,
             descricao: "Booster Box",
+            corteTop: TOP_CUT_SIZE,
         });
         torneioId = torneio.id;
         expect(torneio.status).toBe("inscricoes_abertas");
@@ -566,7 +609,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
 
     // ── 9. Rounds 5–8 (complete and finalize) ───────────────────────────────
 
-    it("9. Deve completar as rodadas 5 a 8 e finalizar o torneio", async () => {
+    it("9. Deve completar as rodadas 5 a 8, iniciar o Top 8 e finalizar o mata-mata", async () => {
         for (let rodada = 5; rodada <= TOTAL_RODADAS_ESPERADAS; rodada++) {
             // Register all results for the current round
             const { totalPartidas, totalByes } = await registrarResultadosRodada(
@@ -598,20 +641,53 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
                     }
                 }
             } else {
-                // Last round: must finalize
+                expect(res.finalizado).toBe(false);
+                if (!res.finalizado) {
+                    expect(res.rodadaAtual).toBe(TOTAL_RODADAS_ESPERADAS + 1);
+                    expect(res.emCorte).toBe(true);
+                    expect(res.partidas).toHaveLength(TOP_CUT_SIZE / 2);
+                    top8Ids = Array.from(new Set(
+                        res.partidas.flatMap((p) => [p.jogador1Id, p.jogador2Id].filter(Boolean) as string[]),
+                    ));
+                    expect(top8Ids).toHaveLength(TOP_CUT_SIZE);
+                    for (const dropId of jogadoresDropados) {
+                        expect(top8Ids.includes(dropId)).toBe(false);
+                    }
+                }
+            }
+        }
+
+        for (let rodadaCorte = 9; rodadaCorte <= TOTAL_RODADAS_COM_CORTE; rodadaCorte++) {
+            const partidasEsperadas = rodadaCorte === 9 ? 4 : rodadaCorte === 10 ? 2 : 1;
+            const { totalPartidas, totalByes } = await registrarResultadosRodada(
+                torneioId, rodadaCorte, partidaGw, mkRegistrar(),
+            );
+            expect(totalPartidas).toBe(partidasEsperadas);
+            expect(totalByes).toBe(0);
+
+            const partidas = await partidaGw.listarPorTorneioERodada(torneioId, rodadaCorte);
+            expect(partidas.every((p) => p.status === "finalizada")).toBe(true);
+
+            const res = await mkProxima().executar({ torneioId, donoId, isAdmin: false });
+            if (rodadaCorte < TOTAL_RODADAS_COM_CORTE) {
+                expect(res.finalizado).toBe(false);
+                if (!res.finalizado) {
+                    expect(res.rodadaAtual).toBe(rodadaCorte + 1);
+                    expect(res.emCorte).toBe(true);
+                    expect(res.partidas).toHaveLength(partidasEsperadas / 2);
+                    const idsRodada = new Set(
+                        res.partidas.flatMap((p) => [p.jogador1Id, p.jogador2Id].filter(Boolean)),
+                    );
+                    expect(Array.from(idsRodada).every((id) => top8Ids.includes(String(id)))).toBe(true);
+                }
+            } else {
                 expect(res.finalizado).toBe(true);
                 if (res.finalizado) {
                     expect(res.classificacao).toHaveLength(TOTAL_JOGADORES);
-
-                    // Positions are continuous from 1 to 150
                     const sorted = [...res.classificacao].sort((a, b) => a.posicao - b.posicao);
                     expect(sorted[0].posicao).toBe(1);
                     expect(sorted[TOTAL_JOGADORES - 1].posicao).toBe(TOTAL_JOGADORES);
-
-                    // Best and worst differ significantly in points
                     expect(sorted[0].pontosMesa).toBeGreaterThan(sorted[TOTAL_JOGADORES - 1].pontosMesa);
-
-                    // Winner has non-zero tie-breakers
                     expect(sorted[0].omwp).toBeGreaterThan(0);
                     expect(sorted[0].gwp).toBeGreaterThan(0);
                 }
@@ -624,6 +700,9 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     it("10. Deve retornar standings finais completos com 150 jogadores", async () => {
         const torneio = await torneioGw.buscarPorId(torneioId);
         expect(torneio!.status).toBe("finalizado");
+        expect(torneio!.rodadaAtual).toBe(TOTAL_RODADAS_COM_CORTE);
+        expect(torneio!.totalRodadas).toBe(TOTAL_RODADAS_COM_CORTE);
+        expect(torneio!.emCorte).toBe(true);
 
         const resultado = await mkStandings().executar({ torneioId });
         expect(resultado.status).toBe("finalizado");
@@ -644,12 +723,20 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
             // Dropped players played rounds 1-4 (4 matches)
             expect(entry!.vitoriasPartida + entry!.empatesPartida + entry!.derrotasPartida).toBe(4);
         }
+ 
+        expect(top8Ids).toHaveLength(TOP_CUT_SIZE);
 
-        // Active players played all 8 rounds
+        // Active players played all 8 Swiss rounds; Top 8 players may have extra cut matches.
         const ativos = resultado.standings.filter((s) => !s.dropped);
         expect(ativos).toHaveLength(TOTAL_JOGADORES - TOTAL_DROPS);
         for (const entry of ativos) {
-            expect(entry.vitoriasPartida + entry.empatesPartida + entry.derrotasPartida).toBe(8);
+            const totalPartidasJogador = entry.vitoriasPartida + entry.empatesPartida + entry.derrotasPartida;
+            if (top8Ids.includes(entry.usuario.id)) {
+                expect(totalPartidasJogador).toBeGreaterThanOrEqual(9);
+                expect(totalPartidasJogador).toBeLessThanOrEqual(TOTAL_RODADAS_COM_CORTE);
+            } else {
+                expect(totalPartidasJogador).toBe(TOTAL_RODADAS_ESPERADAS);
+            }
         }
 
         // All tie-breakers are valid probabilities [0, 1]
@@ -675,7 +762,8 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     // ── 11. Cross-round pairing uniqueness ──────────────────────────────────
 
     it("11. Deve ter rematches mínimos no Swiss (algoritmo prioriza pareamentos únicos)", async () => {
-        const todasPartidas = await partidaGw.listarPorTorneio(torneioId);
+        const todasPartidas = (await partidaGw.listarPorTorneio(torneioId))
+            .filter((p) => p.rodada <= TOTAL_RODADAS_ESPERADAS);
         const pareamentos = new Map<string, number>();
 
         for (const p of todasPartidas) {
@@ -702,8 +790,8 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     it("12. O total de partidas deve ser consistente com as rodadas e jogadores", async () => {
         const todasPartidas = await partidaGw.listarPorTorneio(torneioId);
 
-        // Rounds 1-4: 75 matches each; rounds 5-8: 70 matches each
-        const totalEsperado = 4 * PARTIDAS_POR_RODADA_FASE1 + 4 * PARTIDAS_POR_RODADA_FASE2;
+        // Rounds 1-4: 75 matches each; rounds 5-8: 70 matches each; Top 8: 4 + 2 + 1.
+        const totalEsperado = 4 * PARTIDAS_POR_RODADA_FASE1 + 4 * PARTIDAS_POR_RODADA_FASE2 + PARTIDAS_TOP8;
         expect(todasPartidas).toHaveLength(totalEsperado);
 
         // All matches are finalized

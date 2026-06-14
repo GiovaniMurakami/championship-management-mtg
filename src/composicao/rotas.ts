@@ -16,6 +16,7 @@ import { CheckInTorneioRota } from "../infra/api/express/rotas/torneio/checkInTo
 import { EscolherDeckTorneioRota } from "../infra/api/express/rotas/torneio/escolherDeckTorneio.express.route";
 import { IniciarTorneioRota } from "../infra/api/express/rotas/torneio/iniciarTorneio.express.route";
 import { IniciarProximaRodadaRota } from "../infra/api/express/rotas/torneio/iniciarProximaRodada.express.route";
+import { RefazerRodadaRota } from "../infra/api/express/rotas/torneio/refazerRodada.express.route";
 import { RegistrarResultadoRota } from "../infra/api/express/rotas/torneio/registrarResultado.express.route";
 import { ContestarResultadoRota } from "../infra/api/express/rotas/torneio/contestarResultado.express.route";
 import { ConfirmarResultadoRota } from "../infra/api/express/rotas/torneio/confirmarResultado.express.route";
@@ -79,6 +80,7 @@ export function criarRotas(casos: CasosDeUso) {
         DroparJogadorRota.criar(casos.droparJogador),
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
+        RefazerRodadaRota.criar(casos.refazerRodada),
         RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
         ContestarResultadoRota.criar(casos.contestarResultado),
         ConfirmarResultadoRota.criar(casos.confirmarResultado),

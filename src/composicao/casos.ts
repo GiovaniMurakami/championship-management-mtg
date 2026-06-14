@@ -17,6 +17,7 @@ import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
 import { EscolherDeckTorneio } from "../casosDeUso/torneio/escolherDeckTorneio";
 import { IniciarTorneio } from "../casosDeUso/torneio/iniciarTorneio";
 import { IniciarProximaRodada } from "../casosDeUso/torneio/iniciarProximaRodada";
+import { RefazerRodada } from "../casosDeUso/torneio/refazerRodada";
 import { RegistrarResultado } from "../casosDeUso/torneio/registrarResultado";
 import { ContestarResultado } from "../casosDeUso/torneio/contestarResultado";
 import { ConfirmarResultado } from "../casosDeUso/torneio/confirmarResultado";
@@ -85,6 +86,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck);
     const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
     const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
     const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
@@ -136,7 +138,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
-        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
+        iniciarTorneio, iniciarProximaRodada, refazerRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,

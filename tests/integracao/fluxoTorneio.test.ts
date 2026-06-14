@@ -63,6 +63,13 @@ function criarDeckGatewayMemoria(): DeckGateway {
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (d) => { store.set(d.id, d); },
+        incrementarVisualizacoes: async (id) => {
+            const deck = store.get(id);
+            if (!deck) return null;
+            deck.visualizacoes = (deck.visualizacoes ?? 0) + 1;
+            store.set(id, deck);
+            return deck;
+        },
         excluir: async (id) => { store.delete(id); },
     };
 }
@@ -75,6 +82,13 @@ function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): Torn
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        incrementarVisualizacoes: async (id) => {
+            const torneio = store.get(id);
+            if (!torneio) return null;
+            torneio.visualizacoes = (torneio.visualizacoes ?? 0) + 1;
+            store.set(id, torneio);
+            return torneio;
+        },
         atualizarECriarPartidas: async (t, partidas) => {
             store.set(t.id, t);
             for (const p of partidas) partidaStoreRef.set(p.id, p);
@@ -149,10 +163,33 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
             store.set(id, p);
             return p;
         },
+        excluirPorTorneioERodada: async (torneioId, rodada) => {
+            const partidas = Array.from(store.values()).filter(
+                (p) => p.torneioId === torneioId && p.rodada === rodada,
+            );
+            for (const p of partidas) store.delete(p.id);
+            return partidas.length;
+        },
         buscarByePartidaRodada: async (torneioId, rodada) =>
             Array.from(store.values()).find(
                 (p) => p.torneioId === torneioId && p.rodada === rodada && p.jogador2Id === null
             ) ?? null,
+        confirmarResultado: async (id, userId) => {
+            const p = store.get(id);
+            if (!p) return null;
+            const confirmados = new Set(p.confirmadoPor ?? []);
+            if (confirmados.has(userId)) return null;
+            p.confirmadoPor = [...confirmados, userId];
+            store.set(id, p);
+            return p;
+        },
+        atualizarMesa: async (id, mesa) => {
+            const p = store.get(id);
+            if (!p) return null;
+            p.mesa = mesa;
+            store.set(id, p);
+            return p;
+        },
     };
 }
 
