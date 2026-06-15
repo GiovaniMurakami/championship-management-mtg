@@ -24,6 +24,14 @@ function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
   return u.nome;
 }
 
+function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
+  const corte = Number(corteTop || 0);
+  const total = Number(totalRodadas || 0);
+  const rodadasCorte = Math.log2(corte);
+  if (!Number.isInteger(rodadasCorte) || rodadasCorte <= 0 || total <= 0) return null;
+  return total - rodadasCorte + 1;
+}
+
 export type BuscarStandingsInputDto = {
   torneioId: string;
 };
@@ -158,9 +166,15 @@ export class BuscarStandings
       input.torneioId
     );
 
+    const primeiraRodadaCorte = torneio.emCorte
+      ? obterPrimeiraRodadaCorte(torneio.corteTop, torneio.totalRodadas)
+      : null;
+    const partidasElegiveisParaStandings = primeiraRodadaCorte
+      ? todasPartidas.filter((p) => p.rodada < primeiraRodadaCorte)
+      : todasPartidas;
     const partidasConsolidadas = torneio.status === "finalizado"
-      ? todasPartidas
-      : todasPartidas.filter((p) => p.rodada < torneio.rodadaAtual);
+      ? partidasElegiveisParaStandings
+      : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
 
     // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
     // para que omwp/ogwp use o MWP real de oponentes dropados
