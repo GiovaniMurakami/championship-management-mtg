@@ -59,6 +59,7 @@ export function criarMockLigaGateway(overrides: Partial<LigaGateway> = {}): Liga
     return {
         salvar: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
+        buscarPorTorneioIds: jest.fn().mockResolvedValue([]),
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),

@@ -732,7 +732,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
         for (const entry of ativos) {
             const totalPartidasJogador = entry.vitoriasPartida + entry.empatesPartida + entry.derrotasPartida;
             if (top8Ids.includes(entry.usuario.id)) {
-                expect(totalPartidasJogador).toBeGreaterThanOrEqual(9);
+                expect(totalPartidasJogador).toBeGreaterThanOrEqual(TOTAL_RODADAS_ESPERADAS);
                 expect(totalPartidasJogador).toBeLessThanOrEqual(TOTAL_RODADAS_COM_CORTE);
             } else {
                 expect(totalPartidasJogador).toBe(TOTAL_RODADAS_ESPERADAS);

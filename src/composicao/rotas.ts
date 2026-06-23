@@ -108,6 +108,7 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarTimeRota.criar(casos.buscarTime),
         AlterarTimeRota.criar(casos.alterarTime),
         ExcluirTimeRota.criar(casos.excluirTime),
+        EntrarTimeRota.criar(casos.entrarTime),
         SairTimeRota.criar(casos.sairTime),
         GerarConviteTimeRota.criar(casos.gerarConviteTime),
         EntrarPorConviteTimeRota.criar(casos.entrarPorConviteTime),

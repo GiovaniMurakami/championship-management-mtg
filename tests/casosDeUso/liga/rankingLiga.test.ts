@@ -57,7 +57,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway(),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway()
+            criarMockUsuarioGateway(),
+            criarMockTimeGateway()
         );
 
         await expect(uc.executar({ ligaId: "inexistente" })).rejects.toMatchObject({ status: 404 });
@@ -69,7 +70,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway(),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway()
+            criarMockUsuarioGateway(),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -102,7 +104,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -135,7 +138,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -165,7 +169,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -204,7 +209,8 @@ describe("RankingLiga", () => {
                 listarPorTorneios: jest.fn().mockResolvedValue([inscricao1, inscricao2]),
             }),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway()
+            criarMockUsuarioGateway(),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -242,7 +248,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -272,7 +279,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) })
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1", limiteJogadores: 1, limiteDecks: 1, limiteCartas: 1 });
@@ -302,7 +310,8 @@ describe("RankingLiga", () => {
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partidaPendente]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway()
+            criarMockUsuarioGateway(),
+            criarMockTimeGateway()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });

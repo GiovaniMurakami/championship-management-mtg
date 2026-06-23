@@ -2,7 +2,10 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { BuscarDeck } from "../../../../../casosDeUso/deck/buscarDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { idParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
 
 export class BuscarDeckRota implements Rotas {
   private constructor(
@@ -24,7 +27,7 @@ export class BuscarDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [publicReadRateLimiter];
+    return [validarParamsMiddleware(idParamSchema), publicReadRateLimiter, autenticarJwtOpcional];
   }
 
   public getHandler() {
@@ -37,7 +40,10 @@ export class BuscarDeckRota implements Rotas {
         const { id } = request.params;
         const deckId = Array.isArray(id) ? id[0] : id;
 
-        const resultado = await this.buscarDeckServico.executar({ id: deckId });
+        const resultado = await this.buscarDeckServico.executar({
+          id: deckId,
+          usuarioId: request.usuario?.id,
+        });
 
         response.status(200).json(resultado);
       } catch (error) {

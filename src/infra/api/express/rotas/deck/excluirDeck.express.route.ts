@@ -2,6 +2,8 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { ExcluirDeck } from "../../../../../casosDeUso/deck/excluirDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { idParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
@@ -29,7 +31,7 @@ export class ExcluirDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [mutationRateLimiter, autenticarJwt];
+    return [validarParamsMiddleware(idParamSchema), mutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {

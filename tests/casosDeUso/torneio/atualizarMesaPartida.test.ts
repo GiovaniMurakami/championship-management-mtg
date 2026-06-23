@@ -20,6 +20,9 @@ const partidaBase = new Partida({
     rodada: 1,
     jogador1Id: "user-1",
     jogador2Id: "user-2",
+    vitoriasJogador1: 0,
+    vitoriasJogador2: 0,
+    status: "pendente",
     mesa: null,
 });
 

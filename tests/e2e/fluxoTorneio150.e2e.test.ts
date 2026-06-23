@@ -125,15 +125,15 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     let torneioId: string;
     let playerIds: string[] = [];
     let playerTokens: string[] = [];
-    let latePlayerIds: string[] = [];
-    let latePlayerTokens: string[] = [];
+    const latePlayerIds: string[] = [];
+    const latePlayerTokens: string[] = [];
     let rodadaPartidas: PartidaInfo[] = [];
     /** IDs dos jogadores dropados na Fase 4 — usados para filtrar partidas já resolvidas. */
     let droppedIds: string[] = [];
     /** IDs de partidas da rodada 5 pré-registradas fora do lote normal — excluídas da Fase 5. */
-    let excludedPartidaIds: string[] = [];
-    let confirmedPartidaIds: string[] = [];
-    let contestedPartidaIds: string[] = [];
+    const excludedPartidaIds: string[] = [];
+    const confirmedPartidaIds: string[] = [];
+    const contestedPartidaIds: string[] = [];
     let top8Ids: string[] = [];
 
     const tokenDoJogador = (jogadorId: string) => {

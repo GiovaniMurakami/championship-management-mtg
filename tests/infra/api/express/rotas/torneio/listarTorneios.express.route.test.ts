@@ -1,10 +1,12 @@
 import { ListarTorneiosRota } from "../../../../../../src/infra/api/express/rotas/torneio/listarTorneios.express.route";
 import { ErroPersonalizado } from "../../../../../../src/helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
+import { listarTorneiosQuerySchema } from "../../../../../../src/helpers/validacao/schemas";
 
 function makeReqRes(query: Record<string, string> = {}) {
     const req = {
         query,
+        queryValidados: listarTorneiosQuerySchema.parse(query),
         usuario: { id: "u-1", email: "a@a.com", nome: "User", role: "user" },
     } as any;
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;

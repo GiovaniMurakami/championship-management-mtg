@@ -1,7 +1,6 @@
 import { AtualizarUsuario } from "../../../src/casosDeUso/usuario/atualizarUsuario";
 import { criarMockUsuarioGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
-import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
 
 describe("AtualizarUsuario", () => {
     const usuarioExistente = new Usuario({

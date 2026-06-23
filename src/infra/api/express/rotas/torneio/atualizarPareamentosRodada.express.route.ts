@@ -4,8 +4,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { atualizarPareamentosRodadaSchema } from "../../../../../helpers/validacao/schemas";
+import { atualizarPareamentosRodadaSchema, torneioRodadaParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class AtualizarPareamentosRodadaRota implements Rotas {
   private constructor(
@@ -24,7 +25,9 @@ export class AtualizarPareamentosRodadaRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarParamsMiddleware(torneioRodadaParamSchema), mutationRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (

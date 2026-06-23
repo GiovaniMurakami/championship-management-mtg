@@ -1,6 +1,8 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { SalvarAnuncios } from "../../../../../casosDeUso/site/salvarAnuncios";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { salvarAnunciosSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
@@ -24,8 +26,11 @@ export class SalvarAnunciosRota implements Rotas {
   public getHandler() {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
+        const dados = validarBody(salvarAnunciosSchema, request.body, response);
+        if (!dados) return;
+
         const resultado = await this.salvarAnunciosServico.executar({
-          anuncios: request.body?.anuncios,
+          anuncios: dados.anuncios,
         });
         response.status(200).json(resultado);
       } catch (error) {

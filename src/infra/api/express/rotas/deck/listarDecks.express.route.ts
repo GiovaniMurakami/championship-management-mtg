@@ -4,7 +4,12 @@ import {
 } from "../../../../../casosDeUso/deck/listarDecks";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { listarDecksQuerySchema } from "../../../../../helpers/validacao/schemas";
+import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { z } from "zod";
+
+type ListarDecksQuery = z.infer<typeof listarDecksQuerySchema>;
 
 export class ListarDecksRota implements Rotas {
   private constructor(
@@ -30,7 +35,7 @@ export class ListarDecksRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [publicReadRateLimiter];
+    return [validarQueryMiddleware(listarDecksQuerySchema), publicReadRateLimiter];
   }
 
   public getHandler() {
@@ -40,7 +45,8 @@ export class ListarDecksRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { usuarioId, formato, nome, criadoApos, criadoAntes, limite, offset } = request.query as Record<string, string | undefined>;
+        const { usuarioId, formato, nome, criadoApos, criadoAntes, limite, offset } =
+          request.queryValidados as ListarDecksQuery;
 
         const resultado = await this.listarDecksServico.executar({
           usuarioId,
@@ -48,8 +54,8 @@ export class ListarDecksRota implements Rotas {
           nome,
           criadoApos,
           criadoAntes,
-          limite: limite !== undefined ? Number(limite) : undefined,
-          offset: offset !== undefined ? Number(offset) : undefined,
+          limite,
+          offset,
         });
 
         response.status(200).json(resultado);

@@ -4,10 +4,8 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { z } from "zod";
+import { entrarPorConviteTimeSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
-
-const schema = z.object({ conviteToken: z.string().uuid("conviteToken deve ser um UUID válido.") });
 
 export class EntrarPorConviteTimeRota implements Rotas {
     private constructor(
@@ -27,7 +25,7 @@ export class EntrarPorConviteTimeRota implements Rotas {
     public getHandler() {
         return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
             try {
-                const dados = validarBody(schema, request.body, response);
+                const dados = validarBody(entrarPorConviteTimeSchema, request.body, response);
                 if (!dados) return;
 
                 const resultado = await this.entrarPorConviteTimeServico.executar({

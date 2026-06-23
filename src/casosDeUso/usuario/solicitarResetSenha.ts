@@ -3,8 +3,6 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { ResetSenhaGateway } from "../../dominio/gateway/resetSenhaGateway";
 import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
-import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
-import { StatusErro } from "../../helpers/error/statusErro";
 import { getFrontendUrl } from "../../helpers/env";
 
 const EXPIRACAO_MS = 60 * 60 * 1000; // 1 hora

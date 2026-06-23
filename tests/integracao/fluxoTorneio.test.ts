@@ -4,18 +4,15 @@
  */
 
 import { Usuario } from "../../src/dominio/entidade/usuario";
-import { Deck } from "../../src/dominio/entidade/deck";
 import { Torneio } from "../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../src/dominio/entidade/inscricao";
 import { Partida } from "../../src/dominio/entidade/partida";
 import { UsuarioGateway } from "../../src/dominio/gateway/usuarioGateway";
-import { DeckGateway, FiltrosListarDecks } from "../../src/dominio/gateway/deckGateway";
 import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
 
 import { CadastrarUsuario } from "../../src/casosDeUso/usuario/cadastrarUsuario";
-import { CadastrarDeck } from "../../src/casosDeUso/deck/cadastrarDeck";
 import { CriarTorneio } from "../../src/casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "../../src/casosDeUso/torneio/inscreverTorneio";
 import { IniciarTorneio } from "../../src/casosDeUso/torneio/iniciarTorneio";
@@ -50,27 +47,6 @@ function criarUsuarioGatewayMemoria(): UsuarioGateway {
                 if (usuario) usuario.resultadosExpressivos = (usuario.resultadosExpressivos ?? 0) + incremento;
             });
         },
-    };
-}
-
-function criarDeckGatewayMemoria(): DeckGateway {
-    const store = new Map<string, Deck>();
-    return {
-        salvar: async (d) => { store.set(d.id, d); },
-        buscarPorId: async (id) => store.get(id) ?? null,
-        buscarVarios: async (ids) => ids.map((id) => store.get(id)).filter(Boolean) as Deck[],
-        listarPorUsuario: async (uid) => Array.from(store.values()).filter((d) => d.usuarioId === uid),
-        listar: async () => Array.from(store.values()),
-        listarTotal: async () => store.size,
-        atualizar: async (d) => { store.set(d.id, d); },
-        incrementarVisualizacoes: async (id) => {
-            const deck = store.get(id);
-            if (!deck) return null;
-            deck.visualizacoes = (deck.visualizacoes ?? 0) + 1;
-            store.set(id, deck);
-            return deck;
-        },
-        excluir: async (id) => { store.delete(id); },
     };
 }
 
@@ -197,7 +173,6 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
 
 describe("Integração - Fluxo completo de torneio", () => {
     const usuarioGw = criarUsuarioGatewayMemoria();
-    const deckGw = criarDeckGatewayMemoria();
     const partidaStore = new Map<string, Partida>();
     const torneioGw = criarTorneioGatewayMemoria(partidaStore);
     const inscricaoGw = criarInscricaoGatewayMemoria();
@@ -361,7 +336,6 @@ describe("Integração - Fluxo completo de torneio", () => {
 
 describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
     const usuarioGw2 = criarUsuarioGatewayMemoria();
-    const deckGw2 = criarDeckGatewayMemoria();
     const partidaStore2 = new Map<string, Partida>();
     const torneioGw2 = criarTorneioGatewayMemoria(partidaStore2);
     const inscricaoGw2 = criarInscricaoGatewayMemoria();
