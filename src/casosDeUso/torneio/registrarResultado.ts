@@ -1,8 +1,10 @@
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { ProcessarRankPartida, RankPartidaAplicado } from "../rank/processarRankPartida";
 
 export type RegistrarResultadoInputDto = {
   partidaId: string;
@@ -23,6 +25,7 @@ export type RegistrarResultadoOutputDto = {
   vitoriasJogador1: number;
   vitoriasJogador2: number;
   status: string;
+  rank?: RankPartidaAplicado | null;
 };
 
 export class RegistrarResultado
@@ -30,14 +33,20 @@ export class RegistrarResultado
   CasoDeUso<RegistrarResultadoInputDto, RegistrarResultadoOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly partidaGateway: PartidaGateway
+    private readonly partidaGateway: PartidaGateway,
+    private readonly processarRankPartida: ProcessarRankPartida
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    partidaGateway: PartidaGateway
+    partidaGateway: PartidaGateway,
+    usuarioGateway: UsuarioGateway
   ) {
-    return new RegistrarResultado(torneioGateway, partidaGateway);
+    return new RegistrarResultado(
+      torneioGateway,
+      partidaGateway,
+      ProcessarRankPartida.criar(usuarioGateway, partidaGateway)
+    );
   }
 
   public async executar(
@@ -105,6 +114,8 @@ export class RegistrarResultado
       });
     }
 
+    const rank = await this.processarRankPartida.aplicarParaPartida(partidaAtualizada);
+
     return {
       id: partidaAtualizada.id,
       torneioId: partidaAtualizada.torneioId,
@@ -116,6 +127,7 @@ export class RegistrarResultado
       vitoriasJogador1: partidaAtualizada.vitoriasJogador1,
       vitoriasJogador2: partidaAtualizada.vitoriasJogador2,
       status: partidaAtualizada.status,
+      rank: rank ?? null,
     };
   }
 }

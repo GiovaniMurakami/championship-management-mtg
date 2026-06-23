@@ -56,6 +56,8 @@ import { RejeitarSolicitacaoTime } from "../casosDeUso/time/rejeitarSolicitacaoT
 import { BuscarAnuncios } from "../casosDeUso/site/buscarAnuncios";
 import { RegistrarCliqueAnuncio } from "../casosDeUso/site/registrarCliqueAnuncio";
 import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
+import { BuscarRankUsuario } from "../casosDeUso/rank/buscarRankUsuario";
+import { ListarRankingUsuarios } from "../casosDeUso/rank/listarRankingUsuarios";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -68,6 +70,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const logoutUsuario = LogoutUsuario.criar(repos.tokenBlacklist, repos.refreshToken);
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
     const confirmarResetSenha = ConfirmarResetSenha.criar(repos.usuario, repos.resetSenha);
+
+    // --- Rank ---
+    const buscarRankUsuario = BuscarRankUsuario.criar(repos.usuario);
+    const listarRankingUsuarios = ListarRankingUsuarios.criar(repos.usuario);
 
     // --- Deck ---
     const cadastrarDeck = CadastrarDeck.criar(repos.deck, servicos.chatGpt);
@@ -86,8 +92,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck);
     const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
-    const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
+    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida, repos.usuario);
+    const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida, repos.usuario);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
     const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
     const atualizarMesaPartida = AtualizarMesaPartida.criar(repos.torneio, repos.partida);
@@ -103,7 +109,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
     const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck);
-    const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
+    const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida, repos.usuario);
 
     // --- Liga ---
     const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);
@@ -134,7 +140,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
-        solicitarResetSenha, confirmarResetSenha,
+        solicitarResetSenha, confirmarResetSenha, buscarRankUsuario, listarRankingUsuarios,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,

@@ -18,6 +18,8 @@ interface PartidaDocument extends Document {
   tipoBye: TipoBye;
   confirmadoPor: string[];
   mesa: number | null;
+  rankDeltaJogador1?: number | null;
+  rankDeltaJogador2?: number | null;
   criadoEm: Date;
 }
 
@@ -36,6 +38,8 @@ const partidaSchema = new Schema<PartidaDocument>({
   tipoBye: { type: String, default: null },
   confirmadoPor: { type: [String], default: [] },
   mesa: { type: Number, default: null },
+  rankDeltaJogador1: { type: Number, default: null },
+  rankDeltaJogador2: { type: Number, default: null },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -70,6 +74,8 @@ function docParaPartida(doc: PartidaDocument): Partida {
     tipoBye: (doc.get("tipoBye") as TipoBye) ?? null,
     confirmadoPor: (doc.get("confirmadoPor") as string[]) ?? [],
     mesa: (doc.get("mesa") as number | null) ?? null,
+    rankDeltaJogador1: (doc.get("rankDeltaJogador1") as number | null | undefined) ?? null,
+    rankDeltaJogador2: (doc.get("rankDeltaJogador2") as number | null | undefined) ?? null,
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -91,6 +97,8 @@ function leanParaPartida(doc: Record<string, unknown>): Partida {
     tipoBye: (doc["tipoBye"] as TipoBye | undefined) ?? null,
     confirmadoPor: (doc["confirmadoPor"] as string[] | undefined) ?? [],
     mesa: (doc["mesa"] as number | null | undefined) ?? null,
+    rankDeltaJogador1: (doc["rankDeltaJogador1"] as number | null | undefined) ?? null,
+    rankDeltaJogador2: (doc["rankDeltaJogador2"] as number | null | undefined) ?? null,
     criadoEm: doc["criadoEm"] as Date,
   });
 }
@@ -323,5 +331,17 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     );
     if (!doc) return null;
     return docParaPartida(doc as unknown as PartidaDocument);
+  }
+
+  public async atualizarRankDeltas(
+    id: string,
+    deltaJogador1: number | null,
+    deltaJogador2: number | null
+  ): Promise<void> {
+    await this.conectar();
+    await PartidaModel.updateOne(
+      { id },
+      { rankDeltaJogador1: deltaJogador1, rankDeltaJogador2: deltaJogador2 }
+    );
   }
 }

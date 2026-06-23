@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { PONTOS_RANK_INICIAL } from "../regras/rank";
 
 export type RoleUsuario = "user" | "admin";
 
@@ -12,6 +13,7 @@ export interface UsuarioProps {
   nickMTGO?: string;
   nickArena?: string;
   resultadosExpressivos?: number;
+  pontosRank?: number;
   criadoEm?: Date;
 }
 
@@ -25,9 +27,10 @@ export class Usuario {
   public nickMTGO?: string;
   public nickArena?: string;
   public resultadosExpressivos: number;
+  public pontosRank: number;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, resultadosExpressivos, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, resultadosExpressivos, pontosRank, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -37,6 +40,7 @@ export class Usuario {
     this.nickMTGO = nickMTGO;
     this.nickArena = nickArena;
     this.resultadosExpressivos = resultadosExpressivos ?? 0;
+    this.pontosRank = pontosRank ?? PONTOS_RANK_INICIAL;
     this.criadoEm = criadoEm || new Date();
   }
 

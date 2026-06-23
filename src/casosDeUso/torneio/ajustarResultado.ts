@@ -1,8 +1,10 @@
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { ProcessarRankPartida, RankPartidaAplicado } from "../rank/processarRankPartida";
 
 export type AjustarResultadoInputDto = {
     partidaId: string;
@@ -22,20 +24,27 @@ export type AjustarResultadoOutputDto = {
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    rank?: RankPartidaAplicado | null;
 };
 
 export class AjustarResultado
     implements CasoDeUso<AjustarResultadoInputDto, AjustarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+        private readonly processarRankPartida: ProcessarRankPartida
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+        usuarioGateway: UsuarioGateway
     ) {
-        return new AjustarResultado(torneioGateway, partidaGateway);
+        return new AjustarResultado(
+            torneioGateway,
+            partidaGateway,
+            ProcessarRankPartida.criar(usuarioGateway, partidaGateway)
+        );
     }
 
     public async executar(
@@ -101,6 +110,8 @@ export class AjustarResultado
             });
         }
 
+        const rank = await this.processarRankPartida.aplicarParaPartida(partidaAjustada);
+
         return {
             id: partidaAjustada.id,
             torneioId: partidaAjustada.torneioId,
@@ -111,6 +122,7 @@ export class AjustarResultado
             vitoriasJogador2: partidaAjustada.vitoriasJogador2,
             status: partidaAjustada.status,
             contestado: partidaAjustada.contestado,
+            rank: rank ?? null,
         };
     }
 }

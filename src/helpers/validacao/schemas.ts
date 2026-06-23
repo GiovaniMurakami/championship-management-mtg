@@ -221,6 +221,15 @@ export const listarPartidasQuerySchema = z.object({
   rodada: z.coerce.number().int().min(1).optional(),
 });
 
+export const listarRankingUsuariosQuerySchema = z.object({
+  nome: z.string().max(200).optional(),
+  ...paginacaoQueryCampos,
+});
+
+export const usuarioIdRankParamSchema = z.object({
+  usuarioId: uuidCampo("usuarioId"),
+});
+
 // --- Body adicional ---
 
 export const atualizarMesaPartidaSchema = z.object({

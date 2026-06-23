@@ -5,6 +5,9 @@ import { RefreshTokenRota } from "../infra/api/express/rotas/usuario/refreshToke
 import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
 import { ConfirmarResetSenhaRota } from "../infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
+import { BuscarMeuRankRota } from "../infra/api/express/rotas/usuario/buscarMeuRank.express.route";
+import { BuscarRankUsuarioRota } from "../infra/api/express/rotas/usuario/buscarRankUsuario.express.route";
+import { ListarRankingUsuariosRota } from "../infra/api/express/rotas/usuario/listarRankingUsuarios.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "../infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "../infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -68,6 +71,9 @@ export function criarRotas(casos: CasosDeUso) {
         LogoutUsuarioRota.criar(casos.logoutUsuario),
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
+        BuscarMeuRankRota.criar(casos.buscarRankUsuario),
+        BuscarRankUsuarioRota.criar(casos.buscarRankUsuario),
+        ListarRankingUsuariosRota.criar(casos.listarRankingUsuarios),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),
         ExcluirDeckRota.criar(casos.excluirDeck),

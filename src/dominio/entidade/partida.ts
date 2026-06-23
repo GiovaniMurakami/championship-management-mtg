@@ -18,6 +18,8 @@ export interface PartidaProps {
   tipoBye?: TipoBye;
   confirmadoPor?: string[];
   mesa?: number | null;
+  rankDeltaJogador1?: number | null;
+  rankDeltaJogador2?: number | null;
   criadoEm?: Date;
 }
 
@@ -36,6 +38,8 @@ export class Partida {
   public tipoBye: TipoBye;
   public confirmadoPor: string[];
   public mesa: number | null;
+  public rankDeltaJogador1: number | null;
+  public rankDeltaJogador2: number | null;
   public criadoEm: Date;
 
   constructor(props: PartidaProps) {
@@ -53,6 +57,8 @@ export class Partida {
     this.tipoBye = props.tipoBye ?? null;
     this.confirmadoPor = props.confirmadoPor ?? [];
     this.mesa = props.mesa ?? null;
+    this.rankDeltaJogador1 = props.rankDeltaJogador1 ?? null;
+    this.rankDeltaJogador2 = props.rankDeltaJogador2 ?? null;
     this.criadoEm = props.criadoEm || new Date();
   }
 

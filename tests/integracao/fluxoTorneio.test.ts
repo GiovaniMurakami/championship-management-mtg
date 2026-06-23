@@ -47,6 +47,24 @@ function criarUsuarioGatewayMemoria(): UsuarioGateway {
                 if (usuario) usuario.resultadosExpressivos = (usuario.resultadosExpressivos ?? 0) + incremento;
             });
         },
+        incrementarPontosRank: async (alteracoes) => {
+            alteracoes.forEach(({ id, delta }) => {
+                const usuario = store.get(id);
+                if (usuario) usuario.pontosRank = Math.max(0, (usuario.pontosRank ?? 500) + delta);
+            });
+        },
+        listarRanking: async (limite, offset, nome) => {
+            let usuarios = Array.from(store.values());
+            if (nome) {
+                const termo = nome.toLowerCase();
+                usuarios = usuarios.filter((u) => u.nome.toLowerCase().includes(termo));
+            }
+            usuarios.sort((a, b) => (b.pontosRank ?? 500) - (a.pontosRank ?? 500));
+            return {
+                usuarios: usuarios.slice(offset, offset + limite),
+                total: usuarios.length,
+            };
+        },
     };
 }
 
@@ -166,6 +184,13 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
             store.set(id, p);
             return p;
         },
+        atualizarRankDeltas: async (id, deltaJogador1, deltaJogador2) => {
+            const p = store.get(id);
+            if (!p) return;
+            p.rankDeltaJogador1 = deltaJogador1;
+            p.rankDeltaJogador2 = deltaJogador2;
+            store.set(id, p);
+        },
     };
 }
 
@@ -266,7 +291,7 @@ describe("Integração - Fluxo completo de torneio", () => {
     });
 
     it("6. Deve registrar resultados da rodada 1", async () => {
-        const registrar = RegistrarResultado.criar(torneioGw, partidaGw);
+        const registrar = RegistrarResultado.criar(torneioGw, partidaGw, usuarioGw);
         const partidas = await partidaGw.listarPorTorneioERodada(torneioId, 1);
 
         for (const p of partidas) {
@@ -305,7 +330,7 @@ describe("Integração - Fluxo completo de torneio", () => {
             expect(resultado.partidas[0].jogador1Nome).toBeDefined();
 
             // Registrar resultados da rodada 2
-            const registrar = RegistrarResultado.criar(torneioGw, partidaGw);
+            const registrar = RegistrarResultado.criar(torneioGw, partidaGw, usuarioGw);
             for (const p of resultado.partidas) {
                 if (p.jogador2Id) {
                     await registrar.executar({
@@ -399,7 +424,7 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
     });
 
     it("4. Registrar resultados da rodada 1 e avançar para rodada 2", async () => {
-        const registrar = RegistrarResultado.criar(torneioGw2, partidaGw2);
+        const registrar = RegistrarResultado.criar(torneioGw2, partidaGw2, usuarioGw2);
         const partidas = await partidaGw2.listarPorTorneioERodada(torneioId, 1);
 
         for (const p of partidas) {
@@ -428,7 +453,7 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
     });
 
     it("5. Registrar resultados da rodada 2 e finalizar", async () => {
-        const registrar = RegistrarResultado.criar(torneioGw2, partidaGw2);
+        const registrar = RegistrarResultado.criar(torneioGw2, partidaGw2, usuarioGw2);
         const partidas = await partidaGw2.listarPorTorneioERodada(torneioId, 2);
 
         for (const p of partidas) {

@@ -27,4 +27,6 @@ export interface PartidaGateway {
   confirmarResultado(id: string, userId: string): Promise<Partida | null>;
   /** Atualiza o número de mesa da partida. */
   atualizarMesa(id: string, mesa: number | null): Promise<Partida | null>;
+  /** Persiste deltas de rank aplicados na partida (null limpa). */
+  atualizarRankDeltas(id: string, deltaJogador1: number | null, deltaJogador2: number | null): Promise<void>;
 }

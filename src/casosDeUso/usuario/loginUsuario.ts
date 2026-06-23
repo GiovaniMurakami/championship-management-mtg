@@ -11,6 +11,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { signToken } from "../../helpers/jwt";
 import { getFrontendUrl } from "../../helpers/env";
+import { montarResumoRank } from "../../dominio/regras/rank";
 
 const MAX_TENTATIVAS = 5;
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
@@ -32,6 +33,10 @@ export type LoginUsuarioOutputDto = {
     telefone?: string;
     nickMTGO?: string;
     nickArena?: string;
+    pontosRank: number;
+    rank: string;
+    proximoRank: string | null;
+    pontosParaProximoRank: number | null;
   };
 };
 
@@ -149,6 +154,7 @@ export class LoginUsuario
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
+        ...montarResumoRank(usuario.pontosRank),
       },
     };
   }

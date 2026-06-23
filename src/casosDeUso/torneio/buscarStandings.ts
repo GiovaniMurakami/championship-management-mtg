@@ -17,11 +17,17 @@ import {
 } from "./swiss";
 import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
 import { Usuario } from "../../dominio/entidade/usuario";
+import { obterRankPorPontos, PONTOS_RANK_INICIAL } from "../../dominio/regras/rank";
 
 function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
   if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
   if (modo === "nickArena") return u.nickArena ?? u.nome;
   return u.nome;
+}
+
+function rankDoUsuario(u?: Usuario) {
+  const pontosRank = u?.pontosRank ?? PONTOS_RANK_INICIAL;
+  return { pontosRank, rank: obterRankPorPontos(pontosRank) };
 }
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
@@ -45,7 +51,7 @@ export type BuscarStandingsOutputDto = {
   rodadaIniciadaEm?: string;
   standings: Array<{
     posicao: number;
-    usuario: { id: string; nome: string; resultadosExpressivos: number };
+    usuario: { id: string; nome: string; resultadosExpressivos: number; pontosRank: number; rank: string };
     time: { id: string; nome: string; imagemUrl?: string } | null;
     pontosMesa: number;
     vitoriasPartida: number;
@@ -133,7 +139,12 @@ export class BuscarStandings
         const t = timeByMembro.get(i.usuarioId);
         return {
         posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
+        usuario: {
+          id: i.usuarioId,
+          nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId,
+          resultadosExpressivos: u?.resultadosExpressivos ?? 0,
+          ...rankDoUsuario(u),
+        },
         time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
         pontosMesa: 0,
         vitoriasPartida: 0,
@@ -214,7 +225,12 @@ export class BuscarStandings
         const u = usuarioMap.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
+          usuario: {
+            id: s.usuarioId,
+            nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId,
+            resultadosExpressivos: u?.resultadosExpressivos ?? 0,
+            ...rankDoUsuario(u),
+          },
           time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,

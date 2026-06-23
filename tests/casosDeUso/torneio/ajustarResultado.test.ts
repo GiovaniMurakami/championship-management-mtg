@@ -1,13 +1,29 @@
 import { AjustarResultado } from "../../../src/casosDeUso/torneio/ajustarResultado";
-import { criarMockPartidaGateway, criarMockTorneioGateway } from "../../mocks/gateways";
+import { criarMockPartidaGateway, criarMockTorneioGateway, criarMockUsuarioGateway } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
+import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 describe("AjustarResultado", () => {
+    const usuarioGw = criarMockUsuarioGateway({
+        buscarVarios: jest.fn().mockResolvedValue([
+            new Usuario({ id: "u-1", nome: "U1", email: "a@a.com", senha: "s" }),
+            new Usuario({ id: "u-2", nome: "U2", email: "b@b.com", senha: "s" }),
+        ]),
+    });
+
     const torneio = new Torneio({
         id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
         donoId: "dono-1", status: "em_andamento", rodadaAtual: 2, totalRodadas: 4,
     });
+
+    function criarUc(partidaGw = criarMockPartidaGateway(), torneioRef: Torneio | null = torneio) {
+        return AjustarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRef) }),
+            partidaGw,
+            usuarioGw,
+        );
+    }
 
     const partidaContestada = new Partida({
         id: "p-1", torneioId: "t-1", rodada: 1,
@@ -19,8 +35,7 @@ describe("AjustarResultado", () => {
     it("deve ajustar o resultado de uma partida contestada", async () => {
         const partidaAjustada = new Partida({ ...partidaContestada, vitoriasJogador1: 1, vitoriasJogador2: 2, contestado: false });
 
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({
                 buscarPorId: jest.fn().mockResolvedValue(partidaContestada),
                 ajustarResultadoContestado: jest.fn().mockResolvedValue(partidaAjustada),
@@ -38,10 +53,7 @@ describe("AjustarResultado", () => {
     });
 
     it("deve lançar 404 se a partida não existir", async () => {
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway(),
-            criarMockPartidaGateway(),
-        );
+        const uc = criarUc(criarMockPartidaGateway(), null);
 
         await expect(
             uc.executar({ partidaId: "x", requisitanteId: "dono-1", isAdmin: false, vitoriasJogador1: 2, vitoriasJogador2: 0 })
@@ -51,8 +63,7 @@ describe("AjustarResultado", () => {
     it("deve lançar 400 se a partida não estiver contestada", async () => {
         const partidaNaoContestada = new Partida({ ...partidaContestada, contestado: false });
 
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaNaoContestada) }),
         );
 
@@ -64,9 +75,9 @@ describe("AjustarResultado", () => {
     it("deve lançar 400 se o torneio não estiver em andamento", async () => {
         const torneioFinalizado = new Torneio({ ...torneio, status: "finalizado" });
 
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            torneioFinalizado,
         );
 
         await expect(
@@ -75,8 +86,7 @@ describe("AjustarResultado", () => {
     });
 
     it("deve lançar 403 se não for dono nem admin", async () => {
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
         );
 
@@ -88,8 +98,7 @@ describe("AjustarResultado", () => {
     it("admin pode ajustar resultado de torneio que não é seu", async () => {
         const partidaAjustada = new Partida({ ...partidaContestada, vitoriasJogador1: 2, vitoriasJogador2: 1, contestado: false });
 
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({
                 buscarPorId: jest.fn().mockResolvedValue(partidaContestada),
                 ajustarResultadoContestado: jest.fn().mockResolvedValue(partidaAjustada),
@@ -105,8 +114,7 @@ describe("AjustarResultado", () => {
     });
 
     it("deve lançar 400 para placar inválido (v1 > 2)", async () => {
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
         );
 
@@ -116,8 +124,7 @@ describe("AjustarResultado", () => {
     });
 
     it("deve lançar 400 para placar inválido (soma > 3)", async () => {
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
         );
 
@@ -129,9 +136,9 @@ describe("AjustarResultado", () => {
     it("deve lançar 400 para empate em fase de corte", async () => {
         const torneioEmCorte = new Torneio({ ...torneio, emCorte: true });
 
-        const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) }),
+        const uc = criarUc(
             criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            torneioEmCorte,
         );
 
         await expect(

@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { Usuario } from "../../../dominio/entidade/usuario";
 import { UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { escaparRegex } from "../../../helpers/regex";
 
 interface UsuarioDocument extends Document {
   id: string;
@@ -13,6 +14,7 @@ interface UsuarioDocument extends Document {
   nickMTGO?: string;
   nickArena?: string;
   resultadosExpressivos?: number;
+  pontosRank?: number;
   criadoEm: Date;
 }
 
@@ -26,8 +28,11 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   nickMTGO: { type: String, required: false, maxlength: 50 },
   nickArena: { type: String, required: false, maxlength: 50 },
   resultadosExpressivos: { type: Number, required: true, default: 0 },
+  pontosRank: { type: Number, required: true, default: 500 },
   criadoEm: { type: Date, default: Date.now },
 });
+
+usuarioSchema.index({ pontosRank: -1, id: 1 });
 
 const UsuarioModel =
   mongoose.models.Usuario ||
@@ -52,6 +57,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
       resultadosExpressivos: usuario.resultadosExpressivos,
+      pontosRank: usuario.pontosRank,
       criadoEm: usuario.criadoEm,
     });
   }
@@ -72,6 +78,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
       resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
+      pontosRank: doc.get("pontosRank") ?? 500,
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -92,6 +99,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       nickMTGO: doc.get("nickMTGO"),
       nickArena: doc.get("nickArena"),
       resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
+      pontosRank: doc.get("pontosRank") ?? 500,
       criadoEm: doc.get("criadoEm"),
     });
   }
@@ -111,6 +119,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
           nickMTGO: doc.get("nickMTGO"),
           nickArena: doc.get("nickArena"),
           resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
+          pontosRank: doc.get("pontosRank") ?? 500,
           criadoEm: doc.get("criadoEm"),
         })
     );
@@ -128,6 +137,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
         resultadosExpressivos: usuario.resultadosExpressivos,
+        pontosRank: usuario.pontosRank,
       }
     );
   }
@@ -139,5 +149,60 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       { id: { $in: ids } },
       { $inc: { resultadosExpressivos: incremento } }
     );
+  }
+
+  public async incrementarPontosRank(alteracoes: Array<{ id: string; delta: number }>): Promise<void> {
+    const validas = alteracoes.filter((a) => a.delta !== 0);
+    if (validas.length === 0) return;
+    await this.conectar();
+    await Promise.all(
+      validas.map(({ id, delta }) =>
+        UsuarioModel.updateOne({ id }, { $inc: { pontosRank: delta } })
+      )
+    );
+    await UsuarioModel.updateMany(
+      { id: { $in: validas.map((a) => a.id) }, pontosRank: { $lt: 0 } },
+      { $set: { pontosRank: 0 } }
+    );
+  }
+
+  public async listarRanking(
+    limite: number,
+    offset: number,
+    nome?: string
+  ): Promise<{ usuarios: Usuario[]; total: number }> {
+    await this.conectar();
+    const filtro: Record<string, unknown> = {};
+    if (nome) {
+      filtro.nome = { $regex: escaparRegex(nome), $options: "i" };
+    }
+
+    const [docs, total] = await Promise.all([
+      UsuarioModel.find(filtro)
+        .sort({ pontosRank: -1, criadoEm: 1 })
+        .skip(offset)
+        .limit(limite)
+        .lean(),
+      UsuarioModel.countDocuments(filtro),
+    ]);
+
+    const usuarios = docs.map(
+      (doc) =>
+        new Usuario({
+          id: doc.id,
+          nome: doc.nome,
+          email: doc.email,
+          senha: "",
+          role: (doc.role as "user" | "admin") || "user",
+          telefone: doc.telefone,
+          nickMTGO: doc.nickMTGO,
+          nickArena: doc.nickArena,
+          resultadosExpressivos: doc.resultadosExpressivos ?? 0,
+          pontosRank: doc.pontosRank ?? 500,
+          criadoEm: doc.criadoEm,
+        })
+    );
+
+    return { usuarios, total };
   }
 }

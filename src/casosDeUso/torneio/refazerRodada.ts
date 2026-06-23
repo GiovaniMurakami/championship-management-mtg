@@ -1,8 +1,10 @@
 import { CasoDeUso } from "../casoDeUso";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { ProcessarRankPartida } from "../rank/processarRankPartida";
 
 export type RefazerRodadaInputDto = {
   torneioId: string;
@@ -42,10 +44,19 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly partidaGateway: PartidaGateway,
+    private readonly processarRankPartida: ProcessarRankPartida,
   ) {}
 
-  public static criar(torneioGateway: TorneioGateway, partidaGateway: PartidaGateway) {
-    return new RefazerRodada(torneioGateway, partidaGateway);
+  public static criar(
+    torneioGateway: TorneioGateway,
+    partidaGateway: PartidaGateway,
+    usuarioGateway: UsuarioGateway,
+  ) {
+    return new RefazerRodada(
+      torneioGateway,
+      partidaGateway,
+      ProcessarRankPartida.criar(usuarioGateway, partidaGateway),
+    );
   }
 
   public async executar(input: RefazerRodadaInputDto): Promise<RefazerRodadaOutputDto> {
@@ -95,6 +106,8 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
     const estadoAnterior = torneio.emCorte
       ? calcularEstadoAnteriorCorte(rodadaRemovida, torneio.totalRodadas, torneio.corteTop)
       : { emCorte: false, totalRodadas: torneio.totalRodadas };
+
+    await this.processarRankPartida.reverterPartidas(partidasRodadaAtual);
 
     const partidasRemovidas = await this.partidaGateway.excluirPorTorneioERodada(
       input.torneioId,

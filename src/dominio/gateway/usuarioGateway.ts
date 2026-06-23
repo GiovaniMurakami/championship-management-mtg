@@ -7,4 +7,10 @@ export interface UsuarioGateway {
   buscarVarios(ids: string[]): Promise<Usuario[]>;
   atualizar(usuario: Usuario): Promise<void>;
   incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void>;
+  incrementarPontosRank(alteracoes: Array<{ id: string; delta: number }>): Promise<void>;
+  listarRanking(
+    limite: number,
+    offset: number,
+    nome?: string
+  ): Promise<{ usuarios: Usuario[]; total: number }>;
 }
