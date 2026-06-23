@@ -5,6 +5,8 @@ import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizad
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
+import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class IniciarProximaRodadaRota implements Rotas {
   private constructor(
@@ -23,7 +25,9 @@ export class IniciarProximaRodadaRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarParamsMiddleware(torneioIdParamSchema), mutationRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (

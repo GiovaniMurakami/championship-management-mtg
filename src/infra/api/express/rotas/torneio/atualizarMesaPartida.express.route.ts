@@ -4,6 +4,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { atualizarMesaPartidaSchema, partidaIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class AtualizarMesaPartidaRota implements Rotas {
     private constructor(
@@ -22,7 +25,9 @@ export class AtualizarMesaPartidaRota implements Rotas {
 
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
-    public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
+    public getMiddlewares(): RequestHandler[] {
+        return [validarParamsMiddleware(partidaIdParamSchema), mutationRateLimiter, autenticarJwt];
+    }
 
     public getHandler() {
         return async (
@@ -33,16 +38,12 @@ export class AtualizarMesaPartidaRota implements Rotas {
             try {
                 const requisitanteId = request.usuario!.id;
                 const partidaId = request.params.partidaId as string;
-                const { mesa } = request.body as { mesa: number | null };
-
-                if (mesa !== null && mesa !== undefined && (typeof mesa !== "number" || !Number.isInteger(mesa) || mesa < 1)) {
-                    response.status(400).json({ mensagem: "mesa deve ser um inteiro >= 1 ou null." });
-                    return;
-                }
+                const dados = validarBody(atualizarMesaPartidaSchema, request.body, response);
+                if (!dados) return;
 
                 const resultado = await this.atualizarMesaPartidaServico.executar({
                     partidaId,
-                    mesa: mesa ?? null,
+                    mesa: dados.mesa ?? null,
                     requisitanteId,
                     isAdmin: request.usuario!.role === "admin",
                 });

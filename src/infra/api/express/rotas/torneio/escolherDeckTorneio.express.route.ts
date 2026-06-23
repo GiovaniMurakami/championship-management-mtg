@@ -4,8 +4,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { escolherDeckTorneioSchema } from "../../../../../helpers/validacao/schemas";
+import { escolherDeckTorneioSchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class EscolherDeckTorneioRota implements Rotas {
   private constructor(
@@ -24,7 +25,9 @@ export class EscolherDeckTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [inscricaoRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarParamsMiddleware(torneioIdParamSchema), inscricaoRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (

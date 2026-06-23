@@ -7,7 +7,6 @@ import {
     criarMockResetSenhaGateway,
 } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
-import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
 
 jest.mock("bcryptjs", () => ({
     compare: jest.fn(),

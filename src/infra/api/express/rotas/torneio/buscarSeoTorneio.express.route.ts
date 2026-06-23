@@ -3,6 +3,8 @@ import { BuscarSeoTorneio } from "../../../../../casosDeUso/torneio/buscarSeoTor
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class BuscarSeoTorneioRota implements Rotas {
   private constructor(
@@ -21,7 +23,9 @@ export class BuscarSeoTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarParamsMiddleware(torneioIdParamSchema), publicReadRateLimiter];
+  }
 
   public getHandler() {
     return async (

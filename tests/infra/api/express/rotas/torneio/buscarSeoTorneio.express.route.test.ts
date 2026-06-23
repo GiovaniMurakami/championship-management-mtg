@@ -2,7 +2,9 @@ import { BuscarSeoTorneioRota } from "../../../../../../src/infra/api/express/ro
 import { ErroPersonalizado } from "../../../../../../src/helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
 
-function makeReqRes(torneioId = "t-1") {
+const TORNEIO_ID = "550e8400-e29b-41d4-a716-446655440001";
+
+function makeReqRes(torneioId = TORNEIO_ID) {
     const req = { params: { torneioId } } as any;
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
     const next = jest.fn();
@@ -18,12 +20,12 @@ describe("BuscarSeoTorneioRota", () => {
     it("deve ser rota publica sem autenticarJwt", () => {
         expect(rota.getCaminho()).toBe("/torneio/:torneioId/seo");
         expect(rota.getMetodo()).toBe("get");
-        expect(rota.getMiddlewares()).toHaveLength(1);
+        expect(rota.getMiddlewares()).toHaveLength(2);
     });
 
     it("retorna 200 com dados SEO", async () => {
         const saida = {
-            torneioId: "t-1",
+            torneioId: TORNEIO_ID,
             title: "Torneio",
             image: "https://cdn.example.com/banner.png",
             description: null,
@@ -34,7 +36,7 @@ describe("BuscarSeoTorneioRota", () => {
 
         await rota.getHandler()(req, res, next);
 
-        expect(servico.executar).toHaveBeenCalledWith({ torneioId: "t-1" });
+        expect(servico.executar).toHaveBeenCalledWith({ torneioId: TORNEIO_ID });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);
         expect(next).not.toHaveBeenCalled();

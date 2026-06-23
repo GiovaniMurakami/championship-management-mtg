@@ -5,6 +5,12 @@ import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizad
 import { StatusErro } from "../../../../../helpers/error/statusErro";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { listarTorneiosQuerySchema } from "../../../../../helpers/validacao/schemas";
+import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
+import { z } from "zod";
+import { StatusTorneio } from "../../../../../dominio/entidade/torneio";
+
+type ListarTorneiosQuery = z.infer<typeof listarTorneiosQuerySchema>;
 
 function parseDataFiltro(valor: string | undefined, campo: string, fimDoDia = false): Date | undefined {
   if (!valor) return undefined;
@@ -39,7 +45,9 @@ export class ListarTorneiosRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarQueryMiddleware(listarTorneiosQuerySchema), publicReadRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (
@@ -49,13 +57,13 @@ export class ListarTorneiosRota implements Rotas {
     ): Promise<void> => {
       try {
         const {
-          limite: limiteStr,
-          offset: offsetStr,
+          limite,
+          offset,
           status,
           nome,
           dataInicio: dataInicioStr,
           dataFim: dataFimStr,
-        } = request.query as Record<string, string | undefined>;
+        } = request.queryValidados as ListarTorneiosQuery;
         const dataInicio = parseDataFiltro(dataInicioStr, "dataInicio");
         const dataFim = parseDataFiltro(dataFimStr, "dataFim", true);
 
@@ -68,9 +76,9 @@ export class ListarTorneiosRota implements Rotas {
 
         const resultado = await this.listarTorneiosServico.executar({
           usuarioId: request.usuario!.id,
-          limite: limiteStr !== undefined ? Number(limiteStr) : undefined,
-          offset: offsetStr !== undefined ? Number(offsetStr) : undefined,
-          status: status as Parameters<typeof this.listarTorneiosServico.executar>[0]["status"],
+          limite,
+          offset,
+          status: status as StatusTorneio | undefined,
           nome,
           dataInicio,
           dataFim,

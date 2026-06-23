@@ -2,6 +2,8 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { AprovarSolicitacaoTime } from "../../../../../casosDeUso/time/aprovarSolicitacaoTime";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { timeIdUsuarioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
@@ -18,7 +20,7 @@ export class AprovarSolicitacaoTimeRota implements Rotas {
 
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
-    public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
+    public getMiddlewares(): RequestHandler[] { return [validarParamsMiddleware(timeIdUsuarioIdParamSchema), mutationRateLimiter, autenticarJwt]; }
 
     public getHandler() {
         return async (request: Request, response: Response, next: NextFunction): Promise<void> => {

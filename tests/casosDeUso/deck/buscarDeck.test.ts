@@ -59,4 +59,49 @@ describe("BuscarDeck", () => {
 
         expect(resultado.usuario).toEqual({ id: "u-desconhecido", nome: "u-desconhecido" });
     });
+
+    it("deve retornar 404 para deck oculto quando usuario nao e o dono", async () => {
+        const deck = new Deck({
+            id: "d1",
+            nome: "Burn",
+            formato: "legacy",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+            oculto: true,
+        });
+
+        const deckGateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const uc = BuscarDeck.criar(deckGateway, criarMockUsuarioGateway());
+
+        await expect(uc.executar({ id: "d1" })).rejects.toBeInstanceOf(ErroPersonalizado);
+        await expect(uc.executar({ id: "d1", usuarioId: "u2" })).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve permitir dono visualizar deck oculto", async () => {
+        const deck = new Deck({
+            id: "d1",
+            nome: "Burn",
+            formato: "legacy",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+            oculto: true,
+        });
+        const usuario = new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" });
+
+        const deckGateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const usuarioGateway = criarMockUsuarioGateway({
+            buscarVarios: jest.fn().mockResolvedValue([usuario]),
+        });
+        const uc = BuscarDeck.criar(deckGateway, usuarioGateway);
+
+        const resultado = await uc.executar({ id: "d1", usuarioId: "u1" });
+
+        expect(resultado.id).toBe("d1");
+    });
 });

@@ -189,6 +189,49 @@ describe("BuscarStandings", () => {
         expect(resultado.standings[1].pontosMesa).toBe(3);
     });
 
+    it("deve ignorar partidas do corte ao calcular standings do suíço", async () => {
+        const torneioFinalizadoComCorte = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "legacy",
+            donoId: "d", status: "finalizado", rodadaAtual: 4, totalRodadas: 4,
+            corteTop: 4, emCorte: true,
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false }),
+        ];
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 1, jogador1Id: "u-3", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p3", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "t-1", rodada: 2, jogador1Id: "u-2", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p5", torneioId: "t-1", rodada: 3, jogador1Id: "u-1", jogador2Id: "u-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p6", torneioId: "t-1", rodada: 4, jogador1Id: "u-1", jogador2Id: "u-3", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+        ];
+        const usuarios = [
+            new Usuario({ id: "u-1", nome: "Jogador 1", email: "u1@e.com", senha: "s" }),
+            new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@e.com", senha: "s" }),
+            new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@e.com", senha: "s" }),
+            new Usuario({ id: "u-4", nome: "Jogador 4", email: "u4@e.com", senha: "s" }),
+        ];
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizadoComCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway(),
+            criarMockTimeGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+        const lider = resultado.standings.find((s) => s.usuario.id === "u-1")!;
+
+        expect(lider.pontosMesa).toBe(6);
+        expect(lider.vitoriasPartida).toBe(2);
+    });
+
     it("deve calcular standings de torneio finalizado com apenas 1 rodada", async () => {
         const torneioFinalizadoUmaRodada = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "legacy",

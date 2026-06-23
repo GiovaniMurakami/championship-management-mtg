@@ -54,6 +54,7 @@ import { app } from "../../src/app";
 
 interface PartidaInfo {
     id: string;
+    rodada?: number;
     jogador1Id: string;
     jogador2Id: string | null;
     status?: string;
@@ -109,9 +110,12 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     const SENHA = "Senha@12345";
     const N_PLAYERS = 150;
     const LATE_PLAYERS = 4;
+    const TOP_CUT_SIZE = 8;
     const TOTAL_INSCRITOS_FINAL = N_PLAYERS + LATE_PLAYERS;
     const TOTAL_DROPS_REALISTAS = 10;
     const TOTAL_ATIVOS_APOS_DROPS = TOTAL_INSCRITOS_FINAL - TOTAL_DROPS_REALISTAS;
+    const TOTAL_PARTIDAS_SWISS = (75 * 5) + LATE_PLAYERS + ((TOTAL_ATIVOS_APOS_DROPS / 2) * 3);
+    const TOTAL_PARTIDAS_TOP8 = 4 + 2 + 1;
 
     let req: ReturnType<typeof supertest>;
 
@@ -121,15 +125,16 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     let torneioId: string;
     let playerIds: string[] = [];
     let playerTokens: string[] = [];
-    let latePlayerIds: string[] = [];
-    let latePlayerTokens: string[] = [];
+    const latePlayerIds: string[] = [];
+    const latePlayerTokens: string[] = [];
     let rodadaPartidas: PartidaInfo[] = [];
     /** IDs dos jogadores dropados na Fase 4 — usados para filtrar partidas já resolvidas. */
     let droppedIds: string[] = [];
     /** IDs de partidas da rodada 5 pré-registradas fora do lote normal — excluídas da Fase 5. */
-    let excludedPartidaIds: string[] = [];
-    let confirmedPartidaIds: string[] = [];
-    let contestedPartidaIds: string[] = [];
+    const excludedPartidaIds: string[] = [];
+    const confirmedPartidaIds: string[] = [];
+    const contestedPartidaIds: string[] = [];
+    let top8Ids: string[] = [];
 
     const tokenDoJogador = (jogadorId: string) => {
         const initialIdx = playerIds.indexOf(jogadorId);
@@ -286,6 +291,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 formato: "Standard",
                 maxJogadores: 160,
                 maxRodadas: 8,
+                corteTop: TOP_CUT_SIZE,
             })
             .expect(201);
         torneioId = torneioRes.body.id;
@@ -455,6 +461,39 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     });
 
     // ── Guardrails pós-rodadas 1-4 (rodada 5 com partidas pendentes) ──────────
+
+    it("deve refazer a rodada atual e permitir gerar os pareamentos novamente", async () => {
+        const idsRodadaOriginal = new Set(rodadaPartidas.map((p) => p.id));
+
+        const refazerRes = await req
+            .post(`/torneio/${torneioId}/refazer-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        expect(refazerRes.body.rodadaAtual).toBe(4);
+        expect(refazerRes.body.rodadaRemovida).toBe(5);
+        expect(refazerRes.body.partidasRemovidas).toBe(75);
+        expect(refazerRes.body.emCorte).toBe(false);
+        expect(refazerRes.body.totalRodadas).toBe(8);
+
+        const rodadaRemovida = await req
+            .get(`/torneio/${torneioId}/partidas?rodada=5`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(rodadaRemovida.body.partidas).toHaveLength(0);
+
+        const recriarRes = await req
+            .post(`/torneio/${torneioId}/proxima-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        expect(recriarRes.body.finalizado).toBe(false);
+        expect(recriarRes.body.rodadaAtual).toBe(5);
+        expect(recriarRes.body.emCorte).toBe(false);
+        expect(recriarRes.body.partidas).toHaveLength(75);
+        rodadaPartidas = recriarRes.body.partidas as PartidaInfo[];
+        expect(rodadaPartidas.every((p) => !idsRodadaOriginal.has(p.id))).toBe(true);
+    });
 
     it("não deve avançar rodada com resultados ainda pendentes", async () => {
         // Todas as 75 partidas da rodada 5 estão pendentes
@@ -735,10 +774,10 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
     });
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Fase 5: Rodadas 5–8 e finalização
+    // Fase 5: Rodadas 5–8, corte Top 8 e finalização
     // ═══════════════════════════════════════════════════════════════════════════
 
-    it("deve completar rodadas 5-8 e finalizar o torneio", async () => {
+    it("deve completar rodadas 5-8, iniciar o corte Top 8 e finalizar o torneio", async () => {
         const droppedSet = new Set(droppedIds);
 
         // Jogadores ativos (não dropados), incluindo os que entraram tardiamente.
@@ -806,14 +845,72 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                     if (p.jogador2Id) expect(droppedSet.has(p.jogador2Id)).toBe(false);
                 }
             } else {
-                // Torneio finalizado após rodada 8
-                expect(avancRes.body.finalizado).toBe(true);
-                expect(Array.isArray(avancRes.body.classificacao)).toBe(true);
-                expect(avancRes.body.classificacao.length).toBeGreaterThan(0);
-                // Classificação ordenada por posição
-                for (let i = 0; i < avancRes.body.classificacao.length - 1; i++) {
-                    expect(avancRes.body.classificacao[i].posicao)
-                        .toBeLessThanOrEqual(avancRes.body.classificacao[i + 1].posicao);
+                expect(avancRes.body.finalizado).toBe(false);
+                expect(avancRes.body.rodadaAtual).toBe(9);
+                expect(avancRes.body.emCorte).toBe(true);
+                expect(avancRes.body.partidas).toHaveLength(TOP_CUT_SIZE / 2);
+
+                rodadaPartidas = avancRes.body.partidas as PartidaInfo[];
+                top8Ids = Array.from(new Set(
+                    rodadaPartidas.flatMap((p) => [p.jogador1Id, p.jogador2Id].filter(Boolean) as string[])
+                ));
+                expect(top8Ids).toHaveLength(TOP_CUT_SIZE);
+
+                const top8View = await req
+                    .get(`/torneio/${torneioId}`)
+                    .set("Authorization", `Bearer ${tokenDoJogador(top8Ids[0])}`)
+                    .expect(200);
+                expect(top8View.body.status).toBe("em_andamento");
+                expect(top8View.body.emCorte).toBe(true);
+                expect(top8View.body.corteTop).toBe(TOP_CUT_SIZE);
+                expect(top8View.body.rodadaAtual).toBe(9);
+                expect(top8View.body.totalRodadas).toBe(11);
+                const partidasTop8ViewRodadaAtual = (top8View.body.partidas as PartidaInfo[])
+                    .filter((p) => p.rodada === 9);
+                expect(partidasTop8ViewRodadaAtual).toHaveLength(TOP_CUT_SIZE / 2);
+                expect(
+                    partidasTop8ViewRodadaAtual.some(
+                        (p: PartidaInfo) => p.jogador1Id === top8Ids[0] || p.jogador2Id === top8Ids[0]
+                    )
+                ).toBe(true);
+            }
+        }
+
+        for (let rodadaCorte = 9; rodadaCorte <= 11; rodadaCorte++) {
+            const partidasCorte = rodadaPartidas.filter((p) => p.jogador2Id !== null);
+            const partidasEsperadas = rodadaCorte === 9 ? 4 : rodadaCorte === 10 ? 2 : 1;
+            expect(partidasCorte).toHaveLength(partidasEsperadas);
+
+            await lote(partidasCorte, 4, async (p, idx) => {
+                const vencedorEsquerda = idx % 2 === 0;
+                await req
+                    .post(`/torneio/partida/${p.id}/resultado`)
+                    .set("Authorization", `Bearer ${adminToken}`)
+                    .send({
+                        vitoriasJogador1: vencedorEsquerda ? 2 : 0,
+                        vitoriasJogador2: vencedorEsquerda ? 0 : 2,
+                    })
+                    .expect(200);
+            });
+
+            const avancCorteRes = await req
+                .post(`/torneio/${torneioId}/proxima-rodada`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .expect(200);
+
+            if (rodadaCorte < 11) {
+                expect(avancCorteRes.body.finalizado).toBe(false);
+                expect(avancCorteRes.body.rodadaAtual).toBe(rodadaCorte + 1);
+                expect(avancCorteRes.body.emCorte).toBe(true);
+                expect(avancCorteRes.body.partidas).toHaveLength(partidasEsperadas / 2);
+                rodadaPartidas = avancCorteRes.body.partidas as PartidaInfo[];
+            } else {
+                expect(avancCorteRes.body.finalizado).toBe(true);
+                expect(Array.isArray(avancCorteRes.body.classificacao)).toBe(true);
+                expect(avancCorteRes.body.classificacao.length).toBeGreaterThan(0);
+                for (let i = 0; i < avancCorteRes.body.classificacao.length - 1; i++) {
+                    expect(avancCorteRes.body.classificacao[i].posicao)
+                        .toBeLessThanOrEqual(avancCorteRes.body.classificacao[i + 1].posicao);
                 }
             }
         }
@@ -919,12 +1016,13 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             .expect(200);
 
         expect(res.body.status).toBe("finalizado");
-        expect(res.body.rodadaAtual).toBe(8);
-        expect(res.body.totalRodadas).toBe(8);
+        expect(res.body.rodadaAtual).toBe(11);
+        expect(res.body.totalRodadas).toBe(11);
+        expect(res.body.emCorte).toBe(true);
+        expect(res.body.corteTop).toBe(TOP_CUT_SIZE);
         expect(res.body.totalInscritos).toBe(TOTAL_INSCRITOS_FINAL);
         // Todas as partidas do torneio são retornadas no GET /torneio/:id
-        // 5 rodadas×75 + 4 penalidades tardias + 3 rodadas×72 = 595
-        expect(res.body.partidas.length).toBe(595);
+        expect(res.body.partidas.length).toBe(TOTAL_PARTIDAS_SWISS + TOTAL_PARTIDAS_TOP8);
         // Nenhuma partida deve estar pendente ao final
         const pendentes = res.body.partidas.filter((p: { status: string }) => p.status === "pendente");
         expect(pendentes).toHaveLength(0);
@@ -937,8 +1035,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             .expect(200);
 
         expect(res.body.torneioId).toBe(torneioId);
-        // 75×5 + 4 penalidades tardias + 72×3 = 595
-        expect(res.body.partidas).toHaveLength(595);
+        expect(res.body.partidas).toHaveLength(TOTAL_PARTIDAS_SWISS + TOTAL_PARTIDAS_TOP8);
 
         // Todas finalizadas
         for (const p of res.body.partidas) {
@@ -988,12 +1085,23 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 expect(p.rodada).toBe(rodada);
             }
         }
+
+        for (const [rodada, totalEsperado] of [[9, 4], [10, 2], [11, 1]] as const) {
+            const res = await req
+                .get(`/torneio/${torneioId}/partidas?rodada=${rodada}`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .expect(200);
+            expect(res.body.partidas).toHaveLength(totalEsperado);
+            for (const p of res.body.partidas) {
+                expect(p.rodada).toBe(rodada);
+            }
+        }
     });
 
     it("GET /torneio/:id/meu-historico deve retornar as 8 partidas do jogador com campos corretos", async () => {
-        // Escolhe o primeiro jogador que não foi dropado (tem partidas em todas as 8 rodadas)
+        // Escolhe um jogador que não foi dropado nem entrou no corte Top 8.
         const nonDroppedIdx = Array.from({ length: N_PLAYERS }, (_, i) => i)
-            .find((i) => !droppedIds.includes(playerIds[i]))!;
+            .find((i) => !droppedIds.includes(playerIds[i]) && !top8Ids.includes(playerIds[i]))!;
 
         const res = await req
             .get(`/torneio/${torneioId}/meu-historico`)

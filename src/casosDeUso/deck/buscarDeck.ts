@@ -6,6 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 
 export type BuscarDeckInputDto = {
   id: string;
+  usuarioId?: string;
 };
 
 export type BuscarDeckOutputDto = {
@@ -36,6 +37,13 @@ export class BuscarDeck
     const deck = await this.deckGateway.buscarPorId(input.id);
 
     if (!deck) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Deck não encontrado",
+        status: 404,
+      });
+    }
+
+    if (deck.oculto && deck.usuarioId !== input.usuarioId) {
       throw ErroPersonalizado.criar({
         mensagem: "Deck não encontrado",
         status: 404,

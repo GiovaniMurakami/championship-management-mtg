@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
+import { conectarMongoDB } from "../../../mongodb/conexao";
 import { HttpMethod, Rotas } from "./rotas";
 
 export class HealthRota implements Rotas {
@@ -24,14 +25,11 @@ export class HealthRota implements Rotas {
         ): Promise<void> => {
             let mongoStatus = "unknown";
             try {
-                if (mongoose.connection.readyState === 1) {
-                    await mongoose.connection.db!.admin().command({ ping: 1 });
-                    mongoStatus = "ok";
-                } else {
-                    mongoStatus = "disconnected";
-                }
+                await conectarMongoDB();
+                await mongoose.connection.db!.admin().command({ ping: 1 });
+                mongoStatus = "ok";
             } catch {
-                mongoStatus = "error";
+                mongoStatus = mongoose.connection.readyState === 1 ? "error" : "disconnected";
             }
 
             const degraded = mongoStatus !== "ok";

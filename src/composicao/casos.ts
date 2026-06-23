@@ -17,6 +17,7 @@ import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
 import { EscolherDeckTorneio } from "../casosDeUso/torneio/escolherDeckTorneio";
 import { IniciarTorneio } from "../casosDeUso/torneio/iniciarTorneio";
 import { IniciarProximaRodada } from "../casosDeUso/torneio/iniciarProximaRodada";
+import { RefazerRodada } from "../casosDeUso/torneio/refazerRodada";
 import { RegistrarResultado } from "../casosDeUso/torneio/registrarResultado";
 import { ContestarResultado } from "../casosDeUso/torneio/contestarResultado";
 import { ConfirmarResultado } from "../casosDeUso/torneio/confirmarResultado";
@@ -52,6 +53,9 @@ import { EntrarPorConviteTime } from "../casosDeUso/time/entrarPorConviteTime";
 import { SolicitarEntradaTime } from "../casosDeUso/time/solicitarEntradaTime";
 import { AprovarSolicitacaoTime } from "../casosDeUso/time/aprovarSolicitacaoTime";
 import { RejeitarSolicitacaoTime } from "../casosDeUso/time/rejeitarSolicitacaoTime";
+import { BuscarAnuncios } from "../casosDeUso/site/buscarAnuncios";
+import { RegistrarCliqueAnuncio } from "../casosDeUso/site/registrarCliqueAnuncio";
+import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -82,6 +86,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck);
     const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
     const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
     const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
@@ -122,19 +127,25 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const aprovarSolicitacaoTime = AprovarSolicitacaoTime.criar(repos.time, repos.usuario);
     const rejeitarSolicitacaoTime = RejeitarSolicitacaoTime.criar(repos.time);
 
+    // --- Site ---
+    const buscarAnuncios = BuscarAnuncios.criar(repos.siteConfig);
+    const registrarCliqueAnuncio = RegistrarCliqueAnuncio.criar(repos.siteConfig);
+    const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig);
+
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
         solicitarResetSenha, confirmarResetSenha,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
-        iniciarTorneio, iniciarProximaRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
+        iniciarTorneio, iniciarProximaRodada, refazerRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
+        buscarAnuncios, registrarCliqueAnuncio, salvarAnuncios,
     };
 }
 

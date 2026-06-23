@@ -6,8 +6,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { atualizarDeckSchema } from "../../../../../helpers/validacao/schemas";
+import { atualizarDeckSchema, idParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class AtualizarDeckRota implements Rotas {
   private constructor(
@@ -33,7 +34,7 @@ export class AtualizarDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [mutationRateLimiter, autenticarJwt];
+    return [validarParamsMiddleware(idParamSchema), mutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {

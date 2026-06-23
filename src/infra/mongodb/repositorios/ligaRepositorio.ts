@@ -32,6 +32,10 @@ const ligaSchema = new Schema<LigaDocument>({
 });
 
 ligaSchema.index({ criadoEm: -1 });
+ligaSchema.index({ criadoEm: -1, id: 1 });
+ligaSchema.index({ tipo: 1, criadoEm: -1, id: 1 });
+ligaSchema.index({ torneioIds: 1, criadoEm: -1, id: 1 });
+ligaSchema.index({ donoId: 1 });
 
 const LigaModel =
   mongoose.models.Liga || mongoose.model<LigaDocument>("Liga", ligaSchema);

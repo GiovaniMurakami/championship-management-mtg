@@ -62,6 +62,9 @@ torneioSchema.index({ criadoEm: -1 });
 torneioSchema.index({ horario: 1 });
 torneioSchema.index({ donoId: 1 });
 torneioSchema.index({ status: 1, criadoEm: -1 });
+torneioSchema.index({ secreto: 1, criadoEm: -1, id: 1 });
+torneioSchema.index({ secreto: 1, status: 1, criadoEm: -1, id: 1 });
+torneioSchema.index({ secreto: 1, horario: 1, criadoEm: -1, id: 1 });
 
 const TorneioModel =
   mongoose.models.Torneio ||

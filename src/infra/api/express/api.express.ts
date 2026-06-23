@@ -5,6 +5,7 @@ import helmet from "helmet";
 import compression from "compression";
 import mongoSanitize from "express-mongo-sanitize";
 import { sanitizarEntrada } from "../../../middlewares/express/sanitizarEntrada";
+import { requestIdMiddleware } from "../../../middlewares/express/requestId";
 import { Rotas } from "./rotas/rotas";
 import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
@@ -46,7 +47,7 @@ export class ApiExpress implements Api {
 
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       },
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     }));
@@ -55,8 +56,10 @@ export class ApiExpress implements Api {
     this.app.use(express.urlencoded({ extended: true, limit: "100kb" }));
     this.app.use(mongoSanitize());
     this.app.use(sanitizarEntrada);
+    this.app.use(requestIdMiddleware);
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
-      logger.info({ method: req.method, path: req.path }, "request");
+      const log = req.log ?? logger;
+      log.info({ method: req.method, path: req.path }, "request");
       next();
     });
   }
@@ -74,6 +77,10 @@ export class ApiExpress implements Api {
 
       this.app[metodo](caminho, ...middlewares, handler);
     });
+
+    this.app.use((_req: Request, res: Response) => {
+      res.status(404).json({ mensagem: "Rota não encontrada." });
+    });
   }
 
   private adicionarErroHandler(): void {
@@ -81,6 +88,14 @@ export class ApiExpress implements Api {
       (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
         if (err instanceof ErroPersonalizado) {
           res.status(err.status).json({ mensagem: err.message, erros: err.erros });
+          return;
+        }
+        if (err instanceof SyntaxError && "body" in err) {
+          res.status(400).json({ mensagem: "JSON inválido no corpo da requisição." });
+          return;
+        }
+        if (err instanceof Error && err.message.includes("not allowed by CORS")) {
+          res.status(403).json({ mensagem: "Origem não permitida." });
           return;
         }
         const errosMongoose = extrairErrosMongoose(err);

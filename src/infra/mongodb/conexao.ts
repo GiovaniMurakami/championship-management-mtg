@@ -2,6 +2,14 @@ import mongoose from "mongoose";
 
 let conexao: mongoose.Connection | null = null;
 
+function obterMaxPoolSize(): number {
+  const configurado = Number(process.env.MONGODB_MAX_POOL_SIZE);
+  if (Number.isFinite(configurado) && configurado > 0) {
+    return configurado;
+  }
+  return process.env.AWS_LAMBDA_FUNCTION_NAME ? 3 : 10;
+}
+
 export async function conectarMongoDB(): Promise<mongoose.Connection> {
   if (conexao && conexao.readyState === 1) {
     return conexao;
@@ -18,7 +26,7 @@ export async function conectarMongoDB(): Promise<mongoose.Connection> {
       serverSelectionTimeoutMS: 5000,
       connectTimeoutMS: 10000,
       socketTimeoutMS: 25000,
-      maxPoolSize: 3,
+      maxPoolSize: obterMaxPoolSize(),
       minPoolSize: 0,
       family: 4,
       tls: true,

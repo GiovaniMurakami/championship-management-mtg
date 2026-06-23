@@ -30,6 +30,8 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
 inscricaoSchema.index({ torneioId: 1, usuarioId: 1 }, { unique: true });
 inscricaoSchema.index({ torneioId: 1 });
 inscricaoSchema.index({ usuarioId: 1 });
+inscricaoSchema.index({ torneioId: 1, dropped: 1 });
+inscricaoSchema.index({ torneioId: 1, timeId: 1 });
 
 const InscricaoModel =
   mongoose.models.Inscricao ||

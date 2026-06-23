@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import { ConfirmarResetSenha } from "../../../../../casosDeUso/usuario/confirmarResetSenha";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { authRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { confirmarResetSenhaSchema } from "../../../../../helpers/validacao/schemas";
 
 export class ConfirmarResetSenhaRota implements Rotas {
     private constructor(
@@ -26,6 +29,10 @@ export class ConfirmarResetSenhaRota implements Rotas {
         return this.metodo;
     }
 
+    public getMiddlewares() {
+        return [authRateLimiter];
+    }
+
     public getHandler() {
         return async (
             request: Request,
@@ -33,11 +40,12 @@ export class ConfirmarResetSenhaRota implements Rotas {
             next: NextFunction
         ): Promise<void> => {
             try {
-                const { token, novaSenha } = request.body;
+                const body = validarBody(confirmarResetSenhaSchema, request.body, response);
+                if (!body) return;
 
                 const resultado = await this.confirmarResetSenhaServico.executar({
-                    token,
-                    novaSenha,
+                    token: body.token,
+                    novaSenha: body.novaSenha,
                 });
 
                 response.status(200).json(resultado);
