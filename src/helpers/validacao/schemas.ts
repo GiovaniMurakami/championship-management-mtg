@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getS3BaseUrl } from "../env";
+import { paginacaoQueryCampos, uuidCampo } from "./campos";
 
 function s3ImagemUrl() {
   return z
@@ -12,6 +13,10 @@ function s3ImagemUrl() {
       },
       { message: "A URL da imagem deve pertencer ao bucket S3 autorizado." }
     );
+}
+
+function s3ImagemUrlOuVazio() {
+  return z.union([s3ImagemUrl(), z.literal("")]);
 }
 
 const cartaSchema = z.object({
@@ -78,7 +83,7 @@ export const criarTorneioSchema = z.object({
   formato: z.string().min(1, "Formato é obrigatório."),
   descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
   regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
-  bannerUrl: s3ImagemUrl().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional(),
@@ -95,7 +100,7 @@ export const alterarTorneioSchema = z.object({
   formato: z.string().min(1).optional(),
   descricao: z.string().max(4000, "A descrição pode ter no máximo 4000 caracteres.").optional(),
   regras: z.string().max(4000, "As regras do torneio podem ter no máximo 4000 caracteres.").optional(),
-  bannerUrl: s3ImagemUrl().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
@@ -164,4 +169,81 @@ export const gerarUrlUploadImagemSchema = z.object({
     .int()
     .min(1, "tamanhoBytes deve ser maior que 0.")
     .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
+});
+
+export const solicitarResetSenhaSchema = z.object({
+  email: z.email("E-mail inválido."),
+});
+
+export const confirmarResetSenhaSchema = z.object({
+  token: z.string().min(1, "Token é obrigatório."),
+  novaSenha: z.string().min(8, "A senha deve ter no mínimo 8 caracteres."),
+});
+
+// --- Params ---
+
+export const idParamSchema = z.object({ id: uuidCampo("id") });
+export const torneioIdParamSchema = z.object({ torneioId: uuidCampo("torneioId") });
+export const partidaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
+export const anuncioIdParamSchema = z.object({ anuncioId: uuidCampo("anuncioId") });
+export const tokenIngressoParamSchema = z.object({ token: uuidCampo("token") });
+export const timeIdUsuarioIdParamSchema = z.object({
+  id: uuidCampo("id"),
+  usuarioId: uuidCampo("usuarioId"),
+});
+export const torneioRodadaParamSchema = z.object({
+  torneioId: uuidCampo("torneioId"),
+  rodada: z.coerce.number().int().min(1, "rodada deve ser inteiro >= 1."),
+});
+
+// --- Query ---
+
+export const listarDecksQuerySchema = z.object({
+  usuarioId: uuidCampo("usuarioId").optional(),
+  formato: z.string().max(100).optional(),
+  nome: z.string().max(200).optional(),
+  criadoApos: z.string().optional(),
+  criadoAntes: z.string().optional(),
+  ...paginacaoQueryCampos,
+});
+
+const dataQueryCampo = z.string().optional();
+
+export const listarTorneiosQuerySchema = z.object({
+  status: z.enum(["inscricoes_abertas", "em_andamento", "finalizado"]).optional(),
+  nome: z.string().max(200).optional(),
+  dataInicio: dataQueryCampo,
+  dataFim: dataQueryCampo,
+  ...paginacaoQueryCampos,
+});
+
+export const listarPartidasQuerySchema = z.object({
+  rodada: z.coerce.number().int().min(1).optional(),
+});
+
+// --- Body adicional ---
+
+export const atualizarMesaPartidaSchema = z.object({
+  mesa: z.number().int().min(1).nullable().optional(),
+});
+
+export const anuncioSiteSchema = z.object({
+  id: z.string().max(180).optional(),
+  tipo: z.enum(["banner", "card"]).optional(),
+  tag: z.string().max(80).optional(),
+  titulo: z.string().max(180).optional(),
+  texto: z.string().max(900).optional(),
+  imagemUrl: z.string().max(800).optional(),
+  link: z.string().max(800).optional(),
+  botaoTexto: z.string().max(120).optional(),
+  ativo: z.boolean().optional(),
+  ordem: z.number().int().optional(),
+});
+
+export const entrarPorConviteTimeSchema = z.object({
+  conviteToken: z.string().uuid("conviteToken deve ser um UUID válido."),
+});
+
+export const salvarAnunciosSchema = z.object({
+  anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
 });

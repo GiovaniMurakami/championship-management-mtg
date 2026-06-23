@@ -4,6 +4,9 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { listarPartidasQuerySchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
+import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 
 export class ListarPartidasTorneioRota implements Rotas {
     private constructor(
@@ -22,7 +25,14 @@ export class ListarPartidasTorneioRota implements Rotas {
 
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
-    public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
+    public getMiddlewares(): RequestHandler[] {
+        return [
+            validarParamsMiddleware(torneioIdParamSchema),
+            validarQueryMiddleware(listarPartidasQuerySchema),
+            publicReadRateLimiter,
+            autenticarJwt,
+        ];
+    }
 
     public getHandler() {
         return async (
@@ -32,11 +42,11 @@ export class ListarPartidasTorneioRota implements Rotas {
         ): Promise<void> => {
             try {
                 const torneioId = request.params.torneioId as string;
-                const rodada = request.query.rodada as string | undefined;
+                const { rodada } = request.queryValidados as { rodada?: number };
 
                 const resultado = await this.listarPartidasTorneioServico.executar({
                     torneioId,
-                    rodada: rodada === undefined ? undefined : Number(rodada),
+                    rodada,
                 });
 
                 response.status(200).json(resultado);

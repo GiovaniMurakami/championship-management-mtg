@@ -121,7 +121,7 @@ functions:
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
 
-  # Torneio e liga — Swiss pairing e ranking são CPU e memória intensivos
+  # Torneio e liga - Swiss pairing e ranking sao CPU e memoria intensivos
   api-torneio:
     handler: build/handler.handler
     memorySize: 512
@@ -169,6 +169,22 @@ functions:
             allowCredentials: true
       - http:
           path: /time/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /site
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /site/{proxy+}
           method: any
           cors:
             origins: *corsOrigins

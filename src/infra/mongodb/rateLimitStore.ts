@@ -36,16 +36,23 @@ export class MongoRateLimitStore implements Store {
     async increment(key: string): Promise<ClientRateLimitInfo> {
         await conectarMongoDB();
         const prefixedKey = this.prefixedKey(key);
-        const resetTime = new Date(Date.now() + this.windowMs);
+        const now = Date.now();
+        const newResetTime = new Date(now + this.windowMs);
 
-        const doc = await RateLimitModel.findOneAndUpdate(
-            { key: prefixedKey },
-            {
-                $inc: { hits: 1 },
-                $setOnInsert: { resetTime },
-            },
-            { upsert: true, new: true }
-        );
+        const existente = await RateLimitModel.findOne({ key: prefixedKey });
+        const janelaExpirada = !existente || existente.resetTime.getTime() <= now;
+
+        const doc = janelaExpirada
+            ? await RateLimitModel.findOneAndUpdate(
+                { key: prefixedKey },
+                { $set: { hits: 1, resetTime: newResetTime } },
+                { upsert: true, new: true }
+            )
+            : await RateLimitModel.findOneAndUpdate(
+                { key: prefixedKey },
+                { $inc: { hits: 1 } },
+                { new: true }
+            );
 
         return {
             totalHits: doc!.hits,

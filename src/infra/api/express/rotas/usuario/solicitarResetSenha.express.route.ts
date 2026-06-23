@@ -3,6 +3,8 @@ import { SolicitarResetSenha } from "../../../../../casosDeUso/usuario/solicitar
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { authRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { solicitarResetSenhaSchema } from "../../../../../helpers/validacao/schemas";
 
 export class SolicitarResetSenhaRota implements Rotas {
     private constructor(
@@ -38,9 +40,10 @@ export class SolicitarResetSenhaRota implements Rotas {
             next: NextFunction
         ): Promise<void> => {
             try {
-                const { email } = request.body;
+                const body = validarBody(solicitarResetSenhaSchema, request.body, response);
+                if (!body) return;
 
-                const resultado = await this.solicitarResetSenhaServico.executar({ email });
+                const resultado = await this.solicitarResetSenhaServico.executar({ email: body.email });
 
                 response.status(200).json(resultado);
             } catch (error) {

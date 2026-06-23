@@ -4,6 +4,8 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { tokenIngressoParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class IngressarViaTorneioRota implements Rotas {
     private constructor(
@@ -22,7 +24,9 @@ export class IngressarViaTorneioRota implements Rotas {
 
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
-    public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt]; }
+    public getMiddlewares(): RequestHandler[] {
+        return [validarParamsMiddleware(tokenIngressoParamSchema), mutationRateLimiter, autenticarJwt];
+    }
 
     public getHandler() {
         return async (

@@ -30,6 +30,9 @@ const timeSchema = new Schema<TimeDocument>({
 
 timeSchema.index({ criadoEm: -1 });
 timeSchema.index({ donoId: 1 });
+timeSchema.index({ criadoEm: -1, id: 1 });
+timeSchema.index({ membroIds: 1 });
+timeSchema.index({ conviteToken: 1 }, { unique: true, sparse: true });
 
 const TimeModel =
     mongoose.models.Time || mongoose.model<TimeDocument>("Time", timeSchema);

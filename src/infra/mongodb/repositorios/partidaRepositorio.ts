@@ -41,6 +41,13 @@ const partidaSchema = new Schema<PartidaDocument>({
 
 partidaSchema.index({ torneioId: 1 });
 partidaSchema.index({ torneioId: 1, rodada: 1 });
+partidaSchema.index({ torneioId: 1, rodada: 1, mesa: 1 });
+partidaSchema.index({ torneioId: 1, jogador1Id: 1, rodada: 1 });
+partidaSchema.index({ torneioId: 1, jogador2Id: 1, rodada: 1 });
+partidaSchema.index(
+  { torneioId: 1, rodada: 1, jogador2Id: 1 },
+  { partialFilterExpression: { jogador2Id: null } }
+);
 
 // Exportado para uso em transações compostas (ex: TorneioRepositorio)
 export const PartidaModel =
@@ -288,6 +295,12 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     await this.conectar();
     const existe = await PartidaModel.exists({ torneioId, rodada: { $gt: rodada } });
     return existe !== null;
+  }
+
+  public async excluirPorTorneioERodada(torneioId: string, rodada: number): Promise<number> {
+    await this.conectar();
+    const result = await PartidaModel.deleteMany({ torneioId, rodada });
+    return result.deletedCount ?? 0;
   }
 
   public async atualizarMesa(id: string, mesa: number | null): Promise<Partida | null> {

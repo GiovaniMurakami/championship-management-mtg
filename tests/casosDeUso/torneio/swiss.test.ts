@@ -4,7 +4,6 @@ import {
     mwp,
     gwp,
     omwp,
-    ogwp,
     parKey,
     gerarPareamentos,
     MIN_PERCENTUAL,
