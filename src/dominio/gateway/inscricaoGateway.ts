@@ -13,4 +13,5 @@ export interface InscricaoGateway {
   atualizar(inscricao: Inscricao): Promise<void>;
   excluir(id: string): Promise<void>;
   contarPorTorneios(torneioIds: string[]): Promise<Record<string, number>>;
+  contarJogadoresDistintos(): Promise<number>;
 }

@@ -77,6 +77,7 @@ export function criarMockInscricaoGateway(overrides: Partial<InscricaoGateway> =
         listarPorUsuario: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
         contarPorTorneios: jest.fn().mockResolvedValue({}),
+        contarJogadoresDistintos: jest.fn().mockResolvedValue(0),
         excluir: jest.fn(),
         ...overrides,
     };

@@ -1,4 +1,9 @@
 import { SiteConfigGateway } from "../../dominio/gateway/siteConfigGateway";
+import { mapearAnunciosSite } from "./mapearAnunciosSite";
+
+type BuscarAnunciosInput = {
+  incluirCliques?: boolean;
+};
 
 export class BuscarAnuncios {
   private constructor(private readonly siteConfigGateway: SiteConfigGateway) {}
@@ -7,11 +12,15 @@ export class BuscarAnuncios {
     return new BuscarAnuncios(siteConfigGateway);
   }
 
-  public async executar() {
+  public async executar(input: BuscarAnunciosInput = {}) {
     const config = await this.siteConfigGateway.buscarAnuncios();
+    const anuncios = mapearAnunciosSite(
+      config?.anuncios ?? [],
+      input.incluirCliques === true
+    );
 
     return {
-      anuncios: config?.anuncios ?? [],
+      anuncios,
       atualizadoEm: config?.atualizadoEm ?? null,
     };
   }

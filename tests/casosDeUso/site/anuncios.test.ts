@@ -24,6 +24,61 @@ describe("Anuncios do site", () => {
     expect(resultado).toEqual({ anuncios: [], atualizadoEm: null });
   });
 
+  it("deve ocultar cliques no retorno publico de anuncios", async () => {
+    const gateway = criarGateway({
+      buscarAnuncios: jest.fn().mockResolvedValue({
+        anuncios: [
+          {
+            id: AD_ID,
+            tipo: "card",
+            titulo: "Loja",
+            ativo: true,
+            ordem: 0,
+            cliques: 9,
+          },
+        ],
+        atualizadoEm: new Date("2026-06-23T21:26:19.083Z"),
+      }),
+    });
+    const uc = BuscarAnuncios.criar(gateway);
+
+    const resultado = await uc.executar();
+
+    expect(resultado.anuncios[0]).toEqual({
+      id: AD_ID,
+      tipo: "card",
+      titulo: "Loja",
+      ativo: true,
+      ordem: 0,
+    });
+    expect(resultado.anuncios[0]).not.toHaveProperty("cliques");
+  });
+
+  it("deve incluir cliques quando solicitado para admin", async () => {
+    const gateway = criarGateway({
+      buscarAnuncios: jest.fn().mockResolvedValue({
+        anuncios: [
+          {
+            id: AD_ID,
+            tipo: "card",
+            titulo: "Loja",
+            ativo: true,
+            ordem: 0,
+            cliques: 9,
+          },
+        ],
+      }),
+    });
+    const uc = BuscarAnuncios.criar(gateway);
+
+    const resultado = await uc.executar({ incluirCliques: true });
+
+    expect(resultado.anuncios[0]).toMatchObject({
+      id: AD_ID,
+      cliques: 9,
+    });
+  });
+
   it("deve normalizar e salvar cards e banners", async () => {
     const gateway = criarGateway();
     const uc = SalvarAnuncios.criar(gateway);
