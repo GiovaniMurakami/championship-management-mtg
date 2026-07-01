@@ -3,6 +3,9 @@ import { RegistrarCliqueAnuncio } from "../../../src/casosDeUso/site/registrarCl
 import { SalvarAnuncios } from "../../../src/casosDeUso/site/salvarAnuncios";
 import { AnunciosSiteConfig, SiteConfigGateway } from "../../../src/dominio/gateway/siteConfigGateway";
 
+const AD_ID = "550e8400-e29b-41d4-a716-446655440000";
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function criarGateway(overrides: Partial<SiteConfigGateway> = {}): SiteConfigGateway {
   return {
     buscarAnuncios: jest.fn().mockResolvedValue(null),
@@ -46,6 +49,7 @@ describe("Anuncios do site", () => {
     });
 
     expect(resultado.anuncios).toHaveLength(2);
+    expect(resultado.anuncios[0].id).toMatch(UUID_REGEX);
     expect(resultado.anuncios[0]).toMatchObject({
       tipo: "card",
       tag: "Patrocinador",
@@ -56,6 +60,7 @@ describe("Anuncios do site", () => {
       ativo: true,
       ordem: 0,
     });
+    expect(resultado.anuncios[1].id).toMatch(UUID_REGEX);
     expect(resultado.anuncios[1]).toMatchObject({
       tipo: "banner",
       titulo: "Banner",
@@ -66,12 +71,12 @@ describe("Anuncios do site", () => {
     expect(gateway.salvarAnuncios).toHaveBeenCalledTimes(1);
   });
 
-  it("deve preservar cliques existentes ao salvar anuncios", async () => {
+  it("deve preservar cliques existentes ao salvar anuncios com uuid valido", async () => {
     const gateway = criarGateway({
       buscarAnuncios: jest.fn().mockResolvedValue({
         anuncios: [
           {
-            id: "ad-1",
+            id: AD_ID,
             tipo: "card",
             titulo: "Antigo",
             ativo: true,
@@ -86,7 +91,7 @@ describe("Anuncios do site", () => {
     const resultado = await uc.executar({
       anuncios: [
         {
-          id: "ad-1",
+          id: AD_ID,
           tipo: "card",
           titulo: "Atualizado",
         },
@@ -94,9 +99,44 @@ describe("Anuncios do site", () => {
     });
 
     expect(resultado.anuncios[0]).toMatchObject({
-      id: "ad-1",
+      id: AD_ID,
       titulo: "Atualizado",
       cliques: 7,
+    });
+  });
+
+  it("deve substituir id invalido por uuid ao salvar e preservar cliques", async () => {
+    const gateway = criarGateway({
+      buscarAnuncios: jest.fn().mockResolvedValue({
+        anuncios: [
+          {
+            id: "anuncio-1781395148943-3",
+            tipo: "card",
+            titulo: "Antigo",
+            ativo: true,
+            ordem: 0,
+            cliques: 4,
+          },
+        ],
+      }),
+    });
+    const uc = SalvarAnuncios.criar(gateway);
+
+    const resultado = await uc.executar({
+      anuncios: [
+        {
+          id: "anuncio-1781395148943-3",
+          tipo: "card",
+          titulo: "Atualizado",
+        },
+      ],
+    });
+
+    expect(resultado.anuncios[0].id).toMatch(UUID_REGEX);
+    expect(resultado.anuncios[0].id).not.toBe("anuncio-1781395148943-3");
+    expect(resultado.anuncios[0]).toMatchObject({
+      titulo: "Atualizado",
+      cliques: 4,
     });
   });
 
@@ -105,7 +145,7 @@ describe("Anuncios do site", () => {
       registrarCliqueAnuncio: jest.fn().mockResolvedValue({
         anuncios: [
           {
-            id: "ad-1",
+            id: AD_ID,
             tipo: "card",
             titulo: "Loja",
             ativo: true,
@@ -117,10 +157,10 @@ describe("Anuncios do site", () => {
     });
     const uc = RegistrarCliqueAnuncio.criar(gateway);
 
-    const resultado = await uc.executar({ anuncioId: "ad-1" });
+    const resultado = await uc.executar({ anuncioId: AD_ID });
 
-    expect(resultado).toEqual({ anuncioId: "ad-1", cliques: 8 });
-    expect(gateway.registrarCliqueAnuncio).toHaveBeenCalledWith("ad-1");
+    expect(resultado).toEqual({ anuncioId: AD_ID, cliques: 8 });
+    expect(gateway.registrarCliqueAnuncio).toHaveBeenCalledWith(AD_ID);
   });
 
   it("deve rejeitar banner sem imagem", async () => {
@@ -134,6 +174,6 @@ describe("Anuncios do site", () => {
   it("deve rejeitar clique de anuncio inexistente", async () => {
     const uc = RegistrarCliqueAnuncio.criar(criarGateway());
 
-    await expect(uc.executar({ anuncioId: "ad-inexistente" })).rejects.toMatchObject({ status: 404 });
+    await expect(uc.executar({ anuncioId: AD_ID })).rejects.toMatchObject({ status: 404 });
   });
 });
