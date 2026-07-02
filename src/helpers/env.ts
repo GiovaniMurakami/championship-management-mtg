@@ -1,8 +1,8 @@
 const FRONTEND_LOCAL_URL = "http://localhost:5173";
 const FRONTEND_HOMOLOG_URL = "https://homolog.d32mjk9mbam2cb.amplifyapp.com";
+const WORDPRESS_APP_URL = "https://tiagofuguete.com.br/app-torneios";
 
-function parseOrigins(value?: string): string[] {
-    return (value || "")
+function parseOrigins(value?: string): string[] {    return (value || "")
         .split(",")
         .map((origin) => origin.trim())
         .filter(Boolean);
@@ -15,9 +15,39 @@ export function isExecucaoLocal(): boolean {
 
 export function getFrontendUrl(): string {
     if (isExecucaoLocal()) return FRONTEND_LOCAL_URL;
-    return process.env.FRONTEND_URL || FRONTEND_HOMOLOG_URL;
+
+    const configured = process.env.FRONTEND_URL?.trim();
+    if (configured && configured !== FRONTEND_LOCAL_URL) {
+        return configured;
+    }
+
+    return FRONTEND_HOMOLOG_URL;
 }
 
+function normalizeBaseUrl(value: string): string {
+    return value.replace(/\/+$/, "");
+}
+
+/** Monta URL compartilhável do app (WordPress com appPath fora do ambiente local). */
+export function buildFrontendAppLink(internalPath: string): string {
+    const normalizedPath = internalPath.startsWith("/") ? internalPath : `/${internalPath}`;
+
+    if (isExecucaoLocal()) {
+        return `${FRONTEND_LOCAL_URL}${normalizedPath}`;
+    }
+
+    const baseUrl = normalizeBaseUrl(getFrontendAppBaseUrl());
+    return `${baseUrl}?appPath=${encodeURIComponent(normalizedPath)}`;
+}
+
+function getFrontendAppBaseUrl(): string {
+    const configured = process.env.FRONTEND_URL?.trim();
+    if (configured && configured !== FRONTEND_LOCAL_URL) {
+        return configured;
+    }
+
+    return WORDPRESS_APP_URL;
+}
 export function getCorsOrigin(): string {
     if (isExecucaoLocal()) return FRONTEND_LOCAL_URL;
     return process.env.CORS_ORIGIN || getFrontendUrl();
@@ -26,7 +56,7 @@ export function getCorsOrigin(): string {
 export function getCorsOrigins(): string[] {
     const configuredOrigins = parseOrigins(process.env.CORS_ORIGIN);
     const configuredFrontendUrls = parseOrigins(process.env.FRONTEND_URL);
-    const fallbackOrigins = [FRONTEND_HOMOLOG_URL, FRONTEND_LOCAL_URL];
+    const fallbackOrigins = [FRONTEND_HOMOLOG_URL, WORDPRESS_APP_URL, "https://tiagofuguete.com.br", FRONTEND_LOCAL_URL];
     const origins = [...configuredOrigins, ...configuredFrontendUrls, ...fallbackOrigins];
 
     return [...new Set(origins)];

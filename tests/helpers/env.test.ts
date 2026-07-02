@@ -1,4 +1,4 @@
-import { getCorsOrigin, getCorsOrigins, getFrontendUrl, isExecucaoLocal, getS3Bucket, getS3Region, getS3BaseUrl } from "../../src/helpers/env";
+import { buildFrontendAppLink, getCorsOrigin, getCorsOrigins, getFrontendUrl, isExecucaoLocal, getS3Bucket, getS3Region, getS3BaseUrl } from "../../src/helpers/env";
 
 describe("env helpers", () => {
     const originalEnv = { ...process.env };
@@ -22,6 +22,8 @@ describe("env helpers", () => {
         expect(getCorsOrigin()).toBe("http://localhost:5173");
         expect(getCorsOrigins()).toEqual([
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "https://tiagofuguete.com.br/app-torneios",
+            "https://tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -51,6 +53,8 @@ describe("env helpers", () => {
             "https://web.exemplo.com",
             "https://admin.exemplo.com",
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "https://tiagofuguete.com.br/app-torneios",
+            "https://tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -61,8 +65,43 @@ describe("env helpers", () => {
         expect(getFrontendUrl()).toBe("https://homolog.d32mjk9mbam2cb.amplifyapp.com");
         expect(getCorsOrigins()).toEqual([
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
+            "https://tiagofuguete.com.br/app-torneios",
+            "https://tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
+    });
+
+    it("ignora FRONTEND_URL localhost fora do ambiente local", () => {
+        process.env.IS_LOCAL = "false";
+        process.env.FRONTEND_URL = "http://localhost:5173";
+
+        expect(getFrontendUrl()).toBe("https://homolog.d32mjk9mbam2cb.amplifyapp.com");
+    });
+
+    it("monta link local direto no ambiente de desenvolvimento", () => {
+        process.env.IS_LOCAL = "true";
+
+        expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
+            "http://localhost:5173/reset-senha?token=abc123",
+        );
+    });
+
+    it("monta link externo com appPath fora do ambiente local", () => {
+        process.env.IS_LOCAL = "false";
+        delete process.env.FRONTEND_URL;
+
+        expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
+            "https://tiagofuguete.com.br/app-torneios?appPath=%2Freset-senha%3Ftoken%3Dabc123",
+        );
+    });
+
+    it("usa FRONTEND_URL configurado como base do appPath", () => {
+        process.env.IS_LOCAL = "false";
+        process.env.FRONTEND_URL = "https://homolog.d32mjk9mbam2cb.amplifyapp.com";
+
+        expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
+            "https://homolog.d32mjk9mbam2cb.amplifyapp.com?appPath=%2Freset-senha%3Ftoken%3Dabc123",
+        );
     });
 
     it("IS_LOCAL=1 também é reconhecido como execução local", () => {

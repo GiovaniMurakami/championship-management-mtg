@@ -10,7 +10,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { signToken } from "../../helpers/jwt";
-import { getFrontendUrl } from "../../helpers/env";
+import { buildFrontendAppLink } from "../../helpers/env";
 
 const MAX_TENTATIVAS = 5;
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
@@ -61,7 +61,7 @@ export class LoginUsuario
     const expiresAt = new Date(Date.now() + RESET_EXPIRACAO_MS);
     await this.resetSenhaGateway.salvar({ token, usuarioId, expiresAt });
 
-    const link = `${getFrontendUrl()}/reset-senha?token=${token}`;
+    const link = buildFrontendAppLink(`/reset-senha?token=${token}`);
     await this.emailGateway.enviar({
       para: emailUsuario,
       assunto: "Sua conta foi bloqueada por excesso de tentativas - MTG Championship",

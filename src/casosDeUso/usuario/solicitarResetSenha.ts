@@ -3,7 +3,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { ResetSenhaGateway } from "../../dominio/gateway/resetSenhaGateway";
 import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
-import { getFrontendUrl } from "../../helpers/env";
+import { buildFrontendAppLink } from "../../helpers/env";
 
 const EXPIRACAO_MS = 60 * 60 * 1000; // 1 hora
 
@@ -50,8 +50,7 @@ export class SolicitarResetSenha
 
         await this.resetSenhaGateway.salvar({ token, usuarioId: usuario.id, expiresAt });
 
-        const frontendUrl = getFrontendUrl();
-        const link = `${frontendUrl}/reset-senha?token=${token}`;
+        const link = buildFrontendAppLink(`/reset-senha?token=${token}`);
 
         await this.emailGateway.enviar({
             para: usuario.email,

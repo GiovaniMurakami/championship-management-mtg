@@ -16,7 +16,7 @@ provider:
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
     EMAIL_USER: ${env:EMAIL_USER, ''}
     EMAIL_PASS: ${env:EMAIL_PASS, ''}
-    FRONTEND_URL: ${env:FRONTEND_URL, 'http://localhost:5173'}
+    FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
   iam:
     role:
       statements:
@@ -39,6 +39,9 @@ plugins:
   # - serverless-offline
 
 custom:
+  frontendUrl:
+    dev: https://homolog.d32mjk9mbam2cb.amplifyapp.com
+    prod: https://tiagofuguete.com.br/app-torneios
   jwtSsmParams:
     private:
       dev: /championship-mtg/dev/jwt-private-key
@@ -48,6 +51,7 @@ custom:
       prod: /championship-mtg/prod/jwt-public-key
   corsOrigins: &corsOrigins
     - ${env:FRONTEND_URL, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    - https://tiagofuguete.com.br
     - http://localhost:5173
   # serverless-offline:
   #   httpPort: 4000
