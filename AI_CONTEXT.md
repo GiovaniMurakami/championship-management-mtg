@@ -1,7 +1,7 @@
 # AI Context — championship-management-mtg
 
 > Documento de contexto para assistentes de IA. Leia antes de modificar o projeto.
-> Versão da API: **1.1.15** | Idioma da API e mensagens: **português (BR)**
+> Versão da API: **1.1.16** | Idioma da API e mensagens: **português (BR)**
 
 **Frontend pareado:** repositório `championship-management-mtg-front` (SPA React). Contratos REST documentados em `docs/`.
 
@@ -405,4 +405,4 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 
 ---
 
-*Última revisão: julho/2026 — alinhado com v1.1.15*
+*Última revisão: julho/2026 — alinhado com v1.1.16*
