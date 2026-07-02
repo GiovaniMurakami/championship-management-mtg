@@ -1,5 +1,7 @@
 # Contexto do Backend — Championship Management MTG
 
+> **Documento canônico:** use `AI_CONTEXT.md` na raiz do repositório. Este arquivo é um resumo legado em `.cursor/`.
+
 Documentação interna para agentes. API Node.js 22 + TypeScript para gerenciamento de campeonatos de Magic: The Gathering.
 
 ## Arquitetura
@@ -79,8 +81,8 @@ app.ts → criarRepositorios() + criarServicos() → criarCasosDeUso() → criar
 ## Validação
 
 - Zod schemas em `helpers/validacao/schemas.ts`
-- `validarBody()` nas rotas POST/PUT/PATCH com body
-- Nem todas as rotas têm validação Zod ainda (gap conhecido)
+- `validarBody()`, `validarParamsMiddleware()`, `validarQueryMiddleware()`
+- Todos os endpoints com entrada validam params/query/body conforme aplicável
 
 ## Banco de Dados
 

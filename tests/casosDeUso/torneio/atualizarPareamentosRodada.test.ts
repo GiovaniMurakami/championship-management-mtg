@@ -249,7 +249,7 @@ describe("AtualizarPareamentosRodada", () => {
 
         await expect(
             uc.executar({ torneioId: "t-1", rodada: 2, requisitanteId: "outro", isAdmin: false, partidas: [] })
-        ).rejects.toMatchObject({ status: 403, message: "Apenas o dono do torneio ou um administrador pode alterar pareamentos." });
+        ).rejects.toMatchObject({ status: 403, message: "Apenas o dono, anfitrião ou administrador do torneio pode alterar pareamentos." });
     });
 
     it("deve lançar erro se não existirem partidas para a rodada", async () => {

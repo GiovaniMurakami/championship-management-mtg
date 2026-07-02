@@ -6,9 +6,11 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type EscolherDeckTorneioInputDto = {
   torneioId: string;
+  requisitanteId?: string;
   usuarioId: string;
   usuarioNome: string;
   isAdmin: boolean;
@@ -41,6 +43,7 @@ export class EscolherDeckTorneio
   public async executar(
     input: EscolherDeckTorneioInputDto
   ): Promise<EscolherDeckTorneioOutputDto> {
+    const requisitanteId = input.requisitanteId ?? input.usuarioId;
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
@@ -76,7 +79,14 @@ export class EscolherDeckTorneio
       });
     }
 
-    if (deck.usuarioId !== input.usuarioId && !input.isAdmin) {
+    if (input.usuarioId !== requisitanteId && !podeGerenciarTorneio(torneio, requisitanteId, input.isAdmin)) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Sem permissão para escolher deck em nome de outro jogador.",
+        status: StatusErro.erroProibido,
+      });
+    }
+
+    if (deck.usuarioId !== input.usuarioId && !podeGerenciarTorneio(torneio, requisitanteId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
         mensagem: "Este deck não pertence a você.",
         status: StatusErro.erroProibido,

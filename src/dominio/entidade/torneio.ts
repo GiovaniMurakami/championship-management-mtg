@@ -9,6 +9,7 @@ export interface TorneioProps {
   horario: Date;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
@@ -35,6 +36,7 @@ export class Torneio {
   public horario: Date;
   public formato: string;
   public donoId: string;
+  public anfitriaoId?: string | null;
   public status: StatusTorneio;
   public rodadaAtual: number;
   public totalRodadas: number;
@@ -60,6 +62,7 @@ export class Torneio {
     this.horario = props.horario;
     this.formato = props.formato;
     this.donoId = props.donoId;
+    this.anfitriaoId = props.anfitriaoId ?? null;
     this.status = props.status;
     this.rodadaAtual = props.rodadaAtual;
     this.totalRodadas = props.totalRodadas;

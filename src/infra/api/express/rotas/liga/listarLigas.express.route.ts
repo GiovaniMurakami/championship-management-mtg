@@ -4,6 +4,11 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { listarLigasQuerySchema } from "../../../../../helpers/validacao/schemas";
+import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
+import { z } from "zod";
+
+type ListarLigasQuery = z.infer<typeof listarLigasQuerySchema>;
 
 export class ListarLigasRota implements Rotas {
   private constructor(
@@ -18,7 +23,9 @@ export class ListarLigasRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarQueryMiddleware(listarLigasQuerySchema), publicReadRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (
@@ -27,11 +34,11 @@ export class ListarLigasRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset, tipo, nome } = request.query as Record<string, string | undefined>;
+        const { limite, offset, tipo, nome } = request.queryValidados as ListarLigasQuery;
         const resultado = await this.listarLigasServico.executar({
-          limite: limite !== undefined ? Number(limite) : undefined,
-          offset: offset !== undefined ? Number(offset) : undefined,
-          tipo: tipo as Parameters<typeof this.listarLigasServico.executar>[0]["tipo"],
+          limite,
+          offset,
+          tipo,
           nome,
         });
         response.status(200).json(resultado);

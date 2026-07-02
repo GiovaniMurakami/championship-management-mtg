@@ -217,6 +217,43 @@ Remover um campo (enviar string vazia):
 
 ---
 
+### GET /usuario/listar
+
+**(Somente admin)** Lista usuários cadastrados com busca opcional por nome e paginação.
+
+**Query params:**
+
+| Param  | Tipo   | Descrição                          |
+| ------ | ------ | ---------------------------------- |
+| `nome` | string | Filtro parcial por nome (opcional) |
+| `limite` | number | Máx. 100, padrão do serviço      |
+| `offset` | number | Paginação                          |
+
+**Response (200):**
+
+```json
+{
+  "usuarios": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva",
+      "email": "joao.silva@email.com",
+      "nickMTGO": "joaosilva",
+      "nickArena": "joaosilva#12345"
+    }
+  ],
+  "total": 42
+}
+```
+
+**Erros:**
+
+- `401` — Token inválido ou ausente
+- `403` — Usuário não é admin
+- `400` — Query params inválidos (validação Zod)
+
+---
+
 ### POST /usuario/reset-senha/solicitar
 
 Solicita o envio de um e-mail com link para redefinição de senha.

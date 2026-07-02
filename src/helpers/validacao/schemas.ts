@@ -112,15 +112,15 @@ export const alterarTorneioSchema = z.object({
 });
 
 export const escolherDeckTorneioSchema = z.object({
-  deckId: z.string().min(1, "deckId é obrigatório."),
-  jogadorId: z.string().optional(),
+  deckId: uuidCampo("deckId"),
+  jogadorId: uuidCampo("jogadorId").optional(),
 });
 
 export const atualizarPareamentosRodadaSchema = z.object({
   partidas: z.array(z.object({
-    id: z.string().min(1, "id da partida é obrigatório."),
-    jogador1Id: z.string().min(1, "jogador1Id é obrigatório."),
-    jogador2Id: z.string().nullable().optional(),
+    id: uuidCampo("id"),
+    jogador1Id: uuidCampo("jogador1Id"),
+    jogador2Id: uuidCampo("jogador2Id").nullable().optional(),
     mesa: z.number().int().min(1, "mesa deve ser inteiro >= 1.").nullable().optional(),
   })).min(1, "Informe ao menos uma partida para atualizar."),
 });
@@ -131,20 +131,20 @@ export const registrarResultadoSchema = z.object({
 });
 
 export const droparJogadorSchema = z.object({
-  jogadorId: z.string().optional(),
+  jogadorId: uuidCampo("jogadorId").optional(),
 });
 
 export const criarLigaSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
-  torneioIds: z.array(z.string()).optional(),
+  torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });
 
 export const alterarLigaSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
-  torneioIds: z.array(z.string()).optional(),
+  torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });
 
@@ -198,6 +198,15 @@ export const torneioRodadaParamSchema = z.object({
 
 // --- Query ---
 
+export const listarUsuariosQuerySchema = z.object({
+  nome: z.string().max(200).optional(),
+  ...paginacaoQueryCampos,
+});
+
+export const definirAnfitriaoTorneioSchema = z.object({
+  anfitriaoId: uuidCampo("anfitriaoId").nullable(),
+});
+
 export const listarDecksQuerySchema = z.object({
   usuarioId: uuidCampo("usuarioId").optional(),
   formato: z.string().max(100).optional(),
@@ -221,7 +230,39 @@ export const listarPartidasQuerySchema = z.object({
   rodada: z.coerce.number().int().min(1).optional(),
 });
 
+export const listarLigasQuerySchema = z.object({
+  nome: z.string().max(200).optional(),
+  tipo: z.enum(["individual", "times"]).optional(),
+  ...paginacaoQueryCampos,
+});
+
+export const listarTimesQuerySchema = z.object({
+  nome: z.string().max(200).optional(),
+  ...paginacaoQueryCampos,
+});
+
+const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional().default(10);
+
+export const rankingLigaQuerySchema = z.object({
+  limiteJogadores: limiteRankingCampo,
+  limiteTimes: limiteRankingCampo,
+  limiteDecks: limiteRankingCampo,
+  limiteCartas: limiteRankingCampo,
+});
+
 // --- Body adicional ---
+
+export const inscreverTorneioSchema = z.object({
+  timeId: uuidCampo("timeId").optional(),
+});
+
+export const ingressarViaTorneioSchema = z.object({
+  deckId: uuidCampo("deckId"),
+});
+
+export const gerarLinkIngressoSchema = z.object({
+  validadeHoras: z.number().int().min(1, "validadeHoras deve ser >= 1.").max(168, "validadeHoras não pode exceder 168 horas.").optional(),
+});
 
 export const atualizarMesaPartidaSchema = z.object({
   mesa: z.number().int().min(1).nullable().optional(),

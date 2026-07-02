@@ -1,30 +1,31 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { ListarTimes } from "../../../../../casosDeUso/time/listarTimes";
+import { ListarUsuarios } from "../../../../../casosDeUso/usuario/listarUsuarios";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { listarTimesQuerySchema } from "../../../../../helpers/validacao/schemas";
+import { listarUsuariosQuerySchema } from "../../../../../helpers/validacao/schemas";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { z } from "zod";
 
-type ListarTimesQuery = z.infer<typeof listarTimesQuerySchema>;
+type ListarUsuariosQuery = z.infer<typeof listarUsuariosQuerySchema>;
 
-export class ListarTimesRota implements Rotas {
+export class ListarUsuariosRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly listarTimesServico: ListarTimes
+    private readonly listarUsuariosServico: ListarUsuarios
   ) { }
 
-  public static criar(listarTimesServico: ListarTimes) {
-    return new ListarTimesRota("/time/listar", HttpMethod.GET, listarTimesServico);
+  public static criar(listarUsuariosServico: ListarUsuarios) {
+    return new ListarUsuariosRota("/usuario/listar", HttpMethod.GET, listarUsuariosServico);
   }
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarQueryMiddleware(listarTimesQuerySchema), publicReadRateLimiter, autenticarJwt];
+    return [validarQueryMiddleware(listarUsuariosQuerySchema), publicReadRateLimiter, autenticarJwt, autorizarAdmin];
   }
 
   public getHandler() {
@@ -34,12 +35,8 @@ export class ListarTimesRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset, nome } = request.queryValidados as ListarTimesQuery;
-        const resultado = await this.listarTimesServico.executar({
-          limite,
-          offset,
-          nome,
-        });
+        const { nome, limite, offset } = request.queryValidados as ListarUsuariosQuery;
+        const resultado = await this.listarUsuariosServico.executar({ nome, limite, offset });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

@@ -4,7 +4,8 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { inscreverTorneioSchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class InscreverTorneioRota implements Rotas {
@@ -37,6 +38,8 @@ export class InscreverTorneioRota implements Rotas {
       try {
         const usuarioId = request.usuario!.id;
         const torneioId = request.params.torneioId as string;
+        const dados = validarBody(inscreverTorneioSchema, request.body ?? {}, response);
+        if (!dados) return;
 
         const resultado = await this.inscreverTorneioServico.executar({
           torneioId,

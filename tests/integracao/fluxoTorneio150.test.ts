@@ -382,6 +382,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
         for (let i = 0; i < TOTAL_JOGADORES; i++) {
             await escolher.executar({
                 torneioId,
+                requisitanteId: jogadorIds[i],
                 usuarioId: jogadorIds[i],
                 usuarioNome: `Jogador${String(i + 1).padStart(3, "0")}`,
                 isAdmin: false,

@@ -15,7 +15,17 @@ import {
     criarTimeSchema,
     alterarTimeSchema,
     gerarUrlUploadImagemSchema,
+    listarLigasQuerySchema,
+    listarTimesQuerySchema,
+    rankingLigaQuerySchema,
+    ingressarViaTorneioSchema,
+    gerarLinkIngressoSchema,
+    inscreverTorneioSchema,
+    definirAnfitriaoTorneioSchema,
+    listarUsuariosQuerySchema,
 } from "../../../src/helpers/validacao/schemas";
+
+const UUID = "550e8400-e29b-41d4-a716-446655440000";
 
 describe("schemas de validacao", () => {
     describe("cadastrarUsuarioSchema", () => {
@@ -170,10 +180,10 @@ describe("schemas de validacao", () => {
 
     describe("escolherDeckTorneioSchema", () => {
         it("aceita deckId valido", () => {
-            expect(() => escolherDeckTorneioSchema.parse({ deckId: "d-1" })).not.toThrow();
+            expect(() => escolherDeckTorneioSchema.parse({ deckId: UUID })).not.toThrow();
         });
-        it("rejeita deckId vazio", () => {
-            expect(escolherDeckTorneioSchema.safeParse({ deckId: "" }).success).toBe(false);
+        it("rejeita deckId invalido", () => {
+            expect(escolherDeckTorneioSchema.safeParse({ deckId: "d-1" }).success).toBe(false);
         });
     });
 
@@ -191,7 +201,10 @@ describe("schemas de validacao", () => {
             expect(() => droparJogadorSchema.parse({})).not.toThrow();
         });
         it("aceita jogadorId informado", () => {
-            expect(() => droparJogadorSchema.parse({ jogadorId: "u-1" })).not.toThrow();
+            expect(() => droparJogadorSchema.parse({ jogadorId: UUID })).not.toThrow();
+        });
+        it("rejeita jogadorId invalido", () => {
+            expect(droparJogadorSchema.safeParse({ jogadorId: "u-1" }).success).toBe(false);
         });
     });
 
@@ -251,6 +264,52 @@ describe("schemas de validacao", () => {
             for (const ct of ["image/jpeg", "image/png", "image/gif", "image/webp"] as const) {
                 expect(() => gerarUrlUploadImagemSchema.parse({ contentType: ct, tamanhoBytes: 100 })).not.toThrow();
             }
+        });
+    });
+
+    describe("ingressarViaTorneioSchema", () => {
+        it("exige deckId UUID", () => {
+            expect(() => ingressarViaTorneioSchema.parse({ deckId: UUID })).not.toThrow();
+            expect(ingressarViaTorneioSchema.safeParse({}).success).toBe(false);
+        });
+    });
+
+    describe("gerarLinkIngressoSchema", () => {
+        it("aceita body vazio ou validadeHoras", () => {
+            expect(() => gerarLinkIngressoSchema.parse({})).not.toThrow();
+            expect(() => gerarLinkIngressoSchema.parse({ validadeHoras: 12 })).not.toThrow();
+        });
+        it("rejeita validadeHoras fora do intervalo", () => {
+            expect(gerarLinkIngressoSchema.safeParse({ validadeHoras: 0 }).success).toBe(false);
+            expect(gerarLinkIngressoSchema.safeParse({ validadeHoras: 200 }).success).toBe(false);
+        });
+    });
+
+    describe("inscreverTorneioSchema", () => {
+        it("aceita body vazio ou timeId opcional", () => {
+            expect(() => inscreverTorneioSchema.parse({})).not.toThrow();
+            expect(() => inscreverTorneioSchema.parse({ timeId: UUID })).not.toThrow();
+        });
+    });
+
+    describe("listarLigasQuerySchema", () => {
+        it("aceita filtros e paginacao", () => {
+            expect(() => listarLigasQuerySchema.parse({ nome: "Liga", tipo: "times", limite: "20", offset: "0" })).not.toThrow();
+        });
+    });
+
+    describe("rankingLigaQuerySchema", () => {
+        it("aplica default de 10 nos limites", () => {
+            const parsed = rankingLigaQuerySchema.parse({});
+            expect(parsed.limiteJogadores).toBe(10);
+            expect(parsed.limiteTimes).toBe(10);
+        });
+    });
+
+    describe("definirAnfitriaoTorneioSchema", () => {
+        it("aceita anfitriaoId UUID ou null", () => {
+            expect(() => definirAnfitriaoTorneioSchema.parse({ anfitriaoId: UUID })).not.toThrow();
+            expect(() => definirAnfitriaoTorneioSchema.parse({ anfitriaoId: null })).not.toThrow();
         });
     });
 

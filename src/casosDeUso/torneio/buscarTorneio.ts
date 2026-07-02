@@ -6,6 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { Usuario } from "../../dominio/entidade/usuario";
 
 function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
@@ -21,9 +22,15 @@ export type BuscarTorneioInputDto = {
 export type BuscarTorneioOutputDto = {
   id: string;
   nome: string;
-  horario: Date;
+  horario: string;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
+  anfitriao?: {
+    id: string;
+    nome: string;
+    email: string;
+  } | null;
   status: string;
   rodadaAtual: number;
   totalRodadas: number;
@@ -42,7 +49,8 @@ export type BuscarTorneioOutputDto = {
   visualizacoes: number;
   totalInscritos: number;
   totalCheckin: number;
-  criadoEm: Date;
+  criadoEm: string;
+  rodadaIniciadaEm?: string;
   partidas: Array<{
     id: string;
     rodada: number;
@@ -103,17 +111,25 @@ export class BuscarTorneio
       jogadorIds.add(p.jogador1Id);
       if (p.jogador2Id) jogadorIds.add(p.jogador2Id);
     }
+    if (torneioAtual.anfitriaoId) jogadorIds.add(torneioAtual.anfitriaoId);
     const usuarios = await this.usuarioGateway.buscarVarios(
       Array.from(jogadorIds)
     );
     const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
+    const anfitriaoUsuario = torneioAtual.anfitriaoId
+      ? usuarioMap.get(torneioAtual.anfitriaoId) ?? null
+      : null;
 
     return {
       id: torneioAtual.id,
       nome: torneioAtual.nome,
-      horario: torneioAtual.horario,
+      horario: toBrasiliaISO(torneioAtual.horario)!,
       formato: torneioAtual.formato,
       donoId: torneioAtual.donoId,
+      anfitriaoId: torneioAtual.anfitriaoId ?? null,
+      anfitriao: anfitriaoUsuario
+        ? { id: anfitriaoUsuario.id, nome: anfitriaoUsuario.nome, email: anfitriaoUsuario.email }
+        : null,
       status: torneioAtual.status,
       rodadaAtual: torneioAtual.rodadaAtual,
       totalRodadas: torneioAtual.totalRodadas,
@@ -132,7 +148,8 @@ export class BuscarTorneio
       visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,
       totalCheckin,
-      criadoEm: torneioAtual.criadoEm,
+      criadoEm: toBrasiliaISO(torneioAtual.criadoEm)!,
+      rodadaIniciadaEm: toBrasiliaISO(torneioAtual.rodadaIniciadaEm),
       partidas: partidas.map((p) => ({
         id: p.id,
         rodada: p.rodada,

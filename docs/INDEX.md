@@ -10,6 +10,7 @@
 
 - Estrutura da entidade
 - Endpoints de cadastro e autenticação
+- `GET /usuario/listar` — busca de usuários (admin)
 - Regras de negócio
 - Casos de uso e repositórios
 
@@ -26,7 +27,9 @@
 - Estrutura das entidades (Torneio, Inscrição, Partida)
 - Fluxo completo do torneio
 - Sistema Swiss com critérios de desempate WotC
-- Endpoints: criar, listar, buscar, listar partidas, inscrever, check-in, escolher deck, drop, iniciar, resultado, próxima rodada, standings, meu histórico
+- Endpoints: criar, listar, buscar, listar partidas, inscrever, check-in, escolher deck, drop, iniciar, resultado, próxima rodada, standings, meu histórico, **definir anfitrião**
+- Campo `anfitriaoId` / permissões do anfitrião no torneio
+- Datas serializadas em horário de Brasília (UTC-3)
 - Campo `premio` e `maxJogadores` no torneio
 - Requisito de `nickMTGO` para inscrição
 - Contagem de inscritos e check-in (`totalInscritos`, `totalCheckin`)

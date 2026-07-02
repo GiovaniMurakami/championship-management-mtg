@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { Usuario } from "../../../dominio/entidade/usuario";
-import { UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
+import { FiltrosListarUsuarios, UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
+import { escaparRegex } from "../../../helpers/regex";
 
 interface UsuarioDocument extends Document {
   id: string;
@@ -114,6 +115,42 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
           criadoEm: doc.get("criadoEm"),
         })
     );
+  }
+
+  public async listar(filtros: FiltrosListarUsuarios = {}): Promise<Usuario[]> {
+    await this.conectar();
+    const filtroQuery: Record<string, unknown> = {};
+    if (filtros.nome) {
+      filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+    }
+    let query = UsuarioModel.find(filtroQuery).sort({ nome: 1, id: 1 });
+    if (filtros.offset !== undefined) query = query.skip(filtros.offset);
+    if (filtros.limite !== undefined) query = query.limit(filtros.limite);
+    const docs = await query;
+    return docs.map(
+      (doc) =>
+        new Usuario({
+          id: doc.get("id"),
+          nome: doc.get("nome"),
+          email: doc.get("email"),
+          senha: doc.get("senha"),
+          role: doc.get("role") || "user",
+          telefone: doc.get("telefone"),
+          nickMTGO: doc.get("nickMTGO"),
+          nickArena: doc.get("nickArena"),
+          resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
+          criadoEm: doc.get("criadoEm"),
+        })
+    );
+  }
+
+  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome"> = {}): Promise<number> {
+    await this.conectar();
+    const filtroQuery: Record<string, unknown> = {};
+    if (filtros.nome) {
+      filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+    }
+    return UsuarioModel.countDocuments(filtroQuery);
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {

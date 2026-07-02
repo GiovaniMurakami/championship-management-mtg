@@ -1,32 +1,33 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { EscolherDeckTorneio } from "../../../../../casosDeUso/torneio/escolherDeckTorneio";
+import { DefinirAnfitriaoTorneio } from "../../../../../casosDeUso/torneio/definirAnfitriaoTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { inscricaoRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { escolherDeckTorneioSchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
+import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { definirAnfitriaoTorneioSchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
-export class EscolherDeckTorneioRota implements Rotas {
+export class DefinirAnfitriaoTorneioRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly escolherDeckTorneioServico: EscolherDeckTorneio
+    private readonly definirAnfitriaoTorneioServico: DefinirAnfitriaoTorneio
   ) { }
 
-  public static criar(escolherDeckTorneioServico: EscolherDeckTorneio) {
-    return new EscolherDeckTorneioRota(
-      "/torneio/:torneioId/deck",
-      HttpMethod.POST,
-      escolherDeckTorneioServico
+  public static criar(definirAnfitriaoTorneioServico: DefinirAnfitriaoTorneio) {
+    return new DefinirAnfitriaoTorneioRota(
+      "/torneio/:torneioId/anfitriao",
+      HttpMethod.PUT,
+      definirAnfitriaoTorneioServico
     );
   }
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(torneioIdParamSchema), inscricaoRateLimiter, autenticarJwt];
+    return [validarParamsMiddleware(torneioIdParamSchema), mutationRateLimiter, autenticarJwt, autorizarAdmin];
   }
 
   public getHandler() {
@@ -36,23 +37,13 @@ export class EscolherDeckTorneioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const isAdmin = request.usuario!.role === "admin";
         const torneioId = request.params.torneioId as string;
-        const dados = validarBody(escolherDeckTorneioSchema, request.body, response);
+        const dados = validarBody(definirAnfitriaoTorneioSchema, request.body, response);
         if (!dados) return;
 
-        const { deckId, jogadorId } = dados;
-        const requisitanteId = request.usuario!.id;
-        const usuarioId = jogadorId && jogadorId !== requisitanteId ? jogadorId : requisitanteId;
-        const usuarioNome = request.usuario!.nome;
-
-        const resultado = await this.escolherDeckTorneioServico.executar({
+        const resultado = await this.definirAnfitriaoTorneioServico.executar({
           torneioId,
-          requisitanteId,
-          usuarioId,
-          usuarioNome,
-          isAdmin,
-          deckId,
+          anfitriaoId: dados.anfitriaoId,
         });
 
         response.status(200).json(resultado);

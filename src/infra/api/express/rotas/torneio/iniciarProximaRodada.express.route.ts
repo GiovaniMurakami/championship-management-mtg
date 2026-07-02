@@ -50,6 +50,7 @@ export class IniciarProximaRodadaRota implements Rotas {
             torneioId,
             rodadaAtual: resultado.rodadaAtual,
             emCorte: resultado.emCorte,
+            rodadaIniciadaEm: resultado.rodadaIniciadaEm,
             partidas: resultado.partidas,
           });
 

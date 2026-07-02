@@ -6,6 +6,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 type PartidaAtualizadaInput = {
   id: string;
@@ -93,9 +94,9 @@ export class AtualizarPareamentosRodada
       });
     }
 
-    if (torneio.donoId !== input.requisitanteId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio ou um administrador pode alterar pareamentos.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode alterar pareamentos.",
         status: StatusErro.erroProibido,
       });
     }

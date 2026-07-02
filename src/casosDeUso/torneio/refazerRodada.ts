@@ -3,6 +3,7 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type RefazerRodadaInputDto = {
   torneioId: string;
@@ -57,9 +58,9 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
       });
     }
 
-    if (torneio.donoId !== input.donoId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.donoId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio pode refazer rodadas.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode refazer rodadas.",
         status: StatusErro.erroProibido,
       });
     }

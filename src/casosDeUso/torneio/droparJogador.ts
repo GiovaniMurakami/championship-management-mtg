@@ -5,6 +5,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type DroparJogadorInputDto = {
@@ -58,12 +59,12 @@ export class DroparJogador
       });
     }
 
-    const ehDono = torneio.donoId === input.requisitanteId;
     const ehProprioJogador = input.requisitanteId === input.jogadorId;
+    const podeGerenciar = podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin);
 
-    if (!ehDono && !ehProprioJogador && !input.isAdmin) {
+    if (!podeGerenciar && !ehProprioJogador) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o próprio jogador ou o dono do torneio podem executar esta ação.",
+        mensagem: "Apenas o próprio jogador, dono, anfitrião ou administrador do torneio podem executar esta ação.",
         status: StatusErro.erroProibido,
       });
     }

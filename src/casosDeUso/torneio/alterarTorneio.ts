@@ -3,6 +3,8 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 export type AlterarTorneioInputDto = {
   id: string;
@@ -27,9 +29,10 @@ export type AlterarTorneioInputDto = {
 export type AlterarTorneioOutputDto = {
   id: string;
   nome: string;
-  horario: Date;
+  horario: string;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
   status: string;
   descricao?: string;
   regras?: string;
@@ -42,7 +45,7 @@ export type AlterarTorneioOutputDto = {
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
-  criadoEm: Date;
+  criadoEm: string;
 };
 
 export class AlterarTorneio
@@ -63,7 +66,7 @@ export class AlterarTorneio
       });
     }
 
-    if (torneio.donoId !== input.requisitanteId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para alterar este torneio.",
         status: StatusErro.erroProibido,
@@ -97,9 +100,10 @@ export class AlterarTorneio
     return {
       id: torneio.id,
       nome: torneio.nome,
-      horario: torneio.horario,
+      horario: toBrasiliaISO(torneio.horario)!,
       formato: torneio.formato,
       donoId: torneio.donoId,
+      anfitriaoId: torneio.anfitriaoId ?? null,
       status: torneio.status,
       descricao: torneio.descricao,
       regras: torneio.regras,
@@ -112,7 +116,7 @@ export class AlterarTorneio
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
-      criadoEm: torneio.criadoEm,
+      criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };
   }
 }

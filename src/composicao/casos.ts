@@ -5,6 +5,7 @@ import { RefreshToken } from "../casosDeUso/usuario/refreshToken";
 import { LogoutUsuario } from "../casosDeUso/usuario/logoutUsuario";
 import { SolicitarResetSenha } from "../casosDeUso/usuario/solicitarResetSenha";
 import { ConfirmarResetSenha } from "../casosDeUso/usuario/confirmarResetSenha";
+import { ListarUsuarios } from "../casosDeUso/usuario/listarUsuarios";
 import { CadastrarDeck } from "../casosDeUso/deck/cadastrarDeck";
 import { AtualizarDeck } from "../casosDeUso/deck/atualizarDeck";
 import { ExcluirDeck } from "../casosDeUso/deck/excluirDeck";
@@ -35,6 +36,7 @@ import { ExcluirTorneio } from "../casosDeUso/torneio/excluirTorneio";
 import { GerarLinkIngresso } from "../casosDeUso/torneio/gerarLinkIngresso";
 import { IngressarViaTorneio } from "../casosDeUso/torneio/ingressarViaTorneio";
 import { AjustarResultado } from "../casosDeUso/torneio/ajustarResultado";
+import { DefinirAnfitriaoTorneio } from "../casosDeUso/torneio/definirAnfitriaoTorneio";
 import { CriarLiga } from "../casosDeUso/liga/criarLiga";
 import { AlterarLiga } from "../casosDeUso/liga/alterarLiga";
 import { ExcluirLiga } from "../casosDeUso/liga/excluirLiga";
@@ -69,6 +71,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const logoutUsuario = LogoutUsuario.criar(repos.tokenBlacklist, repos.refreshToken);
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
     const confirmarResetSenha = ConfirmarResetSenha.criar(repos.usuario, repos.resetSenha);
+    const listarUsuarios = ListarUsuarios.criar(repos.usuario);
 
     // --- Deck ---
     const cadastrarDeck = CadastrarDeck.criar(repos.deck, servicos.chatGpt);
@@ -105,6 +108,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
     const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck);
     const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
+    const definirAnfitriaoTorneio = DefinirAnfitriaoTorneio.criar(repos.torneio, repos.usuario);
 
     // --- Liga ---
     const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);
@@ -136,14 +140,14 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
-        solicitarResetSenha, confirmarResetSenha,
+        solicitarResetSenha, confirmarResetSenha, listarUsuarios,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, refazerRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
-        gerarLinkIngresso, ingressarViaTorneio, ajustarResultado,
+        gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,

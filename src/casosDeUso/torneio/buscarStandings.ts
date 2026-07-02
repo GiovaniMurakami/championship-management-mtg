@@ -7,6 +7,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
   ordenarPorDesempate,
@@ -96,12 +97,7 @@ export class BuscarStandings
       });
     }
 
-    const toBrasiliaISO = (date?: Date): string | undefined => {
-      if (!date) return undefined;
-      const offset = -3 * 60;
-      const local = new Date(date.getTime() + offset * 60 * 1000);
-      return local.toISOString().replace("Z", "-03:00");
-    };
+    const toBrasiliaISOLocal = (date?: Date) => toBrasiliaISO(date);
 
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
@@ -157,7 +153,7 @@ export class BuscarStandings
         totalRodadas: torneio.totalRodadas,
         status: torneio.status,
         totalInscritos: inscricoes.length,
-        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+        rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
         standings,
       };
     }
@@ -207,7 +203,7 @@ export class BuscarStandings
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
       totalInscritos: inscricoes.length,
-      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+      rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
         const t = timeByMembro.get(s.usuarioId);

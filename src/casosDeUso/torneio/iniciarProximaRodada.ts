@@ -6,6 +6,8 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
   ordenarPorDesempate,
@@ -35,6 +37,7 @@ export type IniciarProximaRodadaOutputDto =
     finalizado: false;
     rodadaAtual: number;
     emCorte: boolean;
+    rodadaIniciadaEm: string;
     partidas: Array<{
       id: string;
       jogador1Id: string;
@@ -92,9 +95,9 @@ export class IniciarProximaRodada
       });
     }
 
-    if (torneio.donoId !== input.donoId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.donoId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio pode avançar as rodadas.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode avançar as rodadas.",
         status: StatusErro.erroProibido,
       });
     }
@@ -215,6 +218,7 @@ export class IniciarProximaRodada
         finalizado: false,
         rodadaAtual: proximaRodada,
         emCorte: true,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -287,6 +291,7 @@ export class IniciarProximaRodada
         finalizado: false,
         rodadaAtual: proximaRodada,
         emCorte: true,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -336,6 +341,7 @@ export class IniciarProximaRodada
       finalizado: false,
       rodadaAtual: proximaRodada,
       emCorte: false,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
       partidas: novasPartidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

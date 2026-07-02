@@ -1,0 +1,19 @@
+---
+description: Contexto do projeto MTG Championship Management API (backend)
+globs:
+alwaysApply: true
+---
+
+Antes de modificar este repositório, leia `AI_CONTEXT.md` na raiz do projeto.
+
+Resumo rápido:
+- API Node.js 22 + TypeScript + Express + MongoDB (Mongoose)
+- Clean Architecture: dominio → casosDeUso → infra (rotas Express)
+- Composição manual em `src/composicao/` (sem DI container)
+- Validação Zod em `src/helpers/validacao/schemas.ts`
+- Auth JWT RS256; permissões de torneio via `podeGerenciarTorneio` (dono, admin, anfitrião)
+- Realtime Ably via `eventosTorneio` → `NotificacaoAbly`
+- Datas de torneio em horário de Brasília (`helpers/data/brasilia.ts`)
+- Deploy AWS Lambda (Serverless); dev local: `npm run dev`
+- Frontend pareado: `championship-management-mtg-front`
+- `docs/` e README podem estar parcialmente desatualizados — priorize `AI_CONTEXT.md` e o código

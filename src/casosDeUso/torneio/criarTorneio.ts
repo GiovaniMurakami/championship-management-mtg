@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 const CORTES_VALIDOS = [2, 4, 8, 16];
 
@@ -27,7 +28,7 @@ export type CriarTorneioInputDto = {
 export type CriarTorneioOutputDto = {
   id: string;
   nome: string;
-  horario: Date;
+  horario: string;
   formato: string;
   donoId: string;
   status: string;
@@ -42,7 +43,7 @@ export type CriarTorneioOutputDto = {
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
-  criadoEm: Date;
+  criadoEm: string;
 };
 
 export class CriarTorneio
@@ -86,7 +87,7 @@ export class CriarTorneio
     return {
       id: torneio.id,
       nome: torneio.nome,
-      horario: torneio.horario,
+      horario: toBrasiliaISO(torneio.horario)!,
       formato: torneio.formato,
       donoId: torneio.donoId,
       status: torneio.status,
@@ -101,7 +102,7 @@ export class CriarTorneio
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
-      criadoEm: torneio.criadoEm,
+      criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };
   }
 }

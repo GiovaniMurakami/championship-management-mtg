@@ -12,6 +12,7 @@ interface TorneioDocument extends Document {
   horario: Date;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
@@ -38,6 +39,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   horario: { type: Date, required: true },
   formato: { type: String, required: true, maxlength: 50 },
   donoId: { type: String, required: true },
+  anfitriaoId: { type: String, default: null },
   status: { type: String, required: true, default: "inscricoes_abertas" },
   rodadaAtual: { type: Number, required: true, default: 0 },
   totalRodadas: { type: Number, required: true, default: 0 },
@@ -61,6 +63,7 @@ const torneioSchema = new Schema<TorneioDocument>({
 torneioSchema.index({ criadoEm: -1 });
 torneioSchema.index({ horario: 1 });
 torneioSchema.index({ donoId: 1 });
+torneioSchema.index({ anfitriaoId: 1 });
 torneioSchema.index({ status: 1, criadoEm: -1 });
 torneioSchema.index({ secreto: 1, criadoEm: -1, id: 1 });
 torneioSchema.index({ secreto: 1, status: 1, criadoEm: -1, id: 1 });
@@ -77,6 +80,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     horario: doc.get("horario"),
     formato: doc.get("formato"),
     donoId: doc.get("donoId"),
+    anfitriaoId: doc.get("anfitriaoId") ?? null,
     status: doc.get("status"),
     rodadaAtual: doc.get("rodadaAtual"),
     totalRodadas: doc.get("totalRodadas"),
@@ -113,6 +117,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       horario: torneio.horario,
       formato: torneio.formato,
       donoId: torneio.donoId,
+      anfitriaoId: torneio.anfitriaoId ?? null,
       status: torneio.status,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
@@ -189,6 +194,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         nome: torneio.nome,
         horario: torneio.horario,
         formato: torneio.formato,
+        anfitriaoId: torneio.anfitriaoId ?? null,
         status: torneio.status,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,

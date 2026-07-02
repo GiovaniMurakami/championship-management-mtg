@@ -5,6 +5,7 @@ import { RefreshTokenRota } from "../infra/api/express/rotas/usuario/refreshToke
 import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
 import { ConfirmarResetSenhaRota } from "../infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
+import { ListarUsuariosRota } from "../infra/api/express/rotas/usuario/listarUsuarios.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "../infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "../infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -34,6 +35,7 @@ import { ExcluirTorneioRota } from "../infra/api/express/rotas/torneio/excluirTo
 import { GerarLinkIngressoRota } from "../infra/api/express/rotas/torneio/gerarLinkIngresso.express.route";
 import { IngressarViaTorneioRota } from "../infra/api/express/rotas/torneio/ingressarViaTorneio.express.route";
 import { AjustarResultadoRota } from "../infra/api/express/rotas/torneio/ajustarResultado.express.route";
+import { DefinirAnfitriaoTorneioRota } from "../infra/api/express/rotas/torneio/definirAnfitriaoTorneio.express.route";
 import { CriarLigaRota } from "../infra/api/express/rotas/liga/criarLiga.express.route";
 import { AlterarLigaRota } from "../infra/api/express/rotas/liga/alterarLiga.express.route";
 import { ExcluirLigaRota } from "../infra/api/express/rotas/liga/excluirLiga.express.route";
@@ -70,6 +72,7 @@ export function criarRotas(casos: CasosDeUso) {
         LogoutUsuarioRota.criar(casos.logoutUsuario),
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
+        ListarUsuariosRota.criar(casos.listarUsuarios),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),
         ExcluirDeckRota.criar(casos.excluirDeck),
@@ -99,6 +102,7 @@ export function criarRotas(casos: CasosDeUso) {
         GerarLinkIngressoRota.criar(casos.gerarLinkIngresso),
         IngressarViaTorneioRota.criar(casos.ingressarViaTorneio),
         AjustarResultadoRota.criar(casos.ajustarResultado),
+        DefinirAnfitriaoTorneioRota.criar(casos.definirAnfitriaoTorneio),
         CriarLigaRota.criar(casos.criarLiga),
         ListarLigasRota.criar(casos.listarLigas),
         BuscarLigaRota.criar(casos.buscarLiga),

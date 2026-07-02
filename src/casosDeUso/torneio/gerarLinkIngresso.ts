@@ -4,6 +4,7 @@ import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type GerarLinkIngressoInputDto = {
     torneioId: string;
@@ -51,10 +52,9 @@ export class GerarLinkIngresso
             });
         }
 
-        const ehDono = torneio.donoId === input.requisitanteId;
-        if (!ehDono && !input.isAdmin) {
+        if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({
-                mensagem: "Apenas o dono do torneio ou um administrador podem gerar links de ingresso.",
+                mensagem: "Apenas o dono do torneio, anfitrião ou um administrador podem gerar links de ingresso.",
                 status: StatusErro.erroProibido,
             });
         }

@@ -6,6 +6,8 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -17,6 +19,7 @@ export type IniciarTorneioOutputDto = {
   torneioId: string;
   rodadaAtual: number;
   totalRodadas: number;
+  rodadaIniciadaEm: string;
   partidas: Array<{
     id: string;
     jogador1Id: string;
@@ -57,9 +60,9 @@ export class IniciarTorneio
       });
     }
 
-    if (torneio.donoId !== input.donoId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.donoId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio pode iniciá-lo.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode iniciá-lo.",
         status: StatusErro.erroProibido,
       });
     }
@@ -122,6 +125,7 @@ export class IniciarTorneio
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

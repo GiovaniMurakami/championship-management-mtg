@@ -34,10 +34,17 @@ describe("EscolherDeckTorneio", () => {
             criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deck) }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "deck-1" });
+        const resultado = await uc.executar({
+            torneioId: "t-1",
+            requisitanteId: "u-1",
+            usuarioId: "u-1",
+            usuarioNome: "João",
+            isAdmin: false,
+            deckId: "deck-1",
+        });
 
         expect(resultado.deckId).not.toBe("deck-1");
-        expect(resultado.usuario).toEqual({ id: "u-1", nome: "JoÃ£o" });
+        expect(resultado.usuario).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
         expect(inscricaoGw.atualizar).toHaveBeenCalledWith(expect.objectContaining({ deckId: resultado.deckId }));
     });
@@ -50,7 +57,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "x", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
+            uc.executar({ torneioId: "x", requisitanteId: "u", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -63,7 +70,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u", usuarioId: "u", usuarioNome: "u", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 400 });
     });
 
@@ -75,7 +82,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "d" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "d" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -87,7 +94,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "inexistente" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "inexistente" })
         ).rejects.toMatchObject({ status: 404 });
     });
 
@@ -100,7 +107,7 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "deck-1" })
+            uc.executar({ torneioId: "t-1", requisitanteId: "u-1", usuarioId: "u-1", usuarioNome: "João", isAdmin: false, deckId: "deck-1" })
         ).rejects.toMatchObject({ status: 403 });
     });
 
@@ -115,7 +122,14 @@ describe("EscolherDeckTorneio", () => {
             criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deckOutro) }),
         );
 
-        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "Admin", isAdmin: true, deckId: "deck-1" });
+        const resultado = await uc.executar({
+            torneioId: "t-1",
+            requisitanteId: "admin-id",
+            usuarioId: "u-1",
+            usuarioNome: "Admin",
+            isAdmin: true,
+            deckId: "deck-1",
+        });
 
         expect(resultado.deckId).not.toBe("deck-1");
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
@@ -133,7 +147,14 @@ describe("EscolherDeckTorneio", () => {
         );
 
         await expect(
-            uc.executar({ torneioId: "t-1", usuarioId: "u-1", usuarioNome: "JoÃ£o", isAdmin: false, deckId: "deck-2" })
+            uc.executar({
+                torneioId: "t-1",
+                requisitanteId: "u-1",
+                usuarioId: "u-1",
+                usuarioNome: "João",
+                isAdmin: false,
+                deckId: "deck-2",
+            })
         ).rejects.toMatchObject({ status: 400 });
     });
 });

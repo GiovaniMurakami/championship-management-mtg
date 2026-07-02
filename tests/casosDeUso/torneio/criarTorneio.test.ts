@@ -20,7 +20,7 @@ describe("CriarTorneio", () => {
         expect(resultado.donoId).toBe("user-1");
         expect(resultado.status).toBe("inscricoes_abertas");
         expect(resultado.descricao).toBe("Booster Box");
-        expect(resultado.criadoEm).toBeInstanceOf(Date);
+        expect(resultado.criadoEm).toMatch(/-03:00$/);
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
     });
 
