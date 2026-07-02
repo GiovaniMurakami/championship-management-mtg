@@ -32,7 +32,12 @@ function normalizeBaseUrl(value: string): string {
 export function buildFrontendAppLink(internalPath: string): string {
     const normalizedPath = internalPath.startsWith("/") ? internalPath : `/${internalPath}`;
 
-    if (isExecucaoLocal()) {
+    const configuredBase = process.env.FRONTEND_URL?.trim();
+    const shouldUseLocalDirectLink =
+        isExecucaoLocal() &&
+        (!configuredBase || configuredBase === FRONTEND_LOCAL_URL);
+
+    if (shouldUseLocalDirectLink) {
         return `${FRONTEND_LOCAL_URL}${normalizedPath}`;
     }
 

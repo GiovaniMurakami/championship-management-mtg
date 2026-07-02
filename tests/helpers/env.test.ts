@@ -78,11 +78,21 @@ describe("env helpers", () => {
         expect(getFrontendUrl()).toBe("https://homolog.d32mjk9mbam2cb.amplifyapp.com");
     });
 
-    it("monta link local direto no ambiente de desenvolvimento", () => {
+    it("monta link local direto no ambiente de desenvolvimento sem FRONTEND_URL", () => {
         process.env.IS_LOCAL = "true";
+        delete process.env.FRONTEND_URL;
 
         expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
             "http://localhost:5173/reset-senha?token=abc123",
+        );
+    });
+
+    it("usa FRONTEND_URL no link mesmo com IS_LOCAL=true", () => {
+        process.env.IS_LOCAL = "true";
+        process.env.FRONTEND_URL = "https://tiagofuguete.com.br/app-torneios";
+
+        expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
+            "https://tiagofuguete.com.br/app-torneios?appPath=%2Freset-senha%3Ftoken%3Dabc123",
         );
     });
 
