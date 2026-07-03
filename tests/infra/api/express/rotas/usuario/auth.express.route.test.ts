@@ -14,6 +14,12 @@ function makeReqRes(body: Record<string, unknown> = {}, headers: Record<string, 
 describe("CadastrarUsuarioRota", () => {
     const servico = { executar: jest.fn() } as any;
     const rota = CadastrarUsuarioRota.criar(servico);
+    const payloadValido = {
+        nome: "Joao",
+        email: "j@j.com",
+        senha: "senha1234",
+        aceiteTermos: true,
+    };
 
     beforeEach(() => jest.clearAllMocks());
 
@@ -27,7 +33,7 @@ describe("CadastrarUsuarioRota", () => {
     it("retorna 201 com dados do usuario criado", async () => {
         const saida = { id: "u-1", nome: "Joao", email: "j@j.com" };
         servico.executar.mockResolvedValue(saida);
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
+        const { req, res, next } = makeReqRes(payloadValido);
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith(saida);
@@ -37,7 +43,7 @@ describe("CadastrarUsuarioRota", () => {
         servico.executar.mockRejectedValue(
             ErroPersonalizado.criar({ mensagem: "E-mail já cadastrado.", status: StatusErro.erroParametro })
         );
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
+        const { req, res, next } = makeReqRes(payloadValido);
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(400);
     });
@@ -45,7 +51,7 @@ describe("CadastrarUsuarioRota", () => {
     it("chama next() em erros desconhecidos", async () => {
         const err = new Error("db error");
         servico.executar.mockRejectedValue(err);
-        const { req, res, next } = makeReqRes({ nome: "Joao", email: "j@j.com", senha: "senha1234" });
+        const { req, res, next } = makeReqRes(payloadValido);
         await rota.getHandler()(req, res, next);
         expect(next).toHaveBeenCalledWith(err);
     });

@@ -232,7 +232,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         // 1. Registrar organizador
         const orgRes = await req
             .post("/usuario/cadastrar")
-            .send({ nome: "Org E2E", email: `${PREFIX}org@test.com`, senha: SENHA })
+            .send({ nome: "Org E2E", email: `${PREFIX}org@test.com`, senha: SENHA, aceiteTermos: true })
             .expect(201);
         adminId = orgRes.body.id;
 
@@ -258,6 +258,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                     nome: `Player E2E ${i}`,
                     email: `${PREFIX}player${i}@test.com`,
                     senha: SENHA,
+                    aceiteTermos: true,
                 })
                 .expect(201);
             return res.body.id as string;
@@ -556,6 +557,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                     nome: `Late Player E2E ${i}`,
                     email: `${PREFIX}late${i}@test.com`,
                     senha: SENHA,
+                    aceiteTermos: true,
                 })
                 .expect(201);
 

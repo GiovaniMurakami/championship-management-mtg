@@ -77,7 +77,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const cadastrarDeck = CadastrarDeck.criar(repos.deck, servicos.chatGpt);
     const atualizarDeck = AtualizarDeck.criar(repos.deck);
     const excluirDeck = ExcluirDeck.criar(repos.deck);
-    const buscarDeck = BuscarDeck.criar(repos.deck, repos.usuario);
+    const buscarDeck = BuscarDeck.criar(repos.deck, repos.usuario, repos.torneio);
     const listarDecks = ListarDecks.criar(repos.deck, repos.usuario);
 
     // --- Imagem ---

@@ -1,5 +1,6 @@
-import { Carta } from "../../dominio/entidade/deck";
+import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { CasoDeUso } from "../casoDeUso";
@@ -26,11 +27,29 @@ export class BuscarDeck
   implements CasoDeUso<BuscarDeckInputDto, BuscarDeckOutputDto> {
   private constructor(
     private readonly deckGateway: DeckGateway,
-    private readonly usuarioGateway: UsuarioGateway
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly torneioGateway: TorneioGateway,
   ) {}
 
-  public static criar(deckGateway: DeckGateway, usuarioGateway: UsuarioGateway) {
-    return new BuscarDeck(deckGateway, usuarioGateway);
+  public static criar(
+    deckGateway: DeckGateway,
+    usuarioGateway: UsuarioGateway,
+    torneioGateway: TorneioGateway,
+  ) {
+    return new BuscarDeck(deckGateway, usuarioGateway, torneioGateway);
+  }
+
+  private async podeVisualizarDeckOculto(deck: Deck, usuarioId?: string): Promise<boolean> {
+    if (deck.usuarioId === usuarioId) {
+      return true;
+    }
+
+    if (!deck.torneioId) {
+      return false;
+    }
+
+    const torneio = await this.torneioGateway.buscarPorId(deck.torneioId);
+    return torneio?.status === "finalizado";
   }
 
   public async executar(input: BuscarDeckInputDto): Promise<BuscarDeckOutputDto> {
@@ -43,7 +62,7 @@ export class BuscarDeck
       });
     }
 
-    if (deck.oculto && deck.usuarioId !== input.usuarioId) {
+    if (deck.oculto && !(await this.podeVisualizarDeckOculto(deck, input.usuarioId))) {
       throw ErroPersonalizado.criar({
         mensagem: "Deck não encontrado",
         status: 404,

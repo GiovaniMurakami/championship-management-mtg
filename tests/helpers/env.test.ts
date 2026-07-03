@@ -24,6 +24,7 @@ describe("env helpers", () => {
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
             "https://tiagofuguete.com.br/app-torneios",
             "https://tiagofuguete.com.br",
+            "https://www.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -55,6 +56,7 @@ describe("env helpers", () => {
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
             "https://tiagofuguete.com.br/app-torneios",
             "https://tiagofuguete.com.br",
+            "https://www.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -67,6 +69,7 @@ describe("env helpers", () => {
             "https://homolog.d32mjk9mbam2cb.amplifyapp.com",
             "https://tiagofuguete.com.br/app-torneios",
             "https://tiagofuguete.com.br",
+            "https://www.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });

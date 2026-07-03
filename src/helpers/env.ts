@@ -61,7 +61,13 @@ export function getCorsOrigin(): string {
 export function getCorsOrigins(): string[] {
     const configuredOrigins = parseOrigins(process.env.CORS_ORIGIN);
     const configuredFrontendUrls = parseOrigins(process.env.FRONTEND_URL);
-    const fallbackOrigins = [FRONTEND_HOMOLOG_URL, WORDPRESS_APP_URL, "https://tiagofuguete.com.br", FRONTEND_LOCAL_URL];
+    const fallbackOrigins = [
+        FRONTEND_HOMOLOG_URL,
+        WORDPRESS_APP_URL,
+        "https://tiagofuguete.com.br",
+        "https://www.tiagofuguete.com.br",
+        FRONTEND_LOCAL_URL,
+    ];
     const origins = [...configuredOrigins, ...configuredFrontendUrls, ...fallbackOrigins];
 
     return [...new Set(origins)];

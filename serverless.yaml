@@ -39,6 +39,9 @@ plugins:
   # - serverless-offline
 
 custom:
+  apiGatewayCorsOrigin:
+    dev: https://homolog.d32mjk9mbam2cb.amplifyapp.com
+    prod: https://tiagofuguete.com.br/app-torneios
   frontendUrl:
     dev: https://homolog.d32mjk9mbam2cb.amplifyapp.com
     prod: https://tiagofuguete.com.br/app-torneios
@@ -50,8 +53,11 @@ custom:
       dev: /championship-mtg/dev/jwt-public-key
       prod: /championship-mtg/prod/jwt-public-key
   corsOrigins: &corsOrigins
-    - ${env:FRONTEND_URL, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    - ${self:custom.apiGatewayCorsOrigin.${sls:stage}}
+    - https://homolog.d32mjk9mbam2cb.amplifyapp.com
     - https://tiagofuguete.com.br
+    - https://www.tiagofuguete.com.br
+    - https://tiagofuguete.com.br/app-torneios
     - http://localhost:5173
   # serverless-offline:
   #   httpPort: 4000

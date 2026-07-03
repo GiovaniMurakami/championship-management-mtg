@@ -30,13 +30,35 @@ const UUID = "550e8400-e29b-41d4-a716-446655440000";
 describe("schemas de validacao", () => {
     describe("cadastrarUsuarioSchema", () => {
         it("aceita dados validos", () => {
-            expect(() => cadastrarUsuarioSchema.parse({ nome: "Alice", email: "a@a.com", senha: "senha123" })).not.toThrow();
+            expect(() => cadastrarUsuarioSchema.parse({
+                nome: "Alice",
+                email: "a@a.com",
+                senha: "senha123",
+                aceiteTermos: true,
+            })).not.toThrow();
+        });
+        it("rejeita cadastro sem aceite dos termos", () => {
+            expect(cadastrarUsuarioSchema.safeParse({
+                nome: "Alice",
+                email: "a@a.com",
+                senha: "senha123",
+            }).success).toBe(false);
         });
         it("rejeita e-mail invalido", () => {
-            expect(cadastrarUsuarioSchema.safeParse({ nome: "A", email: "nao-email", senha: "12345678" }).success).toBe(false);
+            expect(cadastrarUsuarioSchema.safeParse({
+                nome: "A",
+                email: "nao-email",
+                senha: "12345678",
+                aceiteTermos: true,
+            }).success).toBe(false);
         });
         it("rejeita senha menor que 8 caracteres", () => {
-            expect(cadastrarUsuarioSchema.safeParse({ nome: "A", email: "a@a.com", senha: "1234" }).success).toBe(false);
+            expect(cadastrarUsuarioSchema.safeParse({
+                nome: "A",
+                email: "a@a.com",
+                senha: "1234",
+                aceiteTermos: true,
+            }).success).toBe(false);
         });
     });
 

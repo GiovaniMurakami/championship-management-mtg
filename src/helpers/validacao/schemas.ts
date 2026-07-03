@@ -32,6 +32,9 @@ export const cadastrarUsuarioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   email: z.email("E-mail inválido."),
   senha: z.string().min(8, "A senha deve ter no mínimo 8 caracteres."),
+  aceiteTermos: z.literal(true, {
+    message: "É necessário aceitar os Termos de Uso para criar uma conta.",
+  }),
 });
 
 export const loginUsuarioSchema = z.object({
