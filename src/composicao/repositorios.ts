@@ -11,6 +11,9 @@ import { ResetSenhaRepositorio } from "../infra/mongodb/repositorios/resetSenhaR
 import { LinkIngressoRepositorio } from "../infra/mongodb/repositorios/linkIngressoRepositorio";
 import { TimeRepositorio } from "../infra/mongodb/repositorios/timeRepositorio";
 import { SiteConfigRepositorio } from "../infra/mongodb/repositorios/siteConfigRepositorio";
+import { PostBlogRepositorio } from "../infra/mongodb/repositorios/postBlogRepositorio";
+import { ParceiroRepositorio } from "../infra/mongodb/repositorios/parceiroRepositorio";
+import { ApoiadorRepositorio } from "../infra/mongodb/repositorios/apoiadorRepositorio";
 
 export function criarRepositorios() {
     return {
@@ -27,6 +30,9 @@ export function criarRepositorios() {
         linkIngresso: LinkIngressoRepositorio.criar(),
         time: TimeRepositorio.criar(),
         siteConfig: SiteConfigRepositorio.criar(),
+        postBlog: PostBlogRepositorio.criar(),
+        parceiro: ParceiroRepositorio.criar(),
+        apoiador: ApoiadorRepositorio.criar(),
     };
 }
 

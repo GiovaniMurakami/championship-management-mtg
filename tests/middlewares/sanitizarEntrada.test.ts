@@ -61,6 +61,14 @@ describe("sanitizarEntrada middleware", () => {
             expect(req.body.nome).toBe("João da Silva");
         });
 
+        it("preserva markup do blog no campo conteudo", () => {
+            const markup = "<titulo>teste</titulo><paragrafo>texto</paragrafo><imagem url=\"https://x.jpg\" alt=\"Carta\" carta=\"true\" />";
+            const req = makeReq({ conteudo: markup, resumo: "<b>resumo</b>" });
+            sanitizarEntrada(req as Request, res as Response, next);
+            expect(req.body.conteudo).toBe(markup);
+            expect(req.body.resumo).toBe("resumo");
+        });
+
         it("preserva valores numéricos", () => {
             const req = makeReq({ quantidade: 4 });
             sanitizarEntrada(req as Request, res as Response, next);

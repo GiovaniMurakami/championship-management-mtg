@@ -186,6 +186,9 @@ export const confirmarResetSenhaSchema = z.object({
 // --- Params ---
 
 export const idParamSchema = z.object({ id: uuidCampo("id") });
+export const slugParamSchema = z.object({
+  slug: z.string().min(1, "slug é obrigatório.").max(140),
+});
 export const torneioIdParamSchema = z.object({ torneioId: uuidCampo("torneioId") });
 export const partidaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
 export const anuncioIdParamSchema = z.object({ anuncioId: uuidCampo("anuncioId") });
@@ -290,4 +293,54 @@ export const entrarPorConviteTimeSchema = z.object({
 
 export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
+});
+
+export const listarPostsBlogQuerySchema = z.object({
+  ...paginacaoQueryCampos,
+});
+
+export const criarPostBlogSchema = z.object({
+  titulo: z.string().min(3, "Informe um título com pelo menos 3 caracteres.").max(220),
+  resumo: z.string().min(10, "Informe um resumo com pelo menos 10 caracteres.").max(600),
+  conteudo: z.string().min(20, "Informe um conteúdo com pelo menos 20 caracteres.").max(120000),
+  imagemCapaUrl: z.string().max(800).optional(),
+  slug: z.string().max(140).optional(),
+  publicado: z.boolean().optional(),
+});
+
+export const alterarPostBlogSchema = z.object({
+  titulo: z.string().min(3).max(220).optional(),
+  resumo: z.string().min(10).max(600).optional(),
+  conteudo: z.string().min(20).max(120000).optional(),
+  imagemCapaUrl: z.string().max(800).optional(),
+  slug: z.string().max(140).optional(),
+  publicado: z.boolean().optional(),
+});
+
+export const criarParceiroSchema = z.object({
+  nome: z.string().min(2, "Informe o nome do parceiro.").max(160),
+  imagemUrl: z.string().url("Informe uma URL de imagem válida.").max(800),
+  linkUrl: z.string().max(800).optional(),
+  ordem: z.number().int().min(0).max(9999).optional(),
+  ativo: z.boolean().optional(),
+});
+
+export const alterarParceiroSchema = z.object({
+  nome: z.string().min(2).max(160).optional(),
+  imagemUrl: z.string().url().max(800).optional(),
+  linkUrl: z.string().max(800).optional(),
+  ordem: z.number().int().min(0).max(9999).optional(),
+  ativo: z.boolean().optional(),
+});
+
+export const criarApoiadorSchema = z.object({
+  nome: z.string().min(2, "Informe o nome do apoiador.").max(160),
+  ordem: z.number().int().min(0).max(99999).optional(),
+  ativo: z.boolean().optional(),
+});
+
+export const alterarApoiadorSchema = z.object({
+  nome: z.string().min(2).max(160).optional(),
+  ordem: z.number().int().min(0).max(99999).optional(),
+  ativo: z.boolean().optional(),
 });

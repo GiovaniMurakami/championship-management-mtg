@@ -59,6 +59,22 @@ import { BuscarAnuncios } from "../casosDeUso/site/buscarAnuncios";
 import { BuscarEstatisticasSite } from "../casosDeUso/site/buscarEstatisticasSite";
 import { RegistrarCliqueAnuncio } from "../casosDeUso/site/registrarCliqueAnuncio";
 import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
+import { ListarPostsBlog, ListarPostsBlogAdmin } from "../casosDeUso/blog/listarPostsBlog";
+import { BuscarPostBlog, BuscarPostBlogAdmin } from "../casosDeUso/blog/buscarPostBlog";
+import { AlterarPostBlog, CriarPostBlog, ExcluirPostBlog } from "../casosDeUso/blog/criarPostBlog";
+import { ImportarPostsWordpress } from "../casosDeUso/blog/importarPostsWordpress";
+import {
+    AlterarParceiro,
+    CriarParceiro,
+    ExcluirParceiro,
+    ListarParceiros,
+} from "../casosDeUso/site/parceiros";
+import {
+    AlterarApoiador,
+    CriarApoiador,
+    ExcluirApoiador,
+    ListarApoiadores,
+} from "../casosDeUso/site/apoiadores";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -138,6 +154,26 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const registrarCliqueAnuncio = RegistrarCliqueAnuncio.criar(repos.siteConfig);
     const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig);
 
+    // --- Blog ---
+    const listarPostsBlog = ListarPostsBlog.criar(repos.postBlog);
+    const listarPostsBlogAdmin = ListarPostsBlogAdmin.criar(repos.postBlog);
+    const buscarPostBlog = BuscarPostBlog.criar(repos.postBlog);
+    const buscarPostBlogAdmin = BuscarPostBlogAdmin.criar(repos.postBlog);
+    const criarPostBlog = CriarPostBlog.criar(repos.postBlog);
+    const alterarPostBlog = AlterarPostBlog.criar(repos.postBlog);
+    const excluirPostBlog = ExcluirPostBlog.criar(repos.postBlog);
+    const importarPostsWordpress = ImportarPostsWordpress.criar(repos.postBlog);
+
+    const listarParceiros = ListarParceiros.criar(repos.parceiro);
+    const criarParceiro = CriarParceiro.criar(repos.parceiro);
+    const alterarParceiro = AlterarParceiro.criar(repos.parceiro);
+    const excluirParceiro = ExcluirParceiro.criar(repos.parceiro);
+
+    const listarApoiadores = ListarApoiadores.criar(repos.apoiador);
+    const criarApoiador = CriarApoiador.criar(repos.apoiador);
+    const alterarApoiador = AlterarApoiador.criar(repos.apoiador);
+    const excluirApoiador = ExcluirApoiador.criar(repos.apoiador);
+
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
         solicitarResetSenha, confirmarResetSenha, listarUsuarios,
@@ -152,6 +188,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
+        listarPostsBlog, listarPostsBlogAdmin, buscarPostBlog, buscarPostBlogAdmin,
+        criarPostBlog, alterarPostBlog, excluirPostBlog, importarPostsWordpress,
+        listarParceiros, criarParceiro, alterarParceiro, excluirParceiro,
+        listarApoiadores, criarApoiador, alterarApoiador, excluirApoiador,
     };
 }
 

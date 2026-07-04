@@ -1,17 +1,24 @@
 import { Request, Response, NextFunction } from "express";
 
-function sanitizar(valor: unknown): unknown {
+/** Campos que podem conter markup do blog (tags customizadas ou HTML legado). */
+const CAMPOS_MARKUP_PERMITIDO = new Set(["conteudo"]);
+
+function sanitizarString(valor: string, permitirMarkup = false): string {
+  const semNull = valor.replace(/\0/g, "");
+  if (permitirMarkup) return semNull;
+  return semNull.replace(/<[^>]*>/g, "");
+}
+
+function sanitizar(valor: unknown, chaveCampo?: string): unknown {
   if (typeof valor === "string") {
-    return valor
-      .replace(/<[^>]*>/g, "")
-      .replace(/\0/g, "");
+    return sanitizarString(valor, chaveCampo !== undefined && CAMPOS_MARKUP_PERMITIDO.has(chaveCampo));
   }
   if (Array.isArray(valor)) {
-    return valor.map(sanitizar);
+    return valor.map((item) => sanitizar(item));
   }
   if (valor !== null && typeof valor === "object") {
     return Object.fromEntries(
-      Object.entries(valor as Record<string, unknown>).map(([k, v]) => [k, sanitizar(v)])
+      Object.entries(valor as Record<string, unknown>).map(([k, v]) => [k, sanitizar(v, k)])
     );
   }
   return valor;

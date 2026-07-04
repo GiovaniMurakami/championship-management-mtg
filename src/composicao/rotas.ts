@@ -60,6 +60,28 @@ import { BuscarAnunciosAdminRota } from "../infra/api/express/rotas/site/buscarA
 import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/buscarEstatisticasSite.express.route";
 import { RegistrarCliqueAnuncioRota } from "../infra/api/express/rotas/site/registrarCliqueAnuncio.express.route";
 import { SalvarAnunciosRota } from "../infra/api/express/rotas/site/salvarAnuncios.express.route";
+import { ListarPostsBlogRota } from "../infra/api/express/rotas/blog/listarPostsBlog.express.route";
+import { BuscarPostBlogRota } from "../infra/api/express/rotas/blog/buscarPostBlog.express.route";
+import { ListarPostsBlogAdminRota } from "../infra/api/express/rotas/blog/listarPostsBlogAdmin.express.route";
+import { BuscarPostBlogAdminRota } from "../infra/api/express/rotas/blog/buscarPostBlogAdmin.express.route";
+import { CriarPostBlogRota } from "../infra/api/express/rotas/blog/criarPostBlog.express.route";
+import { AlterarPostBlogRota } from "../infra/api/express/rotas/blog/alterarPostBlog.express.route";
+import { ExcluirPostBlogRota } from "../infra/api/express/rotas/blog/excluirPostBlog.express.route";
+import { ImportarPostsWordpressRota } from "../infra/api/express/rotas/blog/importarPostsWordpress.express.route";
+import {
+    AlterarParceiroRota,
+    CriarParceiroRota,
+    ExcluirParceiroRota,
+    ListarParceirosAdminRota,
+    ListarParceirosRota,
+} from "../infra/api/express/rotas/site/parceiros.express.routes";
+import {
+    AlterarApoiadorRota,
+    CriarApoiadorRota,
+    ExcluirApoiadorRota,
+    ListarApoiadoresAdminRota,
+    ListarApoiadoresRota,
+} from "../infra/api/express/rotas/site/apoiadores.express.routes";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { type CasosDeUso } from "./casos";
 
@@ -126,6 +148,24 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarEstatisticasSiteRota.criar(casos.buscarEstatisticasSite),
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
+        ListarPostsBlogRota.criar(casos.listarPostsBlog),
+        BuscarPostBlogRota.criar(casos.buscarPostBlog),
+        ListarPostsBlogAdminRota.criar(casos.listarPostsBlogAdmin),
+        BuscarPostBlogAdminRota.criar(casos.buscarPostBlogAdmin),
+        CriarPostBlogRota.criar(casos.criarPostBlog),
+        AlterarPostBlogRota.criar(casos.alterarPostBlog),
+        ExcluirPostBlogRota.criar(casos.excluirPostBlog),
+        ImportarPostsWordpressRota.criar(casos.importarPostsWordpress),
+        ListarParceirosRota.criar(casos.listarParceiros),
+        ListarParceirosAdminRota.criar(casos.listarParceiros),
+        CriarParceiroRota.criar(casos.criarParceiro),
+        AlterarParceiroRota.criar(casos.alterarParceiro),
+        ExcluirParceiroRota.criar(casos.excluirParceiro),
+        ListarApoiadoresRota.criar(casos.listarApoiadores),
+        ListarApoiadoresAdminRota.criar(casos.listarApoiadores),
+        CriarApoiadorRota.criar(casos.criarApoiador),
+        AlterarApoiadorRota.criar(casos.alterarApoiador),
+        ExcluirApoiadorRota.criar(casos.excluirApoiador),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
         HealthRota.criar(),
     ];

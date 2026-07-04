@@ -8,6 +8,8 @@
     "lint": "eslint .",
     "build": "node esbuild.config.js",
     "db:create-indexes": "ts-node src/infra/mongodb/criarIndices.ts",
+    "import:blog-wordpress": "ts-node scripts/importarPostsWordpress.ts",
+    "import:parceiros-apoiadores": "ts-node scripts/importarParceirosApoiadores.ts",
     "deploy": "npm run deploy:prod",
     "deploy:dev": "npm run build && serverless deploy --stage dev --region us-east-1",
     "deploy:prod": "npm run build && serverless deploy --stage prod --region us-east-1",

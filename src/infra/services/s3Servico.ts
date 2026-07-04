@@ -1,6 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
+    EnviarImagemInput,
+    EnviarImagemOutput,
     GerarUrlUploadInput,
     GerarUrlUploadOutput,
     ImagemGateway,
@@ -42,5 +44,18 @@ export class S3Servico implements ImagemGateway {
         const urlPublica = `${getS3BaseUrl()}/${input.chave}`;
 
         return { uploadUrl, urlPublica };
+    }
+
+    public async enviarImagem(input: EnviarImagemInput): Promise<EnviarImagemOutput> {
+        await this.client.send(
+            new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: input.chave,
+                ContentType: input.contentType,
+                Body: input.body,
+            }),
+        );
+
+        return { urlPublica: `${getS3BaseUrl()}/${input.chave}` };
     }
 }

@@ -15,6 +15,17 @@ export interface GerarUrlUploadOutput {
     urlPublica: string;
 }
 
+export interface EnviarImagemInput {
+    chave: string;
+    contentType: TipoConteudoImagem;
+    body: Buffer;
+}
+
+export interface EnviarImagemOutput {
+    urlPublica: string;
+}
+
 export interface ImagemGateway {
     gerarUrlUpload(input: GerarUrlUploadInput): Promise<GerarUrlUploadOutput>;
+    enviarImagem(input: EnviarImagemInput): Promise<EnviarImagemOutput>;
 }
