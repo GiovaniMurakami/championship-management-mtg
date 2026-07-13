@@ -11,7 +11,7 @@ provider:
     JWT_SSM_PUBLIC_KEY_PARAM: ${env:JWT_SSM_PUBLIC_KEY_PARAM, self:custom.jwtSsmParams.public.${sls:stage}}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
-    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
     EMAIL_USER: ${env:EMAIL_USER, ''}
@@ -40,8 +40,8 @@ plugins:
 
 custom:
   frontendUrl:
-    dev: https://homolog.d32mjk9mbam2cb.amplifyapp.com
-    prod: https://tiagofuguete.com.br/app-torneios
+    dev: https://app.tiagofuguete.com.br
+    prod: https://app.tiagofuguete.com.br
   jwtSsmParams:
     private:
       dev: /championship-mtg/dev/jwt-private-key
@@ -50,8 +50,11 @@ custom:
       dev: /championship-mtg/dev/jwt-public-key
       prod: /championship-mtg/prod/jwt-public-key
   corsOrigins: &corsOrigins
-    - ${env:FRONTEND_URL, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    - ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
+    - https://app.tiagofuguete.com.br
+    - https://www.app.tiagofuguete.com.br
     - https://tiagofuguete.com.br
+    - https://www.tiagofuguete.com.br
     - http://localhost:5173
   # serverless-offline:
   #   httpPort: 4000
