@@ -8,6 +8,8 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { MaterializarStandings } from "./materializarStandings";
+import { StandingJogador } from "../../dominio/entidade/standings";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -20,6 +22,7 @@ export type IniciarTorneioOutputDto = {
   rodadaAtual: number;
   totalRodadas: number;
   rodadaIniciadaEm: string;
+  standings?: StandingJogador[];
   partidas: Array<{
     id: string;
     jogador1Id: string;
@@ -37,16 +40,24 @@ export class IniciarTorneio
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly materializarStandings: MaterializarStandings
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
+    usuarioGateway: UsuarioGateway,
+    materializarStandings: MaterializarStandings
   ) {
-    return new IniciarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway);
+    return new IniciarTorneio(
+      torneioGateway,
+      inscricaoGateway,
+      partidaGateway,
+      usuarioGateway,
+      materializarStandings
+    );
   }
 
   public async executar(
@@ -119,13 +130,27 @@ export class IniciarTorneio
       );
     }
 
-    await this.torneioGateway.atualizarECriarPartidas(torneio, partidas);
+    const ok = await this.torneioGateway.atualizarECriarPartidas(torneio, partidas, {
+      statusEsperado: "inscricoes_abertas",
+    });
+    if (!ok) {
+      throw ErroPersonalizado.criar({
+        mensagem: "O torneio já foi iniciado por outra requisição. Atualize a página.",
+        status: StatusErro.erroConflito,
+      });
+    }
+
+    const snapshot = await this.materializarStandings.executar({
+      torneio,
+      rodadaConsolidada: 0,
+    });
 
     return {
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+      standings: snapshot.jogadores,
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

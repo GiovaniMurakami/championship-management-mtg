@@ -193,7 +193,7 @@ export const timeIdUsuarioIdParamSchema = z.object({
 });
 export const torneioRodadaParamSchema = z.object({
   torneioId: uuidCampo("torneioId"),
-  rodada: z.coerce.number().int().min(1, "rodada deve ser inteiro >= 1."),
+  rodada: z.coerce.number().int().min(0, "rodada deve ser inteiro >= 0."),
 });
 
 // --- Query ---

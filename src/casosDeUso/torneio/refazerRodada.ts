@@ -1,5 +1,6 @@
 import { CasoDeUso } from "../casoDeUso";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
+import { StandingsGateway } from "../../dominio/gateway/standingsGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -43,17 +44,22 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly partidaGateway: PartidaGateway,
+    private readonly standingsGateway: StandingsGateway,
   ) {}
 
-  public static criar(torneioGateway: TorneioGateway, partidaGateway: PartidaGateway) {
-    return new RefazerRodada(torneioGateway, partidaGateway);
+  public static criar(
+    torneioGateway: TorneioGateway,
+    partidaGateway: PartidaGateway,
+    standingsGateway: StandingsGateway,
+  ) {
+    return new RefazerRodada(torneioGateway, partidaGateway, standingsGateway);
   }
 
   public async executar(input: RefazerRodadaInputDto): Promise<RefazerRodadaOutputDto> {
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
-        mensagem: "Torneio nÃ£o encontrado.",
+        mensagem: "Torneio não encontrado.",
         status: StatusErro.erroNaoEncontrado,
       });
     }
@@ -74,13 +80,14 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (torneio.rodadaAtual <= 1) {
       throw ErroPersonalizado.criar({
-        mensagem: "NÃ£o hÃ¡ rodada anterior para retornar.",
+        mensagem: "Não há rodada anterior para retornar.",
         status: StatusErro.erroParametro,
       });
     }
 
     const rodadaRemovida = torneio.rodadaAtual;
     const rodadaAnterior = rodadaRemovida - 1;
+    const rodadaEsperada = rodadaRemovida;
     const partidasRodadaAtual = await this.partidaGateway.listarPorTorneioERodada(
       input.torneioId,
       rodadaRemovida,
@@ -88,7 +95,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (partidasRodadaAtual.length === 0) {
       throw ErroPersonalizado.criar({
-        mensagem: `NÃ£o existem partidas na rodada ${rodadaRemovida} para remover.`,
+        mensagem: `Não existem partidas na rodada ${rodadaRemovida} para remover.`,
         status: StatusErro.erroParametro,
       });
     }
@@ -102,8 +109,17 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
       rodadaRemovida,
     );
 
+    // Remove snapshot consolidado da rodada à qual voltamos (recriado no próximo avanço)
+    await this.standingsGateway.excluirPorTorneioERodada(input.torneioId, rodadaAnterior);
+
     torneio.voltarRodada(rodadaAnterior, estadoAnterior.totalRodadas, estadoAnterior.emCorte);
-    await this.torneioGateway.atualizar(torneio);
+    const ok = await this.torneioGateway.atualizarSe(torneio, { rodadaEsperada });
+    if (!ok) {
+      throw ErroPersonalizado.criar({
+        mensagem: "A rodada já foi alterada por outra requisição. Atualize a página.",
+        status: StatusErro.erroConflito,
+      });
+    }
 
     return {
       rodadaAtual: rodadaAnterior,

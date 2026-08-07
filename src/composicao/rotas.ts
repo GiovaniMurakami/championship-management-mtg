@@ -28,6 +28,7 @@ import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTor
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarSeoTorneioRota } from "../infra/api/express/rotas/torneio/buscarSeoTorneio.express.route";
 import { BuscarStandingsRota } from "../infra/api/express/rotas/torneio/buscarStandings.express.route";
+import { BuscarStandingsHistoricoRota } from "../infra/api/express/rotas/torneio/buscarStandingsHistorico.express.route";
 import { MeuHistoricoTorneioRota } from "../infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
 import { ListarPartidasTorneioRota } from "../infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
 import { AlterarTorneioRota } from "../infra/api/express/rotas/torneio/alterarTorneio.express.route";
@@ -86,7 +87,7 @@ export function criarRotas(casos: CasosDeUso) {
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
         RefazerRodadaRota.criar(casos.refazerRodada),
-        RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
+        RegistrarResultadoRota.criar(casos.registrarResultado),
         ContestarResultadoRota.criar(casos.contestarResultado),
         ConfirmarResultadoRota.criar(casos.confirmarResultado),
         AtualizarMesaPartidaRota.criar(casos.atualizarMesaPartida),
@@ -95,6 +96,7 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarSeoTorneioRota.criar(casos.buscarSeoTorneio),
         BuscarTorneioRota.criar(casos.buscarTorneio),
         BuscarStandingsRota.criar(casos.buscarStandings),
+        BuscarStandingsHistoricoRota.criar(casos.buscarStandings),
         MeuHistoricoTorneioRota.criar(casos.meuHistoricoTorneio),
         ListarPartidasTorneioRota.criar(casos.listarPartidasTorneio),
         AlterarTorneioRota.criar(casos.alterarTorneio),

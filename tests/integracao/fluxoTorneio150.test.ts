@@ -23,6 +23,8 @@ import { DeckGateway } from "../../src/dominio/gateway/deckGateway";
 import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
+import { StandingsGateway } from "../../src/dominio/gateway/standingsGateway";
+import { Standings } from "../../src/dominio/entidade/standings";
 
 import { CadastrarUsuario } from "../../src/casosDeUso/usuario/cadastrarUsuario";
 import { CadastrarDeck } from "../../src/casosDeUso/deck/cadastrarDeck";
@@ -33,6 +35,7 @@ import { IniciarTorneio } from "../../src/casosDeUso/torneio/iniciarTorneio";
 import { RegistrarResultado } from "../../src/casosDeUso/torneio/registrarResultado";
 import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProximaRodada";
 import { BuscarStandings } from "../../src/casosDeUso/torneio/buscarStandings";
+import { MaterializarStandings } from "../../src/casosDeUso/torneio/materializarStandings";
 import { DroparJogador } from "../../src/casosDeUso/torneio/droparJogador";
 
 import { criarMockEmailGateway, criarMockChatGptGateway, criarMockTimeGateway } from "../mocks/gateways";
@@ -92,6 +95,40 @@ function criarDeckGwMemoria(): DeckGateway {
     };
 }
 
+function criarStandingsGwMemoria(): StandingsGateway {
+    const store = new Map<string, Standings>();
+    const key = (torneioId: string, rodada: number) => `${torneioId}:${rodada}`;
+    return {
+        salvarSnapshot: async (s) => {
+            store.set(key(s.torneioId, s.rodada), s);
+            return s;
+        },
+        buscarPorTorneioERodada: async (torneioId, rodada) =>
+            store.get(key(torneioId, rodada)) ?? null,
+        buscarAtual: async (torneioId) => {
+            const items = Array.from(store.values()).filter((s) => s.torneioId === torneioId);
+            if (items.length === 0) return null;
+            return items.sort((a, b) => b.rodada - a.rodada)[0];
+        },
+        excluirPorTorneioERodada: async (torneioId, rodada) => {
+            const k = key(torneioId, rodada);
+            if (!store.has(k)) return 0;
+            store.delete(k);
+            return 1;
+        },
+        excluirPorTorneio: async (torneioId) => {
+            let n = 0;
+            for (const [k, s] of [...store.entries()]) {
+                if (s.torneioId === torneioId) {
+                    store.delete(k);
+                    n++;
+                }
+            }
+            return n;
+        },
+    };
+}
+
 function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGateway {
     const store = new Map<string, Torneio>();
     return {
@@ -100,6 +137,7 @@ function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGa
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        atualizarSe: async (t) => { store.set(t.id, t); return true; },
         incrementarVisualizacoes: async (id) => {
             const torneio = store.get(id);
             if (!torneio) return null;
@@ -110,6 +148,7 @@ function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGa
         atualizarECriarPartidas: async (t, partidas) => {
             store.set(t.id, t);
             for (const p of partidas) partidaStoreRef.set(p.id, p);
+            return true;
         },
         excluir: async (id) => { store.delete(id); },
     };
@@ -286,6 +325,8 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     const torneioGw = criarTorneioGwMemoria(partidaStore);
     const inscricaoGw = criarInscricaoGwMemoria();
     const partidaGw = criarPartidaGwMemoria(partidaStore);
+    const standingsGw = criarStandingsGwMemoria();
+    const timeGw = criarMockTimeGateway();
 
     // Shared state populated by each step
     let donoId: string;
@@ -296,9 +337,15 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     let top8Ids: string[] = [];
 
     // Lazily-constructed use cases (gateways are ready at construction time)
+    const mkMat = () => MaterializarStandings.criar(
+        torneioGw, inscricaoGw, partidaGw, usuarioGw, deckGw, timeGw, standingsGw
+    );
     const mkRegistrar = () => RegistrarResultado.criar(torneioGw, partidaGw);
-    const mkProxima = () => IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
-    const mkStandings = () => BuscarStandings.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, deckGw, criarMockTimeGateway());
+    const mkProxima = () => IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, mkMat());
+    const mkStandings = () => BuscarStandings.criar(
+        torneioGw, inscricaoGw, partidaGw, usuarioGw, deckGw, timeGw,
+        standingsGw, mkMat()
+    );
 
     // ── 1. Setup ──────────────────────────────────────────────────────────────
 
@@ -416,7 +463,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
             await inscricaoGw.atualizar(i);
         }
 
-        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
+        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, mkMat());
         const resultado = await iniciar.executar({ torneioId, donoId, isAdmin: false });
 
         // Validate tournament state
@@ -567,13 +614,13 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
         const drops = inscricoes.filter((i) => i.dropped);
         expect(drops).toHaveLength(TOTAL_DROPS);
 
-        // Dropped players should appear in standings with dropped=true
+        // Snapshot puro: dropped só entra no standings no próximo materialize (próxima rodada)
         const standingsAposDrops = await mkStandings().executar({ torneioId });
-        expect(standingsAposDrops.standings).toHaveLength(TOTAL_JOGADORES); // Still 150 entries
+        expect(standingsAposDrops.standings).toHaveLength(TOTAL_JOGADORES);
         for (const dropId of jogadoresDropados) {
             const entry = standingsAposDrops.standings.find((s) => s.usuario.id === dropId);
             expect(entry).toBeDefined();
-            expect(entry!.dropped).toBe(true);
+            expect(entry!.dropped).toBe(false);
         }
     }, 30_000);
 
@@ -605,6 +652,15 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
             const ativos = inscricoes.filter((i) => !i.dropped).map((i) => i.usuarioId);
             expect(ativos).toHaveLength(TOTAL_JOGADORES - TOTAL_DROPS);
             expect(idsNaRodada5.size).toBe(TOTAL_JOGADORES - TOTAL_DROPS);
+        }
+
+        // Após materializar a rodada 4, snapshot reflete os drops
+        const standings = await mkStandings().executar({ torneioId });
+        expect(standings.rodadaStandings).toBe(4);
+        for (const dropId of jogadoresDropados) {
+            const entry = standings.standings.find((s) => s.usuario.id === dropId);
+            expect(entry).toBeDefined();
+            expect(entry!.dropped).toBe(true);
         }
     }, 30_000);
 

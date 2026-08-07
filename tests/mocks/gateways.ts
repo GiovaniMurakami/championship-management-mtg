@@ -49,7 +49,8 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         listarTotal: jest.fn().mockResolvedValue(0),
         incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
         atualizar: jest.fn(),
-        atualizarECriarPartidas: jest.fn(),
+        atualizarSe: jest.fn().mockResolvedValue(true),
+        atualizarECriarPartidas: jest.fn().mockResolvedValue(true),
         excluir: jest.fn(),
         ...overrides,
     };
@@ -188,4 +189,32 @@ export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): Time
         excluir: jest.fn(),
         ...overrides,
     };
+}
+
+export function criarMockStandingsGateway(overrides: Partial<import("../../src/dominio/gateway/standingsGateway").StandingsGateway> = {}) {
+    return {
+        salvarSnapshot: jest.fn().mockImplementation(async (s) => s),
+        buscarPorTorneioERodada: jest.fn().mockResolvedValue(null),
+        buscarAtual: jest.fn().mockResolvedValue(null),
+        excluirPorTorneioERodada: jest.fn().mockResolvedValue(0),
+        excluirPorTorneio: jest.fn().mockResolvedValue(0),
+        ...overrides,
+    };
+}
+
+/** MaterializarStandings mock: retorna snapshot vazio sem calcular. */
+export function criarMockMaterializarStandings(overrides: Partial<{ executar: jest.Mock }> = {}) {
+    return {
+        executar: jest.fn().mockResolvedValue({
+            id: "st-1",
+            torneioId: "t-1",
+            rodada: 0,
+            totalInscritos: 0,
+            jogadores: [],
+            criadoEm: new Date(),
+            atualizadoEm: new Date(),
+        }),
+        executarPorTorneioId: jest.fn(),
+        ...overrides,
+    } as any;
 }

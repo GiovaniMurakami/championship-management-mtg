@@ -1,6 +1,6 @@
-import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
-import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
+import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { StandingsGateway } from "../../dominio/gateway/standingsGateway";
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
@@ -8,72 +8,48 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import {
-  calcularEstatisticas,
-  ordenarPorDesempate,
-  mwp,
-  omwp,
-  gwp,
-  ogwp,
-} from "./swiss";
-import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
-import { Usuario } from "../../dominio/entidade/usuario";
-
-function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
-  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
-  if (modo === "nickArena") return u.nickArena ?? u.nome;
-  return u.nome;
-}
-
-function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
-  const corte = Number(corteTop || 0);
-  const total = Number(totalRodadas || 0);
-  const rodadasCorte = Math.log2(corte);
-  if (!Number.isInteger(rodadasCorte) || rodadasCorte <= 0 || total <= 0) return null;
-  return total - rodadasCorte + 1;
-}
+import { StandingJogador } from "../../dominio/entidade/standings";
+import { montarJogadoresStandings } from "./montarStandings";
+import { MaterializarStandings } from "./materializarStandings";
+import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 
 export type BuscarStandingsInputDto = {
   torneioId: string;
+  /** Se informado, retorna snapshot histórico daquela rodada. */
+  rodada?: number;
 };
 
 export type BuscarStandingsOutputDto = {
   torneioId: string;
   rodadaAtual: number;
+  /** Rodada consolidada do snapshot retornado. */
+  rodadaStandings: number;
   totalRodadas: number;
   status: string;
   totalInscritos: number;
   rodadaIniciadaEm?: string;
-  standings: Array<{
-    posicao: number;
-    usuario: { id: string; nome: string; resultadosExpressivos: number };
-    time: { id: string; nome: string; imagemUrl?: string } | null;
-    pontosMesa: number;
-    vitoriasPartida: number;
-    empatesPartida: number;
-    derrotasPartida: number;
-    mwp: number;
-    omwp: number;
-    gwp: number;
-    ogwp: number;
-    checkInRodada: number;
-    deckId?: string | null;
-    deckNome?: string | null;
-    dropped: boolean;
-    resultadosExpressivos: number;
-  }>;
+  standings: StandingJogador[];
 };
 
+/**
+ * Lê standings materializados. Não recalcula Swiss no caminho feliz.
+ * Fallback:
+ * - inscricoes_abertas sem snapshot: monta zeros a partir das inscrições (leve)
+ * - em_andamento/finalizado sem snapshot: materializa uma vez (backfill legado) e retorna
+ */
 export class BuscarStandings
-  implements CasoDeUso<BuscarStandingsInputDto, BuscarStandingsOutputDto> {
+  implements CasoDeUso<BuscarStandingsInputDto, BuscarStandingsOutputDto>
+{
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
-    private readonly timeGateway: TimeGateway
-  ) { }
+    private readonly timeGateway: TimeGateway,
+    private readonly standingsGateway: StandingsGateway,
+    private readonly materializarStandings: MaterializarStandings
+  ) {}
 
   public static criar(
     torneioGateway: TorneioGateway,
@@ -81,9 +57,20 @@ export class BuscarStandings
     partidaGateway: PartidaGateway,
     usuarioGateway: UsuarioGateway,
     deckGateway: DeckGateway,
-    timeGateway: TimeGateway
+    timeGateway: TimeGateway,
+    standingsGateway: StandingsGateway,
+    materializarStandings: MaterializarStandings
   ) {
-    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway);
+    return new BuscarStandings(
+      torneioGateway,
+      inscricaoGateway,
+      partidaGateway,
+      usuarioGateway,
+      deckGateway,
+      timeGateway,
+      standingsGateway,
+      materializarStandings
+    );
   }
 
   public async executar(
@@ -97,138 +84,103 @@ export class BuscarStandings
       });
     }
 
-    const toBrasiliaISOLocal = (date?: Date) => toBrasiliaISO(date);
+    let snapshot =
+      input.rodada !== undefined
+        ? await this.standingsGateway.buscarPorTorneioERodada(
+            input.torneioId,
+            input.rodada
+          )
+        : await this.standingsGateway.buscarAtual(input.torneioId);
 
-    const inscricoes = await this.inscricaoGateway.listarPorTorneio(
-      input.torneioId
-    );
+    if (!snapshot && input.rodada !== undefined) {
+      throw ErroPersonalizado.criar({
+        mensagem: `Standings da rodada ${input.rodada} não encontrados.`,
+        status: StatusErro.erroNaoEncontrado,
+      });
+    }
 
-    const usuarioIds = inscricoes.map((i) => i.usuarioId);
-    const usuarios = await this.usuarioGateway.buscarVarios(usuarioIds);
-    const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
-
-    const deckIds = inscricoes
-      .map((i) => i.deckId)
-      .filter((id): id is string => !!id);
-    const decks = deckIds.length > 0
-      ? await this.deckGateway.buscarVarios(deckIds)
-      : [];
-    const deckMap = new Map(decks.map((d) => [d.id, d]));
-
-    const times = await this.timeGateway.buscarPorMembros(usuarioIds);
-    const timeByMembro = new Map<string, typeof times[0]>();
-    for (const t of times) {
-      for (const membroId of t.membroIds) {
-        if (!timeByMembro.has(membroId)) timeByMembro.set(membroId, t);
+    // Snapshot desatualizado (ex.: ingresso tardio) — rematerializa se o total mudou.
+    if (
+      snapshot &&
+      input.rodada === undefined &&
+      torneio.status !== "inscricoes_abertas"
+    ) {
+      const totais = await this.inscricaoGateway.contarPorTorneios([
+        input.torneioId,
+      ]);
+      const totalAtual = totais[input.torneioId] ?? 0;
+      if (totalAtual !== snapshot.totalInscritos) {
+        const rodadaConsolidada =
+          torneio.status === "finalizado"
+            ? torneio.rodadaAtual
+            : Math.max(0, torneio.rodadaAtual - 1);
+        snapshot = await this.materializarStandings.executar({
+          torneio,
+          rodadaConsolidada,
+        });
       }
     }
 
-    if (torneio.status === "inscricoes_abertas" || (torneio.status !== "finalizado" && torneio.rodadaAtual <= 1)) {
-      const standings = inscricoes.map((i, idx) => {
-        const u = usuarioMap.get(i.usuarioId);
-        const t = timeByMembro.get(i.usuarioId);
+    if (!snapshot) {
+      if (torneio.status === "inscricoes_abertas") {
+        const inscricoes = await this.inscricaoGateway.listarPorTorneio(
+          input.torneioId
+        );
+        const usuarioIds = inscricoes.map((i) => i.usuarioId);
+        const usuarios = await this.usuarioGateway.buscarVarios(usuarioIds);
+        const deckIds = inscricoes
+          .map((i) => i.deckId)
+          .filter((id): id is string => !!id);
+        const decks =
+          deckIds.length > 0 ? await this.deckGateway.buscarVarios(deckIds) : [];
+        const times =
+          usuarioIds.length > 0
+            ? await this.timeGateway.buscarPorMembros(usuarioIds)
+            : [];
+
+        const standings = montarJogadoresStandings({
+          torneio,
+          inscricoes,
+          partidas: [],
+          usuarios,
+          decks,
+          times,
+          incluirAteRodada: 0,
+        });
+
         return {
-        posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
-        time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
-        pontosMesa: 0,
-        vitoriasPartida: 0,
-        empatesPartida: 0,
-        derrotasPartida: 0,
-        mwp: 0,
-        omwp: 0,
-        gwp: 0,
-        ogwp: 0,
-        checkInRodada: i.checkInRodada,
-        deckId: i.deckId ?? null,
-        deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
-        dropped: i.dropped,
-        resultadosExpressivos: u?.resultadosExpressivos ?? 0,
+          torneioId: torneio.id,
+          rodadaAtual: torneio.rodadaAtual,
+          rodadaStandings: 0,
+          totalRodadas: torneio.totalRodadas,
+          status: torneio.status,
+          totalInscritos: inscricoes.length,
+          rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+          standings,
         };
+      }
+
+      // Backfill único para torneios legados sem snapshot
+      const rodadaConsolidada =
+        torneio.status === "finalizado"
+          ? torneio.rodadaAtual
+          : Math.max(0, torneio.rodadaAtual - 1);
+
+      snapshot = await this.materializarStandings.executar({
+        torneio,
+        rodadaConsolidada,
       });
-
-      return {
-        torneioId: torneio.id,
-        rodadaAtual: torneio.rodadaAtual,
-        totalRodadas: torneio.totalRodadas,
-        status: torneio.status,
-        totalInscritos: inscricoes.length,
-        rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
-        standings,
-      };
     }
-
-    const todasPartidas = await this.partidaGateway.listarPorTorneio(
-      input.torneioId
-    );
-
-    const primeiraRodadaCorte = torneio.emCorte
-      ? obterPrimeiraRodadaCorte(torneio.corteTop, torneio.totalRodadas)
-      : null;
-    const partidasElegiveisParaStandings = primeiraRodadaCorte
-      ? todasPartidas.filter((p) => p.rodada < primeiraRodadaCorte)
-      : todasPartidas;
-    const partidasConsolidadas = torneio.status === "finalizado"
-      ? partidasElegiveisParaStandings
-      : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
-
-    // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
-    // para que omwp/ogwp use o MWP real de oponentes dropados
-    const jogadoresComCheckIn = inscricoes
-      .filter((i) => i.checkInRodada >= 0)
-      .map((i) => i.usuarioId);
-
-    const idsComHistorico = Array.from(
-      new Set(
-        todasPartidas.flatMap((p) => [
-          p.jogador1Id,
-          ...(p.jogador2Id ? [p.jogador2Id] : []),
-        ])
-      )
-    );
-
-    const jogadoresIds = Array.from(new Set([...jogadoresComCheckIn, ...idsComHistorico]));
-
-    const inscricaoMap = new Map(inscricoes.map((i) => [i.usuarioId, i]));
-
-    const statsMap = calcularEstatisticas(jogadoresIds, partidasConsolidadas);
-    const ordenados = ordenarPorDesempate(
-      Array.from(statsMap.values()),
-      statsMap
-    );
 
     return {
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
+      rodadaStandings: snapshot.rodada,
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
-      totalInscritos: inscricoes.length,
-      rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
-      standings: ordenados.map((s, idx) => {
-        const inscricao = inscricaoMap.get(s.usuarioId);
-        const t = timeByMembro.get(s.usuarioId);
-        const u = usuarioMap.get(s.usuarioId);
-        return {
-          posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
-          time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
-          pontosMesa: s.pontosMesa,
-          vitoriasPartida: s.vitoriasPartida,
-          empatesPartida: s.empatesPartida,
-          derrotasPartida: s.derrotasPartida,
-          mwp: mwp(s),
-          omwp: omwp(s, statsMap),
-          gwp: gwp(s),
-          ogwp: ogwp(s, statsMap),
-          checkInRodada: inscricao?.checkInRodada ?? -1,
-          deckId: inscricao?.deckId ?? null,
-          deckNome: inscricao?.deckId
-            ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
-            : null,
-          dropped: inscricao?.dropped ?? false,
-          resultadosExpressivos: u?.resultadosExpressivos ?? 0,
-        };
-      }),
+      totalInscritos: snapshot.totalInscritos,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+      standings: snapshot.jogadores,
     };
   }
 }

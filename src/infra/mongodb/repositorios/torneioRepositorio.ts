@@ -216,21 +216,71 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     );
   }
 
+  public async atualizarSe(
+    torneio: Torneio,
+    filtro: { rodadaEsperada?: number; statusEsperado?: StatusTorneio }
+  ): Promise<boolean> {
+    await this.conectar();
+    const query: Record<string, unknown> = { id: torneio.id };
+    if (filtro.rodadaEsperada !== undefined) {
+      query.rodadaAtual = filtro.rodadaEsperada;
+    }
+    if (filtro.statusEsperado !== undefined) {
+      query.status = filtro.statusEsperado;
+    }
+
+    const result = await TorneioModel.updateOne(query, {
+      nome: torneio.nome,
+      horario: torneio.horario,
+      formato: torneio.formato,
+      anfitriaoId: torneio.anfitriaoId ?? null,
+      status: torneio.status,
+      rodadaAtual: torneio.rodadaAtual,
+      totalRodadas: torneio.totalRodadas,
+      descricao: torneio.descricao,
+      regras: torneio.regras,
+      bannerUrl: torneio.bannerUrl,
+      linkBanner: torneio.linkBanner,
+      somRodada: torneio.somRodada,
+      maxJogadores: torneio.maxJogadores,
+      maxRodadas: torneio.maxRodadas,
+      corteTop: torneio.corteTop,
+      linkLive: torneio.linkLive,
+      emCorte: torneio.emCorte,
+      secreto: torneio.secreto,
+      exibirNomeJogador: torneio.exibirNomeJogador,
+      visualizacoes: torneio.visualizacoes,
+      rodadaIniciadaEm: torneio.rodadaIniciadaEm,
+    });
+
+    return (result.matchedCount ?? 0) > 0;
+  }
+
   /**
    * Atualiza o torneio e insere novas partidas numa única transação MongoDB.
    * Evita estado parcial (torneio avançado de rodada mas partidas não criadas).
+   * Com filtros CAS, retorna false se outra Lambda já alterou o estado.
    */
   public async atualizarECriarPartidas(
     torneio: Torneio,
-    partidas: Partida[]
-  ): Promise<void> {
+    partidas: Partida[],
+    opcoes?: { rodadaEsperada?: number; statusEsperado?: StatusTorneio }
+  ): Promise<boolean> {
     await this.conectar();
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
 
-      await TorneioModel.updateOne(
-        { id: torneio.id },
+      const filtro: Record<string, unknown> = { id: torneio.id };
+      if (opcoes?.rodadaEsperada !== undefined) {
+        filtro.rodadaAtual = opcoes.rodadaEsperada;
+      }
+      if (opcoes?.statusEsperado !== undefined) {
+        filtro.status = opcoes.statusEsperado;
+      }
+
+      const updateResult = await TorneioModel.updateOne(
+        filtro,
         {
           status: torneio.status,
           rodadaAtual: torneio.rodadaAtual,
@@ -240,6 +290,11 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         },
         { session }
       );
+
+      if ((updateResult.matchedCount ?? 0) === 0) {
+        await session.abortTransaction();
+        return false;
+      }
 
       if (partidas.length > 0) {
         await PartidaModel.insertMany(
@@ -262,6 +317,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       }
 
       await session.commitTransaction();
+      return true;
     } catch (e) {
       await session.abortTransaction();
       throw e;

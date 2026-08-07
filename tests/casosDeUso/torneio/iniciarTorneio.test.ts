@@ -1,5 +1,5 @@
 import { IniciarTorneio } from "../../../src/casosDeUso/torneio/iniciarTorneio";
-import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGateway } from "../../mocks/gateways";
+import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGateway, criarMockMaterializarStandings } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { criarMockUsuarioGateway } from "../../mocks/gateways";
@@ -35,7 +35,7 @@ describe("IniciarTorneio", () => {
         const partidaGw = criarMockPartidaGateway();
         const usuarioGw = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) });
 
-        const uc = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
+        const uc = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -52,8 +52,7 @@ describe("IniciarTorneio", () => {
             criarMockTorneioGateway(),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway(),
-        );
+            criarMockUsuarioGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ torneioId: "inexistente", donoId: "d", isAdmin: false })
@@ -65,8 +64,7 @@ describe("IniciarTorneio", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway(),
-        );
+            criarMockUsuarioGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ torneioId: "t-1", donoId: "outro", isAdmin: false })
@@ -81,8 +79,7 @@ describe("IniciarTorneio", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
-        );
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "admin-id", isAdmin: true });
 
@@ -96,8 +93,7 @@ describe("IniciarTorneio", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway(),
-        );
+            criarMockUsuarioGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false })
@@ -110,8 +106,7 @@ describe("IniciarTorneio", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }) }),
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(apenasUm) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway(),
-        );
+            criarMockUsuarioGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false })
@@ -131,8 +126,7 @@ describe("IniciarTorneio", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
-        );
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -153,8 +147,7 @@ describe("IniciarTorneio", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
-        );
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -172,8 +165,7 @@ describe("IniciarTorneio", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
                 buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 3)),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -197,8 +189,7 @@ describe("IniciarTorneio", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
                 buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -217,8 +208,7 @@ describe("IniciarTorneio", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(doisJogadores) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 2)) }),
-        );
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 2)) }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -241,8 +231,7 @@ describe("IniciarTorneio", () => {
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
                 buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -255,8 +244,7 @@ describe("IniciarTorneio", () => {
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway(),
-        );
+            criarMockUsuarioGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false })
@@ -271,8 +259,7 @@ describe("IniciarTorneio", () => {
             torneioGw,
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
-        );
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }), criarMockMaterializarStandings());
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 

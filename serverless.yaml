@@ -129,10 +129,15 @@ functions:
             allowCredentials: true
 
   # Torneio e liga - Swiss pairing e ranking sao CPU e memoria intensivos
+  # reservedConcurrency: deixe comentado até medir carga real.
+  # Sugestão inicial para api-torneio (proteção do pool MongoDB ~3/conn por instância):
+  #   reservedConcurrency: 50   # ~150 conexões Atlas no pior caso (50*3)
+  # Ajuste após teste de carga (ver docs/load-test-torneio.md).
   api-torneio:
     handler: build/handler.handler
     memorySize: 512
     timeout: 29
+    # reservedConcurrency: ${env:API_TORNEIO_RESERVED_CONCURRENCY, 50}
     events:
       - http:
           path: /torneio

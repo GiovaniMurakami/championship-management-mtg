@@ -17,14 +17,10 @@ import {
   parKey,
   gerarPareamentos,
 } from "./swiss";
-
-function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
-  const corte = Number(corteTop || 0);
-  const total = Number(totalRodadas || 0);
-  const rodadasCorte = Math.log2(corte);
-  if (!Number.isInteger(rodadasCorte) || rodadasCorte <= 0 || total <= 0) return null;
-  return total - rodadasCorte + 1;
-}
+import { MaterializarStandings } from "./materializarStandings";
+import { StandingJogador } from "../../dominio/entidade/standings";
+import { Torneio } from "../../dominio/entidade/torneio";
+import { obterPrimeiraRodadaCorte } from "./montarStandings";
 
 export type IniciarProximaRodadaInputDto = {
   torneioId: string;
@@ -38,6 +34,7 @@ export type IniciarProximaRodadaOutputDto =
     rodadaAtual: number;
     emCorte: boolean;
     rodadaIniciadaEm: string;
+    standings?: StandingJogador[];
     partidas: Array<{
       id: string;
       jogador1Id: string;
@@ -50,6 +47,7 @@ export type IniciarProximaRodadaOutputDto =
   }
   | {
     finalizado: true;
+    standings?: StandingJogador[];
     classificacao: Array<{
       posicao: number;
       usuarioId: string;
@@ -67,21 +65,38 @@ export class IniciarProximaRodada
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly materializarStandings: MaterializarStandings
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
+    usuarioGateway: UsuarioGateway,
+    materializarStandings: MaterializarStandings
   ) {
     return new IniciarProximaRodada(
       torneioGateway,
       inscricaoGateway,
       partidaGateway,
-      usuarioGateway
+      usuarioGateway,
+      materializarStandings
     );
+  }
+
+  private async materializarRodadaAtual(torneio: Torneio, rodada: number) {
+    return this.materializarStandings.executar({
+      torneio,
+      rodadaConsolidada: rodada,
+    });
+  }
+
+  private erroConcorrencia() {
+    return ErroPersonalizado.criar({
+      mensagem: "A rodada já foi avançada por outra requisição. Atualize a página.",
+      status: StatusErro.erroConflito,
+    });
   }
 
   public async executar(
@@ -109,6 +124,8 @@ export class IniciarProximaRodada
         status: StatusErro.erroParametro,
       });
     }
+
+    const rodadaEsperada = torneio.rodadaAtual;
 
     const partidasRodadaAtual =
       await this.partidaGateway.listarPorTorneioERodada(
@@ -158,8 +175,6 @@ export class IniciarProximaRodada
       });
     }
 
-    // Sempre calcular stats com TODOS os jogadores que possuem histórico
-    // para que omwp/ogwp use o MWP real de oponentes dropados (não MIN_PERCENTUAL)
     const idsParaStats = Array.from(new Set([...idsComHistorico, ...jogadoresIds]));
 
     const primeiraRodadaCorte = torneio.emCorte
@@ -175,8 +190,9 @@ export class IniciarProximaRodada
       statsMap
     );
 
+    const snapshot = await this.materializarRodadaAtual(torneio, rodadaEsperada);
+
     if (estaNaUltimaRodada && torneio.corteTop && !torneio.emCorte) {
-      // Apenas jogadores ativos (não-dropados, com check-in) são elegíveis para o corte
       const statsAtivos = statsOrdenados.filter(s => jogadoresIdsSet.has(s.usuarioId));
 
       if (statsAtivos.length < torneio.corteTop) {
@@ -187,7 +203,7 @@ export class IniciarProximaRodada
       }
 
       const topNIds = statsAtivos.slice(0, torneio.corteTop).map((s) => s.usuarioId);
-      const rodadasCorte = Math.log2(torneio.corteTop); // top8=3, top4=2, top2=1, top16=4
+      const rodadasCorte = Math.log2(torneio.corteTop);
       const proximaRodada = torneio.rodadaAtual + 1;
 
       const topNUsuarios = await this.usuarioGateway.buscarVarios(topNIds);
@@ -212,13 +228,19 @@ export class IniciarProximaRodada
       }
 
       torneio.entrarEmCorte(proximaRodada, proximaRodada + rodadasCorte - 1);
-      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      const ok = await this.torneioGateway.atualizarECriarPartidas(
+        torneio,
+        novasPartidas,
+        { rodadaEsperada }
+      );
+      if (!ok) throw this.erroConcorrencia();
 
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
         emCorte: true,
         rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+        standings: snapshot.jogadores,
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -235,7 +257,8 @@ export class IniciarProximaRodada
       torneio.finalizar();
       const top8Ids = statsOrdenados.slice(0, 8).map((s) => s.usuarioId);
       await this.usuarioGateway.incrementarResultadosExpressivos(top8Ids, 1);
-      await this.torneioGateway.atualizar(torneio);
+      const ok = await this.torneioGateway.atualizarSe(torneio, { rodadaEsperada });
+      if (!ok) throw this.erroConcorrencia();
 
       const classificacao = statsOrdenados.map((s, idx) => ({
         posicao: idx + 1,
@@ -246,12 +269,12 @@ export class IniciarProximaRodada
         ogwp: ogwp(s, statsMap),
       }));
 
-      return { finalizado: true, classificacao };
+      return { finalizado: true, standings: snapshot.jogadores, classificacao };
     }
 
     if (torneio.emCorte) {
       const vencedoresIds = partidasRodadaAtual.map((p) => {
-        if (p.jogador2Id === null) return p.jogador1Id; // bye automático
+        if (p.jogador2Id === null) return p.jogador1Id;
         if (p.vitoriasJogador1 > p.vitoriasJogador2) return p.jogador1Id;
         if (p.vitoriasJogador2 > p.vitoriasJogador1) return p.jogador2Id;
         const idx1 = statsOrdenados.findIndex(s => s.usuarioId === p.jogador1Id);
@@ -285,13 +308,19 @@ export class IniciarProximaRodada
       }
 
       torneio.avancarRodada(proximaRodada);
-      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      const ok = await this.torneioGateway.atualizarECriarPartidas(
+        torneio,
+        novasPartidas,
+        { rodadaEsperada }
+      );
+      if (!ok) throw this.erroConcorrencia();
 
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
         emCorte: true,
         rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+        standings: snapshot.jogadores,
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -310,13 +339,11 @@ export class IniciarProximaRodada
       if (p.jogador2Id !== null) {
         historico.add(parKey(p.jogador1Id, p.jogador2Id));
       } else {
-        // BYE normal (vitória) — rastrear para evitar repetição
         jaRecebeuBye.add(p.jogador1Id);
       }
     }
 
     const proximaRodada = torneio.rodadaAtual + 1;
-    // Filtrar statsOrdenados para apenas jogadores com check-in ativo
     const statsParaPareamento = statsOrdenados.filter(
       (s) => jogadoresIdsSet.has(s.usuarioId)
     );
@@ -335,13 +362,19 @@ export class IniciarProximaRodada
     );
 
     torneio.avancarRodada(proximaRodada);
-    await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+    const ok = await this.torneioGateway.atualizarECriarPartidas(
+      torneio,
+      novasPartidas,
+      { rodadaEsperada }
+    );
+    if (!ok) throw this.erroConcorrencia();
 
     return {
       finalizado: false,
       rodadaAtual: proximaRodada,
       emCorte: false,
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+      standings: snapshot.jogadores,
       partidas: novasPartidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

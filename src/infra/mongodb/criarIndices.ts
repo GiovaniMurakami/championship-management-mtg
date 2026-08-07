@@ -15,6 +15,7 @@ import "./repositorios/timeRepositorio";
 import "./repositorios/tokenBlacklistRepositorio";
 import "./repositorios/torneioRepositorio";
 import "./repositorios/usuarioRepositorio";
+import "./repositorios/standingsRepositorio";
 
 dotenv.config();
 

@@ -1,12 +1,10 @@
 import { IngressarViaTorneio } from "../../../src/casosDeUso/torneio/ingressarViaTorneio";
-import {
-    criarMockTorneioGateway,
+import { criarMockTorneioGateway,
     criarMockInscricaoGateway,
     criarMockPartidaGateway,
     criarMockUsuarioGateway,
     criarMockLinkIngressoGateway,
-    criarMockDeckGateway,
-} from "../../mocks/gateways";
+    criarMockDeckGateway, criarMockMaterializarStandings } from "../../mocks/gateways";
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
@@ -75,8 +73,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deck),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
     }
 
     it("deve inscrever jogador e receber penalidade (BYE 0-2) quando não há BYE na rodada", async () => {
@@ -206,8 +203,7 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
-            criarMockDeckGateway(),
-        );
+            criarMockDeckGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
@@ -232,8 +228,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -268,8 +263,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -305,8 +299,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -342,8 +335,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -379,8 +371,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: jest.fn(),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -404,8 +395,7 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
-            criarMockDeckGateway(),
-        );
+            criarMockDeckGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
@@ -427,8 +417,7 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
-            criarMockDeckGateway(),
-        );
+            criarMockDeckGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
@@ -445,8 +434,7 @@ describe("IngressarViaTorneio", () => {
                 buscarPorToken: jest.fn().mockResolvedValue(linkValido),
                 excluirPorToken: jest.fn(),
             }),
-            criarMockDeckGateway(),
-        );
+            criarMockDeckGateway(), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-inexistente", deckId: "d-1" })
@@ -484,8 +472,7 @@ describe("IngressarViaTorneio", () => {
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(deckValido),
                 salvar: salvarDeckMock,
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
 
@@ -544,8 +531,7 @@ describe("IngressarViaTorneio", () => {
             }),
             criarMockDeckGateway({
                 buscarPorId: jest.fn().mockResolvedValue(null),
-            }),
-        );
+            }), criarMockMaterializarStandings());
 
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-invalido" })

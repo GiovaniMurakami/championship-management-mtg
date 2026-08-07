@@ -18,7 +18,8 @@ import { InscreverTorneio } from "../../src/casosDeUso/torneio/inscreverTorneio"
 import { IniciarTorneio } from "../../src/casosDeUso/torneio/iniciarTorneio";
 import { RegistrarResultado } from "../../src/casosDeUso/torneio/registrarResultado";
 import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProximaRodada";
-import { criarMockEmailGateway } from "../mocks/gateways";
+import { MaterializarStandings } from "../../src/casosDeUso/torneio/materializarStandings";
+import { criarMockEmailGateway, criarMockDeckGateway, criarMockTimeGateway, criarMockStandingsGateway } from "../mocks/gateways";
 
 // Mock bcrypt
 jest.mock("bcryptjs", () => ({
@@ -58,6 +59,7 @@ function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): Torn
         listar: async () => Array.from(store.values()),
         listarTotal: async () => store.size,
         atualizar: async (t) => { store.set(t.id, t); },
+        atualizarSe: async (t) => { store.set(t.id, t); return true; },
         incrementarVisualizacoes: async (id) => {
             const torneio = store.get(id);
             if (!torneio) return null;
@@ -68,6 +70,7 @@ function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): Torn
         atualizarECriarPartidas: async (t, partidas) => {
             store.set(t.id, t);
             for (const p of partidas) partidaStoreRef.set(p.id, p);
+            return true;
         },
         excluir: async (id) => { store.delete(id); },
     };
@@ -172,6 +175,8 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
 // ------- Teste de Integração -------
 
 describe("Integração - Fluxo completo de torneio", () => {
+    const mkMat = (tGw: TorneioGateway, iGw: InscricaoGateway, pGw: PartidaGateway, uGw: UsuarioGateway) =>
+        MaterializarStandings.criar(tGw, iGw, pGw, uGw, criarMockDeckGateway(), criarMockTimeGateway(), criarMockStandingsGateway());
     const usuarioGw = criarUsuarioGatewayMemoria();
     const partidaStore = new Map<string, Partida>();
     const torneioGw = criarTorneioGatewayMemoria(partidaStore);
@@ -253,7 +258,7 @@ describe("Integração - Fluxo completo de torneio", () => {
     });
 
     it("5. Deve iniciar o torneio e gerar partidas da rodada 1", async () => {
-        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
+        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, mkMat(torneioGw, inscricaoGw, partidaGw, usuarioGw));
         const resultado = await iniciar.executar({ torneioId, donoId, isAdmin: false });
 
         expect(resultado.rodadaAtual).toBe(1);
@@ -294,7 +299,7 @@ describe("Integração - Fluxo completo de torneio", () => {
     });
 
     it("8. Deve avançar para rodada 2 e finalizar o torneio", async () => {
-        const proximaRodada = IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
+        const proximaRodada = IniciarProximaRodada.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw, mkMat(torneioGw, inscricaoGw, partidaGw, usuarioGw));
         const resultado = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
 
         // Rodada 2 é a última (totalRodadas = 2), mas como rodadaAtual era 1, 
@@ -335,6 +340,8 @@ describe("Integração - Fluxo completo de torneio", () => {
 });
 
 describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
+    const mkMat2 = (tGw: TorneioGateway, iGw: InscricaoGateway, pGw: PartidaGateway, uGw: UsuarioGateway) =>
+        MaterializarStandings.criar(tGw, iGw, pGw, uGw, criarMockDeckGateway(), criarMockTimeGateway(), criarMockStandingsGateway());
     const usuarioGw2 = criarUsuarioGatewayMemoria();
     const partidaStore2 = new Map<string, Partida>();
     const torneioGw2 = criarTorneioGatewayMemoria(partidaStore2);
@@ -389,7 +396,7 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
             await inscricaoGw2.atualizar(i);
         }
 
-        const iniciar = IniciarTorneio.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2);
+        const iniciar = IniciarTorneio.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2, mkMat2(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2));
         const resultado = await iniciar.executar({ torneioId, donoId, isAdmin: false });
 
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(3)) = 2
@@ -418,7 +425,7 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
             await inscricaoGw2.atualizar(i);
         }
 
-        const proximaRodada = IniciarProximaRodada.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2);
+        const proximaRodada = IniciarProximaRodada.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2, mkMat2(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2));
         const resultado = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
 
         expect(resultado.finalizado).toBe(false);
@@ -440,7 +447,7 @@ describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
             }
         }
 
-        const proximaRodada = IniciarProximaRodada.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2);
+        const proximaRodada = IniciarProximaRodada.criar(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2, mkMat2(torneioGw2, inscricaoGw2, partidaGw2, usuarioGw2));
         const resultado = await proximaRodada.executar({ torneioId, donoId, isAdmin: false });
 
         expect(resultado.finalizado).toBe(true);

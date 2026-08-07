@@ -29,6 +29,7 @@ import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
 import { BuscarSeoTorneio } from "../casosDeUso/torneio/buscarSeoTorneio";
 import { BuscarStandings } from "../casosDeUso/torneio/buscarStandings";
+import { MaterializarStandings } from "../casosDeUso/torneio/materializarStandings";
 import { MeuHistoricoTorneio } from "../casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "../casosDeUso/torneio/listarPartidasTorneio";
 import { AlterarTorneio } from "../casosDeUso/torneio/alterarTorneio";
@@ -88,9 +89,16 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const inscreverTorneio = InscreverTorneio.criar(repos.torneio, repos.inscricao, repos.usuario);
     const checkInTorneio = CheckInTorneio.criar(repos.torneio, repos.inscricao);
     const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck);
-    const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
+    const materializarStandings = MaterializarStandings.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time, repos.standings
+    );
+    const iniciarTorneio = IniciarTorneio.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.usuario, materializarStandings
+    );
+    const iniciarProximaRodada = IniciarProximaRodada.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.usuario, materializarStandings
+    );
+    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida, repos.standings);
     const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
     const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
     const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
@@ -100,13 +108,16 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
-    const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
+    const buscarStandings = BuscarStandings.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time,
+        repos.standings, materializarStandings
+    );
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const alterarTorneio = AlterarTorneio.criar(repos.torneio);
     const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
-    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck);
+    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck, materializarStandings);
     const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
     const definirAnfitriaoTorneio = DefinirAnfitriaoTorneio.criar(repos.torneio, repos.usuario);
 
@@ -145,7 +156,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, refazerRodada, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
-        droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
+        droparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings, materializarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,

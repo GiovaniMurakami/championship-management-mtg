@@ -12,6 +12,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
+import { MaterializarStandings } from "./materializarStandings";
 
 export type IngressarViaTorneioInputDto = {
     token: string;
@@ -37,7 +38,8 @@ export class IngressarViaTorneio
         private readonly partidaGateway: PartidaGateway,
         private readonly usuarioGateway: UsuarioGateway,
         private readonly linkIngressoGateway: LinkIngressoGateway,
-        private readonly deckGateway: DeckGateway
+        private readonly deckGateway: DeckGateway,
+        private readonly materializarStandings: MaterializarStandings
     ) { }
 
     public static criar(
@@ -46,7 +48,8 @@ export class IngressarViaTorneio
         partidaGateway: PartidaGateway,
         usuarioGateway: UsuarioGateway,
         linkIngressoGateway: LinkIngressoGateway,
-        deckGateway: DeckGateway
+        deckGateway: DeckGateway,
+        materializarStandings: MaterializarStandings
     ) {
         return new IngressarViaTorneio(
             torneioGateway,
@@ -54,7 +57,8 @@ export class IngressarViaTorneio
             partidaGateway,
             usuarioGateway,
             linkIngressoGateway,
-            deckGateway
+            deckGateway,
+            materializarStandings
         );
     }
 
@@ -192,6 +196,18 @@ export class IngressarViaTorneio
             criadoEm: new Date(),
         });
         await this.partidaGateway.salvar(partida);
+
+        // Atualiza snapshot consolidado para incluir o novo jogador (sem esperar próxima rodada)
+        const rodadaConsolidada = Math.max(0, torneio.rodadaAtual - 1);
+        const snapshot = await this.materializarStandings.executar({
+            torneio,
+            rodadaConsolidada,
+        });
+        eventosTorneio.emit("standings_atualizados", {
+            torneioId: torneio.id,
+            rodadaStandings: snapshot.rodada,
+            standings: snapshot.jogadores,
+        });
 
         eventosTorneio.emit("jogador_ingressou", {
             torneioId: torneio.id,

@@ -11,6 +11,7 @@ import { ResetSenhaRepositorio } from "../infra/mongodb/repositorios/resetSenhaR
 import { LinkIngressoRepositorio } from "../infra/mongodb/repositorios/linkIngressoRepositorio";
 import { TimeRepositorio } from "../infra/mongodb/repositorios/timeRepositorio";
 import { SiteConfigRepositorio } from "../infra/mongodb/repositorios/siteConfigRepositorio";
+import { StandingsRepositorio } from "../infra/mongodb/repositorios/standingsRepositorio";
 
 export function criarRepositorios() {
     return {
@@ -19,6 +20,7 @@ export function criarRepositorios() {
         torneio: TorneioRepositorio.criar(),
         inscricao: InscricaoRepositorio.criar(),
         partida: PartidaRepositorio.criar(),
+        standings: StandingsRepositorio.criar(),
         tokenBlacklist: TokenBlacklistRepositorio.criar(),
         refreshToken: RefreshTokenRepositorio.criar(),
         liga: LigaRepositorio.criar(),
