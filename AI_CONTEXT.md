@@ -156,7 +156,7 @@ DELETE /deck/:id
 ### Torneio
 ```
 POST /torneio/criar                     (admin)
-GET  /torneio/listar, /:torneioId, /:torneioId/seo
+GET  /torneio/listar, /:torneioId, /:torneioId/seo (público; retorna title/image/imageType/description sanitizada para OG)
 GET  /:torneioId/standings, /partidas, /meu-historico
 POST /:torneioId/inscrever, /checkin, /deck, /iniciar
 POST /:torneioId/proxima-rodada, /refazer-rodada, /drop
