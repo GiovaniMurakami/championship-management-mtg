@@ -20,9 +20,9 @@ app.ts → criarRepositorios() + criarServicos() → criarCasosDeUso() → criar
 | Composição | `src/composicao/` | Wiring de dependências |
 | Cross-cutting | `src/middlewares/`, `src/helpers/` | Auth, validação, erros, logs |
 
-**Deploy:** AWS Lambda via Serverless (`handler.ts` + `serverless-http`). Duas funções:
-- `api-auth` (256MB/15s): `/usuario`, `/deck`, `/imagem`, `/health`
-- `api-torneio` (512MB/29s): `/torneio`, `/liga`, `/time`, `/site`
+**Deploy:** AWS Lambda via Serverless (`handler.ts` + `serverless-http`). Uma função:
+- `api` (512MB/29s): todas as rotas (paths explícitos)
+- `MONGODB_MAX_POOL_SIZE=1` no provider (pool por instância)
 
 ## Domínios e Funcionalidades
 
@@ -94,7 +94,7 @@ MongoDB Atlas via Mongoose. Coleções: usuarios, decks, torneios, inscricoes, p
 
 | Serviço | Uso | Retry/Timeout |
 |---------|-----|---------------|
-| MongoDB | Persistência | pool max 3, timeouts configurados |
+| MongoDB | Persistência | pool max 1 (Lambda), timeouts configurados |
 | AWS SSM | Chaves JWT prod | — |
 | AWS S3 | Upload imagens | presigned 5min |
 | Ably | Realtime torneio | 3 tentativas, aguarda no handler |

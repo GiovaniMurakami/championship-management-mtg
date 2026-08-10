@@ -127,9 +127,10 @@ app.ts
   → inicializarAutenticarJwt()
 ```
 
-**Lambda:** duas funções no `serverless.yaml`:
-- `api-auth` (256MB/15s): `/usuario`, `/deck`, `/imagem`, `/health`
-- `api-torneio` (512MB/29s): `/torneio`, `/liga`, `/time`, `/site`
+**Lambda:** uma função no `serverless.yaml`:
+- `api` (512MB/29s): todas as rotas (`/usuario`, `/deck`, `/torneio`, `/liga`, `/time`, `/site`, `/imagem`, `/health`)
+- `MONGODB_MAX_POOL_SIZE` default `1` (env + provider) para limitar conexões Atlas por instância
+- Paths explícitos (não usar só `/{proxy+}` — quebra method/path no API Gateway + serverless-http)
 
 ---
 
@@ -355,7 +356,7 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 ## 17. Gotchas e armadilhas
 
 1. **`docs/README.md` pode estar parcialmente desatualizado** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts` e o código.
-2. **Lambda cold start** — pool Mongo max 3; Ably aguarda publicação no handler.
+2. **Lambda cold start** — pool Mongo max 1 (`MONGODB_MAX_POOL_SIZE`); Ably aguarda publicação no handler.
 3. **Emails** — falhas são logadas, não propagadas ao cliente.
 4. **ChatGPT** — timeout ~3.5s; deck salva sem `nomeConsolidado` se falhar.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
