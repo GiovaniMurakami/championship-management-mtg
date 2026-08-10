@@ -80,6 +80,56 @@ describe("BuscarDeck", () => {
         await expect(uc.executar({ id: "d1", usuarioId: "u2" })).rejects.toMatchObject({ status: 404 });
     });
 
+    it("admin pode visualizar deck oculto de outro usuario", async () => {
+        const deck = new Deck({
+            id: "d1",
+            nome: "Burn",
+            formato: "legacy",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+            oculto: true,
+        });
+        const usuario = new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" });
+
+        const deckGateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const usuarioGateway = criarMockUsuarioGateway({
+            buscarVarios: jest.fn().mockResolvedValue([usuario]),
+        });
+        const uc = BuscarDeck.criar(deckGateway, usuarioGateway);
+
+        const resultado = await uc.executar({ id: "d1", usuarioId: "admin", isAdmin: true });
+        expect(resultado.id).toBe("d1");
+    });
+
+    it("copia travada de torneio (oculto) e visivel sem ser dono", async () => {
+        const deck = new Deck({
+            id: "d-clone",
+            nome: "Burn",
+            formato: "legacy",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+            oculto: true,
+            travado: true,
+            torneioId: "t-1",
+        });
+        const usuario = new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" });
+
+        const deckGateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const usuarioGateway = criarMockUsuarioGateway({
+            buscarVarios: jest.fn().mockResolvedValue([usuario]),
+        });
+        const uc = BuscarDeck.criar(deckGateway, usuarioGateway);
+
+        const resultado = await uc.executar({ id: "d-clone", usuarioId: "outro" });
+        expect(resultado.id).toBe("d-clone");
+    });
+
     it("deve permitir dono visualizar deck oculto", async () => {
         const deck = new Deck({
             id: "d1",

@@ -7,6 +7,7 @@ import { CasoDeUso } from "../casoDeUso";
 export type BuscarDeckInputDto = {
   id: string;
   usuarioId?: string;
+  isAdmin?: boolean;
 };
 
 export type BuscarDeckOutputDto = {
@@ -43,11 +44,16 @@ export class BuscarDeck
       });
     }
 
-    if (deck.oculto && deck.usuarioId !== input.usuarioId) {
-      throw ErroPersonalizado.criar({
-        mensagem: "Deck não encontrado",
-        status: 404,
-      });
+    // Cópias de torneio (travado) são visíveis no contexto do evento.
+    // Demais decks ocultos: só dono ou admin.
+    if (deck.oculto && !deck.travado) {
+      const isOwner = deck.usuarioId === input.usuarioId;
+      if (!isOwner && !input.isAdmin) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Deck não encontrado",
+          status: 404,
+        });
+      }
     }
 
     const deckAtual = await this.deckGateway.incrementarVisualizacoes(input.id) ?? deck;

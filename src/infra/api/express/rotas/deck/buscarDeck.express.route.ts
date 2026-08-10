@@ -43,6 +43,7 @@ export class BuscarDeckRota implements Rotas {
         const resultado = await this.buscarDeckServico.executar({
           id: deckId,
           usuarioId: request.usuario?.id,
+          isAdmin: request.usuario?.role === "admin",
         });
 
         response.status(200).json(resultado);

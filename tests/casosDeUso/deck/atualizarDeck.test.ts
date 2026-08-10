@@ -56,6 +56,53 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
+    it("deck travado: permite alterar apenas nomeConsolidado", async () => {
+        const deckTravado = new Deck({ ...deckExistente, travado: true });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deckTravado),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: true,
+            usuarioNome: "Admin",
+            nome: "Tentativa de mudar nome",
+            nomeConsolidado: "Elfos",
+            formato: "pauper",
+            maindeck: [{ nome: "forest", quantidade: 60 }],
+            sideboard: [],
+            commander: [],
+        });
+
+        expect(resultado.nomeConsolidado).toBe("Elfos");
+        expect(resultado.nome).toBe("Burn");
+        expect(resultado.formato).toBe("legacy");
+        expect(resultado.maindeck).toEqual(maindeckValido);
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
+
+    it("deck travado: bloqueia update sem nomeConsolidado", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente, travado: true })),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        await expect(
+            uc.executar({
+                id: "deck-1",
+                usuarioIdRequisitante: "user-1",
+                isAdmin: false,
+                usuarioNome: "Jogador Teste",
+                nome: "Outro",
+            })
+        ).rejects.toMatchObject({
+            status: 400,
+            message: expect.stringContaining("travado"),
+        });
+    });
+
     it("deve permitir limpar o nomeConsolidado enviando null", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
