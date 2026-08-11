@@ -128,7 +128,7 @@ app.ts
 ```
 
 **Lambda:** uma função no `serverless.yaml`:
-- `api` (512MB/29s): todas as rotas (`/usuario`, `/deck`, `/torneio`, `/liga`, `/time`, `/site`, `/imagem`, `/health`)
+- `api` (512MB/29s): todas as rotas (`/usuario`, `/deck`, `/torneio`, `/liga`, `/time`, `/site`, `/story-fundo`, `/imagem`, `/health`)
 - `MONGODB_MAX_POOL_SIZE` default `1` (env + provider) para limitar conexões Atlas por instância
 - Paths explícitos (não usar só `/{proxy+}` — quebra method/path no API Gateway + serverless-http)
 

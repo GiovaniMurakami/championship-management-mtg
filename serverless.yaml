@@ -193,6 +193,22 @@ functions:
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
+      - http:
+          path: /story-fundo
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /story-fundo/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
 
 outputs:
   usuarioCadastrar:
