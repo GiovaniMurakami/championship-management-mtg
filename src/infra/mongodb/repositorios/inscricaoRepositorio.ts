@@ -145,4 +145,10 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
     await this.conectar();
     await InscricaoModel.deleteOne({ id });
   }
+
+  public async excluirPorUsuario(usuarioId: string): Promise<number> {
+    await this.conectar();
+    const result = await InscricaoModel.deleteMany({ usuarioId });
+    return result.deletedCount ?? 0;
+  }
 }

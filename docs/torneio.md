@@ -82,8 +82,10 @@ interface PartidaProps {
   rodada: number;
   jogador1Id: string;
   jogador1Nome?: string;
+  jogador1Excluido?: boolean;
   jogador2Id: string | null; // null = bye
   jogador2Nome?: string | null;
+  jogador2Excluido?: boolean;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -118,9 +120,9 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 6. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
 7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`), exceto quando a rodada atual já é a última do torneio
 8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
-9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
+9. Jogador pode **dropar a si mesmo**; organizador (dono/admin/anfitrião) pode dropar outro (`POST /torneio/:id/drop`)
 10. Partidas (mesas) do torneio disponíveis a qualquer momento (`GET /torneio/:id/partidas` e filtro por rodada)
-11. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
+11. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`); contas excluídas aparecem como `"Usuário excluído"` com `excluido: true`
 
 ---
 
@@ -589,10 +591,10 @@ Confirma presença no torneio ou em uma rodada específica. Nenhum body necessá
 
 Dropa um jogador do torneio. O jogador dropado não participa dos próximos pareamentos, mas seus resultados anteriores são mantidos nos standings.
 
-- **Jogador dropa a si mesmo**: chame sem body
-- **Dono dropa outro jogador**: envie `jogadorId` no body
+- **Jogador dropa a si mesmo**: chame sem body (ou `jogadorId` = próprio id). Em `inscricoes_abertas` a inscrição é removida; em `em_andamento` marca `dropped` e resolve partidas pendentes por WO
+- **Organizador dropa outro jogador** (dono, admin ou anfitrião): envie `jogadorId` no body
 
-**Request Body** _(somente quando o dono dropa outro jogador)_:
+**Request Body** _(somente ao dropar outro jogador)_:
 
 ```json
 {
@@ -617,7 +619,7 @@ Dropa um jogador do torneio. O jogador dropado não participa dos próximos pare
 **Erros:**
 
 - `404` — Torneio não encontrado ou jogador não inscrito
-- `403` — Requisitante não é o jogador nem o dono
+- `403` — Requisitante não é o jogador nem quem pode gerenciar o torneio
 - `400` — Jogador já foi dropado
 - `400` — Torneio já finalizado
 
@@ -702,7 +704,8 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 12,
       "omwp": 0.72,
@@ -741,7 +744,8 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 0,
       "vitoriasPartida": 0,
@@ -774,7 +778,8 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 6,
       "vitoriasPartida": 2,

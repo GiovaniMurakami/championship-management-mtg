@@ -18,6 +18,7 @@ export type AlterarTorneioInputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -39,6 +40,7 @@ export type AlterarTorneioOutputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -88,6 +90,7 @@ export class AlterarTorneio
     if (input.bannerUrl !== undefined) torneio.bannerUrl = input.bannerUrl?.trim();
     if (input.linkBanner !== undefined) torneio.linkBanner = input.linkBanner?.trim();
     if (input.somRodada !== undefined) torneio.somRodada = input.somRodada?.trim();
+    if (input.storyFundoUrl !== undefined) torneio.storyFundoUrl = input.storyFundoUrl?.trim();
     if (input.maxJogadores !== undefined) torneio.maxJogadores = input.maxJogadores;
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
@@ -110,6 +113,7 @@ export class AlterarTorneio
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
+      storyFundoUrl: torneio.storyFundoUrl,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,

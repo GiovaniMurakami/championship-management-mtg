@@ -1,18 +1,21 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type EscolherDeckTorneioInputDto = {
   torneioId: string;
   requisitanteId?: string;
   usuarioId: string;
-  usuarioNome: string;
+  /** Fallback se o usuário não for encontrado no gateway. */
+  usuarioNome?: string;
   isAdmin: boolean;
   deckId: string;
 };
@@ -29,15 +32,17 @@ export class EscolherDeckTorneio
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly deckGateway: DeckGateway
+    private readonly deckGateway: DeckGateway,
+    private readonly usuarioGateway: UsuarioGateway,
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    deckGateway: DeckGateway
+    deckGateway: DeckGateway,
+    usuarioGateway: UsuarioGateway,
   ) {
-    return new EscolherDeckTorneio(torneioGateway, inscricaoGateway, deckGateway);
+    return new EscolherDeckTorneio(torneioGateway, inscricaoGateway, deckGateway, usuarioGateway);
   }
 
   public async executar(
@@ -106,16 +111,22 @@ export class EscolherDeckTorneio
     inscricao.deckId = deckTravado.id;
     await this.inscricaoGateway.atualizar(inscricao);
 
+    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
+    const usuarioNome = usuario
+      ? resolverNomeJogador(usuario, torneio.exibirNomeJogador)
+      : (input.usuarioNome ?? input.usuarioId);
+
     eventosTorneio.emit("deck_inserido", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
+      usuarioNome,
       deckConfirmado: true,
     });
 
     return {
       id: inscricao.id,
       torneioId: inscricao.torneioId,
-      usuario: { id: inscricao.usuarioId, nome: input.usuarioNome },
+      usuario: { id: inscricao.usuarioId, nome: usuarioNome },
       deckId: inscricao.deckId!,
     };
   }

@@ -48,7 +48,7 @@ export class AtualizarPareamentosRodadaRota implements Rotas {
           requisitanteId: request.usuario!.id,
           isAdmin: request.usuario!.role === "admin",
           partidas: dados.partidas.map((partida) => ({
-            id: partida.id,
+            id: partida.id ?? null,
             jogador1Id: partida.jogador1Id,
             jogador2Id: partida.jogador2Id ?? null,
             mesa: partida.mesa ?? null,

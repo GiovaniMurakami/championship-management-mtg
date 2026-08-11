@@ -2,11 +2,12 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
-const LIMITE_MAXIMO_USUARIOS = 50;
+const LIMITE_MAXIMO_USUARIOS = 100;
 const LIMITE_PADRAO_USUARIOS = 20;
 
 export type ListarUsuariosInputDto = {
   nome?: string;
+  bloqueadoTorneios?: boolean;
   limite?: number;
   offset?: number;
 };
@@ -18,6 +19,7 @@ export type ListarUsuariosOutputDto = {
     email: string;
     nickMTGO?: string;
     nickArena?: string;
+    bloqueadoTorneios: boolean;
   }>;
   total: number;
   limite: number;
@@ -42,13 +44,17 @@ export class ListarUsuarios
 
     const filtros = {
       nome: input.nome?.trim() || undefined,
+      bloqueadoTorneios: input.bloqueadoTorneios,
       limite,
       offset,
     };
 
     const [usuarios, total] = await Promise.all([
       this.usuarioGateway.listar(filtros),
-      this.usuarioGateway.listarTotal({ nome: filtros.nome }),
+      this.usuarioGateway.listarTotal({
+        nome: filtros.nome,
+        bloqueadoTorneios: filtros.bloqueadoTorneios,
+      }),
     ]);
 
     return {
@@ -58,6 +64,7 @@ export class ListarUsuarios
         email: u.email,
         nickMTGO: u.nickMTGO,
         nickArena: u.nickArena,
+        bloqueadoTorneios: u.bloqueadoTorneios,
       })),
       total,
       limite,

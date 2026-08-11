@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { Usuario } from "../../../dominio/entidade/usuario";
 import { FiltrosListarUsuarios, UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
-import { escaparRegex } from "../../../helpers/regex";
+import { montarFiltroListagemUsuarios } from "../../../helpers/usuario/filtroListagemUsuarios";
 
 interface UsuarioDocument extends Document {
   id: string;
@@ -14,6 +14,9 @@ interface UsuarioDocument extends Document {
   nickMTGO?: string;
   nickArena?: string;
   resultadosExpressivos?: number;
+  bloqueadoTorneios?: boolean;
+  excluido?: boolean;
+  excluidoEm?: Date | null;
   criadoEm: Date;
 }
 
@@ -27,12 +30,36 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   nickMTGO: { type: String, required: false, maxlength: 50 },
   nickArena: { type: String, required: false, maxlength: 50 },
   resultadosExpressivos: { type: Number, required: true, default: 0 },
+  bloqueadoTorneios: { type: Boolean, required: true, default: false },
+  excluido: { type: Boolean, required: true, default: false },
+  excluidoEm: { type: Date, required: false, default: null },
   criadoEm: { type: Date, default: Date.now },
 });
+
+usuarioSchema.index({ bloqueadoTorneios: 1, nome: 1 });
+usuarioSchema.index({ excluido: 1 });
 
 const UsuarioModel =
   mongoose.models.Usuario ||
   mongoose.model<UsuarioDocument>("Usuario", usuarioSchema);
+
+function docParaUsuario(doc: UsuarioDocument): Usuario {
+  return new Usuario({
+    id: doc.get("id"),
+    nome: doc.get("nome"),
+    email: doc.get("email"),
+    senha: doc.get("senha"),
+    role: doc.get("role") || "user",
+    telefone: doc.get("telefone"),
+    nickMTGO: doc.get("nickMTGO"),
+    nickArena: doc.get("nickArena"),
+    resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
+    bloqueadoTorneios: doc.get("bloqueadoTorneios") ?? false,
+    excluido: doc.get("excluido") ?? false,
+    excluidoEm: doc.get("excluidoEm") ?? null,
+    criadoEm: doc.get("criadoEm"),
+  });
+}
 
 export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGateway {
   private constructor() { super(); }
@@ -53,6 +80,9 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
       resultadosExpressivos: usuario.resultadosExpressivos,
+      bloqueadoTorneios: usuario.bloqueadoTorneios,
+      excluido: usuario.excluido,
+      excluidoEm: usuario.excluidoEm ?? null,
       criadoEm: usuario.criadoEm,
     });
   }
@@ -63,18 +93,7 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
 
     if (!doc) return null;
 
-    return new Usuario({
-      id: doc.get("id"),
-      nome: doc.get("nome"),
-      email: doc.get("email"),
-      senha: doc.get("senha"),
-      role: doc.get("role") || "user",
-      telefone: doc.get("telefone"),
-      nickMTGO: doc.get("nickMTGO"),
-      nickArena: doc.get("nickArena"),
-      resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
-      criadoEm: doc.get("criadoEm"),
-    });
+    return docParaUsuario(doc as unknown as UsuarioDocument);
   }
 
   public async buscarPorId(id: string): Promise<Usuario | null> {
@@ -83,74 +102,30 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
 
     if (!doc) return null;
 
-    return new Usuario({
-      id: doc.get("id"),
-      nome: doc.get("nome"),
-      email: doc.get("email"),
-      senha: doc.get("senha"),
-      role: doc.get("role") || "user",
-      telefone: doc.get("telefone"),
-      nickMTGO: doc.get("nickMTGO"),
-      nickArena: doc.get("nickArena"),
-      resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
-      criadoEm: doc.get("criadoEm"),
-    });
+    return docParaUsuario(doc as unknown as UsuarioDocument);
   }
 
   public async buscarVarios(ids: string[]): Promise<Usuario[]> {
     await this.conectar();
     const docs = await UsuarioModel.find({ id: { $in: ids } });
-    return docs.map(
-      (doc) =>
-        new Usuario({
-          id: doc.get("id"),
-          nome: doc.get("nome"),
-          email: doc.get("email"),
-          senha: doc.get("senha"),
-          role: doc.get("role") || "user",
-          telefone: doc.get("telefone"),
-          nickMTGO: doc.get("nickMTGO"),
-          nickArena: doc.get("nickArena"),
-          resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
-          criadoEm: doc.get("criadoEm"),
-        })
-    );
+    return docs.map((doc) => docParaUsuario(doc as unknown as UsuarioDocument));
   }
 
   public async listar(filtros: FiltrosListarUsuarios = {}): Promise<Usuario[]> {
     await this.conectar();
-    const filtroQuery: Record<string, unknown> = {};
-    if (filtros.nome) {
-      filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
-    }
+    const filtroQuery = montarFiltroListagemUsuarios(filtros);
     let query = UsuarioModel.find(filtroQuery).sort({ nome: 1, id: 1 });
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;
-    return docs.map(
-      (doc) =>
-        new Usuario({
-          id: doc.get("id"),
-          nome: doc.get("nome"),
-          email: doc.get("email"),
-          senha: doc.get("senha"),
-          role: doc.get("role") || "user",
-          telefone: doc.get("telefone"),
-          nickMTGO: doc.get("nickMTGO"),
-          nickArena: doc.get("nickArena"),
-          resultadosExpressivos: doc.get("resultadosExpressivos") ?? 0,
-          criadoEm: doc.get("criadoEm"),
-        })
-    );
+    return docs.map((doc) => docParaUsuario(doc as unknown as UsuarioDocument));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome"> = {}): Promise<number> {
+  public async listarTotal(
+    filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios"> = {},
+  ): Promise<number> {
     await this.conectar();
-    const filtroQuery: Record<string, unknown> = {};
-    if (filtros.nome) {
-      filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
-    }
-    return UsuarioModel.countDocuments(filtroQuery);
+    return UsuarioModel.countDocuments(montarFiltroListagemUsuarios(filtros));
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {
@@ -165,8 +140,16 @@ export class UsuarioRepositorio extends BaseRepositorio implements UsuarioGatewa
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
         resultadosExpressivos: usuario.resultadosExpressivos,
+        bloqueadoTorneios: usuario.bloqueadoTorneios,
+        excluido: usuario.excluido,
+        excluidoEm: usuario.excluidoEm ?? null,
       }
     );
+  }
+
+  public async excluir(id: string): Promise<void> {
+    await this.conectar();
+    await UsuarioModel.deleteOne({ id });
   }
 
   public async incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void> {

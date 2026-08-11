@@ -1,17 +1,13 @@
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
-import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
-import { Usuario } from "../../dominio/entidade/usuario";
-
-function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
-    if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
-    if (modo === "nickArena") return u.nickArena ?? u.nome;
-    return u.nome;
-}
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import {
+  isUsuarioExcluido,
+  resolverNomeJogador as resolverNome,
+} from "../../helpers/torneio/resolverNomeJogador";
 
 export type ListarPartidasTorneioInputDto = {
     torneioId: string;
@@ -26,14 +22,17 @@ export type ListarPartidasTorneioOutputDto = {
         rodada: number;
         jogador1Id: string;
         jogador1Nome: string;
+        jogador1Excluido: boolean;
         jogador2Id: string | null;
         jogador2Nome: string | null;
+        jogador2Excluido: boolean;
         deckJogador1Id?: string;
         deckJogador2Id?: string | null;
         vitoriasJogador1: number;
         vitoriasJogador2: number;
         status: string;
         contestado: boolean;
+        observacaoContestacao?: string | null;
         confirmadoPor: string[];
         confirmacao: { count: number; total: number; fullyConfirmed: boolean };
         mesa: number | null;
@@ -82,7 +81,7 @@ export class ListarPartidasTorneio
             partidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])
         ));
         const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
-        const nomeMap = new Map(usuarios.map((u) => [u.id, resolverNome(u, torneio.exibirNomeJogador)]));
+        const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
         const criarResumoConfirmacao = (p: typeof partidas[number]) => {
             if (!p.jogador2Id) return { count: 0, total: 0, fullyConfirmed: true };
@@ -96,23 +95,32 @@ export class ListarPartidasTorneio
         return {
             torneioId: input.torneioId,
             rodada: input.rodada,
-            partidas: partidas.map((p) => ({
+            partidas: partidas.map((p) => {
+                const u1 = usuarioMap.get(p.jogador1Id);
+                const u2 = p.jogador2Id ? usuarioMap.get(p.jogador2Id) : undefined;
+                return {
                 id: p.id,
                 rodada: p.rodada,
                 jogador1Id: p.jogador1Id,
-                jogador1Nome: nomeMap.get(p.jogador1Id) ?? p.jogador1Id,
+                jogador1Nome: u1 ? resolverNome(u1, torneio.exibirNomeJogador) : p.jogador1Id,
+                jogador1Excluido: isUsuarioExcluido(u1),
                 jogador2Id: p.jogador2Id,
-                jogador2Nome: p.jogador2Id ? (nomeMap.get(p.jogador2Id) ?? p.jogador2Id) : null,
+                jogador2Nome: p.jogador2Id
+                    ? (u2 ? resolverNome(u2, torneio.exibirNomeJogador) : p.jogador2Id)
+                    : null,
+                jogador2Excluido: p.jogador2Id ? isUsuarioExcluido(u2) : false,
                 deckJogador1Id: p.deckJogador1Id,
                 deckJogador2Id: p.deckJogador2Id,
                 vitoriasJogador1: p.vitoriasJogador1,
                 vitoriasJogador2: p.vitoriasJogador2,
                 status: p.status,
                 contestado: p.contestado,
+                observacaoContestacao: p.observacaoContestacao ?? null,
                 confirmadoPor: p.confirmadoPor,
                 confirmacao: criarResumoConfirmacao(p),
                 mesa: p.mesa,
-            })),
+                };
+            }),
         };
     }
 }

@@ -6,6 +6,8 @@ import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsua
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
 import { ConfirmarResetSenhaRota } from "../infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
 import { ListarUsuariosRota } from "../infra/api/express/rotas/usuario/listarUsuarios.express.route";
+import { AlterarBloqueioTorneiosRota } from "../infra/api/express/rotas/usuario/alterarBloqueioTorneios.express.route";
+import { ExcluirContaRota } from "../infra/api/express/rotas/usuario/excluirConta.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "../infra/api/express/rotas/deck/atualizarDeck.express.route";
 import { ExcluirDeckRota } from "../infra/api/express/rotas/deck/excluirDeck.express.route";
@@ -18,6 +20,8 @@ import { EscolherDeckTorneioRota } from "../infra/api/express/rotas/torneio/esco
 import { IniciarTorneioRota } from "../infra/api/express/rotas/torneio/iniciarTorneio.express.route";
 import { IniciarProximaRodadaRota } from "../infra/api/express/rotas/torneio/iniciarProximaRodada.express.route";
 import { RefazerRodadaRota } from "../infra/api/express/rotas/torneio/refazerRodada.express.route";
+import { AjustarTotalRodadasRota } from "../infra/api/express/rotas/torneio/ajustarTotalRodadas.express.route";
+import { EncerrarTorneioRota } from "../infra/api/express/rotas/torneio/encerrarTorneio.express.route";
 import { RegistrarResultadoRota } from "../infra/api/express/rotas/torneio/registrarResultado.express.route";
 import { ContestarResultadoRota } from "../infra/api/express/rotas/torneio/contestarResultado.express.route";
 import { ConfirmarResultadoRota } from "../infra/api/express/rotas/torneio/confirmarResultado.express.route";
@@ -60,6 +64,9 @@ import { BuscarAnunciosAdminRota } from "../infra/api/express/rotas/site/buscarA
 import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/buscarEstatisticasSite.express.route";
 import { RegistrarCliqueAnuncioRota } from "../infra/api/express/rotas/site/registrarCliqueAnuncio.express.route";
 import { SalvarAnunciosRota } from "../infra/api/express/rotas/site/salvarAnuncios.express.route";
+import { CadastrarStoryFundoRota } from "../infra/api/express/rotas/storyFundo/cadastrarStoryFundo.express.route";
+import { ListarStoryFundosRota } from "../infra/api/express/rotas/storyFundo/listarStoryFundos.express.route";
+import { ExcluirStoryFundoRota } from "../infra/api/express/rotas/storyFundo/excluirStoryFundo.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { type CasosDeUso } from "./casos";
 
@@ -68,11 +75,13 @@ export function criarRotas(casos: CasosDeUso) {
         CadastrarUsuarioRota.criar(casos.cadastrarUsuario),
         LoginUsuarioRota.criar(casos.loginUsuario),
         AtualizarUsuarioRota.criar(casos.atualizarUsuario),
+        ExcluirContaRota.criar(casos.excluirConta),
         RefreshTokenRota.criar(casos.refreshToken),
         LogoutUsuarioRota.criar(casos.logoutUsuario),
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
         ListarUsuariosRota.criar(casos.listarUsuarios),
+        AlterarBloqueioTorneiosRota.criar(casos.alterarBloqueioTorneios),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),
         ExcluirDeckRota.criar(casos.excluirDeck),
@@ -86,6 +95,8 @@ export function criarRotas(casos: CasosDeUso) {
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
         RefazerRodadaRota.criar(casos.refazerRodada),
+        AjustarTotalRodadasRota.criar(casos.ajustarTotalRodadas),
+        EncerrarTorneioRota.criar(casos.encerrarTorneio),
         RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
         ContestarResultadoRota.criar(casos.contestarResultado),
         ConfirmarResultadoRota.criar(casos.confirmarResultado),
@@ -127,6 +138,9 @@ export function criarRotas(casos: CasosDeUso) {
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
+        ListarStoryFundosRota.criar(casos.listarStoryFundos),
+        CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),
+        ExcluirStoryFundoRota.criar(casos.excluirStoryFundo),
         HealthRota.criar(),
     ];
 }

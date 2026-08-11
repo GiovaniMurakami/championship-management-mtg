@@ -19,6 +19,11 @@ function s3ImagemUrlOuVazio() {
   return z.union([s3ImagemUrl(), z.literal("")]);
 }
 
+export const cadastrarStoryFundoSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório.").max(100, "Nome pode ter no máximo 100 caracteres."),
+  url: s3ImagemUrl(),
+});
+
 const cartaSchema = z.object({
   nome: z.string().min(1),
   quantidade: z.number().int().min(1),
@@ -44,6 +49,10 @@ export const atualizarUsuarioSchema = z.object({
   telefone: z.string().optional(),
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
+});
+
+export const excluirContaSchema = z.object({
+  confirmacao: z.string().min(1, "Confirmação é obrigatória."),
 });
 
 export const refreshTokenSchema = z.object({
@@ -86,8 +95,9 @@ export const criarTorneioSchema = z.object({
   bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
+  storyFundoUrl: s3ImagemUrlOuVazio().optional(),
   maxJogadores: z.number().int().min(2).optional(),
-  maxRodadas: z.number().int().min(1).optional(),
+  maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
@@ -103,8 +113,9 @@ export const alterarTorneioSchema = z.object({
   bannerUrl: s3ImagemUrlOuVazio().optional(),
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
+  storyFundoUrl: s3ImagemUrlOuVazio().optional(),
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
-  maxRodadas: z.number().int().min(1).optional().nullable().transform(v => v ?? undefined),
+  maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
@@ -118,7 +129,7 @@ export const escolherDeckTorneioSchema = z.object({
 
 export const atualizarPareamentosRodadaSchema = z.object({
   partidas: z.array(z.object({
-    id: uuidCampo("id"),
+    id: uuidCampo("id").optional().nullable(),
     jogador1Id: uuidCampo("jogador1Id"),
     jogador2Id: uuidCampo("jogador2Id").nullable().optional(),
     mesa: z.number().int().min(1, "mesa deve ser inteiro >= 1.").nullable().optional(),
@@ -128,6 +139,18 @@ export const atualizarPareamentosRodadaSchema = z.object({
 export const registrarResultadoSchema = z.object({
   vitoriasJogador1: z.number().int().min(0, "vitoriasJogador1 deve ser inteiro >= 0."),
   vitoriasJogador2: z.number().int().min(0, "vitoriasJogador2 deve ser inteiro >= 0."),
+});
+
+export const contestarResultadoSchema = z.object({
+  observacao: z
+    .string()
+    .trim()
+    .max(500, "Observação deve ter no máximo 500 caracteres.")
+    .optional(),
+});
+
+export const ajustarTotalRodadasSchema = z.object({
+  totalRodadas: z.number().int().min(1, "totalRodadas deve ser >= 1.").max(30, "totalRodadas deve ser <= 30."),
 });
 
 export const droparJogadorSchema = z.object({
@@ -200,7 +223,19 @@ export const torneioRodadaParamSchema = z.object({
 
 export const listarUsuariosQuerySchema = z.object({
   nome: z.string().max(200).optional(),
+  bloqueadoTorneios: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((valor) => (valor === undefined ? undefined : valor === "true")),
   ...paginacaoQueryCampos,
+});
+
+export const alterarBloqueioTorneiosSchema = z.object({
+  bloqueado: z.boolean(),
+});
+
+export const usuarioIdParamSchema = z.object({
+  usuarioId: uuidCampo("usuarioId"),
 });
 
 export const definirAnfitriaoTorneioSchema = z.object({

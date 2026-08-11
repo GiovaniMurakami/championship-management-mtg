@@ -21,4 +21,6 @@ export interface TorneioGateway {
   /** Atualiza torneio e cria novas partidas atomicamente numa transação MongoDB. */
   atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void>;
   excluir(id: string): Promise<void>;
+  contarPorDono(donoId: string): Promise<number>;
+  removerAnfitriaoDoUsuario(usuarioId: string): Promise<number>;
 }

@@ -16,9 +16,11 @@ export interface DeckGateway {
   buscarPorId(id: string): Promise<Deck | null>;
   buscarVarios(ids: string[]): Promise<Deck[]>;
   listarPorUsuario(usuarioId: string): Promise<Deck[]>;
+  listarPorDeckOriginalId(deckOriginalId: string): Promise<Deck[]>;
   listar(filtros: FiltrosListarDecks): Promise<Deck[]>;
   listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "formato" | "nome">): Promise<number>;
   atualizar(deck: Deck): Promise<void>;
   incrementarVisualizacoes(id: string): Promise<Deck | null>;
   excluir(id: string): Promise<void>;
+  excluirPorUsuario(usuarioId: string): Promise<number>;
 }

@@ -8,6 +8,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -88,8 +89,9 @@ export class IniciarTorneio
     }
 
     const rodadasCalculadas = Math.ceil(Math.log2(comCheckIn.length));
+    // maxRodadas força o total Swiss (pode ser maior ou menor que ceil(log2(n))).
     const totalRodadas = torneio.maxRodadas !== undefined
-      ? Math.min(rodadasCalculadas, torneio.maxRodadas)
+      ? torneio.maxRodadas
       : rodadasCalculadas;
 
     torneio.avancarParaEmAndamento(1, totalRodadas);
@@ -97,7 +99,9 @@ export class IniciarTorneio
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn.map((i) => i.usuarioId);
     const usuarios = await this.usuarioGateway.buscarVarios(jogadores);
-    const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+    const usuarioNomeMap = new Map(
+      usuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
+    );
     for (let i = jogadores.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];

@@ -33,6 +33,34 @@ describe("ContestarResultado", () => {
         expect(resultado.vitoriasJogador1).toBe(2);
         expect(resultado.vitoriasJogador2).toBe(0);
         expect(resultado.status).toBe("finalizada");
+        expect(resultado.observacaoContestacao).toBeNull();
+    });
+
+    it("deve repassar observação da contestação ao gateway", async () => {
+        const partidaContestada = new Partida({
+            ...partida,
+            contestado: true,
+            observacaoContestacao: "Marcador invertido",
+        });
+        const contestarPartida = jest.fn().mockResolvedValue(partidaContestada);
+
+        const uc = ContestarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({
+                buscarPorId: jest.fn().mockResolvedValue(partida),
+                contestarPartida,
+            }),
+        );
+
+        const resultado = await uc.executar({
+            partidaId: "p-1",
+            usuarioId: "u-1",
+            isAdmin: false,
+            observacao: "Marcador invertido",
+        });
+
+        expect(contestarPartida).toHaveBeenCalledWith("p-1", "Marcador invertido");
+        expect(resultado.observacaoContestacao).toBe("Marcador invertido");
     });
 
     it("deve lançar 404 se a partida não existir", async () => {

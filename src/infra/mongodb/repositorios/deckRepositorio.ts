@@ -141,6 +141,12 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
     return docs.map(docParaDeck);
   }
 
+  public async listarPorDeckOriginalId(deckOriginalId: string): Promise<Deck[]> {
+    await this.conectar();
+    const docs = await DeckModel.find({ deckOriginalId });
+    return docs.map(docParaDeck);
+  }
+
   private escaparRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
@@ -205,6 +211,12 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   public async excluir(id: string): Promise<void> {
     await this.conectar();
     await DeckModel.deleteOne({ id });
+  }
+
+  public async excluirPorUsuario(usuarioId: string): Promise<number> {
+    await this.conectar();
+    const result = await DeckModel.deleteMany({ usuarioId });
+    return result.deletedCount ?? 0;
   }
 
   public async incrementarVisualizacoes(id: string): Promise<Deck | null> {

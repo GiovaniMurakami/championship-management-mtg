@@ -726,7 +726,11 @@ describe("RankingLiga", () => {
 
         const resultado = await uc.executar({ ligaId: "liga-times" });
 
-        expect(resultado.rankingJogadores[0].jogador.nome).toBe("Desconhecido");
+        expect(resultado.rankingJogadores[0].jogador).toEqual({
+            id: "user-1",
+            nome: "user-1",
+            excluido: false,
+        });
         expect(resultado.rankingDecks[0].nome).toBe("deck-nao-encontrado");
         expect(resultado.rankingTimes![0].time.nome).toBe("Desconhecido");
     });

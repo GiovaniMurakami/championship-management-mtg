@@ -118,7 +118,7 @@ describe("IniciarTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve usar maxRodadas quando configurado no torneio", async () => {
+    it("deve usar maxRodadas como total forçado quando menor que o calculado", async () => {
         const torneioComMaxRodadas = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
@@ -136,11 +136,11 @@ describe("IniciarTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
-        // 4 jogadores -> ceil(log2(4)) = 2 por padrão, mas maxRodadas = 1 limita o total.
+        // 4 jogadores -> ceil(log2(4)) = 2 por padrão, mas maxRodadas = 1 força o total.
         expect(resultado.totalRodadas).toBe(1);
     });
 
-    it("não deve aumentar totalRodadas quando maxRodadas for maior que o calculado", async () => {
+    it("deve forçar totalRodadas quando maxRodadas for maior que o calculado", async () => {
         const torneioComMaxRodadas = new Torneio({
             id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
             donoId: "dono-1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
@@ -158,7 +158,7 @@ describe("IniciarTorneio", () => {
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
-        expect(resultado.totalRodadas).toBe(2);
+        expect(resultado.totalRodadas).toBe(5);
     });
 
     it("deve gerar bye quando número ímpar de jogadores", async () => {

@@ -11,6 +11,7 @@ import "./repositorios/partidaRepositorio";
 import "./repositorios/refreshTokenRepositorio";
 import "./repositorios/resetSenhaRepositorio";
 import "./repositorios/siteConfigRepositorio";
+import "./repositorios/storyFundoRepositorio";
 import "./repositorios/timeRepositorio";
 import "./repositorios/tokenBlacklistRepositorio";
 import "./repositorios/torneioRepositorio";

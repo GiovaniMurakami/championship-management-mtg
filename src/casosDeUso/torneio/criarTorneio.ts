@@ -17,6 +17,7 @@ export type CriarTorneioInputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -37,6 +38,7 @@ export type CriarTorneioOutputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -74,6 +76,7 @@ export class CriarTorneio
       bannerUrl: input.bannerUrl?.trim(),
       linkBanner: input.linkBanner?.trim(),
       somRodada: input.somRodada?.trim(),
+      storyFundoUrl: input.storyFundoUrl?.trim(),
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
@@ -96,6 +99,7 @@ export class CriarTorneio
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
+      storyFundoUrl: torneio.storyFundoUrl,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,

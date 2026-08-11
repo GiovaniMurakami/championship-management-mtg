@@ -15,6 +15,7 @@ interface PartidaDocument extends Document {
   vitoriasJogador2: number;
   status: StatusPartida;
   contestado: boolean;
+  observacaoContestacao?: string | null;
   tipoBye: TipoBye;
   confirmadoPor: string[];
   mesa: number | null;
@@ -33,6 +34,7 @@ const partidaSchema = new Schema<PartidaDocument>({
   vitoriasJogador2: { type: Number, required: true, default: 0, max: 3 },
   status: { type: String, required: true, default: "pendente" },
   contestado: { type: Boolean, default: false },
+  observacaoContestacao: { type: String, default: null },
   tipoBye: { type: String, default: null },
   confirmadoPor: { type: [String], default: [] },
   mesa: { type: Number, default: null },
@@ -67,6 +69,7 @@ function docParaPartida(doc: PartidaDocument): Partida {
     vitoriasJogador2: doc.get("vitoriasJogador2"),
     status: doc.get("status"),
     contestado: doc.get("contestado") ?? false,
+    observacaoContestacao: (doc.get("observacaoContestacao") as string | null) ?? null,
     tipoBye: (doc.get("tipoBye") as TipoBye) ?? null,
     confirmadoPor: (doc.get("confirmadoPor") as string[]) ?? [],
     mesa: (doc.get("mesa") as number | null) ?? null,
@@ -88,6 +91,7 @@ function leanParaPartida(doc: Record<string, unknown>): Partida {
     vitoriasJogador2: doc["vitoriasJogador2"] as number,
     status: doc["status"] as StatusPartida,
     contestado: (doc["contestado"] as boolean | undefined) ?? false,
+    observacaoContestacao: (doc["observacaoContestacao"] as string | null | undefined) ?? null,
     tipoBye: (doc["tipoBye"] as TipoBye | undefined) ?? null,
     confirmadoPor: (doc["confirmadoPor"] as string[] | undefined) ?? [],
     mesa: (doc["mesa"] as number | null | undefined) ?? null,
@@ -183,6 +187,18 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     return docs.map((doc) => leanParaPartida(doc as unknown as Record<string, unknown>));
   }
 
+  public async listarPorDeckIds(deckIds: string[]): Promise<Partida[]> {
+    if (deckIds.length === 0) return [];
+    await this.conectar();
+    const docs = await PartidaModel.find({
+      $or: [
+        { deckJogador1Id: { $in: deckIds } },
+        { deckJogador2Id: { $in: deckIds } },
+      ],
+    }).sort({ criadoEm: -1 }).lean();
+    return docs.map((doc) => leanParaPartida(doc as unknown as Record<string, unknown>));
+  }
+
   public async atualizar(partida: Partida): Promise<void> {
     await this.conectar();
     await PartidaModel.updateOne(
@@ -196,6 +212,7 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
         vitoriasJogador2: partida.vitoriasJogador2,
         status: partida.status,
         contestado: partida.contestado,
+        observacaoContestacao: partida.observacaoContestacao,
         tipoBye: partida.tipoBye,
         confirmadoPor: partida.confirmadoPor,
         mesa: partida.mesa,
@@ -227,11 +244,15 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
    * Marca a partida como contestada — mantém placar e status finalizada.
    * Retorna null se a partida não estava finalizada.
    */
-  public async contestarPartida(id: string): Promise<Partida | null> {
+  public async contestarPartida(id: string, observacao?: string | null): Promise<Partida | null> {
     await this.conectar();
+    const observacaoLimpa = typeof observacao === "string" ? observacao.trim() : "";
     const doc = await PartidaModel.findOneAndUpdate(
       { id, status: "finalizada" },
-      { contestado: true },
+      {
+        contestado: true,
+        observacaoContestacao: observacaoLimpa || null,
+      },
       { new: true }
     );
     if (!doc) return null;
@@ -250,7 +271,13 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
     await this.conectar();
     const doc = await PartidaModel.findOneAndUpdate(
       { id, contestado: true },
-      { vitoriasJogador1: v1, vitoriasJogador2: v2, contestado: false, status: "finalizada" },
+      {
+        vitoriasJogador1: v1,
+        vitoriasJogador2: v2,
+        contestado: false,
+        observacaoContestacao: null,
+        status: "finalizada",
+      },
       { new: true }
     );
     if (!doc) return null;
@@ -300,6 +327,13 @@ export class PartidaRepositorio extends BaseRepositorio implements PartidaGatewa
   public async excluirPorTorneioERodada(torneioId: string, rodada: number): Promise<number> {
     await this.conectar();
     const result = await PartidaModel.deleteMany({ torneioId, rodada });
+    return result.deletedCount ?? 0;
+  }
+
+  public async excluirPorIds(ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    await this.conectar();
+    const result = await PartidaModel.deleteMany({ id: { $in: ids } });
     return result.deletedCount ?? 0;
   }
 

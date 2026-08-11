@@ -21,6 +21,7 @@ interface TorneioDocument extends Document {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -48,8 +49,9 @@ const torneioSchema = new Schema<TorneioDocument>({
   bannerUrl: { type: String, maxlength: 500 },
   linkBanner: { type: String, maxlength: 500 },
   somRodada: { type: String, maxlength: 500 },
+  storyFundoUrl: { type: String, maxlength: 500 },
   maxJogadores: { type: Number, max: 512 },
-  maxRodadas: { type: Number, max: 20 },
+  maxRodadas: { type: Number, max: 30 },
   corteTop: { type: Number, max: 64 },
   linkLive: { type: String, maxlength: 500 },
   emCorte: { type: Boolean, default: false },
@@ -89,6 +91,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     bannerUrl: doc.get("bannerUrl") ?? undefined,
     linkBanner: doc.get("linkBanner") ?? undefined,
     somRodada: doc.get("somRodada") ?? undefined,
+    storyFundoUrl: doc.get("storyFundoUrl") ?? undefined,
     maxJogadores: doc.get("maxJogadores") ?? undefined,
     maxRodadas: doc.get("maxRodadas") ?? undefined,
     corteTop: doc.get("corteTop") ?? undefined,
@@ -126,6 +129,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
+      storyFundoUrl: torneio.storyFundoUrl,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
@@ -186,6 +190,20 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
     await TorneioModel.deleteOne({ id });
   }
 
+  public async contarPorDono(donoId: string): Promise<number> {
+    await this.conectar();
+    return TorneioModel.countDocuments({ donoId });
+  }
+
+  public async removerAnfitriaoDoUsuario(usuarioId: string): Promise<number> {
+    await this.conectar();
+    const result = await TorneioModel.updateMany(
+      { anfitriaoId: usuarioId },
+      { $set: { anfitriaoId: null } },
+    );
+    return result.modifiedCount ?? 0;
+  }
+
   public async atualizar(torneio: Torneio): Promise<void> {
     await this.conectar();
     await TorneioModel.updateOne(
@@ -203,6 +221,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         bannerUrl: torneio.bannerUrl,
         linkBanner: torneio.linkBanner,
         somRodada: torneio.somRodada,
+        storyFundoUrl: torneio.storyFundoUrl,
         maxJogadores: torneio.maxJogadores,
         maxRodadas: torneio.maxRodadas,
         corteTop: torneio.corteTop,

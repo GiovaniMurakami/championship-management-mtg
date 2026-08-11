@@ -11,6 +11,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 
 export type IngressarViaTorneioInputDto = {
@@ -97,6 +98,13 @@ export class IngressarViaTorneio
             throw ErroPersonalizado.criar({
                 mensagem: "Usuário não encontrado.",
                 status: StatusErro.erroNaoEncontrado,
+            });
+        }
+
+        if (usuario.bloqueadoTorneios) {
+            throw ErroPersonalizado.criar({
+                mensagem: "Sua conta está bloqueada para inscrição em torneios.",
+                status: StatusErro.erroProibido,
             });
         }
 
@@ -193,10 +201,12 @@ export class IngressarViaTorneio
         });
         await this.partidaGateway.salvar(partida);
 
+        const usuarioNome = resolverNomeJogador(usuario, torneio.exibirNomeJogador);
+
         eventosTorneio.emit("jogador_ingressou", {
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
-            usuarioNome: usuario.nome,
+            usuarioNome,
             rodadaIngresso: torneio.rodadaAtual,
             substituiuBye: false,
         });

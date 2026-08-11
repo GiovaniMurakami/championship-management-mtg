@@ -143,7 +143,9 @@ app.ts
 POST /usuario/cadastrar, /login, /refresh-token, /logout
 POST /usuario/reset-senha/solicitar, /confirmar
 PUT  /usuario/atualizar
-GET  /usuario/listar                    (admin — busca por nome)
+DELETE /usuario/conta                   (auth — body: { confirmacao } = nome do perfil; soft-delete/anonimiza; preserva decks e inscrições; marca excluido)
+GET  /usuario/listar                    (admin — busca por nome/email; query bloqueadoTorneios; omite excluídos por padrão)
+PUT  /usuario/:usuarioId/bloqueio-torneios (admin — body: { bloqueado }; remove inscricoes abertas)
 ```
 
 ### Deck
@@ -207,6 +209,23 @@ Helper `podeGerenciarTorneio(torneio, usuarioId, isAdmin)` em `helpers/torneio/p
 
 Usado em iniciar rodada, resultados, pareamentos, drop em nome de jogador, escolher deck para jogador, etc.
 
+**Drop pelo próprio jogador:** `POST /torneio/:torneioId/drop` com body vazio (ou `jogadorId` = próprio id). Em `inscricoes_abertas` remove a inscrição; em `em_andamento` marca `dropped` e resolve partidas pendentes por WO.
+
+### Conta — soft-delete (LGPD)
+
+`DELETE /usuario/conta` com `{ confirmacao }` = nome atual do perfil:
+
+- **Não** apaga decks nem inscrições/partidas
+- Anonimiza: nome → `"Usuário excluído"`, e-mail interno, limpa nicks/telefone, senha aleatória
+- Flags: `excluido: true`, `excluidoEm`, `bloqueadoTorneios: true`
+- Remove anfitrião, refresh/reset tokens; login e refresh rejeitam conta excluída
+- Bloqueia se for admin, dono de torneio ou dono de time
+- Payloads públicos incluem `excluido` / `jogadorNExcluido` e nome anonimizado via `helpers/torneio/resolverNomeJogador.ts` (`toUsuarioPublico`)
+
+### Bloqueio de torneios (admin)
+
+`PUT /usuario/:usuarioId/bloqueio-torneios` — flag `bloqueadoTorneios`; ao bloquear, remove inscrições só de torneios em `inscricoes_abertas`.
+
 ---
 
 ## 8. Validação (Zod)
@@ -216,8 +235,11 @@ Usado em iniciar rodada, resultados, pareamentos, drop em nome de jogador, escol
 - `validarBody()` — handler síncrono em POST/PUT/PATCH
 - `validarParamsMiddleware()` / `validarQueryMiddleware()` — middleware Express
 - Erro: `400` com `{ mensagem, erros: string[] }`
+- Rotas **sem** Zod (proposital): `GET /health`, anúncios/estatísticas públicas, `GET /story-fundo` (listar), `POST /usuario/logout` — sem params/body/query
 
 Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
+
+**Cobertura mínima (Jest):** statements/lines/functions ≥ 95%, branches ≥ 90%.
 
 ---
 
@@ -342,6 +364,8 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 | Novo endpoint | `casosDeUso/` → `composicao/casos.ts` → rota → `composicao/rotas.ts` → Zod |
 | Permissão torneio | `helpers/torneio/podeGerenciarTorneio.ts` + use case específico |
 | Anfitrião | `definirAnfitriaoTorneio.ts`, campo em `dominio/entidade/torneio.ts` |
+| Soft-delete conta | `casosDeUso/usuario/excluirConta.ts`, `resolverNomeJogador.ts` |
+| Bloqueio torneios | `casosDeUso/usuario/alterarBloqueioTorneios.ts` |
 | Pareamento Swiss | `casosDeUso/torneio/iniciarTorneio.ts`, `iniciarProximaRodada.ts`, helpers em `helpers/torneio/` |
 | Standings | `buscarStandings.ts` |
 | Datas Brasília | `helpers/data/brasilia.ts` + rotas que serializam torneio |
@@ -406,4 +430,4 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 
 ---
 
-*Última revisão: julho/2026 — alinhado com v1.1.16*
+*Última revisão: agosto/2026 — alinhado com v1.1.16 (soft-delete/LGPD, drop do próprio jogador, bloqueio de torneios)*

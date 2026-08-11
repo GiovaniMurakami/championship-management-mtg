@@ -53,7 +53,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
-        mensagem: "Torneio nÃ£o encontrado.",
+        mensagem: "Torneio não encontrado.",
         status: StatusErro.erroNaoEncontrado,
       });
     }
@@ -74,7 +74,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (torneio.rodadaAtual <= 1) {
       throw ErroPersonalizado.criar({
-        mensagem: "NÃ£o hÃ¡ rodada anterior para retornar.",
+        mensagem: "Não há rodada anterior para retornar.",
         status: StatusErro.erroParametro,
       });
     }
@@ -88,7 +88,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (partidasRodadaAtual.length === 0) {
       throw ErroPersonalizado.criar({
-        mensagem: `NÃ£o existem partidas na rodada ${rodadaRemovida} para remover.`,
+        mensagem: `Não existem partidas na rodada ${rodadaRemovida} para remover.`,
         status: StatusErro.erroParametro,
       });
     }

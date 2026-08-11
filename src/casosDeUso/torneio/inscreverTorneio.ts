@@ -6,6 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type InscreverTorneioInputDto = {
   torneioId: string;
@@ -80,7 +81,21 @@ export class InscreverTorneio
 
     const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
 
-    if (!usuario?.nickMTGO) {
+    if (!usuario) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Usuário não encontrado.",
+        status: StatusErro.erroNaoEncontrado,
+      });
+    }
+
+    if (usuario.bloqueadoTorneios) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Sua conta está bloqueada para inscrição em torneios.",
+        status: StatusErro.erroProibido,
+      });
+    }
+
+    if (!usuario.nickMTGO) {
       throw ErroPersonalizado.criar({
         mensagem: "É necessário configurar um nick do MTGO na sua conta antes de se inscrever em um torneio.",
         status: StatusErro.erroParametro,
@@ -107,7 +122,7 @@ export class InscreverTorneio
       }
     }
 
-    const usuarioNome = usuario.nome;
+    const usuarioNome = resolverNomeJogador(usuario, torneio.exibirNomeJogador);
 
     eventosTorneio.emit("participante_inscrito", {
       torneioId: inscricao.torneioId,

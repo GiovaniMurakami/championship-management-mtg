@@ -55,4 +55,24 @@ describe("ExcluirDeck", () => {
         expect(resultado.mensagem).toBe("Deck excluído com sucesso.");
         expect(gateway.excluir).toHaveBeenCalledWith("deck-1");
     });
+
+    it("não permite excluir deck travado de torneio", async () => {
+        const travado = new Deck({
+            ...deckExistente,
+            id: "deck-travado",
+            travado: true,
+            torneioId: "t-1",
+        });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(travado),
+        });
+        const uc = ExcluirDeck.criar(gateway);
+
+        await expect(
+            uc.executar({ id: "deck-travado", usuarioIdRequisitante: "user-1", isAdmin: false }),
+        ).rejects.toMatchObject({
+            message: expect.stringMatching(/travado/i),
+            status: 400,
+        });
+    });
 });

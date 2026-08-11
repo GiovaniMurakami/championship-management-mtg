@@ -30,4 +30,18 @@ describe("CriarTime", () => {
 
         expect(resultado.descricao).toBe("Melhor time");
     });
+
+    it("rejeita criação se o usuário já pertence a um time", async () => {
+        const timeGateway = criarMockTimeGateway({
+            buscarPorMembros: jest.fn().mockResolvedValue([{ id: "t-1" }]),
+        });
+        const uc = CriarTime.criar(timeGateway);
+
+        await expect(
+            uc.executar({ nome: "Novo", donoId: "user-1" }),
+        ).rejects.toMatchObject({
+            message: expect.stringMatching(/já faz parte/i),
+            status: 400,
+        });
+    });
 });

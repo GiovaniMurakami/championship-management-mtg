@@ -231,4 +231,23 @@ describe("Anuncios do site", () => {
 
     await expect(uc.executar({ anuncioId: AD_ID })).rejects.toMatchObject({ status: 404 });
   });
+
+  it("deve rejeitar clique sem anuncioId", async () => {
+    const uc = RegistrarCliqueAnuncio.criar(criarGateway());
+    await expect(uc.executar({ anuncioId: "  " })).rejects.toMatchObject({ status: 400 });
+    await expect(uc.executar({})).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("usa cliques 0 quando o anuncio nao tem campo cliques", async () => {
+    const gateway = criarGateway({
+      registrarCliqueAnuncio: jest.fn().mockResolvedValue({
+        anuncios: [{ id: AD_ID, tipo: "card", titulo: "Loja", ativo: true, ordem: 0 }],
+      }),
+    });
+    const uc = RegistrarCliqueAnuncio.criar(gateway);
+    await expect(uc.executar({ anuncioId: ` ${AD_ID} ` })).resolves.toEqual({
+      anuncioId: AD_ID,
+      cliques: 0,
+    });
+  });
 });

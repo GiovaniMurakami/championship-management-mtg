@@ -5,15 +5,12 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { Usuario } from "../../dominio/entidade/usuario";
-
-function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
-  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
-  if (modo === "nickArena") return u.nickArena ?? u.nome;
-  return u.nome;
-}
+import {
+  isUsuarioExcluido,
+  resolverNomeJogador as resolverNome,
+  USUARIO_EXCLUIDO_NOME,
+} from "../../helpers/torneio/resolverNomeJogador";
 
 export type BuscarTorneioInputDto = {
   torneioId: string;
@@ -29,7 +26,8 @@ export type BuscarTorneioOutputDto = {
   anfitriao?: {
     id: string;
     nome: string;
-    email: string;
+    email: string | null;
+    excluido: boolean;
   } | null;
   status: string;
   rodadaAtual: number;
@@ -39,6 +37,7 @@ export type BuscarTorneioOutputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -56,12 +55,15 @@ export type BuscarTorneioOutputDto = {
     rodada: number;
     jogador1Id: string;
     jogador1Nome: string;
+    jogador1Excluido: boolean;
     jogador2Id: string | null;
     jogador2Nome: string | null;
+    jogador2Excluido: boolean;
     vitoriasJogador1: number;
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    observacaoContestacao?: string | null;
     confirmadoPor: string[];
     mesa: number | null;
   }>;
@@ -128,7 +130,14 @@ export class BuscarTorneio
       donoId: torneioAtual.donoId,
       anfitriaoId: torneioAtual.anfitriaoId ?? null,
       anfitriao: anfitriaoUsuario
-        ? { id: anfitriaoUsuario.id, nome: anfitriaoUsuario.nome, email: anfitriaoUsuario.email }
+        ? {
+            id: anfitriaoUsuario.id,
+            nome: isUsuarioExcluido(anfitriaoUsuario)
+              ? USUARIO_EXCLUIDO_NOME
+              : anfitriaoUsuario.nome,
+            email: isUsuarioExcluido(anfitriaoUsuario) ? null : anfitriaoUsuario.email,
+            excluido: isUsuarioExcluido(anfitriaoUsuario),
+          }
         : null,
       status: torneioAtual.status,
       rodadaAtual: torneioAtual.rodadaAtual,
@@ -138,6 +147,7 @@ export class BuscarTorneio
       bannerUrl: torneioAtual.bannerUrl,
       linkBanner: torneioAtual.linkBanner,
       somRodada: torneioAtual.somRodada,
+      storyFundoUrl: torneioAtual.storyFundoUrl,
       maxJogadores: torneioAtual.maxJogadores,
       maxRodadas: torneioAtual.maxRodadas,
       corteTop: torneioAtual.corteTop,
@@ -150,26 +160,33 @@ export class BuscarTorneio
       totalCheckin,
       criadoEm: toBrasiliaISO(torneioAtual.criadoEm)!,
       rodadaIniciadaEm: toBrasiliaISO(torneioAtual.rodadaIniciadaEm),
-      partidas: partidas.map((p) => ({
+      partidas: partidas.map((p) => {
+        const u1 = usuarioMap.get(p.jogador1Id);
+        const u2 = p.jogador2Id ? usuarioMap.get(p.jogador2Id) : undefined;
+        return {
         id: p.id,
         rodada: p.rodada,
         jogador1Id: p.jogador1Id,
-        jogador1Nome: usuarioMap.get(p.jogador1Id)
-          ? resolverNome(usuarioMap.get(p.jogador1Id)!, torneioAtual.exibirNomeJogador)
+        jogador1Nome: u1
+          ? resolverNome(u1, torneioAtual.exibirNomeJogador)
           : p.jogador1Id,
+        jogador1Excluido: isUsuarioExcluido(u1),
         jogador2Id: p.jogador2Id,
         jogador2Nome: p.jogador2Id
-          ? (usuarioMap.get(p.jogador2Id)
-            ? resolverNome(usuarioMap.get(p.jogador2Id)!, torneioAtual.exibirNomeJogador)
+          ? (u2
+            ? resolverNome(u2, torneioAtual.exibirNomeJogador)
             : p.jogador2Id)
           : null,
+        jogador2Excluido: p.jogador2Id ? isUsuarioExcluido(u2) : false,
         vitoriasJogador1: p.vitoriasJogador1,
         vitoriasJogador2: p.vitoriasJogador2,
         status: p.status,
         contestado: p.contestado,
+        observacaoContestacao: p.observacaoContestacao ?? null,
         confirmadoPor: p.confirmadoPor,
         mesa: p.mesa,
-      })),
+        };
+      }),
     };
   }
 }

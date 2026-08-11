@@ -9,6 +9,7 @@ export type ContestarResultadoInputDto = {
     partidaId: string;
     usuarioId: string;
     isAdmin: boolean;
+    observacao?: string;
 };
 
 export type ContestarResultadoOutputDto = {
@@ -21,6 +22,7 @@ export type ContestarResultadoOutputDto = {
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    observacaoContestacao: string | null;
 };
 
 export class ContestarResultado
@@ -95,7 +97,10 @@ export class ContestarResultado
             });
         }
 
-        const partidaContestada = await this.partidaGateway.contestarPartida(input.partidaId);
+        const partidaContestada = await this.partidaGateway.contestarPartida(
+            input.partidaId,
+            input.observacao
+        );
         if (!partidaContestada) {
             throw ErroPersonalizado.criar({
                 mensagem: "Não foi possível contestar a partida. Tente novamente.",
@@ -113,6 +118,7 @@ export class ContestarResultado
             vitoriasJogador2: partidaContestada.vitoriasJogador2,
             status: partidaContestada.status,
             contestado: partidaContestada.contestado,
+            observacaoContestacao: partidaContestada.observacaoContestacao,
         };
     }
 }

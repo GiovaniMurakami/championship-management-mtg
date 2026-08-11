@@ -27,9 +27,9 @@ describe("ListarDecks", () => {
         expect(resultado.total).toBe(2);
         expect(resultado.decks[0].nome).toBe("Burn");
         expect(resultado.decks[0].linkLigaMagic).toBeNull();
-        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "Joao" });
+        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "Joao", excluido: false });
         expect(resultado.decks[1].nome).toBe("Storm");
-        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "Joao" });
+        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "Joao", excluido: false });
     });
 
     it("deve retornar lista vazia quando nao ha decks", async () => {

@@ -7,6 +7,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
@@ -36,6 +37,7 @@ export type IniciarProximaRodadaOutputDto =
   | {
     finalizado: false;
     rodadaAtual: number;
+    totalRodadas: number;
     emCorte: boolean;
     rodadaIniciadaEm: string;
     partidas: Array<{
@@ -147,7 +149,9 @@ export class IniciarProximaRodada
     const jogadoresIds = inscricoesAtivas.map((i) => i.usuarioId);
     const deckMap = new Map(inscricoesAtivas.map((i) => [i.usuarioId, i.deckId]));
     const usuarios = await this.usuarioGateway.buscarVarios(jogadoresIds);
-    const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+    const usuarioNomeMap = new Map(
+      usuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
+    );
     const estaNaUltimaRodada = torneio.rodadaAtual >= torneio.totalRodadas;
     const jogadoresIdsSet = new Set(jogadoresIds);
 
@@ -191,7 +195,9 @@ export class IniciarProximaRodada
       const proximaRodada = torneio.rodadaAtual + 1;
 
       const topNUsuarios = await this.usuarioGateway.buscarVarios(topNIds);
-      const topNNomeMap = new Map(topNUsuarios.map((u) => [u.id, u.nome]));
+      const topNNomeMap = new Map(
+        topNUsuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
+      );
 
       const n = topNIds.length;
       const novasPartidas: Partida[] = [];
@@ -217,6 +223,7 @@ export class IniciarProximaRodada
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
+        totalRodadas: torneio.totalRodadas,
         emCorte: true,
         rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
         partidas: novasPartidas.map((p) => ({
@@ -264,7 +271,9 @@ export class IniciarProximaRodada
         .map((s) => s.usuarioId);
 
       const vencedoresUsuarios = await this.usuarioGateway.buscarVarios(vencedoresOrdenados);
-      const vencedoresNomeMap = new Map(vencedoresUsuarios.map((u) => [u.id, u.nome]));
+      const vencedoresNomeMap = new Map(
+        vencedoresUsuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
+      );
 
       const proximaRodada = torneio.rodadaAtual + 1;
       const novasPartidas: Partida[] = [];
@@ -290,6 +299,7 @@ export class IniciarProximaRodada
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
+        totalRodadas: torneio.totalRodadas,
         emCorte: true,
         rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
         partidas: novasPartidas.map((p) => ({
@@ -340,6 +350,7 @@ export class IniciarProximaRodada
     return {
       finalizado: false,
       rodadaAtual: proximaRodada,
+      totalRodadas: torneio.totalRodadas,
       emCorte: false,
       rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
       partidas: novasPartidas.map((p) => ({

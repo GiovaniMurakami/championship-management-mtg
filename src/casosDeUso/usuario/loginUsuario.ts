@@ -96,6 +96,13 @@ export class LoginUsuario
       });
     }
 
+    if (usuario.excluido) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Esta conta foi excluída e não pode mais ser acessada.",
+        status: StatusErro.erroProibido,
+      });
+    }
+
     const senhaValida = await bcrypt.compare(input.senha, usuario.senha);
 
     if (!senhaValida) {

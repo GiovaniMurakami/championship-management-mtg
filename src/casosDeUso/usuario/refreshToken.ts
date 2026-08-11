@@ -53,6 +53,13 @@ export class RefreshToken
       });
     }
 
+    if (usuario.excluido) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Esta conta foi excluída.",
+        status: StatusErro.erroNaoAutorizado,
+      });
+    }
+
     const token = signToken(
       {
         id: usuario.id,

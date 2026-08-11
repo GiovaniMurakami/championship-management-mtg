@@ -9,6 +9,8 @@ import {
     alterarTorneioSchema,
     escolherDeckTorneioSchema,
     registrarResultadoSchema,
+    contestarResultadoSchema,
+    ajustarTotalRodadasSchema,
     droparJogadorSchema,
     criarLigaSchema,
     alterarLigaSchema,
@@ -193,6 +195,31 @@ describe("schemas de validacao", () => {
         });
         it("rejeita valores negativos", () => {
             expect(registrarResultadoSchema.safeParse({ vitoriasJogador1: -1, vitoriasJogador2: 0 }).success).toBe(false);
+        });
+    });
+
+    describe("contestarResultadoSchema", () => {
+        it("aceita body vazio", () => {
+            expect(() => contestarResultadoSchema.parse({})).not.toThrow();
+        });
+        it("aceita observação até 500 caracteres", () => {
+            expect(() => contestarResultadoSchema.parse({ observacao: "Erro de digitação" })).not.toThrow();
+        });
+        it("rejeita observação acima de 500 caracteres", () => {
+            expect(contestarResultadoSchema.safeParse({ observacao: "x".repeat(501) }).success).toBe(false);
+        });
+    });
+
+    describe("ajustarTotalRodadasSchema", () => {
+        it("aceita total entre 1 e 30", () => {
+            expect(() => ajustarTotalRodadasSchema.parse({ totalRodadas: 5 })).not.toThrow();
+        });
+        it("rejeita total fora do intervalo", () => {
+            expect(ajustarTotalRodadasSchema.safeParse({ totalRodadas: 0 }).success).toBe(false);
+            expect(ajustarTotalRodadasSchema.safeParse({ totalRodadas: 31 }).success).toBe(false);
+        });
+        it("rejeita total não inteiro", () => {
+            expect(ajustarTotalRodadasSchema.safeParse({ totalRodadas: 2.5 }).success).toBe(false);
         });
     });
 

@@ -20,7 +20,10 @@ export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {})
         buscarPorEmail: jest.fn().mockResolvedValue(null),
         buscarPorId: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
+        listar: jest.fn().mockResolvedValue([]),
+        listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),
+        excluir: jest.fn(),
         incrementarResultadosExpressivos: jest.fn(),
         ...overrides,
     };
@@ -32,11 +35,13 @@ export function criarMockDeckGateway(overrides: Partial<DeckGateway> = {}): Deck
         buscarPorId: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
         listarPorUsuario: jest.fn().mockResolvedValue([]),
+        listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
         incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
         atualizar: jest.fn(),
         excluir: jest.fn(),
+        excluirPorUsuario: jest.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
@@ -51,6 +56,8 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         atualizar: jest.fn(),
         atualizarECriarPartidas: jest.fn(),
         excluir: jest.fn(),
+        contarPorDono: jest.fn().mockResolvedValue(0),
+        removerAnfitriaoDoUsuario: jest.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
@@ -79,6 +86,7 @@ export function criarMockInscricaoGateway(overrides: Partial<InscricaoGateway> =
         contarPorTorneios: jest.fn().mockResolvedValue({}),
         contarJogadoresDistintos: jest.fn().mockResolvedValue(0),
         excluir: jest.fn(),
+        excluirPorUsuario: jest.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
@@ -92,6 +100,7 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         listarPorTorneios: jest.fn().mockResolvedValue([]),
         listarPorTorneioERodada: jest.fn().mockResolvedValue([]),
         listarPorJogadorETorneio: jest.fn().mockResolvedValue([]),
+        listarPorDeckIds: jest.fn().mockResolvedValue([]),
         atualizar: jest.fn(),
         finalizarAtomicamente: jest.fn().mockResolvedValue(null),
         contestarPartida: jest.fn().mockResolvedValue(null),
@@ -99,6 +108,7 @@ export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {})
         ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
         atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
         excluirPorTorneioERodada: jest.fn().mockResolvedValue(0),
+        excluirPorIds: jest.fn().mockResolvedValue(0),
         buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
         confirmarResultado: jest.fn().mockResolvedValue(null),
         atualizarMesa: jest.fn().mockResolvedValue(null),
@@ -186,6 +196,16 @@ export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): Time
         listarTotal: jest.fn().mockResolvedValue(0),
         atualizar: jest.fn(),
         excluir: jest.fn(),
+        ...overrides,
+    };
+}
+
+export function criarMockStoryFundoGateway(overrides: Partial<import("../../src/dominio/gateway/storyFundoGateway").StoryFundoGateway> = {}) {
+    return {
+        salvar: jest.fn(),
+        listar: jest.fn().mockResolvedValue([]),
+        buscarPorId: jest.fn().mockResolvedValue(null),
+        excluir: jest.fn().mockResolvedValue(false),
         ...overrides,
     };
 }

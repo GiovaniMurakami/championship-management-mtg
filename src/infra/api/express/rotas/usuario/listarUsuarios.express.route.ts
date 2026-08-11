@@ -35,8 +35,13 @@ export class ListarUsuariosRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { nome, limite, offset } = request.queryValidados as ListarUsuariosQuery;
-        const resultado = await this.listarUsuariosServico.executar({ nome, limite, offset });
+        const { nome, bloqueadoTorneios, limite, offset } = request.queryValidados as ListarUsuariosQuery;
+        const resultado = await this.listarUsuariosServico.executar({
+          nome,
+          bloqueadoTorneios,
+          limite,
+          offset,
+        });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

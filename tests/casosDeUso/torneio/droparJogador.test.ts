@@ -4,6 +4,11 @@ import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Partida } from "../../../src/dominio/entidade/partida";
+import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+
+jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: jest.fn() },
+}));
 
 describe("DroparJogador", () => {
     const torneio = new Torneio({
@@ -16,7 +21,10 @@ describe("DroparJogador", () => {
         checkInRodada: 0, dropped: false,
     });
 
-    const jogador = new Usuario({ id: "u-1", nome: "JoÃ£o", email: "j@e.com", senha: "s" });
+    const jogador = new Usuario({
+        id: "u-1", nome: "João", email: "j@e.com", senha: "s",
+        nickMTGO: "joao_mtgo",
+    });
 
     it("deve dropar o prÃ³prio jogador com sucesso", async () => {
         const inscricaoGw = criarMockInscricaoGateway({
@@ -34,8 +42,37 @@ describe("DroparJogador", () => {
         });
 
         expect(resultado.dropped).toBe(true);
-        expect(resultado.jogador).toEqual({ id: "u-1", nome: "JoÃ£o" });
+        expect(resultado.jogador).toEqual({ id: "u-1", nome: "João" });
         expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(1);
+        expect(eventosTorneio.emit).toHaveBeenCalledWith(
+            "jogador_dropou",
+            expect.objectContaining({ jogadorId: "u-1", jogadorNome: "João" }),
+        );
+    });
+
+    it("emite jogador_dropou com nick MOL quando o torneio usa nickMOL", async () => {
+        const torneioNick = new Torneio({
+            ...torneio,
+            exibirNomeJogador: "nickMOL",
+        });
+        const uc = DroparJogador.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNick) }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+            }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockPartidaGateway(),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", requisitanteId: "u-1", isAdmin: false, jogadorId: "u-1",
+        });
+
+        expect(resultado.jogador.nome).toBe("joao_mtgo");
+        expect(eventosTorneio.emit).toHaveBeenCalledWith(
+            "jogador_dropou",
+            expect.objectContaining({ jogadorNome: "joao_mtgo" }),
+        );
     });
 
     it("deve permitir que o dono do torneio drope um jogador", async () => {
