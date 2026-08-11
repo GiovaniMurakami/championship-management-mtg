@@ -4,6 +4,7 @@ import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
+import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -22,7 +23,7 @@ export type RankingLigaOutputDto = {
   tipo: "individual" | "times";
   rankingJogadores: {
     posicao: number;
-    jogador: { id: string; nome: string };
+    jogador: { id: string; nome: string; excluido: boolean };
     vitorias: number;
     derrotas: number;
     empates: number;
@@ -295,7 +296,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     // Busca nomes dos jogadores
     const jogadorIds = Array.from(statsJogadores.keys());
     const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
-    const nomesPorId = new Map(usuarios.map((u) => [u.id, u.nome]));
+    const usuarioPorId = new Map(usuarios.map((u) => [u.id, u]));
 
     const limJogadores = input.limiteJogadores ?? 10;
     const limDecks = input.limiteDecks ?? 10;
@@ -309,7 +310,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       .slice(0, limJogadores)
       .map(([jogadorId, stats], idx) => ({
         posicao: idx + 1,
-        jogador: { id: jogadorId, nome: nomesPorId.get(jogadorId) ?? "Desconhecido" },
+        jogador: toUsuarioPublico(usuarioPorId.get(jogadorId), jogadorId),
         vitorias: stats.vitorias,
         derrotas: stats.derrotas,
         empates: stats.empates,

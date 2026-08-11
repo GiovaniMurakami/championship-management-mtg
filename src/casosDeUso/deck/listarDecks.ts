@@ -1,8 +1,9 @@
 import { Carta } from "../../dominio/entidade/deck";
 import { DeckGateway, FiltrosListarDecks } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
-import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
+import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
+import { CasoDeUso } from "../casoDeUso";
 
 const LIMITE_MAXIMO_DECKS = 100;
 const LIMITE_PADRAO_DECKS = 20;
@@ -26,7 +27,7 @@ export type ListarDecksOutputDto = {
     maindeck: Carta[];
     sideboard: Carta[];
     commander: Carta[];
-    usuario: { id: string; nome: string };
+    usuario: { id: string; nome: string; excluido: boolean };
     visualizacoes: number;
     criadoEm: Date;
   }[];
@@ -83,10 +84,7 @@ export class ListarDecks
         maindeck: deck.maindeck,
         sideboard: deck.sideboard,
         commander: deck.commander,
-        usuario: {
-          id: deck.usuarioId,
-          nome: usuarioMap.get(deck.usuarioId)?.nome ?? deck.usuarioId,
-        },
+        usuario: toUsuarioPublico(usuarioMap.get(deck.usuarioId), deck.usuarioId),
         visualizacoes: deck.visualizacoes,
         criadoEm: deck.criadoEm,
       })),

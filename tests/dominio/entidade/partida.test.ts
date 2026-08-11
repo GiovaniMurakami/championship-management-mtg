@@ -26,6 +26,24 @@ describe("Partida", () => {
         expect(partida.status).toBe("finalizada");
     });
 
+    it("deve incluir observação de contestação quando informada", () => {
+        const partida = new Partida({
+            id: "p-1",
+            torneioId: "t-1",
+            rodada: 1,
+            jogador1Id: "j1",
+            jogador2Id: "j2",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+            contestado: true,
+            observacaoContestacao: "Placar invertido",
+        });
+
+        expect(partida.contestado).toBe(true);
+        expect(partida.observacaoContestacao).toBe("Placar invertido");
+    });
+
     describe("criar", () => {
         it("deve criar partida normal com status pendente e vitórias zeradas", () => {
             const partida = Partida.criar({

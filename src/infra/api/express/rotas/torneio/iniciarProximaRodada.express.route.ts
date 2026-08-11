@@ -49,7 +49,9 @@ export class IniciarProximaRodadaRota implements Rotas {
           eventosTorneio.emit("rodada_iniciada", {
             torneioId,
             rodadaAtual: resultado.rodadaAtual,
+            totalRodadas: resultado.totalRodadas,
             emCorte: resultado.emCorte,
+            rodadaIniciadaEm: resultado.rodadaIniciadaEm,
             partidas: resultado.partidas,
           });
 

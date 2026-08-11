@@ -2,6 +2,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type ExcluirTorneioInputDto = {
   id: string;
@@ -31,7 +32,7 @@ export class ExcluirTorneio
       });
     }
 
-    if (torneio.donoId !== input.requisitanteId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para excluir este torneio.",
         status: StatusErro.erroProibido,

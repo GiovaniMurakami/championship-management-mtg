@@ -6,6 +6,9 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -17,6 +20,7 @@ export type IniciarTorneioOutputDto = {
   torneioId: string;
   rodadaAtual: number;
   totalRodadas: number;
+  rodadaIniciadaEm: string;
   partidas: Array<{
     id: string;
     jogador1Id: string;
@@ -57,9 +61,9 @@ export class IniciarTorneio
       });
     }
 
-    if (torneio.donoId !== input.donoId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.donoId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio pode iniciá-lo.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode iniciá-lo.",
         status: StatusErro.erroProibido,
       });
     }
@@ -85,8 +89,9 @@ export class IniciarTorneio
     }
 
     const rodadasCalculadas = Math.ceil(Math.log2(comCheckIn.length));
+    // maxRodadas força o total Swiss (pode ser maior ou menor que ceil(log2(n))).
     const totalRodadas = torneio.maxRodadas !== undefined
-      ? Math.min(rodadasCalculadas, torneio.maxRodadas)
+      ? torneio.maxRodadas
       : rodadasCalculadas;
 
     torneio.avancarParaEmAndamento(1, totalRodadas);
@@ -94,7 +99,9 @@ export class IniciarTorneio
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn.map((i) => i.usuarioId);
     const usuarios = await this.usuarioGateway.buscarVarios(jogadores);
-    const usuarioNomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+    const usuarioNomeMap = new Map(
+      usuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
+    );
     for (let i = jogadores.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
@@ -122,6 +129,7 @@ export class IniciarTorneio
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

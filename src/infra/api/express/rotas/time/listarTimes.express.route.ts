@@ -4,6 +4,11 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { listarTimesQuerySchema } from "../../../../../helpers/validacao/schemas";
+import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
+import { z } from "zod";
+
+type ListarTimesQuery = z.infer<typeof listarTimesQuerySchema>;
 
 export class ListarTimesRota implements Rotas {
   private constructor(
@@ -18,7 +23,9 @@ export class ListarTimesRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [publicReadRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] {
+    return [validarQueryMiddleware(listarTimesQuerySchema), publicReadRateLimiter, autenticarJwt];
+  }
 
   public getHandler() {
     return async (
@@ -27,10 +34,10 @@ export class ListarTimesRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset, nome } = request.query as Record<string, string | undefined>;
+        const { limite, offset, nome } = request.queryValidados as ListarTimesQuery;
         const resultado = await this.listarTimesServico.executar({
-          limite: limite !== undefined ? Number(limite) : undefined,
-          offset: offset !== undefined ? Number(offset) : undefined,
+          limite,
+          offset,
           nome,
         });
         response.status(200).json(resultado);

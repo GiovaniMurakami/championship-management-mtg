@@ -4,7 +4,8 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { gerarLinkIngressoSchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class GerarLinkIngressoRota implements Rotas {
@@ -37,15 +38,14 @@ export class GerarLinkIngressoRota implements Rotas {
             try {
                 const torneioId = request.params.torneioId as string;
                 const requisitanteId = request.usuario!.id;
-                const validadeHoras = typeof request.body?.validadeHoras === "number"
-                    ? request.body.validadeHoras
-                    : undefined;
+                const dados = validarBody(gerarLinkIngressoSchema, request.body ?? {}, response);
+                if (!dados) return;
 
                 const resultado = await this.gerarLinkIngressoServico.executar({
                     torneioId,
                     requisitanteId,
                     isAdmin: request.usuario!.role === "admin",
-                    validadeHoras,
+                    validadeHoras: dados.validadeHoras,
                 });
 
                 response.status(201).json(resultado);

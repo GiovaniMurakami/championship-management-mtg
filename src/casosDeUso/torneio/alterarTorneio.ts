@@ -3,6 +3,8 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 export type AlterarTorneioInputDto = {
   id: string;
@@ -16,6 +18,7 @@ export type AlterarTorneioInputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -27,22 +30,24 @@ export type AlterarTorneioInputDto = {
 export type AlterarTorneioOutputDto = {
   id: string;
   nome: string;
-  horario: Date;
+  horario: string;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
   status: string;
   descricao?: string;
   regras?: string;
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
-  criadoEm: Date;
+  criadoEm: string;
 };
 
 export class AlterarTorneio
@@ -63,7 +68,7 @@ export class AlterarTorneio
       });
     }
 
-    if (torneio.donoId !== input.requisitanteId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
         mensagem: "Sem permissão para alterar este torneio.",
         status: StatusErro.erroProibido,
@@ -85,6 +90,7 @@ export class AlterarTorneio
     if (input.bannerUrl !== undefined) torneio.bannerUrl = input.bannerUrl?.trim();
     if (input.linkBanner !== undefined) torneio.linkBanner = input.linkBanner?.trim();
     if (input.somRodada !== undefined) torneio.somRodada = input.somRodada?.trim();
+    if (input.storyFundoUrl !== undefined) torneio.storyFundoUrl = input.storyFundoUrl?.trim();
     if (input.maxJogadores !== undefined) torneio.maxJogadores = input.maxJogadores;
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
@@ -97,22 +103,24 @@ export class AlterarTorneio
     return {
       id: torneio.id,
       nome: torneio.nome,
-      horario: torneio.horario,
+      horario: toBrasiliaISO(torneio.horario)!,
       formato: torneio.formato,
       donoId: torneio.donoId,
+      anfitriaoId: torneio.anfitriaoId ?? null,
       status: torneio.status,
       descricao: torneio.descricao,
       regras: torneio.regras,
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
+      storyFundoUrl: torneio.storyFundoUrl,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
-      criadoEm: torneio.criadoEm,
+      criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };
   }
 }

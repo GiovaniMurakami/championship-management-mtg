@@ -112,4 +112,28 @@ describe("RefreshToken", () => {
             uc.executar({ refreshToken: "old-refresh" })
         ).rejects.toMatchObject({ status: 500 });
     });
+
+    it("rejeita refresh de conta excluída", async () => {
+        const excluido = new Usuario({
+            ...usuarioExistente,
+            excluido: true,
+            excluidoEm: new Date(),
+        });
+        const gateway = criarMockUsuarioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(excluido),
+        });
+        const refreshTokenGw = criarMockRefreshTokenGateway({
+            consumir: jest.fn().mockResolvedValue({
+                token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
+            }),
+        });
+        const uc = RefreshToken.criar(gateway, refreshTokenGw);
+
+        await expect(
+            uc.executar({ refreshToken: "old-refresh" }),
+        ).rejects.toMatchObject({
+            message: expect.stringMatching(/excluída/i),
+            status: 401,
+        });
+    });
 });

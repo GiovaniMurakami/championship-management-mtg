@@ -3,6 +3,7 @@ import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 const LIMITE_MAXIMO_TORNEIOS = 100;
 const LIMITE_PADRAO_TORNEIOS = 20;
@@ -21,7 +22,7 @@ export type ListarTorneiosOutputDto = {
   torneios: Array<{
     id: string;
     nome: string;
-    horario: Date;
+    horario: string;
     formato: string;
     donoId: string;
     status: string;
@@ -38,7 +39,7 @@ export type ListarTorneiosOutputDto = {
     emCorte: boolean;
     secreto: boolean;
     visualizacoes: number;
-    criadoEm: Date;
+    criadoEm: string;
     inscrito: boolean;
     totalInscritos: number;
   }>;
@@ -98,7 +99,7 @@ export class ListarTorneios
       torneios: torneios.map((t) => ({
         id: t.id,
         nome: t.nome,
-        horario: t.horario,
+        horario: toBrasiliaISO(t.horario)!,
         formato: t.formato,
         donoId: t.donoId,
         status: t.status,
@@ -115,7 +116,7 @@ export class ListarTorneios
         emCorte: t.emCorte,
         secreto: t.secreto,
         visualizacoes: t.visualizacoes,
-        criadoEm: t.criadoEm,
+        criadoEm: toBrasiliaISO(t.criadoEm)!,
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,
       })),

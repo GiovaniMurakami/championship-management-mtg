@@ -17,6 +17,10 @@ import { CriarTorneio } from "../../src/casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "../../src/casosDeUso/torneio/inscreverTorneio";
 import { IniciarTorneio } from "../../src/casosDeUso/torneio/iniciarTorneio";
 import { RegistrarResultado } from "../../src/casosDeUso/torneio/registrarResultado";
+import { ContestarResultado } from "../../src/casosDeUso/torneio/contestarResultado";
+import { AjustarResultado } from "../../src/casosDeUso/torneio/ajustarResultado";
+import { AjustarTotalRodadas } from "../../src/casosDeUso/torneio/ajustarTotalRodadas";
+import { EncerrarTorneio } from "../../src/casosDeUso/torneio/encerrarTorneio";
 import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProximaRodada";
 import { criarMockEmailGateway } from "../mocks/gateways";
 
@@ -40,6 +44,8 @@ function criarUsuarioGatewayMemoria(): UsuarioGateway {
         buscarPorEmail: async (email) => Array.from(store.values()).find((u) => u.email === email) ?? null,
         buscarPorId: async (id) => store.get(id) ?? null,
         buscarVarios: async (ids) => ids.map((id) => store.get(id)).filter(Boolean) as Usuario[],
+        listar: async () => Array.from(store.values()),
+        listarTotal: async () => store.size,
         atualizar: async (u) => { store.set(u.id, u); },
         incrementarResultadosExpressivos: async (ids, incremento) => {
             ids.forEach((id) => {
@@ -112,12 +118,11 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
             store.set(id, p);
             return p;
         },
-        contestarPartida: async (id) => {
+        contestarPartida: async (id, observacao?) => {
             const p = store.get(id);
-            if (!p || p.status !== "finalizada") return null;
-            p.vitoriasJogador1 = 0;
-            p.vitoriasJogador2 = 0;
-            p.status = "pendente";
+            if (!p || p.status !== "finalizada" || p.contestado) return null;
+            p.contestado = true;
+            p.observacaoContestacao = observacao?.trim() ? observacao.trim() : null;
             store.set(id, p);
             return p;
         },
@@ -125,10 +130,12 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
             Array.from(store.values()).some((p) => p.torneioId === torneioId && p.rodada > rodada),
         ajustarResultadoContestado: async (id, v1, v2) => {
             const p = store.get(id);
-            if (!p) return null;
+            if (!p || !p.contestado) return null;
             p.vitoriasJogador1 = v1;
             p.vitoriasJogador2 = v2;
             p.status = "finalizada";
+            p.contestado = false;
+            p.observacaoContestacao = null;
             store.set(id, p);
             return p;
         },
@@ -222,18 +229,26 @@ describe("Integração - Fluxo completo de torneio", () => {
             formato: "legacy",
             donoId,
             descricao: "Booster Box",
+            exibirNomeJogador: "nickMOL",
         });
 
         torneioId = resultado.id;
         expect(resultado.status).toBe("inscricoes_abertas");
+        expect(resultado.exibirNomeJogador).toBe("nickMOL");
     });
 
     it("3. Deve inscrever 4 jogadores", async () => {
         const inscrever = InscreverTorneio.criar(torneioGw, inscricaoGw, usuarioGw);
 
-        for (const uid of [jogador1Id, jogador2Id, jogador3Id, jogador4Id]) {
+        for (const [uid, nick] of [
+            [jogador1Id, "j1_mtgo"],
+            [jogador2Id, "j2_mtgo"],
+            [jogador3Id, "j3_mtgo"],
+            [jogador4Id, "j4_mtgo"],
+        ] as [string, string][]) {
             const res = await inscrever.executar({ torneioId, usuarioId: uid });
             expect(res.torneioId).toBe(torneioId);
+            expect(res.usuario.nome).toBe(nick);
         }
 
         const inscricoes = await inscricaoGw.listarPorTorneio(torneioId);
@@ -259,30 +274,69 @@ describe("Integração - Fluxo completo de torneio", () => {
         expect(resultado.rodadaAtual).toBe(1);
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(4))
         expect(resultado.partidas).toHaveLength(2);
-        expect(resultado.partidas[0].jogador1Nome).toBeDefined();
+        expect(resultado.partidas[0].jogador1Nome).toMatch(/_mtgo$/);
+
+        const ajustar = AjustarTotalRodadas.criar(torneioGw);
+        const totalAjustado = await ajustar.executar({
+            torneioId,
+            usuarioId: donoId,
+            isAdmin: false,
+            totalRodadas: 3,
+        });
+        expect(totalAjustado.totalRodadas).toBe(3);
+        expect(totalAjustado.totalRodadasAnterior).toBe(2);
+
+        // Volta para 2 para o restante do fluxo original
+        await ajustar.executar({
+            torneioId,
+            usuarioId: donoId,
+            isAdmin: false,
+            totalRodadas: 2,
+        });
 
         const torneio = await torneioGw.buscarPorId(torneioId);
         expect(torneio!.status).toBe("em_andamento");
+        expect(torneio!.totalRodadas).toBe(2);
     });
 
     it("6. Deve registrar resultados da rodada 1", async () => {
         const registrar = RegistrarResultado.criar(torneioGw, partidaGw);
+        const contestar = ContestarResultado.criar(torneioGw, partidaGw);
         const partidas = await partidaGw.listarPorTorneioERodada(torneioId, 1);
+        const comOponente = partidas.filter((p) => p.jogador2Id);
 
-        for (const p of partidas) {
-            if (p.jogador2Id) {
-                await registrar.executar({
-                    partidaId: p.id,
-                    usuarioId: p.jogador1Id,
-                    vitoriasJogador1: 2,
-                    vitoriasJogador2: 1,
-                    isAdmin: false,
-                });
-            }
+        for (const p of comOponente) {
+            await registrar.executar({
+                partidaId: p.id,
+                usuarioId: p.jogador1Id,
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 1,
+                isAdmin: false,
+            });
         }
+
+        const alvo = comOponente[0];
+        const contestado = await contestar.executar({
+            partidaId: alvo.id,
+            usuarioId: alvo.jogador2Id!,
+            isAdmin: false,
+            observacao: "Marcador invertido na integração",
+        });
+        expect(contestado.contestado).toBe(true);
+        expect(contestado.observacaoContestacao).toBe("Marcador invertido na integração");
+
+        const ajustarResultado = AjustarResultado.criar(torneioGw, partidaGw);
+        await ajustarResultado.executar({
+            partidaId: alvo.id,
+            requisitanteId: donoId,
+            isAdmin: false,
+            vitoriasJogador1: 1,
+            vitoriasJogador2: 2,
+        });
 
         const atualizadas = await partidaGw.listarPorTorneioERodada(torneioId, 1);
         expect(atualizadas.every((p) => p.status === "finalizada")).toBe(true);
+        expect(atualizadas.find((p) => p.id === alvo.id)?.contestado).toBe(false);
     });
 
     it("7. Deve fazer check-in entre rodadas", async () => {
@@ -331,6 +385,87 @@ describe("Integração - Fluxo completo de torneio", () => {
     it("9. Torneio deve estar finalizado", async () => {
         const torneio = await torneioGw.buscarPorId(torneioId);
         expect(torneio!.status).toBe("finalizado");
+    });
+});
+
+describe("Integração - Encerrar torneio antecipadamente", () => {
+    const usuarioGw = criarUsuarioGatewayMemoria();
+    const partidaStore = new Map<string, Partida>();
+    const torneioGw = criarTorneioGatewayMemoria(partidaStore);
+    const inscricaoGw = criarInscricaoGatewayMemoria();
+    const partidaGw = criarPartidaGatewayMemoria(partidaStore);
+
+    let donoId: string;
+    let jogadores: string[] = [];
+    let torneioId: string;
+
+    it("encerra na rodada 1 sem gerar corte", async () => {
+        const cadastrar = CadastrarUsuario.criar(usuarioGw, criarMockEmailGateway());
+        const dono = await cadastrar.executar({ nome: "OrgEnd", email: "orgend@e.com", senha: "s" });
+        donoId = dono.id;
+
+        for (let i = 0; i < 4; i++) {
+            const j = await cadastrar.executar({ nome: `JE${i}`, email: `je${i}@e.com`, senha: "s" });
+            const u = await usuarioGw.buscarPorId(j.id);
+            u!.nickMTGO = `je${i}_mtgo`;
+            await usuarioGw.atualizar(u!);
+            jogadores.push(j.id);
+        }
+
+        const criarTorneio = CriarTorneio.criar(torneioGw);
+        const torneio = await criarTorneio.executar({
+            nome: "Encerrar cedo",
+            horario: new Date(),
+            formato: "legacy",
+            donoId,
+            maxRodadas: 4,
+        });
+        torneioId = torneio.id;
+
+        const inscrever = InscreverTorneio.criar(torneioGw, inscricaoGw, usuarioGw);
+        for (const uid of jogadores) {
+            await inscrever.executar({ torneioId, usuarioId: uid });
+        }
+        for (const i of await inscricaoGw.listarPorTorneio(torneioId)) {
+            i.checkInRodada = 0;
+            await inscricaoGw.atualizar(i);
+        }
+
+        const iniciar = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
+        const iniciado = await iniciar.executar({ torneioId, donoId, isAdmin: false });
+        expect(iniciado.totalRodadas).toBeGreaterThanOrEqual(2);
+
+        await AjustarTotalRodadas.criar(torneioGw).executar({
+            torneioId,
+            usuarioId: donoId,
+            isAdmin: false,
+            totalRodadas: 1,
+        });
+
+        const registrar = RegistrarResultado.criar(torneioGw, partidaGw);
+        for (const p of await partidaGw.listarPorTorneioERodada(torneioId, 1)) {
+            if (!p.jogador2Id) continue;
+            await registrar.executar({
+                partidaId: p.id,
+                usuarioId: p.jogador1Id,
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 0,
+                isAdmin: false,
+            });
+        }
+
+        const encerrado = await EncerrarTorneio.criar(torneioGw).executar({
+            torneioId,
+            usuarioId: donoId,
+            isAdmin: false,
+        });
+        expect(encerrado.finalizado).toBe(true);
+        expect(encerrado.status).toBe("finalizado");
+        expect(encerrado.totalRodadas).toBe(1);
+
+        const t = await torneioGw.buscarPorId(torneioId);
+        expect(t!.status).toBe("finalizado");
+        expect(t!.emCorte).toBe(false);
     });
 });
 

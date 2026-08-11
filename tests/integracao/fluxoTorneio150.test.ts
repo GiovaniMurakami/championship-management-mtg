@@ -155,12 +155,11 @@ function criarPartidaGwMemoria(store: Map<string, Partida>): PartidaGateway {
             store.set(id, p);
             return p;
         },
-        contestarPartida: async (id) => {
+        contestarPartida: async (id, observacao?) => {
             const p = store.get(id);
-            if (!p || p.status !== "finalizada") return null;
-            p.vitoriasJogador1 = 0;
-            p.vitoriasJogador2 = 0;
-            p.status = "pendente";
+            if (!p || p.status !== "finalizada" || p.contestado) return null;
+            p.contestado = true;
+            p.observacaoContestacao = observacao?.trim() ? observacao.trim() : null;
             store.set(id, p);
             return p;
         },
@@ -168,10 +167,12 @@ function criarPartidaGwMemoria(store: Map<string, Partida>): PartidaGateway {
             Array.from(store.values()).some((p) => p.torneioId === torneioId && p.rodada > rodada),
         ajustarResultadoContestado: async (id, v1, v2) => {
             const p = store.get(id);
-            if (!p) return null;
+            if (!p || !p.contestado) return null;
             p.vitoriasJogador1 = v1;
             p.vitoriasJogador2 = v2;
             p.status = "finalizada";
+            p.contestado = false;
+            p.observacaoContestacao = null;
             store.set(id, p);
             return p;
         },
@@ -377,11 +378,12 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     // ── 3. Deck selection ────────────────────────────────────────────────────
 
     it("3. Cada jogador deve escolher seu deck para o torneio", async () => {
-        const escolher = EscolherDeckTorneio.criar(torneioGw, inscricaoGw, deckGw);
+        const escolher = EscolherDeckTorneio.criar(torneioGw, inscricaoGw, deckGw, usuarioGw);
 
         for (let i = 0; i < TOTAL_JOGADORES; i++) {
             await escolher.executar({
                 torneioId,
+                requisitanteId: jogadorIds[i],
                 usuarioId: jogadorIds[i],
                 usuarioNome: `Jogador${String(i + 1).padStart(3, "0")}`,
                 isAdmin: false,

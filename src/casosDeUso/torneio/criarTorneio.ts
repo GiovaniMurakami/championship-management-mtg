@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 const CORTES_VALIDOS = [2, 4, 8, 16];
 
@@ -16,6 +17,7 @@ export type CriarTorneioInputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -27,7 +29,7 @@ export type CriarTorneioInputDto = {
 export type CriarTorneioOutputDto = {
   id: string;
   nome: string;
-  horario: Date;
+  horario: string;
   formato: string;
   donoId: string;
   status: string;
@@ -36,13 +38,14 @@ export type CriarTorneioOutputDto = {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
-  criadoEm: Date;
+  criadoEm: string;
 };
 
 export class CriarTorneio
@@ -73,6 +76,7 @@ export class CriarTorneio
       bannerUrl: input.bannerUrl?.trim(),
       linkBanner: input.linkBanner?.trim(),
       somRodada: input.somRodada?.trim(),
+      storyFundoUrl: input.storyFundoUrl?.trim(),
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
@@ -86,7 +90,7 @@ export class CriarTorneio
     return {
       id: torneio.id,
       nome: torneio.nome,
-      horario: torneio.horario,
+      horario: toBrasiliaISO(torneio.horario)!,
       formato: torneio.formato,
       donoId: torneio.donoId,
       status: torneio.status,
@@ -95,13 +99,14 @@ export class CriarTorneio
       bannerUrl: torneio.bannerUrl,
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
+      storyFundoUrl: torneio.storyFundoUrl,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
-      criadoEm: torneio.criadoEm,
+      criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };
   }
 }

@@ -12,6 +12,11 @@ import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Deck } from "../../../src/dominio/entidade/deck";
 import { LinkIngressoData } from "../../../src/dominio/gateway/linkIngressoGateway";
+import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+
+jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: jest.fn() },
+}));
 
 describe("IngressarViaTorneio", () => {
     const torneio = new Torneio({
@@ -91,6 +96,52 @@ describe("IngressarViaTorneio", () => {
         expect(resultado.vitoriasJogador2).toBe(2);
         const partidaCriada = salvarPartida.mock.calls[0][0] as Partida;
         expect(partidaCriada.mesa).toBe(1);
+        expect(eventosTorneio.emit).toHaveBeenCalledWith(
+            "jogador_ingressou",
+            expect.objectContaining({
+                usuarioId: "u-novo",
+                usuarioNome: "Novo Jogador",
+            }),
+        );
+    });
+
+    it("emite jogador_ingressou com nick MOL quando o torneio usa nickMOL", async () => {
+        const torneioNick = new Torneio({
+            id: "t-1", nome: "Torneio", horario: new Date(), formato: "legacy",
+            donoId: "dono-1", status: "em_andamento", rodadaAtual: 2, totalRodadas: 4,
+            exibirNomeJogador: "nickMOL",
+        });
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(torneioNick),
+                atualizar: jest.fn(),
+            }),
+            criarMockInscricaoGateway({
+                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
+                salvar: jest.fn(),
+                listarPorTorneio: jest.fn().mockResolvedValue([{ dropped: false }]),
+            }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue([]),
+                salvar: jest.fn(),
+            }),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway({
+                buscarPorId: jest.fn().mockResolvedValue(deckValido),
+                salvar: jest.fn(),
+            }),
+        );
+
+        await uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" });
+
+        expect(eventosTorneio.emit).toHaveBeenCalledWith(
+            "jogador_ingressou",
+            expect.objectContaining({ usuarioNome: "NickMTGO_Novo" }),
+        );
     });
 
     it("deve criar nova partida de penalidade quando já existe um BYE na rodada", async () => {
@@ -212,6 +263,32 @@ describe("IngressarViaTorneio", () => {
         await expect(
             uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
         ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("deve lançar 403 se o usuário estiver bloqueado para torneios", async () => {
+        const usuarioBloqueado = new Usuario({
+            id: "u-novo",
+            nome: "Bloqueado",
+            email: "b@email.com",
+            senha: "senha",
+            nickMTGO: "NickBloqueado",
+            bloqueadoTorneios: true,
+        });
+        const uc = IngressarViaTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioBloqueado) }),
+            criarMockLinkIngressoGateway({
+                buscarPorToken: jest.fn().mockResolvedValue(linkValido),
+                excluirPorToken: jest.fn(),
+            }),
+            criarMockDeckGateway(),
+        );
+
+        await expect(
+            uc.executar({ token: "token-uuid", usuarioId: "u-novo", deckId: "d-1" })
+        ).rejects.toMatchObject({ status: 403 });
     });
 
     it("deve consumir o token após ingresso bem-sucedido (uso único)", async () => {

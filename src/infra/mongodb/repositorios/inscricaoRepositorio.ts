@@ -135,8 +135,20 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
     return mapa;
   }
 
+  public async contarJogadoresDistintos(): Promise<number> {
+    await this.conectar();
+    const jogadores = await InscricaoModel.distinct("usuarioId");
+    return jogadores.length;
+  }
+
   public async excluir(id: string): Promise<void> {
     await this.conectar();
     await InscricaoModel.deleteOne({ id });
+  }
+
+  public async excluirPorUsuario(usuarioId: string): Promise<number> {
+    await this.conectar();
+    const result = await InscricaoModel.deleteMany({ usuarioId });
+    return result.deletedCount ?? 0;
   }
 }

@@ -24,6 +24,7 @@ A documentação completa está organizada por entidade:
 ### Usuário (🔒 JWT obrigatório)
 
 - `PUT /usuario/atualizar` - Atualizar dados do usuário (telefone, nicks MTGO/Arena)
+- `GET /usuario/listar` - _(admin)_ Listar usuários com busca por nome
 
 ### Decks (🔒 JWT obrigatório)
 
@@ -47,6 +48,13 @@ A documentação completa está organizada por entidade:
 - `POST /torneio/:torneioId/drop` - Dropar jogador
 - `GET /torneio/:torneioId/standings` - Ver classificação atual (inclui `nome` e `deckNome`)
 - `GET /torneio/:torneioId/meu-historico` - Ver histórico de partidas do jogador autenticado
+- `PUT /torneio/:torneioId/anfitriao` - _(admin)_ Definir ou remover anfitrião do torneio
+- `POST /torneio/:torneioId/gerar-link-ingresso` - _(dono/admin)_ Gerar link de ingresso tardio
+- `POST /torneio/ingressar/:token` - Ingressar em torneio em andamento via token
+
+### Validação de entrada
+
+Todos os endpoints validam **params**, **query** e **body** com **Zod** (`src/helpers/validacao/schemas.ts`). Respostas de erro de validação: `400` com `{ mensagem, erros: string[] }`.
 
 ### Ligas (🔒 JWT obrigatório)
 

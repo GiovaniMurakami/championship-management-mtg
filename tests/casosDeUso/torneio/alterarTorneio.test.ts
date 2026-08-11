@@ -128,7 +128,7 @@ describe("AlterarTorneio", () => {
         });
 
         expect(resultado.nome).toBe("Novo Nome");
-        expect(resultado.horario).toEqual(novoHorario);
+        expect(resultado.horario).toBe("2025-07-01T11:00:00.000-03:00");
         expect(resultado.formato).toBe("vintage");
         expect(resultado.descricao).toBe("R$ 1000");
         expect(resultado.bannerUrl).toBe("https://example.com/banner.jpg");

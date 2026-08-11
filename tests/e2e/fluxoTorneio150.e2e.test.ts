@@ -5,7 +5,11 @@
  * Rate limiters são neutralizados para permitir o volume de requisições do teste.
  * Ably e EventEmitter de eventos são silenciados (sem efeitos colaterais externos).
  *
- * Execução: jest tests/e2e/fluxoTorneio150.e2e.test.ts --testTimeout=300000
+ * Execução: npx jest tests/e2e/fluxoTorneio150.e2e.test.ts --testTimeout=300000
+ *
+ * Suites auxiliares no mesmo arquivo:
+ * - Ajuste de rodadas + encerramento antecipado
+ * - Contestação com observação + maxRodadas acima do Swiss (ceil(log2(n)))
  */
 
 // ─── Mocks devem vir antes de qualquer import ───────────────────────────────
@@ -47,6 +51,11 @@ dotenv.config();
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
 process.env.LOG_LEVEL = "silent";
+// Setup com 150 jogadores em paralelo precisa de pool > 1 (evita timeout no beforeAll)
+const poolSize = Number(process.env.MONGODB_MAX_POOL_SIZE || "1");
+if (!Number.isFinite(poolSize) || poolSize < 10) {
+    process.env.MONGODB_MAX_POOL_SIZE = "20";
+}
 
 import { app } from "../../src/app";
 
@@ -62,6 +71,7 @@ interface PartidaInfo {
     vitoriasJogador2?: number;
     confirmadoPor?: string[];
     contestado?: boolean;
+    observacaoContestacao?: string | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -104,7 +114,7 @@ const MAINDECK_VALIDO = [{ nome: "Island", quantidade: 60 }];
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe("E2E – Torneio Swiss 150 jogadores", () => {
-    jest.setTimeout(300_000);
+    jest.setTimeout(600_000);
 
     const PREFIX = `e2e_${Date.now()}_`;
     const SENHA = "Senha@12345";
@@ -178,11 +188,14 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
         if (opcoes.contestar) {
             const contestadorToken = tokenDoJogador(seed % 2 === 0 ? partida.jogador2Id : partida.jogador1Id);
+            const observacao = `Contestação e2e seed=${seed}`;
             const contestRes = await req
                 .post(`/torneio/partida/${partida.id}/contestar`)
                 .set("Authorization", `Bearer ${contestadorToken}`)
+                .send({ observacao })
                 .expect(200);
             expect(contestRes.body.contestado).toBe(true);
+            expect(contestRes.body.observacaoContestacao).toBe(observacao);
 
             const resultadoAjustado = resultadoOriginal.vitoriasJogador1 === resultadoOriginal.vitoriasJogador2
                 ? { vitoriasJogador1: 2, vitoriasJogador2: 1 }
@@ -292,9 +305,11 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 maxJogadores: 160,
                 maxRodadas: 8,
                 corteTop: TOP_CUT_SIZE,
+                exibirNomeJogador: "nickMOL",
             })
             .expect(201);
         torneioId = torneioRes.body.id;
+        expect(torneioRes.body.exibirNomeJogador).toBe("nickMOL");
 
         // 8. Inscrever 150 jogadores
         await lote(indices, 15, async (i) => {
@@ -332,7 +347,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 .send()
                 .expect(200);
         });
-    }, 300_000);
+    }, 600_000);
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Fase 1: Iniciar torneio
@@ -416,6 +431,11 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             if (p.jogador2Id !== null) {
                 expect(typeof p.jogador2Nome).toBe("string");
             }
+            // Torneio configurado com nickMOL
+            expect(p.jogador1Nome).toMatch(/^e2eplayer\d+$/);
+            if (p.jogador2Id !== null) {
+                expect(p.jogador2Nome).toMatch(/^e2eplayer\d+$/);
+            }
         }
     });
 
@@ -493,6 +513,42 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         expect(recriarRes.body.partidas).toHaveLength(75);
         rodadaPartidas = recriarRes.body.partidas as PartidaInfo[];
         expect(rodadaPartidas.every((p) => !idsRodadaOriginal.has(p.id))).toBe(true);
+    });
+
+    it("deve aumentar e reduzir o total de rodadas Swiss durante a rodada 5", async () => {
+        const aumentarRes = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: 9 })
+            .expect(200);
+
+        expect(aumentarRes.body.totalRodadasAnterior).toBe(8);
+        expect(aumentarRes.body.totalRodadas).toBe(9);
+        expect(aumentarRes.body.rodadaAtual).toBe(5);
+        expect(aumentarRes.body.emCorte).toBe(false);
+
+        const reduzirRes = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: 8 })
+            .expect(200);
+
+        expect(reduzirRes.body.totalRodadasAnterior).toBe(9);
+        expect(reduzirRes.body.totalRodadas).toBe(8);
+
+        const rejeitaAbaixoDaAtual = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: 4 })
+            .expect(400);
+        expect(rejeitaAbaixoDaAtual.body.mensagem).toMatch(/rodada atual/i);
+
+        const rejeitaJogador = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${playerTokens[0]}`)
+            .send({ totalRodadas: 9 })
+            .expect(403);
+        expect(rejeitaJogador.body.mensagem).toBeDefined();
     });
 
     it("não deve avançar rodada com resultados ainda pendentes", async () => {
@@ -657,6 +713,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             expect(entry.omwp).toBeLessThanOrEqual(1);
             expect(entry.gwp).toBeGreaterThanOrEqual(0);
             expect(entry.gwp).toBeLessThanOrEqual(1);
+            // Nome exibido = nick MTGO (exibirNomeJogador: nickMOL)
+            expect(entry.usuario.nome).toMatch(/^e2e(player|late)\d+$/);
         }
 
         // `rodadaIniciadaEm` no formato ISO com offset -03:00 (Brasília)
@@ -735,12 +793,15 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             .send({ vitoriasJogador1: 2, vitoriasJogador2: 0 })
             .expect(200);
 
-        // Jogador 2 contesta
+        // Jogador 2 contesta com observação
+        const observacao = "Placar reportado invertido no e2e";
         const contestRes = await req
             .post(`/torneio/partida/${alvo.id}/contestar`)
             .set("Authorization", `Bearer ${playerTokens[idxJ2]}`)
+            .send({ observacao })
             .expect(200);
         expect(contestRes.body.contestado).toBe(true);
+        expect(contestRes.body.observacaoContestacao).toBe(observacao);
         expect(contestRes.body.vitoriasJogador1).toBe(2);
         expect(contestRes.body.vitoriasJogador2).toBe(0);
 
@@ -1168,6 +1229,539 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         });
         await mongoose.model("Usuario").deleteMany({ email: emailRegex });
 
-        await mongoose.disconnect();
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+        }
+    }, 60_000);
+});
+
+/**
+ * E2E menor: cobre ajuste de rodadas + encerramento antecipado sem corte.
+ * Separado do fluxo 150 para não interferir nas expectativas de Top 8.
+ */
+describe("E2E – Ajuste de rodadas e encerramento antecipado", () => {
+    jest.setTimeout(120_000);
+
+    const PREFIX = `e2e_end_${Date.now()}_`;
+    const SENHA = "Senha@12345";
+    const N = 4;
+
+    let req: ReturnType<typeof supertest>;
+    let adminToken: string;
+    let adminId: string;
+    let torneioId: string;
+    let playerIds: string[] = [];
+    let playerTokens: string[] = [];
+
+    beforeAll(async () => {
+        req = supertest(app());
+
+        if (mongoose.connection.readyState === 0) {
+            await mongoose.connect(process.env.MONGODB_URI as string);
+        }
+
+        const orgRes = await req
+            .post("/usuario/cadastrar")
+            .send({ nome: "Org End", email: `${PREFIX}org@end.com`, senha: SENHA })
+            .expect(201);
+        adminId = orgRes.body.id;
+        await mongoose.model("Usuario").updateOne({ id: adminId }, { $set: { role: "admin" } });
+
+        const adminLogin = await req
+            .post("/usuario/login")
+            .send({ email: `${PREFIX}org@end.com`, senha: SENHA })
+            .expect(200);
+        adminToken = adminLogin.body.token;
+
+        const indices = Array.from({ length: N }, (_, i) => i);
+        playerIds = await lote(indices, 4, async (i) => {
+            const res = await req
+                .post("/usuario/cadastrar")
+                .send({
+                    nome: `End Player ${i}`,
+                    email: `${PREFIX}p${i}@end.com`,
+                    senha: SENHA,
+                })
+                .expect(201);
+            return res.body.id as string;
+        });
+
+        playerTokens = await lote(indices, 4, async (i) => {
+            const res = await req
+                .post("/usuario/login")
+                .send({ email: `${PREFIX}p${i}@end.com`, senha: SENHA })
+                .expect(200);
+            return res.body.token as string;
+        });
+
+        await lote(indices, 4, async (i) => {
+            await req
+                .put("/usuario/atualizar")
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({ nickMTGO: `endnick${i}` })
+                .expect(200);
+        });
+
+        const torneioRes = await req
+            .post("/torneio/criar")
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({
+                nome: `${PREFIX}Encerrar cedo`,
+                horario: new Date(Date.now() + 3_600_000).toISOString(),
+                formato: "Standard",
+                maxJogadores: 8,
+                maxRodadas: 4,
+                exibirNomeJogador: "nickMOL",
+            })
+            .expect(201);
+        torneioId = torneioRes.body.id;
+
+        await lote(indices, 4, async (i) => {
+            await req
+                .post(`/torneio/${torneioId}/inscrever`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(201);
+
+            const deckRes = await req
+                .post("/deck/cadastrar")
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({
+                    nome: `${PREFIX}Deck ${i}`,
+                    formato: "Standard",
+                    maindeck: MAINDECK_VALIDO,
+                    sideboard: [],
+                })
+                .expect(201);
+
+            await req
+                .post(`/torneio/${torneioId}/deck`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({ deckId: deckRes.body.id })
+                .expect(200);
+
+            await req
+                .post(`/torneio/${torneioId}/checkin`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(200);
+        });
+    }, 60_000);
+
+    it("deve iniciar, forçar menos rodadas Swiss e encerrar sem corte", async () => {
+        const startRes = await req
+            .post(`/torneio/${torneioId}/iniciar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        expect(startRes.body.rodadaAtual).toBe(1);
+        // 4 jogadores → ceil(log2(4))=2; maxRodadas=4 força o total acima do Swiss
+        expect(startRes.body.totalRodadas).toBe(4);
+        const partidas = startRes.body.partidas as PartidaInfo[];
+        expect(partidas).toHaveLength(2);
+        expect(partidas[0].jogador1Nome).toMatch(/^endnick\d+$/);
+
+        const totalOriginal = startRes.body.totalRodadas as number;
+
+        const ajustarRes = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: 1 })
+            .expect(200);
+        expect(ajustarRes.body.totalRodadas).toBe(1);
+        expect(ajustarRes.body.totalRodadasAnterior).toBe(totalOriginal);
+
+        for (const p of partidas.filter((x) => x.jogador2Id !== null)) {
+            await req
+                .post(`/torneio/partida/${p.id}/resultado`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ vitoriasJogador1: 2, vitoriasJogador2: 0 })
+                .expect(200);
+        }
+
+        const encerrarRes = await req
+            .post(`/torneio/${torneioId}/encerrar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        expect(encerrarRes.body.finalizado).toBe(true);
+        expect(encerrarRes.body.status).toBe("finalizado");
+        expect(encerrarRes.body.rodadaAtual).toBe(1);
+        expect(encerrarRes.body.totalRodadas).toBe(1);
+
+        const view = await req
+            .get(`/torneio/${torneioId}`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(view.body.status).toBe("finalizado");
+        expect(view.body.emCorte).toBe(false);
+
+        const standings = await req
+            .get(`/torneio/${torneioId}/standings`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(standings.body.standings).toHaveLength(N);
+        expect(standings.body.standings[0].usuario.nome).toMatch(/^endnick\d+$/);
+
+        await req
+            .post(`/torneio/${torneioId}/encerrar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(400);
+
+        await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: 2 })
+            .expect(400);
+    });
+
+    afterAll(async () => {
+        if (torneioId) {
+            await mongoose.model("Partida").deleteMany({ torneioId });
+            await mongoose.model("Inscricao").deleteMany({ torneioId });
+            await mongoose.model("Torneio").deleteMany({ id: torneioId });
+        }
+        await mongoose.model("Deck").deleteMany({
+            usuarioId: { $in: [adminId, ...playerIds].filter(Boolean) },
+        });
+        await mongoose.model("Usuario").deleteMany({
+            email: new RegExp(`^${PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+        });
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+        }
+    }, 60_000);
+});
+
+/**
+ * E2E focado: contestação com observação + rodadas além do limite Swiss.
+ * 4 jogadores → Swiss natural = 2; maxRodadas=3 força a 3ª; PUT sobe para 4 e joga até o fim.
+ */
+describe("E2E – Contestação com observação e rodadas acima do Swiss", () => {
+    jest.setTimeout(180_000);
+
+    const PREFIX = `e2e_extra_${Date.now()}_`;
+    const SENHA = "Senha@12345";
+    const N = 4;
+    const SWISS_NATURAL = Math.ceil(Math.log2(N)); // 2
+    const MAX_RODADAS_INICIAL = 3;
+    const TOTAL_FORCADO_DURANTE = 4;
+
+    let req: ReturnType<typeof supertest>;
+    let adminToken: string;
+    let adminId: string;
+    let torneioId: string;
+    let playerIds: string[] = [];
+    let playerTokens: string[] = [];
+
+    const checkinTodos = async () => {
+        await lote(Array.from({ length: N }, (_, i) => i), 4, async (i) => {
+            await req
+                .post(`/torneio/${torneioId}/checkin`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(200);
+        });
+    };
+
+    const finalizarRodada = async (partidas: PartidaInfo[]) => {
+        for (const p of partidas.filter((x) => x.jogador2Id !== null && x.status !== "finalizada")) {
+            await req
+                .post(`/torneio/partida/${p.id}/resultado`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ vitoriasJogador1: 2, vitoriasJogador2: 0 })
+                .expect(200);
+        }
+    };
+
+    beforeAll(async () => {
+        req = supertest(app());
+
+        if (mongoose.connection.readyState === 0) {
+            await mongoose.connect(process.env.MONGODB_URI as string);
+        }
+
+        const orgRes = await req
+            .post("/usuario/cadastrar")
+            .send({ nome: "Org Extra", email: `${PREFIX}org@extra.com`, senha: SENHA })
+            .expect(201);
+        adminId = orgRes.body.id;
+        await mongoose.model("Usuario").updateOne({ id: adminId }, { $set: { role: "admin" } });
+
+        const adminLogin = await req
+            .post("/usuario/login")
+            .send({ email: `${PREFIX}org@extra.com`, senha: SENHA })
+            .expect(200);
+        adminToken = adminLogin.body.token;
+
+        const indices = Array.from({ length: N }, (_, i) => i);
+        playerIds = await lote(indices, 4, async (i) => {
+            const res = await req
+                .post("/usuario/cadastrar")
+                .send({
+                    nome: `Extra Player ${i}`,
+                    email: `${PREFIX}p${i}@extra.com`,
+                    senha: SENHA,
+                })
+                .expect(201);
+            return res.body.id as string;
+        });
+
+        playerTokens = await lote(indices, 4, async (i) => {
+            const res = await req
+                .post("/usuario/login")
+                .send({ email: `${PREFIX}p${i}@extra.com`, senha: SENHA })
+                .expect(200);
+            return res.body.token as string;
+        });
+
+        await lote(indices, 4, async (i) => {
+            await req
+                .put("/usuario/atualizar")
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({ nickMTGO: `extranick${i}` })
+                .expect(200);
+        });
+
+        const torneioRes = await req
+            .post("/torneio/criar")
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({
+                nome: `${PREFIX}Rodadas extras`,
+                horario: new Date(Date.now() + 3_600_000).toISOString(),
+                formato: "Standard",
+                maxJogadores: 8,
+                maxRodadas: MAX_RODADAS_INICIAL,
+                exibirNomeJogador: "nickMOL",
+            })
+            .expect(201);
+        torneioId = torneioRes.body.id;
+        expect(torneioRes.body.maxRodadas).toBe(MAX_RODADAS_INICIAL);
+
+        await lote(indices, 4, async (i) => {
+            await req
+                .post(`/torneio/${torneioId}/inscrever`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(201);
+
+            const deckRes = await req
+                .post("/deck/cadastrar")
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({
+                    nome: `${PREFIX}Deck ${i}`,
+                    formato: "Standard",
+                    maindeck: MAINDECK_VALIDO,
+                    sideboard: [],
+                })
+                .expect(201);
+
+            await req
+                .post(`/torneio/${torneioId}/deck`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({ deckId: deckRes.body.id })
+                .expect(200);
+
+            await req
+                .post(`/torneio/${torneioId}/checkin`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(200);
+        });
+    }, 90_000);
+
+    it("deve iniciar com maxRodadas acima do Swiss e contestar com observação persistida", async () => {
+        expect(MAX_RODADAS_INICIAL).toBeGreaterThan(SWISS_NATURAL);
+
+        const startRes = await req
+            .post(`/torneio/${torneioId}/iniciar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+
+        expect(startRes.body.rodadaAtual).toBe(1);
+        expect(startRes.body.totalRodadas).toBe(MAX_RODADAS_INICIAL);
+        expect(startRes.body.totalRodadas).toBeGreaterThan(SWISS_NATURAL);
+
+        const partidasR1 = (startRes.body.partidas as PartidaInfo[]).filter((p) => p.jogador2Id !== null);
+        expect(partidasR1.length).toBe(2);
+
+        const alvo = partidasR1[0];
+        const outras = partidasR1.slice(1);
+
+        await req
+            .post(`/torneio/partida/${alvo.id}/resultado`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ vitoriasJogador1: 2, vitoriasJogador2: 0 })
+            .expect(200);
+
+        const observacao = "Placar invertido — j2 venceu 2-0 na mesa";
+        const contestRes = await req
+            .post(`/torneio/partida/${alvo.id}/contestar`)
+            .set("Authorization", `Bearer ${playerTokens[playerIds.indexOf(alvo.jogador2Id!)]}`)
+            .send({ observacao })
+            .expect(200);
+
+        expect(contestRes.body.contestado).toBe(true);
+        expect(contestRes.body.observacaoContestacao).toBe(observacao);
+
+        const listContestada = await req
+            .get(`/torneio/${torneioId}/partidas?rodada=1`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        const partidaListada = listContestada.body.partidas.find((p: PartidaInfo) => p.id === alvo.id);
+        expect(partidaListada.contestado).toBe(true);
+        expect(partidaListada.observacaoContestacao).toBe(observacao);
+
+        const ajusteRes = await req
+            .put(`/torneio/partida/${alvo.id}/ajustar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ vitoriasJogador1: 0, vitoriasJogador2: 2 })
+            .expect(200);
+        expect(ajusteRes.body.contestado).toBe(false);
+        expect(ajusteRes.body.observacaoContestacao == null || ajusteRes.body.observacaoContestacao === "").toBe(true);
+
+        await finalizarRodada(outras);
+    });
+
+    it("deve jogar rodadas extras além do Swiss e aumentar o total durante o torneio", async () => {
+        await checkinTodos();
+        const r2 = await req
+            .post(`/torneio/${torneioId}/proxima-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(r2.body.finalizado).toBe(false);
+        expect(r2.body.rodadaAtual).toBe(2);
+        expect(r2.body.totalRodadas).toBe(MAX_RODADAS_INICIAL);
+        expect(r2.body.emCorte).toBe(false);
+
+        await finalizarRodada(r2.body.partidas as PartidaInfo[]);
+
+        const aumentar = await req
+            .put(`/torneio/${torneioId}/total-rodadas`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ totalRodadas: TOTAL_FORCADO_DURANTE })
+            .expect(200);
+        expect(aumentar.body.totalRodadasAnterior).toBe(MAX_RODADAS_INICIAL);
+        expect(aumentar.body.totalRodadas).toBe(TOTAL_FORCADO_DURANTE);
+
+        await checkinTodos();
+        const r3 = await req
+            .post(`/torneio/${torneioId}/proxima-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(r3.body.finalizado).toBe(false);
+        expect(r3.body.rodadaAtual).toBe(3);
+        expect(r3.body.totalRodadas).toBe(TOTAL_FORCADO_DURANTE);
+
+        await finalizarRodada(r3.body.partidas as PartidaInfo[]);
+
+        await checkinTodos();
+        const r4 = await req
+            .post(`/torneio/${torneioId}/proxima-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(r4.body.finalizado).toBe(false);
+        expect(r4.body.rodadaAtual).toBe(4);
+
+        await finalizarRodada(r4.body.partidas as PartidaInfo[]);
+
+        const fim = await req
+            .post(`/torneio/${torneioId}/proxima-rodada`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(fim.body.finalizado).toBe(true);
+        expect(fim.body.classificacao).toHaveLength(N);
+
+        const view = await req
+            .get(`/torneio/${torneioId}`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        expect(view.body.status).toBe("finalizado");
+        expect(view.body.totalRodadas).toBe(TOTAL_FORCADO_DURANTE);
+        expect(view.body.emCorte).toBe(false);
+    });
+
+    it("deve rejeitar observação de contestação acima de 500 caracteres", async () => {
+        const tRes = await req
+            .post("/torneio/criar")
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({
+                nome: `${PREFIX}Obs longa`,
+                horario: new Date(Date.now() + 3_600_000).toISOString(),
+                formato: "Standard",
+                maxJogadores: 8,
+                maxRodadas: 1,
+            })
+            .expect(201);
+        const tid = tRes.body.id as string;
+
+        await lote(Array.from({ length: N }, (_, i) => i), 4, async (i) => {
+            await req
+                .post(`/torneio/${tid}/inscrever`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(201);
+            const deckRes = await req
+                .post("/deck/cadastrar")
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({
+                    nome: `${PREFIX}DeckObs ${i}`,
+                    formato: "Standard",
+                    maindeck: MAINDECK_VALIDO,
+                    sideboard: [],
+                })
+                .expect(201);
+            await req
+                .post(`/torneio/${tid}/deck`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send({ deckId: deckRes.body.id })
+                .expect(200);
+            await req
+                .post(`/torneio/${tid}/checkin`)
+                .set("Authorization", `Bearer ${playerTokens[i]}`)
+                .send()
+                .expect(200);
+        });
+
+        const start = await req
+            .post(`/torneio/${tid}/iniciar`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .expect(200);
+        const partida = (start.body.partidas as PartidaInfo[]).find((p) => p.jogador2Id)!;
+
+        await req
+            .post(`/torneio/partida/${partida.id}/resultado`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send({ vitoriasJogador1: 2, vitoriasJogador2: 0 })
+            .expect(200);
+
+        const longa = "x".repeat(501);
+        const res = await req
+            .post(`/torneio/partida/${partida.id}/contestar`)
+            .set("Authorization", `Bearer ${playerTokens[playerIds.indexOf(partida.jogador2Id!)]}`)
+            .send({ observacao: longa })
+            .expect(400);
+        expect(res.body.mensagem || JSON.stringify(res.body)).toMatch(/500|Observação|observacao/i);
+
+        await mongoose.model("Partida").deleteMany({ torneioId: tid });
+        await mongoose.model("Inscricao").deleteMany({ torneioId: tid });
+        await mongoose.model("Torneio").deleteMany({ id: tid });
+    });
+
+    afterAll(async () => {
+        if (torneioId) {
+            await mongoose.model("Partida").deleteMany({ torneioId });
+            await mongoose.model("Inscricao").deleteMany({ torneioId });
+            await mongoose.model("Torneio").deleteMany({ id: torneioId });
+        }
+        await mongoose.model("Deck").deleteMany({
+            usuarioId: { $in: [adminId, ...playerIds].filter(Boolean) },
+        });
+        await mongoose.model("Usuario").deleteMany({
+            email: new RegExp(`^${PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+        });
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+        }
     }, 60_000);
 });

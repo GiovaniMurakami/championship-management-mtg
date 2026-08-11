@@ -15,6 +15,7 @@ export interface PartidaProps {
   vitoriasJogador2: number;
   status: StatusPartida;
   contestado?: boolean;
+  observacaoContestacao?: string | null;
   tipoBye?: TipoBye;
   confirmadoPor?: string[];
   mesa?: number | null;
@@ -33,6 +34,7 @@ export class Partida {
   public vitoriasJogador2: number;
   public status: StatusPartida;
   public contestado: boolean;
+  public observacaoContestacao: string | null;
   public tipoBye: TipoBye;
   public confirmadoPor: string[];
   public mesa: number | null;
@@ -50,6 +52,7 @@ export class Partida {
     this.vitoriasJogador2 = props.vitoriasJogador2;
     this.status = props.status;
     this.contestado = props.contestado ?? false;
+    this.observacaoContestacao = props.observacaoContestacao ?? null;
     this.tipoBye = props.tipoBye ?? null;
     this.confirmadoPor = props.confirmadoPor ?? [];
     this.mesa = props.mesa ?? null;

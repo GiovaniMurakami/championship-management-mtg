@@ -32,6 +32,9 @@ interface UsuarioProps {
 | telefone  | string | Não         | Telefone de contato do usuário                                         |
 | nickMTGO  | string | Não         | Username do Magic: The Gathering Online                                |
 | nickArena | string | Não         | Username do Magic: The Gathering Arena                                 |
+| bloqueadoTorneios | boolean | Não | Se `true`, bloqueia novas inscrições/ingresso |
+| excluido | boolean | Não | Soft-delete: conta anonimizada; login/refresh rejeitados |
+| excluidoEm | Date | Não | Momento da exclusão da conta |
 | criadoEm  | Date   | Não         | Data de criação do registro (gerada automaticamente)                   |
 
 ## Endpoints
@@ -217,6 +220,47 @@ Remover um campo (enviar string vazia):
 
 ---
 
+### GET /usuario/listar
+
+**(Somente admin)** Lista usuários cadastrados com busca opcional por nome e paginação.
+
+**Query params:**
+
+| Param  | Tipo   | Descrição                          |
+| ------ | ------ | ---------------------------------- |
+| `nome` | string | Filtro parcial por nome/e-mail (opcional) |
+| `bloqueadoTorneios` | `"true"` \| `"false"` | Filtra por bloqueio de torneios |
+| `limite` | number | 1–100, padrão 20                 |
+| `offset` | number | Deslocamento (padrão 0)            |
+
+**Response (200):**
+
+```json
+{
+  "usuarios": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nome": "João Silva",
+      "email": "joao.silva@email.com",
+      "nickMTGO": "joaosilva",
+      "nickArena": "joaosilva#12345",
+      "bloqueadoTorneios": false
+    }
+  ],
+  "total": 42,
+  "limite": 20,
+  "offset": 0
+}
+```
+
+**Erros:**
+
+- `401` — Token inválido ou ausente
+- `403` — Usuário não é admin
+- `400` — Query params inválidos (validação Zod)
+
+---
+
 ### POST /usuario/reset-senha/solicitar
 
 Solicita o envio de um e-mail com link para redefinição de senha.
@@ -277,6 +321,38 @@ Confirma a redefinição de senha usando o token recebido por e-mail.
 - `404 Not Found` - Usuário não encontrado
 - `500 Internal Server Error` - Erro no servidor
 
+### DELETE /usuario/conta
+
+Exclusão de conta (soft-delete / anonimização LGPD). Requer autenticação.
+
+**Não** remove decks, inscrições nem partidas. O perfil passa a aparecer como `"Usuário excluído"` com flag `excluido: true` nos payloads públicos.
+
+**Request Body:**
+
+```json
+{
+  "confirmacao": "Nome Exato Do Perfil"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "mensagem": "Conta excluída com sucesso."
+}
+```
+
+**Erros:**
+
+- `400` — Confirmação diferente do nome atual
+- `403` — Admin, dono de torneio ou dono de time não pode excluir a conta
+- `401` — Não autenticado
+
+### PUT /usuario/:usuarioId/bloqueio-torneios
+
+Admin bloqueia ou desbloqueia o usuário para novas participações em torneios (`bloqueadoTorneios`). Ao bloquear, remove inscrições apenas de torneios em `inscricoes_abertas`.
+
 ## Regras de Negócio
 
 1. **Email único**: Cada email só pode ser cadastrado uma vez no sistema
@@ -285,7 +361,9 @@ Confirma a redefinição de senha usando o token recebido por e-mail.
 4. **Email de boas-vindas**: Enviado automaticamente após o cadastro bem-sucedido
 5. **Reset de senha**: Token de 32 bytes gerado com `crypto.randomBytes`, expira em 1 hora, uso único
 6. **Segurança no reset**: A resposta de `/reset-senha/solicitar` é sempre genérica para não revelar se o e-mail está cadastrado
-7. **Validações**:
+7. **Exclusão de conta (soft-delete)**: anonimiza PII; preserva decks e histórico de torneios; login/refresh rejeitam `excluido`
+8. **Bloqueio de torneios**: independente do soft-delete; controlado por admin via `bloqueadoTorneios`
+9. **Validações**:
    - Nome: obrigatório, mínimo 3 caracteres
    - Email: obrigatório, formato válido
    - Senha: obrigatório, mínimo 6 caracteres no cadastro; mínimo 8 caracteres na redefinição
@@ -295,6 +373,8 @@ Confirma a redefinição de senha usando o token recebido por e-mail.
 - [CadastrarUsuario](../src/casosDeUso/usuario/cadastrarUsuario.ts) - Registra novo usuário e envia e-mail de boas-vindas
 - [LoginUsuario](../src/casosDeUso/usuario/loginUsuario.ts) - Autentica e gera token
 - [AtualizarUsuario](../src/casosDeUso/usuario/atualizarUsuario.ts) - Atualiza dados do usuário
+- [ExcluirConta](../src/casosDeUso/usuario/excluirConta.ts) - Soft-delete / anonimização
+- [AlterarBloqueioTorneios](../src/casosDeUso/usuario/alterarBloqueioTorneios.ts) - Bloqueio admin
 - [SolicitarResetSenha](../src/casosDeUso/usuario/solicitarResetSenha.ts) - Gera token e envia e-mail de redefinição
 - [ConfirmarResetSenha](../src/casosDeUso/usuario/confirmarResetSenha.ts) - Valida token e redefine a senha
 

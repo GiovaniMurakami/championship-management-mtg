@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type RegistrarResultadoInputDto = {
   partidaId: string;
@@ -62,12 +63,12 @@ export class RegistrarResultado
     const ehJogador =
       input.usuarioId === partida.jogador1Id ||
       input.usuarioId === partida.jogador2Id;
-    const ehDono = torneio.donoId === input.usuarioId;
+    const podeGerenciar = podeGerenciarTorneio(torneio, input.usuarioId, input.isAdmin);
 
-    if (!ehJogador && !ehDono && !input.isAdmin) {
+    if (!ehJogador && !podeGerenciar) {
       throw ErroPersonalizado.criar({
         mensagem:
-          "Apenas os jogadores da partida ou o dono do torneio podem registrar o resultado.",
+          "Apenas os jogadores da partida, dono, anfitrião ou administrador do torneio podem registrar o resultado.",
         status: StatusErro.erroProibido,
       });
     }

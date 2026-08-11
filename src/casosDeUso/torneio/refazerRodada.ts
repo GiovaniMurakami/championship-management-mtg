@@ -3,6 +3,7 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type RefazerRodadaInputDto = {
   torneioId: string;
@@ -52,14 +53,14 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
-        mensagem: "Torneio nÃ£o encontrado.",
+        mensagem: "Torneio não encontrado.",
         status: StatusErro.erroNaoEncontrado,
       });
     }
 
-    if (torneio.donoId !== input.donoId && !input.isAdmin) {
+    if (!podeGerenciarTorneio(torneio, input.donoId, input.isAdmin)) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o dono do torneio pode refazer rodadas.",
+        mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode refazer rodadas.",
         status: StatusErro.erroProibido,
       });
     }
@@ -73,7 +74,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (torneio.rodadaAtual <= 1) {
       throw ErroPersonalizado.criar({
-        mensagem: "NÃ£o hÃ¡ rodada anterior para retornar.",
+        mensagem: "Não há rodada anterior para retornar.",
         status: StatusErro.erroParametro,
       });
     }
@@ -87,7 +88,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     if (partidasRodadaAtual.length === 0) {
       throw ErroPersonalizado.criar({
-        mensagem: `NÃ£o existem partidas na rodada ${rodadaRemovida} para remover.`,
+        mensagem: `Não existem partidas na rodada ${rodadaRemovida} para remover.`,
         status: StatusErro.erroParametro,
       });
     }

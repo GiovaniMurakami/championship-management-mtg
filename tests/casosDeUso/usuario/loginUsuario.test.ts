@@ -17,7 +17,7 @@ jest.mock("../../../src/helpers/jwt", () => ({
 }));
 
 jest.mock("../../../src/helpers/env", () => ({
-    getFrontendUrl: jest.fn().mockReturnValue("http://localhost:5173"),
+    buildFrontendAppLink: jest.fn((path: string) => `http://localhost:5173${path}`),
     isExecucaoLocal: jest.fn().mockReturnValue(true),
     getCorsOrigin: jest.fn().mockReturnValue("http://localhost:5173"),
 }));

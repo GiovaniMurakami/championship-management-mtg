@@ -7,6 +7,7 @@ import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimi
 import { alterarTorneioSchema, idParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
+import { parseHorarioBrasilia } from "../../../../../helpers/data/brasilia";
 
 export class AlterarTorneioRota implements Rotas {
   private constructor(
@@ -39,7 +40,7 @@ export class AlterarTorneioRota implements Rotas {
 
         const {
           nome, horario, formato, descricao, regras,
-          bannerUrl, linkBanner, somRodada,
+          bannerUrl, linkBanner, somRodada, storyFundoUrl,
           maxJogadores, maxRodadas, corteTop, linkLive, secreto, exibirNomeJogador,
         } = dados;
 
@@ -48,13 +49,14 @@ export class AlterarTorneioRota implements Rotas {
           requisitanteId,
           isAdmin: request.usuario!.role === "admin",
           nome,
-          horario: horario ? new Date(horario) : undefined,
+          horario: horario ? parseHorarioBrasilia(horario) : undefined,
           formato,
           descricao,
           regras,
           bannerUrl,
           linkBanner,
           somRodada,
+          storyFundoUrl,
           maxJogadores,
           maxRodadas,
           corteTop,

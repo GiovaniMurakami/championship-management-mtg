@@ -4,7 +4,8 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { tokenIngressoParamSchema } from "../../../../../helpers/validacao/schemas";
+import { ingressarViaTorneioSchema, tokenIngressoParamSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class IngressarViaTorneioRota implements Rotas {
@@ -37,17 +38,13 @@ export class IngressarViaTorneioRota implements Rotas {
             try {
                 const token = request.params.token as string;
                 const usuarioId = request.usuario!.id;
-                const deckId = request.body.deckId as string | undefined;
-
-                if (!deckId) {
-                    response.status(400).json({ mensagem: "É necessário selecionar um deck para ingressar no torneio.", erros: [] });
-                    return;
-                }
+                const dados = validarBody(ingressarViaTorneioSchema, request.body, response);
+                if (!dados) return;
 
                 const resultado = await this.ingressarViaTorneioServico.executar({
                     token,
                     usuarioId,
-                    deckId,
+                    deckId: dados.deckId,
                 });
 
                 response.status(201).json(resultado);

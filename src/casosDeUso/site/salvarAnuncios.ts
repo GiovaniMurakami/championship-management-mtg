@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { AnuncioSite, SiteConfigGateway, TipoAnuncioSite } from "../../dominio/gateway/siteConfigGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 
@@ -9,6 +10,8 @@ type SalvarAnunciosInput = {
 };
 
 const MAX_ANUNCIOS = 20;
+
+const isUuid = (value: string): boolean => z.string().uuid().safeParse(value).success;
 
 const limpar = (valor: unknown, limite: number): string | undefined => {
   if (typeof valor !== "string") return undefined;
@@ -51,7 +54,8 @@ export class SalvarAnuncios {
       const tipo = normalizarTipo(item.tipo);
       const titulo = limpar(item.titulo, 180) ?? "";
       const imagemUrl = limpar(item.imagemUrl, 800);
-      const id = limpar(item.id, 180) ?? uuidv4();
+      const rawId = limpar(item.id, 180);
+      const id = rawId && isUuid(rawId) ? rawId : uuidv4();
 
       if (tipo === "banner" && !imagemUrl) {
         throw ErroPersonalizado.criar({
@@ -78,7 +82,7 @@ export class SalvarAnuncios {
         botaoTexto: limpar(item.botaoTexto, 120),
         ativo: item.ativo !== false,
         ordem: Number.isFinite(item.ordem) ? Number(item.ordem) : index,
-        cliques: cliquesPorId.get(id) ?? 0,
+        cliques: cliquesPorId.get(id) ?? (rawId ? cliquesPorId.get(rawId) : undefined) ?? 0,
       };
     });
 

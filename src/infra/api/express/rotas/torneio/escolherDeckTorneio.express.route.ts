@@ -42,12 +42,13 @@ export class EscolherDeckTorneioRota implements Rotas {
         if (!dados) return;
 
         const { deckId, jogadorId } = dados;
-
-        const usuarioId = isAdmin && jogadorId ? jogadorId : request.usuario!.id;
+        const requisitanteId = request.usuario!.id;
+        const usuarioId = jogadorId && jogadorId !== requisitanteId ? jogadorId : requisitanteId;
         const usuarioNome = request.usuario!.nome;
 
         const resultado = await this.escolherDeckTorneioServico.executar({
           torneioId,
+          requisitanteId,
           usuarioId,
           usuarioNome,
           isAdmin,

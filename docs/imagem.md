@@ -100,7 +100,7 @@ Se o navegador retornar erro de CORS no `PUT`, configure o bucket com uma regra 
   {
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
-    "AllowedOrigins": ["https://homolog.d32mjk9mbam2cb.amplifyapp.com"],
+    "AllowedOrigins": ["https://app.tiagofuguete.com.br"],
     "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3000
   }

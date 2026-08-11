@@ -72,9 +72,11 @@ describe("BuscarTime", () => {
         const resultado = await uc.executar({ id: "time-1" });
 
         expect(resultado.membros).toEqual([
-            { id: "user-1", nome: "Alice" },
-            { id: "user-3", nome: "user-3" },
+            { id: "user-1", nome: "Alice", excluido: false },
+            { id: "user-3", nome: "user-3", excluido: false },
         ]);
-        expect(resultado.solicitacoesPendentes).toEqual([{ id: "user-4", nome: "user-4" }]);
+        expect(resultado.solicitacoesPendentes).toEqual([
+            { id: "user-4", nome: "user-4", excluido: false },
+        ]);
     });
 });

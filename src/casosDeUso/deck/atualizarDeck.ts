@@ -59,14 +59,39 @@ export class AtualizarDeck
     }
 
     if (deck.travado) {
-      throw ErroPersonalizado.criar({
-        mensagem: "Este deck está travado porque está vinculado a um torneio.",
-        status: StatusErro.erroParametro,
-      });
+      // Deck de torneio: cartas/formato ficam congelados; só nomeConsolidado pode mudar
+      // (o front costuma reenviar o payload completo no PUT).
+      if (input.nomeConsolidado === undefined) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Este deck está travado porque está vinculado a um torneio.",
+          status: StatusErro.erroParametro,
+        });
+      }
+
+      deck.nomeConsolidado =
+        input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;
+
+      await this.deckGateway.atualizar(deck);
+
+      return {
+        id: deck.id,
+        nome: deck.nome,
+        nomeConsolidado: deck.nomeConsolidado,
+        formato: deck.formato,
+        linkLigaMagic: deck.linkLigaMagic,
+        maindeck: deck.maindeck,
+        sideboard: deck.sideboard,
+        commander: deck.commander,
+        usuario: { id: deck.usuarioId, nome: input.usuarioNome },
+        criadoEm: deck.criadoEm,
+      };
     }
 
     if (input.nome !== undefined) deck.nome = input.nome.trim();
-    if (input.nomeConsolidado !== undefined) deck.nomeConsolidado = input.nomeConsolidado;
+    if (input.nomeConsolidado !== undefined) {
+      deck.nomeConsolidado =
+        input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;
+    }
     if (input.formato !== undefined) deck.formato = normalizarFormatoDeck(input.formato);
     if (input.linkLigaMagic !== undefined) deck.linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
     if (input.maindeck !== undefined) deck.maindeck = normalizarListaCartas(input.maindeck);

@@ -1,14 +1,18 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
+import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type CheckInTorneioInputDto = {
   torneioId: string;
   usuarioId: string;
-  usuarioNome: string;
+  /** Fallback se o usuário não for encontrado no gateway. */
+  usuarioNome?: string;
 };
 
 export type CheckInTorneioOutputDto = {
@@ -22,14 +26,16 @@ export class CheckInTorneio
   implements CasoDeUso<CheckInTorneioInputDto, CheckInTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly inscricaoGateway: InscricaoGateway
+    private readonly inscricaoGateway: InscricaoGateway,
+    private readonly usuarioGateway: UsuarioGateway,
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    inscricaoGateway: InscricaoGateway
+    inscricaoGateway: InscricaoGateway,
+    usuarioGateway: UsuarioGateway,
   ) {
-    return new CheckInTorneio(torneioGateway, inscricaoGateway);
+    return new CheckInTorneio(torneioGateway, inscricaoGateway, usuarioGateway);
   }
 
   public async executar(
@@ -66,7 +72,7 @@ export class CheckInTorneio
       const umHoraAntes = new Date(torneio.horario.getTime() - 60 * 60 * 1000);
       if (new Date() < umHoraAntes) {
         throw ErroPersonalizado.criar({
-          mensagem: `O check-in só abre 1 hora antes do torneio (a partir de ${umHoraAntes.toISOString()}).`,
+          mensagem: `O check-in só abre 1 hora antes do torneio (a partir de ${toBrasiliaISO(umHoraAntes)}).`,
           status: StatusErro.erroParametro,
         });
       }
@@ -89,16 +95,22 @@ export class CheckInTorneio
 
     await this.inscricaoGateway.atualizar(inscricao);
 
+    const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
+    const usuarioNome = usuario
+      ? resolverNomeJogador(usuario, torneio.exibirNomeJogador)
+      : (input.usuarioNome ?? input.usuarioId);
+
     eventosTorneio.emit("checkin_realizado", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
+      usuarioNome,
       checkInRodada: inscricao.checkInRodada,
     });
 
     return {
       id: inscricao.id,
       torneioId: inscricao.torneioId,
-      usuario: { id: inscricao.usuarioId, nome: input.usuarioNome },
+      usuario: { id: inscricao.usuarioId, nome: usuarioNome },
       checkInRodada: inscricao.checkInRodada,
     };
   }

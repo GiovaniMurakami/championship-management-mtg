@@ -5,6 +5,7 @@ import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizad
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
+import { toBrasiliaISO } from "../../../../../helpers/data/brasilia";
 import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
@@ -56,6 +57,7 @@ export class IniciarTorneioRota implements Rotas {
           torneioId: resultado.torneioId,
           rodadaAtual: resultado.rodadaAtual,
           totalRodadas: resultado.totalRodadas,
+          rodadaIniciadaEm: resultado.rodadaIniciadaEm,
           partidas: resultado.partidas,
         });
 

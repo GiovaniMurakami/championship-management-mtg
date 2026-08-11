@@ -3,11 +3,13 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type ContestarResultadoInputDto = {
     partidaId: string;
     usuarioId: string;
     isAdmin: boolean;
+    observacao?: string;
 };
 
 export type ContestarResultadoOutputDto = {
@@ -20,6 +22,7 @@ export type ContestarResultadoOutputDto = {
     vitoriasJogador2: number;
     status: string;
     contestado: boolean;
+    observacaoContestacao: string | null;
 };
 
 export class ContestarResultado
@@ -85,16 +88,19 @@ export class ContestarResultado
         const ehJogador =
             input.usuarioId === partida.jogador1Id ||
             input.usuarioId === partida.jogador2Id;
-        const ehDono = torneio.donoId === input.usuarioId;
+        const podeGerenciar = podeGerenciarTorneio(torneio, input.usuarioId, input.isAdmin);
 
-        if (!ehJogador && !ehDono && !input.isAdmin) {
+        if (!ehJogador && !podeGerenciar) {
             throw ErroPersonalizado.criar({
-                mensagem: "Apenas os jogadores da partida, o dono do torneio ou um administrador podem contestar o resultado.",
+                mensagem: "Apenas os jogadores da partida, dono, anfitrião ou administrador do torneio podem contestar o resultado.",
                 status: StatusErro.erroProibido,
             });
         }
 
-        const partidaContestada = await this.partidaGateway.contestarPartida(input.partidaId);
+        const partidaContestada = await this.partidaGateway.contestarPartida(
+            input.partidaId,
+            input.observacao
+        );
         if (!partidaContestada) {
             throw ErroPersonalizado.criar({
                 mensagem: "Não foi possível contestar a partida. Tente novamente.",
@@ -112,6 +118,7 @@ export class ContestarResultado
             vitoriasJogador2: partidaContestada.vitoriasJogador2,
             status: partidaContestada.status,
             contestado: partidaContestada.contestado,
+            observacaoContestacao: partidaContestada.observacaoContestacao,
         };
     }
 }

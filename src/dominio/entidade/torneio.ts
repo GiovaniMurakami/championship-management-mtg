@@ -9,6 +9,7 @@ export interface TorneioProps {
   horario: Date;
   formato: string;
   donoId: string;
+  anfitriaoId?: string | null;
   status: StatusTorneio;
   rodadaAtual: number;
   totalRodadas: number;
@@ -17,6 +18,7 @@ export interface TorneioProps {
   bannerUrl?: string;
   linkBanner?: string;
   somRodada?: string;
+  storyFundoUrl?: string;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -35,6 +37,7 @@ export class Torneio {
   public horario: Date;
   public formato: string;
   public donoId: string;
+  public anfitriaoId?: string | null;
   public status: StatusTorneio;
   public rodadaAtual: number;
   public totalRodadas: number;
@@ -43,6 +46,7 @@ export class Torneio {
   public bannerUrl?: string;
   public linkBanner?: string;
   public somRodada?: string;
+  public storyFundoUrl?: string;
   public maxJogadores?: number;
   public maxRodadas?: number;
   public corteTop?: number;
@@ -60,6 +64,7 @@ export class Torneio {
     this.horario = props.horario;
     this.formato = props.formato;
     this.donoId = props.donoId;
+    this.anfitriaoId = props.anfitriaoId ?? null;
     this.status = props.status;
     this.rodadaAtual = props.rodadaAtual;
     this.totalRodadas = props.totalRodadas;
@@ -68,6 +73,7 @@ export class Torneio {
     this.bannerUrl = props.bannerUrl;
     this.linkBanner = props.linkBanner;
     this.somRodada = props.somRodada;
+    this.storyFundoUrl = props.storyFundoUrl;
     this.maxJogadores = props.maxJogadores;
     this.maxRodadas = props.maxRodadas;
     this.corteTop = props.corteTop;
@@ -125,7 +131,7 @@ export class Torneio {
 
   public voltarRodada(rodadaAnterior: number, totalRodadas?: number, emCorte?: boolean): void {
     if (this.status !== "em_andamento") {
-      throw new Error(`TransiÃ§Ã£o invÃ¡lida: rodada nÃ£o pode voltar com status ${this.status}`);
+      throw new Error(`Transição inválida: rodada não pode voltar com status ${this.status}`);
     }
     this.rodadaAtual = rodadaAnterior;
     if (totalRodadas !== undefined) this.totalRodadas = totalRodadas;

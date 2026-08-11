@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type AjustarResultadoInputDto = {
     partidaId: string;
@@ -64,10 +65,9 @@ export class AjustarResultado
             });
         }
 
-        const ehDono = torneio.donoId === input.requisitanteId;
-        if (!ehDono && !input.isAdmin) {
+        if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({
-                mensagem: "Apenas o dono do torneio ou um administrador podem ajustar um resultado contestado.",
+                mensagem: "Apenas o dono, anfitrião ou administrador do torneio podem ajustar um resultado contestado.",
                 status: StatusErro.erroProibido,
             });
         }

@@ -6,17 +6,18 @@ provider:
   timeout: 29
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
+    MONGODB_MAX_POOL_SIZE: ${env:MONGODB_MAX_POOL_SIZE, '1'}
     JWT_SECRET: ${env:JWT_SECRET}
     JWT_SSM_PRIVATE_KEY_PARAM: ${env:JWT_SSM_PRIVATE_KEY_PARAM, self:custom.jwtSsmParams.private.${sls:stage}}
     JWT_SSM_PUBLIC_KEY_PARAM: ${env:JWT_SSM_PUBLIC_KEY_PARAM, self:custom.jwtSsmParams.public.${sls:stage}}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
     CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
-    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
     EMAIL_USER: ${env:EMAIL_USER, ''}
     EMAIL_PASS: ${env:EMAIL_PASS, ''}
-    FRONTEND_URL: ${env:FRONTEND_URL, 'http://localhost:5173'}
+    FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
   iam:
     role:
       statements:
@@ -39,6 +40,9 @@ plugins:
   # - serverless-offline
 
 custom:
+  frontendUrl:
+    dev: https://app.tiagofuguete.com.br
+    prod: https://app.tiagofuguete.com.br
   jwtSsmParams:
     private:
       dev: /championship-mtg/dev/jwt-private-key
@@ -47,7 +51,11 @@ custom:
       dev: /championship-mtg/dev/jwt-public-key
       prod: /championship-mtg/prod/jwt-public-key
   corsOrigins: &corsOrigins
-    - ${env:FRONTEND_URL, 'https://homolog.d32mjk9mbam2cb.amplifyapp.com'}
+    - ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
+    - https://app.tiagofuguete.com.br
+    - https://www.app.tiagofuguete.com.br
+    - https://tiagofuguete.com.br
+    - https://www.tiagofuguete.com.br
     - http://localhost:5173
   # serverless-offline:
   #   httpPort: 4000
@@ -58,11 +66,12 @@ package:
     - "build/**"
 
 functions:
-  # Auth, deck, imagem e health — operações leves, sem cálculos pesados
-  api-auth:
+  # Uma única Lambda (um pool Mongo por instância). Paths explícitos —
+  # catch-all /{proxy+} quebrou o httpMethod/path no API Gateway + serverless-http.
+  api:
     handler: build/handler.handler
-    memorySize: 256
-    timeout: 15
+    memorySize: 512
+    timeout: 29
     events:
       - http:
           path: /usuario
@@ -120,13 +129,6 @@ functions:
             methods: [OPTIONS, GET]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
-
-  # Torneio e liga - Swiss pairing e ranking sao CPU e memoria intensivos
-  api-torneio:
-    handler: build/handler.handler
-    memorySize: 512
-    timeout: 29
-    events:
       - http:
           path: /torneio
           method: any

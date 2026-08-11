@@ -9,6 +9,7 @@ import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmi
 import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { criarTorneioSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
+import { parseHorarioBrasilia } from "../../../../../helpers/data/brasilia";
 
 export class CriarTorneioRota implements Rotas {
   private constructor(
@@ -38,13 +39,13 @@ export class CriarTorneioRota implements Rotas {
 
         const {
           nome, horario, formato, descricao, regras,
-          bannerUrl, linkBanner, somRodada,
+          bannerUrl, linkBanner, somRodada, storyFundoUrl,
           maxJogadores, maxRodadas, corteTop, linkLive, secreto, exibirNomeJogador,
         } = dados;
 
         const resultado = await this.criarTorneioServico.executar({
           nome,
-          horario: new Date(horario),
+          horario: parseHorarioBrasilia(horario),
           formato,
           donoId,
           descricao,
@@ -52,6 +53,7 @@ export class CriarTorneioRota implements Rotas {
           bannerUrl,
           linkBanner,
           somRodada,
+          storyFundoUrl,
           maxJogadores,
           maxRodadas,
           corteTop,

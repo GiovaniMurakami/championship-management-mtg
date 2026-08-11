@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type AtualizarMesaPartidaInputDto = {
     partidaId: string;
@@ -60,10 +61,9 @@ export class AtualizarMesaPartida
             });
         }
 
-        const ehDono = torneio.donoId === input.requisitanteId;
-        if (!ehDono && !input.isAdmin) {
+        if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({
-                mensagem: "Apenas o dono do torneio ou um administrador pode alterar mesas.",
+                mensagem: "Apenas o dono, anfitrião ou administrador do torneio pode alterar mesas.",
                 status: StatusErro.erroProibido,
             });
         }

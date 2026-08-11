@@ -5,6 +5,8 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type DroparJogadorInputDto = {
@@ -58,12 +60,12 @@ export class DroparJogador
       });
     }
 
-    const ehDono = torneio.donoId === input.requisitanteId;
     const ehProprioJogador = input.requisitanteId === input.jogadorId;
+    const podeGerenciar = podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin);
 
-    if (!ehDono && !ehProprioJogador && !input.isAdmin) {
+    if (!podeGerenciar && !ehProprioJogador) {
       throw ErroPersonalizado.criar({
-        mensagem: "Apenas o próprio jogador ou o dono do torneio podem executar esta ação.",
+        mensagem: "Apenas o próprio jogador, dono, anfitrião ou administrador do torneio podem executar esta ação.",
         status: StatusErro.erroProibido,
       });
     }
@@ -89,6 +91,9 @@ export class DroparJogador
 
     const partidasResolvidas: Array<{ partidaId: string; vencedorId: string }> = [];
     const jogador = await this.usuarioGateway.buscarPorId(inscricao.usuarioId);
+    const jogadorNome = jogador
+      ? resolverNomeJogador(jogador, torneio.exibirNomeJogador)
+      : input.jogadorId;
 
     if (torneio.status === "inscricoes_abertas") {
       await this.inscricaoGateway.excluir(inscricao.id);
@@ -96,7 +101,7 @@ export class DroparJogador
       eventosTorneio.emit("jogador_dropou", {
         torneioId: input.torneioId,
         jogadorId: input.jogadorId,
-        jogadorNome: jogador?.nome ?? input.jogadorId,
+        jogadorNome,
         inscricaoRemovida: true,
         partidasResolvidas,
       });
@@ -104,7 +109,7 @@ export class DroparJogador
       return {
         inscricaoId: inscricao.id,
         torneioId: inscricao.torneioId,
-        jogador: { id: inscricao.usuarioId, nome: jogador?.nome ?? inscricao.usuarioId },
+        jogador: { id: inscricao.usuarioId, nome: jogadorNome },
         dropped: false,
         inscricaoRemovida: true,
       };
@@ -143,14 +148,14 @@ export class DroparJogador
     eventosTorneio.emit("jogador_dropou", {
       torneioId: input.torneioId,
       jogadorId: input.jogadorId,
-      jogadorNome: jogador?.nome ?? input.jogadorId,
+      jogadorNome,
       partidasResolvidas,
     });
 
     return {
       inscricaoId: inscricao.id,
       torneioId: inscricao.torneioId,
-      jogador: { id: inscricao.usuarioId, nome: jogador?.nome ?? inscricao.usuarioId },
+      jogador: { id: inscricao.usuarioId, nome: jogadorNome },
       dropped: true,
     };
   }

@@ -23,6 +23,8 @@ interface TorneioProps {
   premio?: string;
   maxJogadores?: number;
   secreto?: boolean;
+  anfitriaoId?: string | null;
+  rodadaIniciadaEm?: Date;
   criadoEm?: Date;
 }
 ```
@@ -31,15 +33,31 @@ interface TorneioProps {
 | ------------- | ------- | --------------------------------------------------------- |
 | id            | string  | Identificador único UUID                                  |
 | nome          | string  | Nome do torneio                                           |
-| horario       | Date    | Data e hora de realização                                 |
+| horario       | Date    | Data e hora de realização (**serializado em horário de Brasília, UTC-3**) |
 | formato       | string  | Formato do torneio (Standard, Modern, Legacy, etc.)       |
 | donoId        | string  | ID do usuário que criou o torneio                         |
+| anfitriaoId   | string  | ID do usuário anfitrião (opcional; definido por admin)   |
 | status        | string  | `inscricoes_abertas` → `em_andamento` → `finalizado`      |
 | rodadaAtual   | number  | Rodada corrente (0 antes de iniciar)                      |
 | totalRodadas  | number  | Total de rodadas calculado via `ceil(log₂(n))` ao iniciar |
+| rodadaIniciadaEm | Date | Momento em que a rodada atual foi iniciada (timer; Brasília) |
 | premio        | string  | Descrição do prêmio (opcional)                            |
 | maxJogadores  | number  | Limite máximo de inscrições. Sem limite quando omitido (opcional) |
 | secreto       | boolean | Se `true`, o torneio não aparece em listagens públicas. Acessível apenas por link direto com o UUID. Padrão: `false`. |
+
+### Permissões de gerenciamento
+
+Operações administrativas do torneio (iniciar rodada, registrar resultado em nome de jogador, ajustar pareamentos, etc.) podem ser executadas por:
+
+- **Dono** do torneio (`donoId`)
+- **Admin** global (`role: "admin"`)
+- **Anfitrião** do torneio (`anfitriaoId`), definido via `PUT /torneio/:torneioId/anfitriao`
+
+### Fuso horário (Brasília)
+
+- Campos de data/hora (`horario`, `criadoEm`, `rodadaIniciadaEm`) são **serializados com offset `-03:00`** nas respostas da API.
+- Ao criar ou alterar torneio, envie `horario` como string `datetime-local` ou ISO **sem converter para UTC no cliente** — o backend interpreta valores sem fuso como horário de Brasília.
+- Exemplo: `"2026-03-20T19:00:00-03:00"` representa 19h em Brasília.
 
 ### Inscrição
 
@@ -64,8 +82,10 @@ interface PartidaProps {
   rodada: number;
   jogador1Id: string;
   jogador1Nome?: string;
+  jogador1Excluido?: boolean;
   jogador2Id: string | null; // null = bye
   jogador2Nome?: string | null;
+  jogador2Excluido?: boolean;
   deckJogador1Id?: string;
   deckJogador2Id?: string | null;
   vitoriasJogador1: number;
@@ -100,9 +120,9 @@ Máximo 2 vitórias por jogador. Máximo 3 jogos totais.
 6. **Jogadores / Dono** registram resultados (`POST /torneio/partida/:id/resultado`)
 7. Jogadores que quiserem continuar fazem **check-in entre rodadas** (`POST /torneio/:id/checkin`), exceto quando a rodada atual já é a última do torneio
 8. **Dono** avança para a próxima rodada — gera pareamentos Swiss ou finaliza (`POST /torneio/:id/proxima-rodada`)
-9. Jogador ou dono podem **dropar** a qualquer momento (`POST /torneio/:id/drop`)
+9. Jogador pode **dropar a si mesmo**; organizador (dono/admin/anfitrião) pode dropar outro (`POST /torneio/:id/drop`)
 10. Partidas (mesas) do torneio disponíveis a qualquer momento (`GET /torneio/:id/partidas` e filtro por rodada)
-11. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`)
+11. Standings disponíveis a qualquer momento (`GET /torneio/:id/standings`); contas excluídas aparecem como `"Usuário excluído"` com `excluido: true`
 
 ---
 
@@ -157,6 +177,8 @@ Quando há número ímpar de jogadores, o último colocado no ranking recebe um 
 
 > **⚠️ Todos os endpoints de torneio requerem autenticação via token JWT.**
 
+Entrada validada com **Zod** (`src/helpers/validacao/schemas.ts`): params UUID, body e query conforme cada rota. Erros retornam `400` com `{ mensagem, erros[] }`.
+
 ---
 
 ### POST /torneio/criar
@@ -170,7 +192,7 @@ Cria um novo torneio.
 ```json
 {
   "nome": "FNM Standard",
-  "horario": "2026-03-20T19:00:00.000Z",
+  "horario": "2026-03-20T19:00:00-03:00",
   "formato": "standard",
   "premio": "1º lugar: booster box",
   "maxJogadores": 32,
@@ -186,7 +208,7 @@ Cria um novo torneio.
 {
   "id": "uuid",
   "nome": "FNM Standard",
-  "horario": "2026-03-20T19:00:00.000Z",
+  "horario": "2026-03-20T19:00:00-03:00",
   "formato": "standard",
   "donoId": "uuid-do-usuario",
   "status": "inscricoes_abertas",
@@ -226,7 +248,7 @@ Lista todos os torneios existentes, ordenados por data de criação (mais recent
     {
       "id": "uuid",
       "nome": "FNM Standard",
-      "horario": "2026-03-20T19:00:00.000Z",
+      "horario": "2026-03-20T19:00:00-03:00",
       "formato": "standard",
       "donoId": "uuid",
       "status": "inscricoes_abertas",
@@ -251,12 +273,15 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 {
   "id": "uuid",
   "nome": "FNM Standard",
-  "horario": "2026-03-20T19:00:00.000Z",
+  "horario": "2026-03-20T19:00:00-03:00",
   "formato": "standard",
   "donoId": "uuid",
+  "anfitriaoId": "uuid-anfitriao",
+  "anfitriao": { "id": "uuid-anfitriao", "nome": "Maria", "email": "maria@email.com" },
   "status": "em_andamento",
   "rodadaAtual": 2,
   "totalRodadas": 4,
+  "rodadaIniciadaEm": "2026-03-20T20:15:00-03:00",
   "premio": "1º lugar: booster box",
   "totalInscritos": 12,
   "totalCheckin": 10,
@@ -292,6 +317,9 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 
 | Campo          | Descrição                                                         |
 | -------------- | ----------------------------------------------------------------- |
+| anfitriaoId    | UUID do anfitrião (null se não definido)                          |
+| anfitriao      | Objeto `{ id, nome, email }` quando há anfitrião                   |
+| rodadaIniciadaEm | Início da rodada atual (Brasília); usado pelo timer             |
 | totalInscritos | Total de jogadores inscritos no torneio                           |
 | totalCheckin   | Total de jogadores que confirmaram presença (`checkIn = true`)    |
 | partidas       | Todas as partidas do torneio ordenadas por rodada                 |
@@ -309,7 +337,7 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 ```json
 {
   "nome": "FNM Standard Semanal",
-  "horario": "2026-03-27T19:00:00.000Z",
+  "horario": "2026-03-27T19:00:00-03:00",
   "formato": "standard",
   "premio": "Booster Box",
   "maxJogadores": 64,
@@ -332,6 +360,35 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 - `404` — Torneio não encontrado
 - `403` — Não é dono nem admin
 - `400` — Torneio não está em `inscricoes_abertas`
+
+---
+
+### PUT /torneio/:torneioId/anfitriao
+
+**(Somente admin)** Define ou remove o anfitrião do torneio. O anfitrião recebe permissões de gerenciamento **neste torneio** (iniciar rodadas, ajustar resultados, pareamentos, etc.), equivalentes às do dono para operações in-game.
+
+**Request Body:**
+
+```json
+{
+  "anfitriaoId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Para remover o anfitrião:
+
+```json
+{
+  "anfitriaoId": null
+}
+```
+
+**Response (200):** Retorna o torneio atualizado com `anfitriaoId` e objeto `anfitriao` populado.
+
+**Erros:**
+
+- `403` — Usuário não é admin
+- `404` — Torneio ou usuário anfitrião não encontrado
 
 ---
 
@@ -534,10 +591,10 @@ Confirma presença no torneio ou em uma rodada específica. Nenhum body necessá
 
 Dropa um jogador do torneio. O jogador dropado não participa dos próximos pareamentos, mas seus resultados anteriores são mantidos nos standings.
 
-- **Jogador dropa a si mesmo**: chame sem body
-- **Dono dropa outro jogador**: envie `jogadorId` no body
+- **Jogador dropa a si mesmo**: chame sem body (ou `jogadorId` = próprio id). Em `inscricoes_abertas` a inscrição é removida; em `em_andamento` marca `dropped` e resolve partidas pendentes por WO
+- **Organizador dropa outro jogador** (dono, admin ou anfitrião): envie `jogadorId` no body
 
-**Request Body** _(somente quando o dono dropa outro jogador)_:
+**Request Body** _(somente ao dropar outro jogador)_:
 
 ```json
 {
@@ -562,7 +619,7 @@ Dropa um jogador do torneio. O jogador dropado não participa dos próximos pare
 **Erros:**
 
 - `404` — Torneio não encontrado ou jogador não inscrito
-- `403` — Requisitante não é o jogador nem o dono
+- `403` — Requisitante não é o jogador nem quem pode gerenciar o torneio
 - `400` — Jogador já foi dropado
 - `400` — Torneio já finalizado
 
@@ -647,7 +704,8 @@ Exemplos válidos: `2-0`, `2-1`, `1-2`, `0-2`, `1-0`, `0-1`, `1-1`, `0-0`.
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 12,
       "omwp": 0.72,
@@ -686,7 +744,8 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 0,
       "vitoriasPartida": 0,
@@ -719,7 +778,8 @@ Retorna a classificação atual do torneio com todas as estatísticas de desempa
       "posicao": 1,
       "usuario": {
         "id": "uuid",
-        "nome": "João Silva"
+        "nome": "João Silva",
+        "excluido": false
       },
       "pontosMesa": 6,
       "vitoriasPartida": 2,
@@ -910,6 +970,14 @@ Marca uma partida finalizada como **contestada**, sinalizando ao dono/admin que 
 
 Permite que o jogador autenticado ingresse em um torneio **em andamento** usando um token gerado pelo dono. O token é de **uso único** — é consumido imediatamente após o ingresso.
 
+**Request Body:**
+
+```json
+{
+  "deckId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
 **Comportamento após o ingresso:**
 
 | Situação na rodada atual                     | Resultado para o novo jogador                              |
@@ -938,6 +1006,7 @@ Permite que o jogador autenticado ingresse em um torneio **em andamento** usando
 - `400` — Torneio não está em andamento
 - `404` — Usuário não encontrado
 - `400` — Nick MTGO não configurado na conta
+- `400` — `deckId` inválido ou ausente
 - `400` — Usuário já está inscrito neste torneio
 
 ---

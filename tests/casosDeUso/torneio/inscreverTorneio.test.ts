@@ -3,6 +3,7 @@ import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockUsuarioGat
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
 // Mock do eventosTorneio para evitar side effects nos testes
 jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
@@ -105,6 +106,29 @@ describe("InscreverTorneio", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
+    it("deve lançar erro se o usuario estiver bloqueado para torneios", async () => {
+        const uc = InscreverTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockInscricaoGateway(),
+            criarMockUsuarioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(
+                    new Usuario({
+                        id: "u-1",
+                        nome: "João",
+                        email: "j@e.com",
+                        senha: "s",
+                        nickMTGO: "joao_mtgo",
+                        bloqueadoTorneios: true,
+                    }),
+                ),
+            }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
+        ).rejects.toMatchObject({ status: 403 });
+    });
+
     it("deve lançar erro se o jogador já estiver inscrito", async () => {
         const inscricaoExistente = new Inscricao({
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
@@ -120,5 +144,47 @@ describe("InscreverTorneio", () => {
         await expect(
             uc.executar({ torneioId: "t-1", usuarioId: "u-1" })
         ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("emite participante_inscrito com nick MOL quando o torneio está configurado assim", async () => {
+        const torneioNick = new Torneio({
+            id: "t-1",
+            nome: "Torneio",
+            horario: new Date(),
+            formato: "legacy",
+            donoId: "dono",
+            status: "inscricoes_abertas",
+            rodadaAtual: 0,
+            totalRodadas: 0,
+            exibirNomeJogador: "nickMOL",
+        });
+
+        const uc = InscreverTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNick) }),
+            criarMockInscricaoGateway(),
+            criarMockUsuarioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(
+                    new Usuario({
+                        id: "u-1",
+                        nome: "João",
+                        email: "j@e.com",
+                        senha: "s",
+                        nickMTGO: "joao_mtgo",
+                    }),
+                ),
+            }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
+
+        expect(resultado.usuario.nome).toBe("joao_mtgo");
+        expect(eventosTorneio.emit).toHaveBeenCalledWith(
+            "participante_inscrito",
+            expect.objectContaining({
+                torneioId: "t-1",
+                usuarioId: "u-1",
+                usuarioNome: "joao_mtgo",
+            }),
+        );
     });
 });

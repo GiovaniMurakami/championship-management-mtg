@@ -27,6 +27,7 @@ describe("AtualizarPareamentosRodada", () => {
         new Inscricao({ id: "i-2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: false, deckId: "deck-2" }),
         new Inscricao({ id: "i-3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 2, dropped: false, deckId: "deck-3" }),
         new Inscricao({ id: "i-4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false, deckId: "deck-4" }),
+        new Inscricao({ id: "i-5", torneioId: "t-1", usuarioId: "u-5", checkInRodada: 2, dropped: false, deckId: "deck-5" }),
     ];
 
     function criarPartidasRodadaBase() {
@@ -69,9 +70,10 @@ describe("AtualizarPareamentosRodada", () => {
         new Usuario({ id: "u-2", nome: "Jogador 2", email: "u2@test.com", senha: "s" }),
         new Usuario({ id: "u-3", nome: "Jogador 3", email: "u3@test.com", senha: "s" }),
         new Usuario({ id: "u-4", nome: "Jogador 4", email: "u4@test.com", senha: "s" }),
+        new Usuario({ id: "u-5", nome: "Jogador 5", email: "u5@test.com", senha: "s" }),
     ];
 
-    it("deve permitir reordenar mesas e trocar os pareamentos usando exatamente os mesmos jogadores", async () => {
+    it("deve permitir reordenar mesas e trocar os pareamentos pendentes", async () => {
         const partidasRodada = criarPartidasRodadaBase();
         const atualizarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
         const uc = AtualizarPareamentosRodada.criar(
@@ -119,31 +121,18 @@ describe("AtualizarPareamentosRodada", () => {
         expect(atualizarMock).toHaveBeenCalledTimes(2);
     });
 
-    it("deve converter a partida editada em BYE normal quando jogador2 for removido", async () => {
-        const partidasRodada = [
-            criarPartidasRodadaBase()[0],
-            new Partida({
-                id: "p-3",
-                torneioId: "t-1",
-                rodada: 2,
-                jogador1Id: "u-3",
-                jogador2Id: null,
-                deckJogador1Id: "deck-3",
-                deckJogador2Id: null,
-                vitoriasJogador1: 2,
-                vitoriasJogador2: 0,
-                status: "finalizada",
-                tipoBye: "normal",
-                mesa: 2,
-            }),
-        ];
-        const atualizarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
+    it("deve permitir criar mesa BYE nova e incluir jogador que não estava na rodada", async () => {
+        const partidasRodada = [criarPartidasRodadaBase()[0]];
+        const salvarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
+        const excluirMock = jest.fn().mockResolvedValue(0);
         const uc = AtualizarPareamentosRodada.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
                 listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
-                atualizar: atualizarMock,
+                atualizar: jest.fn().mockImplementation(async (partida: Partida) => partida),
+                salvar: salvarMock,
+                excluirPorIds: excluirMock,
             }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
         );
@@ -155,23 +144,87 @@ describe("AtualizarPareamentosRodada", () => {
             isAdmin: false,
             partidas: [
                 { id: "p-1", jogador1Id: "u-1", jogador2Id: "u-2", mesa: 1 },
-                { id: "p-3", jogador1Id: "u-3", jogador2Id: null, mesa: 3 },
+                { id: null, jogador1Id: "u-5", jogador2Id: null, mesa: 2 },
             ],
         });
 
-        const bye = resultado.partidas.find((partida) => partida.id === "p-3");
-        expect(bye).toMatchObject({
-            jogador1Id: "u-3",
-            jogador2Id: null,
-            mesa: 3,
-            status: "finalizada",
-            vitoriasJogador1: 2,
-            vitoriasJogador2: 0,
-        });
+        expect(salvarMock).toHaveBeenCalledTimes(1);
+        expect(resultado.partidas).toHaveLength(2);
+        expect(resultado.partidas.some((p) => p.jogador1Id === "u-5" && p.jogador2Id === null)).toBe(true);
     });
 
-    it("deve lançar erro quando a edição não reutiliza exatamente os mesmos jogadores da rodada", async () => {
-        const partidasRodada = criarPartidasRodadaBase();
+    it("deve excluir mesa pendente omitida e travar mesa finalizada", async () => {
+        const partidasRodada = [
+            new Partida({
+                id: "p-1",
+                torneioId: "t-1",
+                rodada: 2,
+                jogador1Id: "u-1",
+                jogador2Id: "u-2",
+                deckJogador1Id: "deck-1",
+                deckJogador2Id: "deck-2",
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 0,
+                status: "finalizada",
+                mesa: 1,
+            }),
+            new Partida({
+                id: "p-2",
+                torneioId: "t-1",
+                rodada: 2,
+                jogador1Id: "u-3",
+                jogador2Id: "u-4",
+                deckJogador1Id: "deck-3",
+                deckJogador2Id: "deck-4",
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 0,
+                status: "pendente",
+                mesa: 2,
+            }),
+        ];
+        const excluirMock = jest.fn().mockResolvedValue(1);
+        const uc = AtualizarPareamentosRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                atualizar: jest.fn().mockImplementation(async (partida: Partida) => partida),
+                excluirPorIds: excluirMock,
+                salvar: jest.fn(),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1",
+            rodada: 2,
+            requisitanteId: "dono-1",
+            isAdmin: false,
+            partidas: [
+                { id: "p-1", jogador1Id: "u-1", jogador2Id: "u-2", mesa: 1 },
+                { id: null, jogador1Id: "u-5", jogador2Id: "u-3", mesa: 2 },
+            ],
+        });
+
+        expect(excluirMock).toHaveBeenCalledWith(["p-2"]);
+        expect(resultado.partidas).toHaveLength(2);
+        expect(resultado.partidas.find((p) => p.id === "p-1")?.status).toBe("finalizada");
+    });
+
+    it("deve rejeitar alteração de jogadores em partida finalizada", async () => {
+        const partidasRodada = [
+            new Partida({
+                id: "p-1",
+                torneioId: "t-1",
+                rodada: 2,
+                jogador1Id: "u-1",
+                jogador2Id: "u-2",
+                vitoriasJogador1: 2,
+                vitoriasJogador2: 0,
+                status: "finalizada",
+                mesa: 1,
+            }),
+        ];
         const uc = AtualizarPareamentosRodada.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
             criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
@@ -187,14 +240,48 @@ describe("AtualizarPareamentosRodada", () => {
                 rodada: 2,
                 requisitanteId: "dono-1",
                 isAdmin: false,
-                partidas: [
-                    { id: "p-1", jogador1Id: "u-1", jogador2Id: "u-2", mesa: 1 },
-                    { id: "p-2", jogador1Id: "u-1", jogador2Id: "u-3", mesa: 2 },
-                ],
+                partidas: [{ id: "p-1", jogador1Id: "u-1", jogador2Id: "u-3", mesa: 1 }],
             })
         ).rejects.toMatchObject({
             status: 400,
-            message: "Os pareamentos devem reutilizar exatamente os mesmos jogadores da rodada.",
+            message: "Partidas finalizadas não podem ter jogadores alterados.",
+        });
+    });
+
+    it("deve converter a partida editada em BYE normal quando jogador2 for removido", async () => {
+        const partidasRodada = criarPartidasRodadaBase();
+        const atualizarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
+        const excluirMock = jest.fn().mockResolvedValue(1);
+        const uc = AtualizarPareamentosRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                atualizar: atualizarMock,
+                excluirPorIds: excluirMock,
+            }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1",
+            rodada: 2,
+            requisitanteId: "dono-1",
+            isAdmin: false,
+            partidas: [
+                { id: "p-1", jogador1Id: "u-1", jogador2Id: null, mesa: 1 },
+            ],
+        });
+
+        expect(excluirMock).toHaveBeenCalledWith(["p-2"]);
+        const bye = resultado.partidas.find((partida) => partida.id === "p-1");
+        expect(bye).toMatchObject({
+            jogador1Id: "u-1",
+            jogador2Id: null,
+            mesa: 1,
+            status: "finalizada",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
         });
     });
 
@@ -249,7 +336,7 @@ describe("AtualizarPareamentosRodada", () => {
 
         await expect(
             uc.executar({ torneioId: "t-1", rodada: 2, requisitanteId: "outro", isAdmin: false, partidas: [] })
-        ).rejects.toMatchObject({ status: 403, message: "Apenas o dono do torneio ou um administrador pode alterar pareamentos." });
+        ).rejects.toMatchObject({ status: 403, message: "Apenas o dono, anfitrião ou administrador do torneio pode alterar pareamentos." });
     });
 
     it("deve lançar erro se não existirem partidas para a rodada", async () => {
@@ -263,29 +350,6 @@ describe("AtualizarPareamentosRodada", () => {
         await expect(
             uc.executar({ torneioId: "t-1", rodada: 2, requisitanteId: "dono-1", isAdmin: false, partidas: [] })
         ).rejects.toMatchObject({ status: 404, message: "Não existem partidas para a rodada informada." });
-    });
-
-    it("deve lançar erro se os ids enviados não corresponderem exatamente às partidas da rodada", async () => {
-        const partidasRodada = criarPartidasRodadaBase();
-        const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada) }),
-            criarMockUsuarioGateway(),
-        );
-
-        await expect(
-            uc.executar({
-                torneioId: "t-1",
-                rodada: 2,
-                requisitanteId: "dono-1",
-                isAdmin: false,
-                partidas: [{ id: "p-invalida", jogador1Id: "u-1", jogador2Id: "u-2", mesa: 1 }],
-            })
-        ).rejects.toMatchObject({
-            status: 400,
-            message: "Envie exatamente as partidas existentes da rodada para reordenar os pareamentos.",
-        });
     });
 
     it("deve lançar erro se um jogador inativo aparecer nos pareamentos", async () => {
@@ -320,32 +384,6 @@ describe("AtualizarPareamentosRodada", () => {
         });
     });
 
-    it("deve priorizar o erro de coleção inválida antes do erro de jogador repetido no mesmo pareamento", async () => {
-        const partidasRodada = criarPartidasRodadaBase();
-        const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada) }),
-            criarMockUsuarioGateway(),
-        );
-
-        await expect(
-            uc.executar({
-                torneioId: "t-1",
-                rodada: 2,
-                requisitanteId: "dono-1",
-                isAdmin: false,
-                partidas: [
-                    { id: "p-1", jogador1Id: "u-1", jogador2Id: "u-1", mesa: 1 },
-                    { id: "p-2", jogador1Id: "u-3", jogador2Id: "u-4", mesa: 2 },
-                ],
-            })
-        ).rejects.toMatchObject({
-            status: 400,
-            message: "Os pareamentos devem reutilizar exatamente os mesmos jogadores da rodada.",
-        });
-    });
-
     it("deve lançar erro se a rodada editada terminar com mais de um BYE", async () => {
         const partidasRodada = [
             new Partida({
@@ -371,26 +409,10 @@ describe("AtualizarPareamentosRodada", () => {
                 status: "pendente",
                 mesa: 2,
             }),
-            new Partida({
-                id: "p-3",
-                torneioId: "t-1",
-                rodada: 2,
-                jogador1Id: "u-4",
-                jogador2Id: null,
-                vitoriasJogador1: 2,
-                vitoriasJogador2: 0,
-                status: "finalizada",
-                tipoBye: "normal",
-                mesa: 3,
-            }),
-        ];
-        const inscricoesComCinco = [
-            ...inscricoes,
-            new Inscricao({ id: "i-5", torneioId: "t-1", usuarioId: "u-5", checkInRodada: 2, dropped: false, deckId: "deck-5" }),
         ];
         const uc = AtualizarPareamentosRodada.criar(
             criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCinco) }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada) }),
             criarMockUsuarioGateway(),
         );
@@ -403,8 +425,7 @@ describe("AtualizarPareamentosRodada", () => {
                 isAdmin: false,
                 partidas: [
                     { id: "p-1", jogador1Id: "u-1", jogador2Id: null, mesa: 1 },
-                    { id: "p-2", jogador1Id: "u-2", jogador2Id: "u-3", mesa: 2 },
-                    { id: "p-3", jogador1Id: "u-4", jogador2Id: null, mesa: 3 },
+                    { id: "p-2", jogador1Id: "u-2", jogador2Id: null, mesa: 2 },
                 ],
             })
         ).rejects.toMatchObject({

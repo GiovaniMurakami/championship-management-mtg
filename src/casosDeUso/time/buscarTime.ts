@@ -3,6 +3,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 
 export type BuscarTimeInputDto = { id: string };
 
@@ -12,8 +13,8 @@ export type BuscarTimeOutputDto = {
     descricao?: string;
     imagemUrl?: string;
     donoId: string;
-    membros: Array<{ id: string; nome: string }>;
-    solicitacoesPendentes: Array<{ id: string; nome: string }>;
+    membros: Array<{ id: string; nome: string; excluido: boolean }>;
+    solicitacoesPendentes: Array<{ id: string; nome: string; excluido: boolean }>;
     criadoEm: Date;
 };
 
@@ -40,7 +41,7 @@ export class BuscarTime implements CasoDeUso<BuscarTimeInputDto, BuscarTimeOutpu
         const usuarios = todosIds.length > 0
             ? await this.usuarioGateway.buscarVarios(todosIds)
             : [];
-        const nomeMap = new Map(usuarios.map((u) => [u.id, u.nome]));
+        const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
         return {
             id: time.id,
@@ -48,8 +49,10 @@ export class BuscarTime implements CasoDeUso<BuscarTimeInputDto, BuscarTimeOutpu
             descricao: time.descricao,
             imagemUrl: time.imagemUrl,
             donoId: time.donoId,
-            membros: time.membroIds.map((id) => ({ id, nome: nomeMap.get(id) ?? id })),
-            solicitacoesPendentes: time.solicitacoesPendentes.map((id) => ({ id, nome: nomeMap.get(id) ?? id })),
+            membros: time.membroIds.map((id) => toUsuarioPublico(usuarioMap.get(id), id)),
+            solicitacoesPendentes: time.solicitacoesPendentes.map((id) =>
+                toUsuarioPublico(usuarioMap.get(id), id),
+            ),
             criadoEm: time.criadoEm,
         };
     }

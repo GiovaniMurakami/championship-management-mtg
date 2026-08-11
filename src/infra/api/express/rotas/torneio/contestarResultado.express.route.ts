@@ -7,6 +7,8 @@ import { resultadoRateLimiter } from "../../../../../middlewares/express/rateLim
 import { partidaIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
+import { contestarResultadoSchema } from "../../../../../helpers/validacao/schemas";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class ContestarResultadoRota implements Rotas {
     private constructor(
@@ -38,11 +40,14 @@ export class ContestarResultadoRota implements Rotas {
             try {
                 const usuarioId = request.usuario!.id;
                 const partidaId = request.params.partidaId as string;
+                const body = validarBody(contestarResultadoSchema, request.body ?? {}, response);
+                if (!body) return;
 
                 const resultado = await this.contestarResultadoServico.executar({
                     partidaId,
                     usuarioId,
                     isAdmin: request.usuario!.role === "admin",
+                    observacao: body.observacao,
                 });
 
                 eventosTorneio.emit("resultado_contestado", resultado);

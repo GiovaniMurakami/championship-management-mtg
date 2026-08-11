@@ -20,7 +20,7 @@ describe("CriarTorneio", () => {
         expect(resultado.donoId).toBe("user-1");
         expect(resultado.status).toBe("inscricoes_abertas");
         expect(resultado.descricao).toBe("Booster Box");
-        expect(resultado.criadoEm).toBeInstanceOf(Date);
+        expect(resultado.criadoEm).toMatch(/-03:00$/);
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
     });
 
@@ -50,6 +50,7 @@ describe("CriarTorneio", () => {
             bannerUrl: " https://cdn.example.com/banner.png ",
             linkBanner: " https://evento.example.com ",
             somRodada: " round-start.mp3 ",
+            storyFundoUrl: " https://cdn.example.com/story-fundo.jpg ",
             maxJogadores: 64,
             maxRodadas: 6,
             corteTop: 8,
@@ -59,6 +60,7 @@ describe("CriarTorneio", () => {
         expect(resultado.bannerUrl).toBe("https://cdn.example.com/banner.png");
         expect(resultado.linkBanner).toBe("https://evento.example.com");
         expect(resultado.somRodada).toBe("round-start.mp3");
+        expect(resultado.storyFundoUrl).toBe("https://cdn.example.com/story-fundo.jpg");
         expect(resultado.maxJogadores).toBe(64);
         expect(resultado.maxRodadas).toBe(6);
         expect(resultado.corteTop).toBe(8);

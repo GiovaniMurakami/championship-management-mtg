@@ -8,8 +8,11 @@
 
 ### [Usuário](./usuario.md)
 
-- Estrutura da entidade
+- Estrutura da entidade (`bloqueadoTorneios`, `excluido`, `excluidoEm`)
 - Endpoints de cadastro e autenticação
+- `DELETE /usuario/conta` — soft-delete / anonimização (preserva decks e histórico)
+- `PUT /usuario/:id/bloqueio-torneios` — bloqueio admin
+- `GET /usuario/listar` — busca de usuários (admin; omite excluídos por padrão)
 - Regras de negócio
 - Casos de uso e repositórios
 
@@ -26,12 +29,14 @@
 - Estrutura das entidades (Torneio, Inscrição, Partida)
 - Fluxo completo do torneio
 - Sistema Swiss com critérios de desempate WotC
-- Endpoints: criar, listar, buscar, listar partidas, inscrever, check-in, escolher deck, drop, iniciar, resultado, próxima rodada, standings, meu histórico
+- Endpoints: criar, listar, buscar, listar partidas, inscrever, check-in, escolher deck, drop (auto ou organizador), iniciar, resultado, próxima rodada, standings, meu histórico, **definir anfitrião**, encerrar, ajustar total de rodadas
+- Campo `anfitriaoId` / permissões do anfitrião no torneio (`podeGerenciarTorneio`)
+- Datas serializadas em horário de Brasília (UTC-3)
 - Campo `premio` e `maxJogadores` no torneio
 - Requisito de `nickMTGO` para inscrição
 - Contagem de inscritos e check-in (`totalInscritos`, `totalCheckin`)
-- Nomes populados em standings e partidas
-- Notificações em tempo real via Ably (7 eventos)
+- Nomes populados em standings e partidas; flag `excluido` / `jogadorNExcluido` para contas anonimizadas
+- Notificações em tempo real via Ably
 
 ### [Liga](./liga.md)
 

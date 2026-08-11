@@ -7,6 +7,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
   ordenarPorDesempate,
@@ -15,14 +16,7 @@ import {
   gwp,
   ogwp,
 } from "./swiss";
-import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
-import { Usuario } from "../../dominio/entidade/usuario";
-
-function resolverNome(u: Usuario, modo: ExibirNomeJogador): string {
-  if (modo === "nickMOL") return u.nickMTGO ?? u.nome;
-  if (modo === "nickArena") return u.nickArena ?? u.nome;
-  return u.nome;
-}
+import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
   const corte = Number(corteTop || 0);
@@ -45,7 +39,7 @@ export type BuscarStandingsOutputDto = {
   rodadaIniciadaEm?: string;
   standings: Array<{
     posicao: number;
-    usuario: { id: string; nome: string; resultadosExpressivos: number };
+    usuario: { id: string; nome: string; excluido: boolean; resultadosExpressivos: number };
     time: { id: string; nome: string; imagemUrl?: string } | null;
     pontosMesa: number;
     vitoriasPartida: number;
@@ -96,12 +90,7 @@ export class BuscarStandings
       });
     }
 
-    const toBrasiliaISO = (date?: Date): string | undefined => {
-      if (!date) return undefined;
-      const offset = -3 * 60;
-      const local = new Date(date.getTime() + offset * 60 * 1000);
-      return local.toISOString().replace("Z", "-03:00");
-    };
+    const toBrasiliaISOLocal = (date?: Date) => toBrasiliaISO(date);
 
     const inscricoes = await this.inscricaoGateway.listarPorTorneio(
       input.torneioId
@@ -133,7 +122,12 @@ export class BuscarStandings
         const t = timeByMembro.get(i.usuarioId);
         return {
         posicao: idx + 1,
-        usuario: { id: i.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
+        usuario: {
+          id: i.usuarioId,
+          nome: u ? resolverNome(u, torneio.exibirNomeJogador) : i.usuarioId,
+          excluido: Boolean(u?.excluido),
+          resultadosExpressivos: u?.resultadosExpressivos ?? 0,
+        },
         time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
         pontosMesa: 0,
         vitoriasPartida: 0,
@@ -157,7 +151,7 @@ export class BuscarStandings
         totalRodadas: torneio.totalRodadas,
         status: torneio.status,
         totalInscritos: inscricoes.length,
-        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+        rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
         standings,
       };
     }
@@ -207,14 +201,19 @@ export class BuscarStandings
       totalRodadas: torneio.totalRodadas,
       status: torneio.status,
       totalInscritos: inscricoes.length,
-      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
+      rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
       standings: ordenados.map((s, idx) => {
         const inscricao = inscricaoMap.get(s.usuarioId);
         const t = timeByMembro.get(s.usuarioId);
         const u = usuarioMap.get(s.usuarioId);
         return {
           posicao: idx + 1,
-          usuario: { id: s.usuarioId, nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId, resultadosExpressivos: u?.resultadosExpressivos ?? 0 },
+          usuario: {
+            id: s.usuarioId,
+            nome: u ? resolverNome(u, torneio.exibirNomeJogador) : s.usuarioId,
+            excluido: Boolean(u?.excluido),
+            resultadosExpressivos: u?.resultadosExpressivos ?? 0,
+          },
           time: t ? { id: t.id, nome: t.nome, imagemUrl: t.imagemUrl } : null,
           pontosMesa: s.pontosMesa,
           vitoriasPartida: s.vitoriasPartida,

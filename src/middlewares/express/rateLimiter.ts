@@ -33,9 +33,9 @@ export const authRateLimiter = rateLimit({
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
-// Refresh de token — um pouco mais permissivo que auth
+// Refresh de token — precisa aguentar retornos de idle + cold start sem matar a sessão no client
 export const refreshTokenRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(15, "refresh"),
+  ...criarOpcoesRateLimit(60, "refresh"),
   message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
 });
 
