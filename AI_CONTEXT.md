@@ -159,7 +159,8 @@ DELETE /deck/:id
 ### Torneio
 ```
 POST /torneio/criar                     (admin)
-GET  /torneio/listar, /:torneioId, /:torneioId/seo (público; retorna title/image/imageType/description sanitizada para OG)
+GET  /torneio/listar, /:torneioId, /:torneioId/seo, /:torneioId/standings, /:torneioId/partidas (leitura pública; listar usa JWT opcional para flag `inscrito`)
+GET  /torneio/:torneioId/meu-historico (JWT)
 GET  /:torneioId/standings, /partidas, /meu-historico
 POST /:torneioId/inscrever, /checkin, /deck, /iniciar
 POST /:torneioId/proxima-rodada, /refazer-rodada, /drop
@@ -176,7 +177,8 @@ DELETE /:torneioId
 
 ### Liga, Time, Site, Imagem
 ```
-Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking, PUT, DELETE
+Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking (leitura pública), PUT, DELETE
+Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
 Img:   POST /imagem/upload-url

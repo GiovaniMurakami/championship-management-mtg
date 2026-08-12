@@ -2,7 +2,6 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { ListarPartidasTorneio } from "../../../../../casosDeUso/torneio/listarPartidasTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { listarPartidasQuerySchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
@@ -30,7 +29,6 @@ export class ListarPartidasTorneioRota implements Rotas {
             validarParamsMiddleware(torneioIdParamSchema),
             validarQueryMiddleware(listarPartidasQuerySchema),
             publicReadRateLimiter,
-            autenticarJwt,
         ];
     }
 

@@ -44,6 +44,24 @@ describe("ListarTorneios", () => {
         expect(resultado.torneios.every((t) => t.totalInscritos === 0)).toBe(true);
     });
 
+    it("deve listar sem usuarioId (visitante) com inscrito=false e sem consultar inscricoes do usuario", async () => {
+        const torneioGateway = criarMockTorneioGateway({
+            listar: jest.fn().mockResolvedValue(torneios),
+            listarTotal: jest.fn().mockResolvedValue(2),
+        });
+        const inscricaoGateway = criarMockInscricaoGateway({
+            listarPorUsuario: jest.fn(),
+            contarPorTorneios: jest.fn().mockResolvedValue({ t1: 1, t2: 2 }),
+        });
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({});
+
+        expect(inscricaoGateway.listarPorUsuario).not.toHaveBeenCalled();
+        expect(resultado.torneios.every((t) => t.inscrito === false)).toBe(true);
+        expect(resultado.torneios[0].totalInscritos).toBe(1);
+    });
+
     it("deve retornar lista vazia", async () => {
         const torneioGateway = criarMockTorneioGateway();
         const inscricaoGateway = criarMockInscricaoGateway();

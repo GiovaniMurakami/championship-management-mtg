@@ -9,7 +9,8 @@ const LIMITE_MAXIMO_TORNEIOS = 100;
 const LIMITE_PADRAO_TORNEIOS = 20;
 
 export type ListarTorneiosInputDto = {
-  usuarioId: string;
+  /** Ausente para visitante sem login — todos os torneios saem com inscrito=false. */
+  usuarioId?: string;
   limite?: number;
   offset?: number;
   status?: StatusTorneio;
@@ -86,7 +87,7 @@ export class ListarTorneios
         dataFim,
       }),
       this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
-      this.inscricaoGateway.listarPorUsuario(usuarioId),
+      usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
     ]);
 
     const torneiosInscritos = new Set(inscricoes.map((i) => i.torneioId));
