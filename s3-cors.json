@@ -1,0 +1,19 @@
+{
+  "CORSRules": [
+    {
+      "AllowedHeaders": ["*"],
+      "AllowedMethods": ["GET", "HEAD", "PUT", "POST"],
+      "AllowedOrigins": [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://app.tiagofuguete.com.br",
+        "https://www.app.tiagofuguete.com.br",
+        "https://tiagofuguete.com.br",
+        "https://www.tiagofuguete.com.br",
+        "https://homolog.d32mjk9mbam2cb.amplifyapp.com"
+      ],
+      "ExposeHeaders": ["ETag", "Content-Type", "x-amz-meta-custom-header"],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}
