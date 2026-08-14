@@ -68,6 +68,8 @@ import { CadastrarStoryFundoRota } from "../infra/api/express/rotas/storyFundo/c
 import { ListarStoryFundosRota } from "../infra/api/express/rotas/storyFundo/listarStoryFundos.express.route";
 import { ExcluirStoryFundoRota } from "../infra/api/express/rotas/storyFundo/excluirStoryFundo.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
+import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
+import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
 import { type CasosDeUso } from "./casos";
 
 export function criarRotas(casos: CasosDeUso) {
@@ -141,6 +143,8 @@ export function criarRotas(casos: CasosDeUso) {
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),
         ExcluirStoryFundoRota.criar(casos.excluirStoryFundo),
+        ListarMetagameRota.criar(casos.listarMetagame),
+        BuscarArquetipoMetagameRota.criar(casos.buscarArquetipoMetagame),
         HealthRota.criar(),
     ];
 }

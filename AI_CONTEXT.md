@@ -12,10 +12,11 @@
 API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gathering**:
 
 - Autenticação JWT (RS256 em prod) + refresh token rotacionado
-- CRUD de decks (consolidação de nome via ChatGPT opcional)
+- CRUD de decks (`nomeConsolidado` = nome dado pelo usuário; admin pode alterar)
 - Torneios Swiss com top cut, pareamentos, resultados, check-in por rodada, link de ingresso tardio
 - **Anfitrião de torneio** — admin designa usuário com permissões de gestão no torneio
 - Ligas (rankings consolidados) e times (convites/solicitações)
+- Metagame público por formato (torneios finalizados)
 - Upload de imagens via presigned URL (S3)
 - Anúncios do site + estatísticas
 - Notificações em tempo real via **Ably**
@@ -37,7 +38,6 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 | Ably | Pub/Sub realtime |
 | AWS S3 + SSM | Imagens + chaves JWT |
 | Nodemailer | E-mails transacionais |
-| OpenAI gpt-4o-mini | `nomeConsolidado` de decks |
 | Jest + Supertest | Testes |
 | esbuild + Serverless | Build e deploy Lambda |
 | Pino | Logs |
@@ -53,9 +53,9 @@ src/
 ├── iniciarServidor.ts          # Dev local (nodemon)
 ├── composicao/
 │   ├── repositorios.ts         # Wiring MongoDB
-│   ├── servicos.ts             # Email, S3, ChatGPT, etc.
+│   ├── servicos.ts             # Email, S3, etc.
 │   ├── casos.ts                # Todos os use cases
-│   └── rotas.ts                # Registro das 63 rotas
+│   └── rotas.ts                # Registro das rotas Express
 ├── dominio/
 │   ├── entidade/               # Torneio, Deck, Usuario, Partida, etc.
 │   └── gateway/                # Interfaces dos repositórios
@@ -65,13 +65,14 @@ src/
 │   ├── torneio/                # Maior volume de lógica
 │   ├── liga/
 │   ├── time/
+│   ├── metagame/
 │   ├── site/
 │   └── imagem/
 ├── infra/
 │   ├── api/express/            # ApiExpress + rotas *Rota
 │   ├── mongodb/repositorios/   # Implementações Mongoose
 │   ├── ably/                   # NotificacaoAbly
-│   ├── s3/, email/, chatgpt/
+│   ├── s3/, email/
 │   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably
 ├── middlewares/express/        # autenticarJwt, rateLimiter, sanitização
 └── helpers/
@@ -82,7 +83,7 @@ src/
     └── jwt.ts, env.ts, logger.ts
 
 docs/                           # Documentação por entidade (usuario, torneio, etc.)
-tests/                          # Jest (~90 suites)
+tests/                          # Jest (~859 testes de unidade/integração)
 ```
 
 **Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
@@ -122,7 +123,7 @@ app.ts
   → criarRepositorios()
   → criarServicos()
   → criarCasosDeUso(repos, servicos)
-  → criarRotas(casos)          // 63 rotas
+  → criarRotas(casos)          // rotas Express (inclui GET /metagame)
   → ApiExpress.criar(rotas)
   → inicializarAutenticarJwt()
 ```
@@ -178,6 +179,7 @@ DELETE /:torneioId
 ### Liga, Time, Site, Imagem
 ```
 Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking (leitura pública), PUT, DELETE
+Metagame: GET /metagame, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
 Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
@@ -222,7 +224,7 @@ Usado em iniciar rodada, resultados, pareamentos, drop em nome de jogador, escol
 - Flags: `excluido: true`, `excluidoEm`, `bloqueadoTorneios: true`
 - Remove anfitrião, refresh/reset tokens; login e refresh rejeitam conta excluída
 - Bloqueia se for admin, dono de torneio ou dono de time
-- Payloads públicos incluem `excluido` / `jogadorNExcluido` e nome anonimizado via `helpers/torneio/resolverNomeJogador.ts` (`toUsuarioPublico`)
+- Payloads públicos incluem `excluido` / `jogadorNExcluido` e nome via `helpers/torneio/resolverNomeJogador.ts` (`toUsuarioPublico`): **nick MOL** (`nickMTGO`), fallback para o nome cadastrado. Usado em ligas, decks, metagame e times. Torneios continuam com `exibirNomeJogador` (nome | nickMOL | nickArena).
 
 ### Bloqueio de torneios (admin)
 
@@ -309,7 +311,6 @@ npm run db:create-indexes   # src/infra/mongodb/criarIndices.ts
 | AWS SSM | Chaves JWT (prod) |
 | AWS S3 | Presigned upload (5 min, max 5 MB, image/*) |
 | Ably | Realtime |
-| OpenAI | Nome arquétipo do deck (não bloqueia cadastro se falhar) |
 | Gmail/Nodemailer | Boas-vindas, reset senha, lockout |
 
 ---
@@ -322,7 +323,23 @@ npm run db:create-indexes   # src/infra/mongodb/criarIndices.ts
 4. `sanitizarEntrada` (strip HTML/null bytes)
 5. Request logging (pino)
 
-**Rate limiting:** tiers por rota; store `memory` (local) ou `mongo` (prod/Lambda).
+**Rate limiting:** janela de 15 min por IP (`ipv6Subnet` /56). Store `memory` (local) ou `mongo` (prod/Lambda).
+
+| Limiter | Máx/15min | Uso |
+|---|---|---|
+| `auth` | 5 | login, cadastro, reset senha (mesmo bucket) |
+| `refresh` | 40 | refresh token |
+| `account` | 15 | logout, perfil |
+| `deck` | 40 | criar deck |
+| `inscricao` | 80 | inscrever, check-in, escolher deck |
+| `resultado` | 120 | resultado/confirmação/contestação |
+| `mutation` | 60 | demais mutações autenticadas |
+| `public-read` | 100 | listagens/buscas públicas |
+| `heavy-read` | 40 | metagame e ranking de liga |
+| `public-action` | 30 | POST público (clique anúncio) |
+| `upload` | 8 | presigned URL S3 |
+
+`GET /health` sem limiter. Em rotas caras o limiter vem **antes** da validação, para contar spam de payload inválido.
 
 ---
 
@@ -339,7 +356,7 @@ CORS_ORIGIN=http://localhost:5173
 IS_LOCAL=true
 ```
 
-Opcionais: `ABLY_API_KEY`, `CHATGPT_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `RATE_LIMIT_STORE`, `LOG_LEVEL`.
+Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `RATE_LIMIT_STORE`, `LOG_LEVEL`.
 
 **Nunca commitar `.env`.**
 
@@ -348,14 +365,15 @@ Opcionais: `ABLY_API_KEY`, `CHATGPT_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EM
 ## 15. Testes
 
 ```bash
-npm test              # jest --verbose (~736 testes)
+npm test              # jest --verbose (~859 testes; e2e em tests/e2e/)
+npm run test:coverage # cobertura; limiar 95/90/95/95 em casosDeUso, entidades, helpers, middlewares (exclui e2e)
 npm run lint          # eslint
 npm run dev           # nodemon + ts-node (porta 3000)
 npm run build         # esbuild
 npm run deploy:dev    # serverless deploy stage dev
 ```
 
-Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas Express com cobertura mais esparsa; fluxos E2E de torneio em `tests/integracao/`.
+Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `middlewares/`. Rotas Express com cobertura mais esparsa; fluxos E2E de torneio em `tests/integracao/` e `tests/e2e/`.
 
 ---
 
@@ -369,6 +387,7 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 | Soft-delete conta | `casosDeUso/usuario/excluirConta.ts`, `resolverNomeJogador.ts` |
 | Bloqueio torneios | `casosDeUso/usuario/alterarBloqueioTorneios.ts` |
 | Pareamento Swiss | `casosDeUso/torneio/iniciarTorneio.ts`, `iniciarProximaRodada.ts`, helpers em `helpers/torneio/` |
+| Metagame | `casosDeUso/metagame/`, `docs/metagame.md` |
 | Standings | `buscarStandings.ts` |
 | Datas Brasília | `helpers/data/brasilia.ts` + rotas que serializam torneio |
 | Validação API | `helpers/validacao/schemas.ts` |
@@ -384,7 +403,7 @@ Cobertura forte em `casosDeUso/`, `dominio/`, `helpers/`, `middlewares/`. Rotas 
 1. **`docs/README.md` pode estar parcialmente desatualizado** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts` e o código.
 2. **Lambda cold start** — pool Mongo max 1 (`MONGODB_MAX_POOL_SIZE`); Ably aguarda publicação no handler.
 3. **Emails** — falhas são logadas, não propagadas ao cliente.
-4. **ChatGPT** — timeout ~3.5s; deck salva sem `nomeConsolidado` se falhar.
+4. **`nomeConsolidado`** — igual ao nome do deck no cadastro; admin pode alterar depois (metagame).
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
 6. **Alterar torneio** — só em `inscricoes_abertas`; dono ou admin.
 7. **Torneios secretos** — filtrados em `listarTorneios`, acessíveis por UUID direto.

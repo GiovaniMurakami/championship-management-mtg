@@ -87,7 +87,15 @@ export class AtualizarDeck
       };
     }
 
-    if (input.nome !== undefined) deck.nome = input.nome.trim();
+    if (input.nome !== undefined) {
+      const novoNome = input.nome.trim();
+      const consolidadoSegueNomeDoUsuario =
+        !deck.nomeConsolidado || deck.nomeConsolidado === deck.nome;
+      deck.nome = novoNome;
+      if (input.nomeConsolidado === undefined && consolidadoSegueNomeDoUsuario) {
+        deck.nomeConsolidado = novoNome;
+      }
+    }
     if (input.nomeConsolidado !== undefined) {
       deck.nomeConsolidado =
         input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;

@@ -3,7 +3,7 @@ import { RegistrarCliqueAnuncio } from "../../../../../casosDeUso/site/registrar
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { anuncioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
-import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { publicActionRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { HttpMethod, Rotas } from "../rotas";
 
 export class RegistrarCliqueAnuncioRota implements Rotas {
@@ -19,7 +19,7 @@ export class RegistrarCliqueAnuncioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [validarParamsMiddleware(anuncioIdParamSchema), mutationRateLimiter]; }
+  public getMiddlewares(): RequestHandler[] { return [publicActionRateLimiter, validarParamsMiddleware(anuncioIdParamSchema)]; }
 
   public getHandler() {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {

@@ -137,6 +137,44 @@ describe("AtualizarDeck", () => {
         expect(resultado.nomeConsolidado).toBe("Mono Red Burn");
     });
 
+    it("ao renomear, atualiza nomeConsolidado quando ele ainda e o nome do usuario", async () => {
+        const deck = new Deck({ ...deckExistente, nome: "Burn", nomeConsolidado: "Burn" });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            nome: "Mono Red",
+        });
+
+        expect(resultado.nome).toBe("Mono Red");
+        expect(resultado.nomeConsolidado).toBe("Mono Red");
+    });
+
+    it("ao renomear, atualiza nomeConsolidado quando ele e nulo", async () => {
+        const deck = new Deck({ ...deckExistente, nome: "Burn", nomeConsolidado: null });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            nome: "Affinity",
+        });
+
+        expect(resultado.nome).toBe("Affinity");
+        expect(resultado.nomeConsolidado).toBe("Affinity");
+    });
+
     it("deve atualizar commander explicitamente", async () => {
         const deckCommander = new Deck({
             ...deckExistente,

@@ -25,6 +25,9 @@ import {
     inscreverTorneioSchema,
     definirAnfitriaoTorneioSchema,
     listarUsuariosQuerySchema,
+    listarMetagameQuerySchema,
+    metagameDiasQuerySchema,
+    metagameArquetipoParamsSchema,
 } from "../../../src/helpers/validacao/schemas";
 
 const UUID = "550e8400-e29b-41d4-a716-446655440000";
@@ -359,6 +362,25 @@ describe("schemas de validacao", () => {
                 formato: "f",
                 bannerUrl: "https://qualquer-cdn.example.com/img.png",
             })).not.toThrow();
+        });
+    });
+
+    describe("metagame", () => {
+        it("lista aceita formato e default de 30 dias", () => {
+            expect(listarMetagameQuerySchema.parse({ formato: "pauper" })).toEqual({
+                formato: "pauper",
+                dias: 30,
+            });
+        });
+
+        it("rejeita dias fora da janela e slug inválido", () => {
+            expect(listarMetagameQuerySchema.safeParse({ formato: "pauper", dias: 15 }).success).toBe(false);
+            expect(metagameDiasQuerySchema.safeParse({ dias: 8 }).success).toBe(false);
+            expect(metagameArquetipoParamsSchema.safeParse({ formato: "pauper", slug: "Blue Terror" }).success).toBe(false);
+            expect(metagameArquetipoParamsSchema.parse({ formato: "pauper", slug: "blue-terror" })).toEqual({
+                formato: "pauper",
+                slug: "blue-terror",
+            });
         });
     });
 });

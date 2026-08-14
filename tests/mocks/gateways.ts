@@ -4,15 +4,14 @@ import { DeckGateway } from "../../src/dominio/gateway/deckGateway";
 import { TorneioGateway } from "../../src/dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../src/dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../src/dominio/gateway/partidaGateway";
-import { ChatGptGateway } from "../../src/dominio/gateway/chatGptGateway";
 import { LigaGateway } from "../../src/dominio/gateway/ligaGateway";
+import { TimeGateway } from "../../src/dominio/gateway/timeGateway";
 import { LoginAttemptGateway } from "../../src/dominio/gateway/loginAttemptGateway";
 import { RefreshTokenGateway } from "../../src/dominio/gateway/refreshTokenGateway";
 import { EmailGateway } from "../../src/dominio/gateway/emailGateway";
 import { ResetSenhaGateway } from "../../src/dominio/gateway/resetSenhaGateway";
 import { ImagemGateway } from "../../src/dominio/gateway/imagemGateway";
 import { LinkIngressoGateway } from "../../src/dominio/gateway/linkIngressoGateway";
-import { TimeGateway } from "../../src/dominio/gateway/timeGateway";
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
@@ -121,13 +120,6 @@ export function criarMockLinkIngressoGateway(overrides: Partial<LinkIngressoGate
         salvar: jest.fn(),
         buscarPorToken: jest.fn().mockResolvedValue(null),
         excluirPorToken: jest.fn(),
-        ...overrides,
-    };
-}
-
-export function criarMockChatGptGateway(overrides: Partial<ChatGptGateway> = {}): ChatGptGateway {
-    return {
-        obterNomeConsolidado: jest.fn().mockResolvedValue("Burn"),
         ...overrides,
     };
 }

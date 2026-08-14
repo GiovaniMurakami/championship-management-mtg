@@ -24,6 +24,13 @@
 - Autenticação e autorização
 - Casos de uso e repositórios
 
+### [Metagame](./metagame.md)
+
+- Lista de arquétipos por formato e janela de dias
+- Detalhe: listas, matchups e resultados em torneios
+- `GET /metagame` e `GET /metagame/:formato/:slug`
+- `usuario.nome` = nick MOL (`nickMTGO`)
+
 ### [Torneio](./torneio.md)
 
 - Estrutura das entidades (Torneio, Inscrição, Partida)
@@ -44,7 +51,7 @@
 - Criação e gerenciamento de ligas (somente admin)
 - Associação de torneios a uma liga
 - Tipos: `individual` e `times`
-- Endpoint de ranking: jogadores, decks, cartas e times
+- Endpoint de ranking: jogadores, decks, cartas e times (`jogador.nome` = nick MOL)
 - Cálculo de pontuação e critérios de ordenação
 
 ### [Time](./time.md)

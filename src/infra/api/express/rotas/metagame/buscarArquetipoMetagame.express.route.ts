@@ -1,24 +1,28 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { RankingLiga } from "../../../../../casosDeUso/liga/rankingLiga";
+import { BuscarArquetipoMetagame } from "../../../../../casosDeUso/metagame/buscarArquetipoMetagame";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { heavyReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { idParamSchema, rankingLigaQuerySchema } from "../../../../../helpers/validacao/schemas";
+import {
+  metagameArquetipoParamsSchema,
+  metagameDiasQuerySchema,
+} from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { z } from "zod";
 
-type RankingLigaQuery = z.infer<typeof rankingLigaQuerySchema>;
+type Params = z.infer<typeof metagameArquetipoParamsSchema>;
+type Query = z.infer<typeof metagameDiasQuerySchema>;
 
-export class RankingLigaRota implements Rotas {
+export class BuscarArquetipoMetagameRota implements Rotas {
   private constructor(
     private readonly caminho: string,
     private readonly metodo: HttpMethod,
-    private readonly rankingLigaServico: RankingLiga
-  ) { }
+    private readonly servico: BuscarArquetipoMetagame
+  ) {}
 
-  public static criar(rankingLigaServico: RankingLiga) {
-    return new RankingLigaRota("/liga/:id/ranking", HttpMethod.GET, rankingLigaServico);
+  public static criar(servico: BuscarArquetipoMetagame) {
+    return new BuscarArquetipoMetagameRota("/metagame/:formato/:slug", HttpMethod.GET, servico);
   }
 
   public getCaminho(): string { return this.caminho; }
@@ -26,32 +30,17 @@ export class RankingLigaRota implements Rotas {
   public getMiddlewares(): RequestHandler[] {
     return [
       heavyReadRateLimiter,
-      validarParamsMiddleware(idParamSchema),
-      validarQueryMiddleware(rankingLigaQuerySchema),
+      validarParamsMiddleware(metagameArquetipoParamsSchema),
+      validarQueryMiddleware(metagameDiasQuerySchema),
     ];
   }
 
   public getHandler() {
-    return async (
-      request: Request,
-      response: Response,
-      next: NextFunction
-    ): Promise<void> => {
+    return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
-        const ligaId = request.params.id as string;
-        const {
-          limiteJogadores,
-          limiteTimes,
-          limiteDecks,
-          limiteCartas,
-        } = request.queryValidados as RankingLigaQuery;
-        const resultado = await this.rankingLigaServico.executar({
-          ligaId,
-          limiteJogadores,
-          limiteTimes,
-          limiteDecks,
-          limiteCartas,
-        });
+        const { formato, slug } = request.paramsValidados as Params;
+        const { dias } = request.queryValidados as Query;
+        const resultado = await this.servico.executar({ formato, slug, dias });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

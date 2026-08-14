@@ -14,7 +14,7 @@ function criarUc(deckGatewayOverrides = {}, partidaOverrides = {}) {
         criarMockDeckGateway(deckGatewayOverrides),
         criarMockUsuarioGateway({
             buscarVarios: jest.fn().mockResolvedValue([
-                new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" }),
+                new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" }),
             ]),
         }),
         criarMockPartidaGateway(partidaOverrides)
@@ -44,7 +44,7 @@ describe("BuscarDeck", () => {
         expect(resultado.nome).toBe("Burn");
         expect(resultado.formato).toBe("legacy");
         expect(resultado.linkLigaMagic).toBe("https://www.ligamagic.com.br/?view=dks/deck&id=123456");
-        expect(resultado.usuario).toEqual({ id: "u1", nome: "Joao", excluido: false });
+        expect(resultado.usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
         expect(resultado.estatisticas).toEqual({
             vitorias: 0,
             derrotas: 0,

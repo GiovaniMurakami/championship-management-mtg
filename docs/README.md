@@ -10,6 +10,7 @@ A documentação completa está organizada por entidade:
 
 - **[Usuário](./usuario.md)** - Autenticação, cadastro e gerenciamento de usuários
 - **[Deck](./deck.md)** - CRUD de decks de Magic: The Gathering
+- **[Metagame](./metagame.md)** - Arquétipos públicos a partir de torneios finalizados
 - **[Torneio](./torneio.md)** - Criação e gerenciamento de torneios com sistema Swiss
 - **[Liga](./liga.md)** - Agrupamento de torneios e rankings consolidados (admin)
 - **[Time](./time.md)** - Criação e gerenciamento de equipes com fluxo de convite/solicitação
@@ -32,6 +33,13 @@ A documentação completa está organizada por entidade:
 - `POST /deck/cadastrar` - Cadastrar novo deck
 - `PUT /deck/atualizar/:id` - Atualizar deck existente
 - `DELETE /deck/excluir/:id` - Excluir deck
+
+### Metagame (Público)
+
+- `GET /metagame?formato=&dias=30` - Lista de arquétipos (torneios finalizados, não secretos)
+- `GET /metagame/:formato/:slug?dias=30` - Detalhe do arquétipo (listas, matchups, resultados)
+
+`usuario.nome` nestes payloads é o nick MOL (`nickMTGO`).
 
 ### Torneios (🔒 JWT obrigatório)
 

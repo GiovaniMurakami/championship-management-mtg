@@ -25,6 +25,8 @@ jest.mock("../../src/middlewares/express/rateLimiter", () => {
         resultadoRateLimiter: passthrough,
         mutationRateLimiter: passthrough,
         publicReadRateLimiter: passthrough,
+        heavyReadRateLimiter: passthrough,
+        publicActionRateLimiter: passthrough,
         uploadImagemRateLimiter: passthrough,
     };
 });

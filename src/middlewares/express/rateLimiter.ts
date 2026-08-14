@@ -3,6 +3,8 @@ import { MongoRateLimitStore } from "../../infra/mongodb/rateLimitStore";
 import { isExecucaoLocal } from "../../helpers/env";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
+const MSG_TENTATIVAS = { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." };
+const MSG_REQUISICOES = { mensagem: "Muitas requisições. Tente novamente em 15 minutos." };
 
 function usarStoreMongo(): boolean {
   const store = process.env.RATE_LIMIT_STORE?.trim().toLowerCase();
@@ -17,7 +19,8 @@ function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
     max,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
+    ipv6Subnet: 56,
+    message: MSG_TENTATIVAS,
   };
 
   if (usarStoreMongo()) {
@@ -27,41 +30,53 @@ function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
   return opcoes;
 }
 
-// Login e cadastro de conta — mais restritivo para dificultar brute-force
+// Login, cadastro e reset de senha — mesmo bucket por IP (brute-force / spam de conta)
 export const authRateLimiter = rateLimit({
   ...criarOpcoesRateLimit(5, "auth"),
-  message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
+  message: MSG_TENTATIVAS,
 });
 
-// Refresh de token — precisa aguentar retornos de idle + cold start sem matar a sessão no client
+// Refresh de token — precisa aguentar retornos de idle + cold start sem matar a sessão
 export const refreshTokenRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(60, "refresh"),
-  message: { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." },
+  ...criarOpcoesRateLimit(40, "refresh"),
+  message: MSG_TENTATIVAS,
 });
 
 // Operações de conta autenticada — logout e atualizar perfil
-export const accountRateLimiter = rateLimit(criarOpcoesRateLimit(20, "account"));
+export const accountRateLimiter = rateLimit(criarOpcoesRateLimit(15, "account"));
 
-// Criar decks — limite brando pois chama ChatGPT mas não é rota crítica de segurança
-export const deckRateLimiter = rateLimit(criarOpcoesRateLimit(60, "deck"));
+// Criar decks
+export const deckRateLimiter = rateLimit(criarOpcoesRateLimit(40, "deck"));
 
-// Inscrições em torneios — brando, jogadores se inscrevem/fazem check-in com frequência
-export const inscricaoRateLimiter = rateLimit(criarOpcoesRateLimit(100, "inscricao"));
+// Inscrições / check-in / escolher deck
+export const inscricaoRateLimiter = rateLimit(criarOpcoesRateLimit(80, "inscricao"));
 
-// Registrar resultado de partida — mais permissivo pois há muitas partidas por rodada
+// Registrar/confirmar/contestar resultado — muitas partidas por rodada
 export const resultadoRateLimiter = rateLimit(criarOpcoesRateLimit(120, "resultado"));
 
 // Mutações autenticadas genéricas — alterar/excluir deck, torneio, liga, etc.
-export const mutationRateLimiter = rateLimit(criarOpcoesRateLimit(100, "mutation"));
+export const mutationRateLimiter = rateLimit(criarOpcoesRateLimit(60, "mutation"));
 
-// Leitura pública — endpoints de listagem/busca de torneio, deck e liga
+// Leitura pública barata — listagens e busca de torneio/deck/liga/time
 export const publicReadRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(200, "public-read"),
-  message: { mensagem: "Muitas requisições. Tente novamente em 15 minutos." },
+  ...criarOpcoesRateLimit(100, "public-read"),
+  message: MSG_REQUISICOES,
+});
+
+// Agregações públicas caras — metagame e ranking de liga (varrem torneios/partidas)
+export const heavyReadRateLimiter = rateLimit({
+  ...criarOpcoesRateLimit(40, "heavy-read"),
+  message: { mensagem: "Muitas consultas. Tente novamente em 15 minutos." },
+});
+
+// POST público (clique de anúncio) — sem JWT
+export const publicActionRateLimiter = rateLimit({
+  ...criarOpcoesRateLimit(30, "public-action"),
+  message: MSG_REQUISICOES,
 });
 
 // Upload de imagem — restritivo para evitar abuso e custos S3
 export const uploadImagemRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(10, "upload"),
+  ...criarOpcoesRateLimit(8, "upload"),
   message: { mensagem: "Limite de uploads atingido. Tente novamente em 15 minutos." },
 });

@@ -323,3 +323,32 @@ export const entrarPorConviteTimeSchema = z.object({
 export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
 });
+
+const diasMetagameSchema = z.preprocess(
+  (valor) => (valor === undefined || valor === null || valor === "" ? 30 : valor),
+  z.coerce
+    .number()
+    .int("dias deve ser inteiro.")
+    .refine((n) => [7, 14, 30, 90, 365].includes(n), {
+      message: "dias deve ser 7, 14, 30, 90 ou 365.",
+    })
+);
+
+export const listarMetagameQuerySchema = z.object({
+  formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
+  dias: diasMetagameSchema,
+});
+
+export const metagameDiasQuerySchema = z.object({
+  dias: diasMetagameSchema,
+});
+
+export const metagameArquetipoParamsSchema = z.object({
+  formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
+  slug: z
+    .string()
+    .trim()
+    .min(1, "slug é obrigatório.")
+    .max(120)
+    .regex(/^[a-z0-9-]+$/, "slug inválido."),
+});

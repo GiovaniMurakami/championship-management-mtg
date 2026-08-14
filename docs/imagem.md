@@ -76,7 +76,7 @@ Authorization: Bearer {token}
 | 400    | tamanhoBytes deve ser maior que 0                                     | Tamanho zero ou negativo          |
 | 400    | tamanhoBytes não pode exceder 5 MB                                    | Arquivo maior que 5 MB            |
 | 401    | Token não informado / Token inválido ou expirado                      | Sem autenticação                  |
-| 429    | Limite de uploads atingido. Tente novamente em 15 minutos            | Rate limit: 10 uploads / 15 min   |
+| 429    | Limite de uploads atingido. Tente novamente em 15 minutos            | Rate limit: 8 uploads / 15 min    |
 
 ---
 
