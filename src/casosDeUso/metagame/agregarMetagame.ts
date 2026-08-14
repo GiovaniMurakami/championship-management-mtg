@@ -171,37 +171,14 @@ function mapaSlugs(nomes: string[]): Map<string, string> {
   return resultado;
 }
 
-function mediana(valores: number[]): number {
-  const s = [...valores].sort((a, b) => a - b);
-  const mid = Math.floor(s.length / 2);
-  const raw = s.length % 2 === 1 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
-  return Math.max(1, Math.round(raw));
-}
-
-function listaTipica(
-  decks: Deck[],
+function cartasDoCampo(
+  deck: Deck | undefined,
   campo: "maindeck" | "sideboard" | "commander"
 ): CartaQuantidade[] {
-  if (decks.length === 0) return [];
-  const porCarta = new Map<string, number[]>();
-  for (const deck of decks) {
-    const visto = new Set<string>();
-    for (const carta of deck[campo] ?? []) {
-      if (!carta.nome || visto.has(carta.nome)) continue;
-      visto.add(carta.nome);
-      const lista = porCarta.get(carta.nome) ?? [];
-      lista.push(carta.quantidade);
-      porCarta.set(carta.nome, lista);
-    }
-  }
-  const limiar = decks.length * 0.5;
-  const resultado: CartaQuantidade[] = [];
-  for (const [nome, qtds] of porCarta) {
-    if (qtds.length >= limiar) {
-      resultado.push({ nome, quantidade: mediana(qtds) });
-    }
-  }
-  return resultado.sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome));
+  if (!deck) return [];
+  return (deck[campo] ?? [])
+    .filter((carta) => Boolean(carta.nome))
+    .map((carta) => ({ nome: carta.nome, quantidade: carta.quantidade }));
 }
 
 function contarCartasChave(decks: Deck[], formato: string): Array<[string, number]> {
@@ -372,9 +349,10 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     const slug = slugs.get(nome)!;
     const stats = statsPorNome.get(nome) ?? { vitorias: 0, derrotas: 0, empates: 0 };
     const decksUnicos = listaCopias.map((c) => c.deck);
-    const tipicaMain = listaTipica(decksUnicos, "maindeck");
-    const tipicaSide = listaTipica(decksUnicos, "sideboard");
-    const tipicaCmd = listaTipica(decksUnicos, "commander");
+    const primeiroDeck = listaCopias[0]?.deck;
+    const tipicaMain = cartasDoCampo(primeiroDeck, "maindeck");
+    const tipicaSide = cartasDoCampo(primeiroDeck, "sideboard");
+    const tipicaCmd = cartasDoCampo(primeiroDeck, "commander");
     const ehCommander = formato === "commander" || formato === "commander500";
     const resumo: ArquetipoResumo = {
       nome,

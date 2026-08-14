@@ -136,7 +136,7 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].winrate).toBe(100);
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("brainstorm");
         expect(resultado.arquetipos[0].cartasChave).toEqual(["brainstorm", "tolarian terror"]);
-        expect(resultado.arquetipos[0].cartasCores).toEqual(["island", "brainstorm", "tolarian terror"]);
+        expect(resultado.arquetipos[0].cartasCores).toEqual(["tolarian terror", "island", "brainstorm"]);
         expect(resultado.arquetipos[1].cartasCores).toEqual(["frogmite", "mountain"]);
         expect(resultado.recentes).toHaveLength(1);
         expect(resultado.recentes[0].torneioNome).toBe("Pauper Semanal");
@@ -265,7 +265,13 @@ describe("agregarMetagame", () => {
 
         const detalhe = agregado.porSlug.get("blue-terror");
         expect(detalhe).toBeDefined();
-        expect(detalhe!.listaTipica.maindeck.some((c) => c.nome === "tolarian terror" && c.quantidade === 4)).toBe(true);
+        expect(detalhe!.listaTipica.maindeck).toEqual([
+            { nome: "tolarian terror", quantidade: 4 },
+            { nome: "island", quantidade: 18 },
+            { nome: "brainstorm", quantidade: 4 },
+        ]);
+        expect(detalhe!.listaTipica.sideboard).toEqual([{ nome: "hydroblast", quantidade: 3 }]);
+        expect(detalhe!.listaTipica.maindeck.some((c) => c.nome === "counterspell")).toBe(false);
         expect(detalhe!.cartaRepresentativa).toBe("brainstorm");
         expect(detalhe!.matchups).toHaveLength(1);
         expect(detalhe!.matchups[0].slug).toBe("affinity");
@@ -381,7 +387,7 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartasCores).toEqual(["edric, spymaster of trest"]);
     });
 
-    it("ignora partida não finalizada e usa mediana par na lista típica", () => {
+    it("ignora partida não finalizada e usa a primeira lista encontrada", () => {
         const t = torneio();
         const terrorB = deck({
             id: "deck-terror-b",
@@ -416,7 +422,7 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].vitorias).toBe(0);
         expect(resultado.arquetipos[0].copias).toBe(2);
         const tipica = resultado.porSlug.get("blue-terror")!.listaTipica.maindeck;
-        expect(tipica.find((c) => c.nome === "tolarian terror")?.quantidade).toBe(3);
+        expect(tipica.find((c) => c.nome === "tolarian terror")?.quantidade).toBe(4);
     });
 
     it("limita recentes aos dois torneios mais novos", () => {
@@ -466,8 +472,8 @@ describe("agregarMetagame", () => {
                 torneio({ id: "aberto", status: "em_andamento" }),
             ],
             inscricoes: [
-                inscricao("torneio-1", "user-1", "deck-terror"),
                 inscricao("torneio-1", "user-2", "deck-terror-b"),
+                inscricao("torneio-1", "user-1", "deck-terror"),
                 inscricao("torneio-1", "user-3", "deck-inexistente"),
             ],
             partidas: [
@@ -491,7 +497,7 @@ describe("agregarMetagame", () => {
         expect(resultado.porSlug.get("blue-terror")!.listaTipica.maindeck.find((c) => c.nome === "")).toBeUndefined();
     });
 
-    it("commander500 ignora commander sem nome e omite carta rara da lista típica", () => {
+    it("commander500 ignora commander sem nome e mantém carta só da primeira lista", () => {
         const t = torneio({ formato: "commander500" });
         const a = deck({
             id: "cmd-a",
@@ -502,6 +508,7 @@ describe("agregarMetagame", () => {
             maindeck: [
                 { nome: "sol ring", quantidade: 1 },
                 { nome: "forest", quantidade: 30 },
+                { nome: "rhystic study", quantidade: 1 },
             ],
         });
         const b = deck({
@@ -514,7 +521,6 @@ describe("agregarMetagame", () => {
             maindeck: [
                 { nome: "sol ring", quantidade: 1 },
                 { nome: "forest", quantidade: 30 },
-                { nome: "rhystic study", quantidade: 1 },
             ],
         });
         const c = deck({
@@ -551,6 +557,9 @@ describe("agregarMetagame", () => {
         });
 
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("edric, spymaster of trest");
-        expect(resultado.porSlug.get("edric")!.listaTipica.maindeck.map((x) => x.nome)).not.toContain("rhystic study");
+        expect(resultado.porSlug.get("edric")!.listaTipica.maindeck.map((x) => x.nome)).toContain("rhystic study");
+        expect(resultado.porSlug.get("edric")!.listaTipica.commander.map((x) => x.nome)).toEqual([
+            "edric, spymaster of trest",
+        ]);
     });
 });
