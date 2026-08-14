@@ -17,11 +17,11 @@ Públicos. `dias` ∈ 7, 14, 30, 90, 365 (padrão 30). Rate limit **40 req / 15 
 
 Retorna `formato`, `dias`, `totalDecks`, `totalTorneios`, `arquetipos` (nome, slug, copias, metaPct, vitorias, derrotas, empates, winrate, cartaRepresentativa, cartasChave, cartasCores) e `recentes` (últimos torneios com decks e recorde).
 
-`cartasCores` = nomes da lista típica (maindeck; commander nos formatos Commander) para o front calcular os pips WUBRG.
+`cartasCores` = nomes da primeira lista encontrada (maindeck; commander nos formatos Commander) para o front calcular os pips WUBRG.
 
 ### Detalhe
 
-404 se o slug não existir na janela. Inclui `listaTipica`, `listas`, `matchups` e `resultados`.
+404 se o slug não existir na janela. Inclui `listaTipica` (primeira lista do arquétipo na janela), `listas`, `matchups` e `resultados`.
 
 Jogador em `listas` / `resultados` / `recentes`: `usuario.nome` é o **nick MOL** (`nickMTGO`), com fallback para o nome cadastrado.
 
