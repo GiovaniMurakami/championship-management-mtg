@@ -9,6 +9,8 @@ export interface FiltrosListarTorneios {
   nome?: string;
   dataInicio?: Date;
   dataFim?: Date;
+  /** Default: mais antigo primeiro. Finalizados usam mais recente primeiro. */
+  horarioDesc?: boolean;
 }
 
 export interface TorneioGateway {

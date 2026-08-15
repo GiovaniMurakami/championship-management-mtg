@@ -3,7 +3,7 @@ import { AtualizarMesaPartida } from "../../../../../casosDeUso/torneio/atualiza
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { atualizarMesaPartidaSchema, partidaIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
@@ -26,7 +26,7 @@ export class AtualizarMesaPartidaRota implements Rotas {
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
     public getMiddlewares(): RequestHandler[] {
-        return [validarParamsMiddleware(partidaIdParamSchema), mutationRateLimiter, autenticarJwt];
+        return [validarParamsMiddleware(partidaIdParamSchema), torneioMutationRateLimiter, autenticarJwt];
     }
 
     public getHandler() {

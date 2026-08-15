@@ -2,7 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { ListarPartidasTorneio } from "../../../../../casosDeUso/torneio/listarPartidasTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { listarPartidasQuerySchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
@@ -28,7 +28,7 @@ export class ListarPartidasTorneioRota implements Rotas {
         return [
             validarParamsMiddleware(torneioIdParamSchema),
             validarQueryMiddleware(listarPartidasQuerySchema),
-            publicReadRateLimiter,
+            torneioReadRateLimiter,
         ];
     }
 

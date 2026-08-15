@@ -4,6 +4,14 @@ provider:
   name: aws
   runtime: nodejs22.x
   timeout: 29
+  apiGateway:
+    # Só tipos de imagem. NÃO use "*/*" — quebra OPTIONS/CORS do API Gateway.
+    binaryMediaTypes:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - application/octet-stream
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     MONGODB_MAX_POOL_SIZE: ${env:MONGODB_MAX_POOL_SIZE, '1'}

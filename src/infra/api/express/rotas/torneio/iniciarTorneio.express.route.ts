@@ -3,7 +3,7 @@ import { IniciarTorneio } from "../../../../../casosDeUso/torneio/iniciarTorneio
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 import { toBrasiliaISO } from "../../../../../helpers/data/brasilia";
 import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
@@ -27,7 +27,7 @@ export class IniciarTorneioRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(torneioIdParamSchema), mutationRateLimiter, autenticarJwt];
+    return [validarParamsMiddleware(torneioIdParamSchema), torneioMutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {

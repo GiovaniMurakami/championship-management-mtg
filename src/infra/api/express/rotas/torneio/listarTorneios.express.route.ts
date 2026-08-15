@@ -4,7 +4,7 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../helpers/error/statusErro";
 import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
-import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { listarTorneiosQuerySchema } from "../../../../../helpers/validacao/schemas";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { z } from "zod";
@@ -46,7 +46,7 @@ export class ListarTorneiosRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarQueryMiddleware(listarTorneiosQuerySchema), publicReadRateLimiter, autenticarJwtOpcional];
+    return [validarQueryMiddleware(listarTorneiosQuerySchema), torneioReadRateLimiter, autenticarJwtOpcional];
   }
 
   public getHandler() {

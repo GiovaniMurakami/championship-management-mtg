@@ -83,6 +83,34 @@ describe("ListarTorneios", () => {
         expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ limite: 5, offset: 10, incluirSecretos: false }));
     });
 
+    it("deve pedir horarioDesc ao listar finalizados (mais recente primeiro)", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        await uc.executar({ usuarioId: "u1", status: "finalizado" });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({
+            status: "finalizado",
+            horarioDesc: true,
+        }));
+    });
+
+    it("nao deve pedir horarioDesc para inscricoes abertas", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        await uc.executar({ usuarioId: "u1", status: "inscricoes_abertas" });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({
+            status: "inscricoes_abertas",
+            horarioDesc: false,
+        }));
+    });
+
     it("deve limitar paginação profunda para evitar skip excessivo", async () => {
         const listarMock = jest.fn().mockResolvedValue([]);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock });

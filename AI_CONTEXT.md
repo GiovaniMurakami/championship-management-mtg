@@ -333,10 +333,12 @@ Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `tornei
 | `refresh` | 40 | refresh token |
 | `account` | 15 | logout, perfil |
 | `deck` | 40 | criar deck |
-| `inscricao` | 80 | inscrever, check-in, escolher deck |
-| `resultado` | 120 | resultado/confirmação/contestação |
-| `mutation` | 60 | demais mutações autenticadas |
-| `public-read` | 100 | listagens/buscas públicas |
+| `inscricao` | 400 | inscrever, check-in, escolher deck |
+| `resultado` | 600 | resultado/confirmação/contestação |
+| `mutation` | 60 | demais mutações autenticadas (fora de torneio) |
+| `torneio-mutation` | 500 | mutações de torneio (rodada, drop, mesa…) |
+| `public-read` | 100 | listagens/buscas públicas (fora de torneio) |
+| `torneio-read` | 800 | detalhe/listar/standings/partidas de torneio |
 | `heavy-read` | 40 | metagame e ranking de liga |
 | `public-action` | 30 | POST público (clique anúncio) |
 | `upload` | 8 | presigned URL S3 |

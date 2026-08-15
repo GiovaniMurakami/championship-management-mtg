@@ -167,7 +167,9 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         ...(filtros.dataFim ? { $lte: filtros.dataFim } : {}),
       };
     }
-    let query = TorneioModel.find(filtroQuery).sort({ horario: 1, id: 1 });
+    let query = TorneioModel.find(filtroQuery).sort(
+      filtros.horarioDesc ? { horario: -1, id: -1 } : { horario: 1, id: 1 },
+    );
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;

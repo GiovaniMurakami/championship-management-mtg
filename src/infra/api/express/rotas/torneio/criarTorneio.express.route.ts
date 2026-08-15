@@ -6,7 +6,7 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
-import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { criarTorneioSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { parseHorarioBrasilia } from "../../../../../helpers/data/brasilia";
@@ -24,7 +24,7 @@ export class CriarTorneioRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [mutationRateLimiter, autenticarJwt, autorizarAdmin]; }
+  public getMiddlewares(): RequestHandler[] { return [torneioMutationRateLimiter, autenticarJwt, autorizarAdmin]; }
 
   public getHandler() {
     return async (

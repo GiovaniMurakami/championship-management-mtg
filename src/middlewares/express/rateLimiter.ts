@@ -48,18 +48,27 @@ export const accountRateLimiter = rateLimit(criarOpcoesRateLimit(15, "account"))
 // Criar decks
 export const deckRateLimiter = rateLimit(criarOpcoesRateLimit(40, "deck"));
 
-// Inscrições / check-in / escolher deck
-export const inscricaoRateLimiter = rateLimit(criarOpcoesRateLimit(80, "inscricao"));
+// Inscrições / check-in / escolher deck — janela de torneio ao vivo precisa de folga
+export const inscricaoRateLimiter = rateLimit(criarOpcoesRateLimit(400, "inscricao"));
 
 // Registrar/confirmar/contestar resultado — muitas partidas por rodada
-export const resultadoRateLimiter = rateLimit(criarOpcoesRateLimit(120, "resultado"));
+export const resultadoRateLimiter = rateLimit(criarOpcoesRateLimit(600, "resultado"));
 
-// Mutações autenticadas genéricas — alterar/excluir deck, torneio, liga, etc.
+// Mutações autenticadas genéricas — alterar/excluir deck, liga, time, etc.
 export const mutationRateLimiter = rateLimit(criarOpcoesRateLimit(60, "mutation"));
 
-// Leitura pública barata — listagens e busca de torneio/deck/liga/time
+// Mutações de torneio (rodada, pareamento, drop, mesa…) — bem mais brando que mutation genérica
+export const torneioMutationRateLimiter = rateLimit(criarOpcoesRateLimit(500, "torneio-mutation"));
+
+// Leitura pública barata — listagens e busca de deck/liga/time
 export const publicReadRateLimiter = rateLimit({
   ...criarOpcoesRateLimit(100, "public-read"),
+  message: MSG_REQUISICOES,
+});
+
+// Leitura de torneio (detalhe, standings, partidas, listar) — polling/realtime no app
+export const torneioReadRateLimiter = rateLimit({
+  ...criarOpcoesRateLimit(800, "torneio-read"),
   message: MSG_REQUISICOES,
 });
 

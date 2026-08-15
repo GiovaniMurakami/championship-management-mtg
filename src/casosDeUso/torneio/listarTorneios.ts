@@ -88,6 +88,7 @@ export class ListarTorneios
         nome,
         dataInicio,
         dataFim,
+        horarioDesc: status === "finalizado",
       }),
       this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
       usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
