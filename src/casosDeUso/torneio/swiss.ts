@@ -139,57 +139,85 @@ export function parKey(id1: string, id2: string): string {
   return [id1, id2].sort().join("|");
 }
 
+type ParSwiss = { jogador1Id: string; jogador2Id: string | null };
+
 export function gerarPareamentos(
   ordenados: EstatisticasJogador[],
   historico: Set<string>,
   jaRecebeuBye: Set<string> = new Set()
-): Array<{ jogador1Id: string; jogador2Id: string | null }> {
-  const fila = [...ordenados];
-  const pares: Array<{ jogador1Id: string; jogador2Id: string | null }> = [];
-
-  while (fila.length > 0) {
-    const atual = fila.shift()!;
-
-    if (fila.length === 0) {
-      pares.push({ jogador1Id: atual.usuarioId, jogador2Id: null });
-      break;
-    }
-
-    let idxOponente = fila.findIndex(
-      (j) => !historico.has(parKey(atual.usuarioId, j.usuarioId))
-    );
-    if (idxOponente === -1) idxOponente = 0;
-
-    const oponente = fila.splice(idxOponente, 1)[0];
-    pares.push({ jogador1Id: atual.usuarioId, jogador2Id: oponente.usuarioId });
-  }
-
-  // Se há BYE e o jogador que recebeu já teve BYE antes, tentar trocar
-  if (fila.length === 0 && pares.length > 0) {
-    const ultimoPar = pares[pares.length - 1];
-    if (ultimoPar.jogador2Id === null && jaRecebeuBye.has(ultimoPar.jogador1Id) && pares.length > 1) {
-      // Tentar trocar com alguém do par anterior que nunca recebeu BYE
-      const penultimoPar = pares[pares.length - 2];
-      const candidatos = [penultimoPar.jogador2Id, penultimoPar.jogador1Id].filter(
-        (id): id is string => id !== null && !jaRecebeuBye.has(id)
-      );
-      if (candidatos.length > 0) {
-        const substituto = candidatos[0];
-        // Remover substituto do par anterior e recriar os dois últimos pares
-        const outroDoParAnterior = penultimoPar.jogador1Id === substituto
-          ? penultimoPar.jogador2Id!
-          : penultimoPar.jogador1Id;
-        pares[pares.length - 2] = {
-          jogador1Id: outroDoParAnterior,
-          jogador2Id: ultimoPar.jogador1Id,
-        };
-        pares[pares.length - 1] = {
-          jogador1Id: substituto,
-          jogador2Id: null,
-        };
-      }
-    }
-  }
-
+): ParSwiss[] {
+  const ids = ordenados.map((j) => j.usuarioId);
+  const semRematch = parearComBacktrack(ids, historico, true);
+  const pares = semRematch ?? parearComBacktrack(ids, historico, false) ?? [];
+  aplicarTrocaBye(pares, historico, jaRecebeuBye);
   return pares;
+}
+
+function parearComBacktrack(
+  remaining: string[],
+  historico: Set<string>,
+  proibirRematch: boolean
+): ParSwiss[] | null {
+  if (remaining.length === 0) return [];
+  if (remaining.length === 1) {
+    return [{ jogador1Id: remaining[0], jogador2Id: null }];
+  }
+
+  const atual = remaining[0];
+  const others = remaining.slice(1);
+  const legais: number[] = [];
+  const rematches: number[] = [];
+
+  for (let i = 0; i < others.length; i++) {
+    if (historico.has(parKey(atual, others[i]))) rematches.push(i);
+    else legais.push(i);
+  }
+
+  const ordem = proibirRematch ? legais : [...legais, ...rematches];
+  for (const i of ordem) {
+    const oponente = others[i];
+    const rest = others.filter((_, j) => j !== i);
+    const sub = parearComBacktrack(rest, historico, proibirRematch);
+    if (sub) {
+      return [{ jogador1Id: atual, jogador2Id: oponente }, ...sub];
+    }
+  }
+
+  // Campo ímpar: se parear este jogador trava o restante, tenta BYE nele.
+  if (proibirRematch && remaining.length % 2 === 1) {
+    const sub = parearComBacktrack(others, historico, true);
+    if (sub) {
+      return [...sub, { jogador1Id: atual, jogador2Id: null }];
+    }
+  }
+
+  return null;
+}
+
+function aplicarTrocaBye(
+  pares: ParSwiss[],
+  historico: Set<string>,
+  jaRecebeuBye: Set<string>
+): void {
+  if (pares.length < 2) return;
+  const ultimo = pares[pares.length - 1];
+  if (ultimo.jogador2Id !== null || !jaRecebeuBye.has(ultimo.jogador1Id)) return;
+
+  const quemTemBye = ultimo.jogador1Id;
+
+  for (let i = pares.length - 2; i >= 0; i--) {
+    const par = pares[i];
+    const candidatos = [par.jogador2Id, par.jogador1Id].filter(
+      (id): id is string => id !== null && !jaRecebeuBye.has(id)
+    );
+
+    for (const substituto of candidatos) {
+      const outro = par.jogador1Id === substituto ? par.jogador2Id! : par.jogador1Id;
+      if (historico.has(parKey(outro, quemTemBye))) continue;
+
+      pares[i] = { jogador1Id: outro, jogador2Id: quemTemBye };
+      pares[pares.length - 1] = { jogador1Id: substituto, jogador2Id: null };
+      return;
+    }
+  }
 }

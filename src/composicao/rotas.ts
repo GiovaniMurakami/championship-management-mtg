@@ -100,7 +100,7 @@ export function criarRotas(casos: CasosDeUso) {
         RefazerRodadaRota.criar(casos.refazerRodada),
         AjustarTotalRodadasRota.criar(casos.ajustarTotalRodadas),
         EncerrarTorneioRota.criar(casos.encerrarTorneio),
-        RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
+        RegistrarResultadoRota.criar(casos.registrarResultado),
         ContestarResultadoRota.criar(casos.contestarResultado),
         ConfirmarResultadoRota.criar(casos.confirmarResultado),
         AtualizarMesaPartidaRota.criar(casos.atualizarMesaPartida),

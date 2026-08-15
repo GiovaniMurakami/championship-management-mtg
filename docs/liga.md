@@ -137,10 +137,10 @@ Retorna o ranking consolidado da liga. Leitura pública. Rate limit **40 req / 1
 
 | Parâmetro | Tipo | Default | Máximo |
 |---|---|---|---|
-| `limiteJogadores` | number | `10` | `200` |
-| `limiteTimes` | number | `10` | `200` |
-| `limiteDecks` | number | `10` | `200` |
-| `limiteCartas` | number | `10` | `200` |
+| `limiteJogadores` | number | sem limite (todos) | `200` (só se enviado) |
+| `limiteTimes` | number | `50` | `200` |
+| `limiteDecks` | number | `50` | `200` |
+| `limiteCartas` | number | `50` | `200` |
 
 **Resposta `200` — Liga Individual:**
 

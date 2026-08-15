@@ -55,13 +55,6 @@ export class IniciarProximaRodadaRota implements Rotas {
             partidas: resultado.partidas,
           });
 
-          if (!resultado.emCorte) {
-            eventosTorneio.emit("checkin_rodada_aberto", {
-              torneioId,
-              rodadaAtual: resultado.rodadaAtual,
-            });
-          }
-
           if (resultado.emCorte) {
             eventosTorneio.emit("corte_iniciado", {
               torneioId,

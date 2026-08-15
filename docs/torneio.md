@@ -171,6 +171,10 @@ Ou seja, `maxRodadas` nunca aumenta a quantidade padrão de rodadas; apenas impe
 
 Quando há número ímpar de jogadores, o último colocado no ranking recebe um **bye** (vitória automática 2-0). Byes não são contabilizados no cálculo de OMW%/OGW% dos oponentes.
 
+### Rematch
+
+O pareamento Swiss evita repetir oponentes (backtracking). Rematch só ocorre se não existir nenhum pareamento completo sem repetir.
+
 ---
 
 ## Endpoints
@@ -1058,8 +1062,6 @@ torneio-{torneioId}
 | `rodada_iniciada`        | `POST /torneio/:id/iniciar` ou `POST /torneio/:id/proxima-rodada` (torneio não finalizado) |
 | `torneio_finalizado`     | `POST /torneio/:id/proxima-rodada` quando última rodada encerra                            |
 | `resultado_registrado`   | `POST /torneio/partida/:id/resultado`                                                      |
-| `mesa_atualizada`        | `POST /torneio/partida/:id/resultado` — payload focado em atualização da mesa no front     |
-| `standings_atualizados`  | Imediatamente após `resultado_registrado` com standings recalculados                       |
 | `participante_inscrito`  | `POST /torneio/:id/inscrever` — novo jogador inscrito                                      |
 | `checkin_realizado`      | `POST /torneio/:id/checkin` — jogador confirmou presença                                   |
 | `deck_inserido`          | `POST /torneio/:id/deck` — jogador escolheu ou trocou o deck                               |
@@ -1094,30 +1096,6 @@ torneio-{torneioId}
 }
 ```
 
-**`mesa_atualizada`**
-
-```json
-{
-  "torneioId": "abc123",
-  "rodada": 2,
-  "partidaId": "p-123",
-  "partida": {
-    "id": "p-123",
-    "torneioId": "abc123",
-    "rodada": 2,
-    "jogador1Id": "...",
-    "jogador1Nome": "João Silva",
-    "jogador2Id": "...",
-    "jogador2Nome": "Maria Santos",
-    "vitoriasJogador1": 2,
-    "vitoriasJogador2": 1,
-    "status": "finalizada"
-  }
-}
-```
-
-**`standings_atualizados`** — mesmo payload do `GET /torneio/:id/standings`
-
 **`torneio_finalizado`**
 
 ```json
@@ -1149,8 +1127,6 @@ const canal = ably.channels.get(`torneio-${torneioId}`);
 
 canal.subscribe("rodada_iniciada", (msg) => console.log(msg.data));
 canal.subscribe("resultado_registrado", (msg) => console.log(msg.data));
-canal.subscribe("mesa_atualizada", (msg) => console.log(msg.data));
-canal.subscribe("standings_atualizados", (msg) => console.log(msg.data));
 canal.subscribe("torneio_finalizado", (msg) => console.log(msg.data));
 canal.subscribe("participante_inscrito", (msg) => console.log(msg.data));
 canal.subscribe("checkin_realizado", (msg) => console.log(msg.data));

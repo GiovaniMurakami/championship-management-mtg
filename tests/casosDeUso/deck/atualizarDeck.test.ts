@@ -83,6 +83,26 @@ describe("AtualizarDeck", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
+    it("deck travado: permite alterar cartaRepresentativa", async () => {
+        const deckTravado = new Deck({ ...deckExistente, travado: true });
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(deckTravado),
+        });
+        const uc = AtualizarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: true,
+            usuarioNome: "Admin",
+            cartaRepresentativa: "Tolarian Terror",
+        });
+
+        expect(resultado.cartaRepresentativa).toBe("Tolarian Terror");
+        expect(resultado.nome).toBe("Burn");
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
+
     it("deck travado: bloqueia update sem nomeConsolidado", async () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente, travado: true })),

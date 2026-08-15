@@ -54,10 +54,6 @@ export class NotificacaoAbly {
       this.publicar(payload.torneioId, "resultado_contestado", payload);
     });
 
-    eventosTorneio.on("standings_atualizados", (payload: Record<string, unknown> & { torneioId: string }) => {
-      this.publicar(payload.torneioId, "standings_atualizados", payload);
-    });
-
     eventosTorneio.on("participante_inscrito", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "participante_inscrito", payload);
     });
@@ -92,10 +88,6 @@ export class NotificacaoAbly {
 
     eventosTorneio.on("total_rodadas_alterado", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "total_rodadas_alterado", payload);
-    });
-
-    eventosTorneio.on("checkin_rodada_aberto", (payload: Record<string, unknown> & { torneioId: string }) => {
-      this.publicar(payload.torneioId, "checkin_rodada_aberto", payload);
     });
   }
 }

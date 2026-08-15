@@ -126,6 +126,11 @@ describe("schemas de validacao", () => {
         it("aceita commander null para limpeza explicita", () => {
             expect(() => atualizarDeckSchema.parse({ commander: null })).not.toThrow();
         });
+        it("aceita cartaRepresentativa nula para limpar a escolha do admin", () => {
+            expect(atualizarDeckSchema.parse({ cartaRepresentativa: null })).toEqual({
+                cartaRepresentativa: null,
+            });
+        });
         it("rejeita linkLigaMagic invalido quando informado", () => {
             expect(atualizarDeckSchema.safeParse({ linkLigaMagic: "nao-url" }).success).toBe(false);
         });
@@ -329,9 +334,9 @@ describe("schemas de validacao", () => {
     });
 
     describe("rankingLigaQuerySchema", () => {
-        it("aplica default de 50 nos limites", () => {
+        it("aplica default de 50 nos limites de times, decks e cartas; jogadores sem teto", () => {
             const parsed = rankingLigaQuerySchema.parse({});
-            expect(parsed.limiteJogadores).toBe(50);
+            expect(parsed.limiteJogadores).toBeUndefined();
             expect(parsed.limiteTimes).toBe(50);
             expect(parsed.limiteDecks).toBe(50);
             expect(parsed.limiteCartas).toBe(50);

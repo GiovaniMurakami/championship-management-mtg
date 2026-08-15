@@ -20,14 +20,7 @@ describe("RegistrarResultadoRota", () => {
             executar: jest.fn().mockResolvedValue(resultado),
         } as any;
 
-        const buscarStandingsServico = {
-            executar: jest.fn().mockResolvedValue({ torneioId: "t-1", standings: [] }),
-        } as any;
-
-        const rota = RegistrarResultadoRota.criar(
-            registrarResultadoServico,
-            buscarStandingsServico
-        );
+        const rota = RegistrarResultadoRota.criar(registrarResultadoServico);
 
         const emitSpy = jest.spyOn(eventosTorneio, "emit");
 
@@ -51,6 +44,10 @@ describe("RegistrarResultadoRota", () => {
         expect(response.json).toHaveBeenCalledWith(resultado);
 
         expect(emitSpy).toHaveBeenCalledWith("resultado_registrado", resultado);
+        expect(emitSpy).not.toHaveBeenCalledWith(
+            "standings_atualizados",
+            expect.anything(),
+        );
 
         emitSpy.mockRestore();
     });

@@ -84,6 +84,7 @@ export const cadastrarDeckSchema = z.object({
 export const atualizarDeckSchema = z.object({
   nome: z.string().min(1).optional(),
   nomeConsolidado: z.string().optional().nullable(),
+  cartaRepresentativa: z.string().max(200).optional().nullable(),
   formato: z.string().min(1).optional(),
   linkLigaMagic: linkLigaMagicSchema,
   maindeck: z.array(cartaSchema).min(1).optional(),
@@ -284,7 +285,7 @@ export const listarTimesQuerySchema = z.object({
 const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional();
 
 export const rankingLigaQuerySchema = z.object({
-  limiteJogadores: limiteRankingCampo.default(50),
+  limiteJogadores: limiteRankingCampo,
   limiteTimes: limiteRankingCampo.default(50),
   limiteDecks: limiteRankingCampo.default(50),
   limiteCartas: limiteRankingCampo.default(50),

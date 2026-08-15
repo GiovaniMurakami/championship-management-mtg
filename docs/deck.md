@@ -20,6 +20,7 @@ interface DeckProps {
   sideboard: Carta[];
   usuarioId: string;
   nomeConsolidado?: string | null;
+  cartaRepresentativa?: string | null;
   criadoEm?: Date;
 }
 ```
@@ -35,6 +36,7 @@ interface DeckProps {
 | sideboard       | Carta[]        | Sim         | Array de cartas do sideboard/banco de reservas                                                  |
 | usuarioId       | string         | Sim         | ID do usuário proprietário do deck                                                              |
 | nomeConsolidado | string \| null | Não         | Nome do arquétipo: começa igual ao `nome` do deck; admin pode alterar. `null` se limpo. |
+| cartaRepresentativa | string \| null | Não     | Carta cuja arte representa o arquétipo no metagame. Admin define; `null` volta à mais jogada. |
 | criadoEm        | Date           | Não         | Data de criação do registro (gerada automaticamente)                                            |
 
 ### Tipo Carta
@@ -315,6 +317,7 @@ Array de decks do usuário:
    - Formato: obrigatório
    - Maindeck: obrigatório, deve conter pelo menos 1 carta
 6. **Nome Consolidado**: Ao cadastrar um deck, `nomeConsolidado` recebe o mesmo valor de `nome`. Admin pode alterar depois (ex.: na página de metagame). Enviar `null` limpa o campo.
+7. **Carta representativa**: Admin pode definir `cartaRepresentativa` (também em deck travado de torneio). Enviar `null` remove o override e o metagame volta à carta mais jogada.
 
 ## Casos de Uso
 

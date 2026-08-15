@@ -12,7 +12,7 @@
 API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gathering**:
 
 - Autenticação JWT (RS256 em prod) + refresh token rotacionado
-- CRUD de decks (`nomeConsolidado` = nome dado pelo usuário; admin pode alterar)
+- CRUD de decks (`nomeConsolidado` = nome dado pelo usuário; admin pode alterar; `cartaRepresentativa` = arte do arquétipo no metagame)
 - Torneios Swiss com top cut, pareamentos, resultados, check-in por rodada, link de ingresso tardio
 - **Anfitrião de torneio** — admin designa usuário com permissões de gestão no torneio
 - Ligas (rankings consolidados) e times (convites/solicitações)
@@ -256,6 +256,7 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 - Rodadas: `ceil(log₂(n))` com teto opcional `maxRodadas`
 - Critérios de desempate WotC: pontos → OMW% → GW% → OGW%
 - Bye para último colocado quando ímpar
+- Pareamento evita rematch com backtracking; rematch só se for impossível evitar
 
 ### Campos notáveis
 - `somRodada` — URL de áudio ao iniciar rodada (evento Ably + front toca)
@@ -282,8 +283,8 @@ Eventos publicados:
 ```
 rodada_iniciada, torneio_iniciado, torneio_finalizado,
 resultado_registrado, resultado_confirmado, resultado_contestado, resultado_ajustado,
-standings_atualizados, participante_inscrito, checkin_realizado, deck_inserido,
-jogador_dropou, jogador_ingressou, corte_iniciado, checkin_rodada_aberto,
+participante_inscrito, checkin_realizado, deck_inserido,
+jogador_dropou, jogador_ingressou, corte_iniciado,
 rodada_refeita, total_rodadas_alterado
 ```
 
@@ -407,7 +408,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 1. **`docs/README.md` pode estar parcialmente desatualizado** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts` e o código.
 2. **Lambda cold start** — pool Mongo max 1 (`MONGODB_MAX_POOL_SIZE`); Ably aguarda publicação no handler.
 3. **Emails** — falhas são logadas, não propagadas ao cliente.
-4. **`nomeConsolidado`** — igual ao nome do deck no cadastro; admin pode alterar depois (metagame).
+4. **`nomeConsolidado` / `cartaRepresentativa`** — nome do arquétipo e arte no metagame; admin altera depois. Deck travado de torneio aceita só esses dois campos. `cartaRepresentativa: null` volta à carta mais jogada.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
 6. **Alterar torneio** — só em `inscricoes_abertas`; dono ou admin.
 7. **Torneios secretos** — filtrados em `listarTorneios`, acessíveis por UUID direto.

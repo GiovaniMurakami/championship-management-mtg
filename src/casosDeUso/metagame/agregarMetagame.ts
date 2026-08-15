@@ -205,6 +205,15 @@ function contarCartasChave(decks: Deck[], formato: string): Array<[string, numbe
 }
 
 function cartaRepresentativa(decks: Deck[], formato: string): string | null {
+  const votos = new Map<string, number>();
+  for (const deck of decks) {
+    const escolhida = deck.cartaRepresentativa?.trim();
+    if (!escolhida) continue;
+    votos.set(escolhida, (votos.get(escolhida) ?? 0) + 1);
+  }
+  if (votos.size > 0) {
+    return [...votos.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+  }
   return contarCartasChave(decks, formato)[0]?.[0] ?? null;
 }
 
