@@ -30,7 +30,7 @@ export function validarConsultaMetagame(formato: string, dias: number): { format
   }
   if (!ehDiasMetagame(dias)) {
     throw ErroPersonalizado.criar({
-      mensagem: "dias deve ser 7, 14, 30, 90 ou 365.",
+      mensagem: "dias deve ser 7, 14, 30 ou 90.",
       status: StatusErro.erroParametro,
     });
   }

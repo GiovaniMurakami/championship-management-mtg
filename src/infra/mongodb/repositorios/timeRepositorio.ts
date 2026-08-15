@@ -28,7 +28,6 @@ const timeSchema = new Schema<TimeDocument>({
     criadoEm: { type: Date, default: Date.now },
 });
 
-timeSchema.index({ criadoEm: -1 });
 timeSchema.index({ donoId: 1 });
 timeSchema.index({ criadoEm: -1, id: 1 });
 timeSchema.index({ membroIds: 1 });

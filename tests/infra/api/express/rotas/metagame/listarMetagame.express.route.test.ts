@@ -38,7 +38,7 @@ describe("ListarMetagameRota", () => {
 
     it("retorna status do ErroPersonalizado quando lancado", async () => {
         servico.executar.mockRejectedValue(
-            ErroPersonalizado.criar({ mensagem: "dias deve ser 7, 14, 30, 90 ou 365.", status: StatusErro.erroParametro })
+            ErroPersonalizado.criar({ mensagem: "dias deve ser 7, 14, 30 ou 90.", status: StatusErro.erroParametro })
         );
         const { req, res, next } = makeReqRes({ formato: "pauper", dias: 15 });
 

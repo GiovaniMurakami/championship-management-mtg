@@ -7,7 +7,7 @@ import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { calcularEstatisticas, ordenarPorDesempate } from "../torneio/swiss";
 
-export const DIAS_METAGAME = [7, 14, 30, 90, 365] as const;
+export const DIAS_METAGAME = [7, 14, 30, 90] as const;
 export type DiasMetagame = (typeof DIAS_METAGAME)[number];
 
 export const NOME_OUTROS = "Outros";

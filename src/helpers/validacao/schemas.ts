@@ -24,6 +24,11 @@ export const cadastrarStoryFundoSchema = z.object({
   url: s3ImagemUrl(),
 });
 
+/** Query de GET /imagem/proxy — só URLs do bucket S3 configurado (anti-SSRF). */
+export const proxyImagemQuerySchema = z.object({
+  url: s3ImagemUrl(),
+});
+
 const cartaSchema = z.object({
   nome: z.string().min(1),
   quantidade: z.number().int().min(1),
@@ -276,13 +281,13 @@ export const listarTimesQuerySchema = z.object({
   ...paginacaoQueryCampos,
 });
 
-const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional().default(10);
+const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional();
 
 export const rankingLigaQuerySchema = z.object({
-  limiteJogadores: limiteRankingCampo,
-  limiteTimes: limiteRankingCampo,
-  limiteDecks: limiteRankingCampo,
-  limiteCartas: limiteRankingCampo,
+  limiteJogadores: limiteRankingCampo.default(50),
+  limiteTimes: limiteRankingCampo.default(50),
+  limiteDecks: limiteRankingCampo.default(50),
+  limiteCartas: limiteRankingCampo.default(50),
 });
 
 // --- Body adicional ---
@@ -329,8 +334,8 @@ const diasMetagameSchema = z.preprocess(
   z.coerce
     .number()
     .int("dias deve ser inteiro.")
-    .refine((n) => [7, 14, 30, 90, 365].includes(n), {
-      message: "dias deve ser 7, 14, 30, 90 ou 365.",
+    .refine((n) => [7, 14, 30, 90].includes(n), {
+      message: "dias deve ser 7, 14, 30 ou 90.",
     })
 );
 

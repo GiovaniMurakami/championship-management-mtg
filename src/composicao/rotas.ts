@@ -59,6 +59,7 @@ import { SolicitarEntradaTimeRota } from "../infra/api/express/rotas/time/solici
 import { AprovarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/aprovarSolicitacaoTime.express.route";
 import { RejeitarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/rejeitarSolicitacaoTime.express.route";
 import { GerarUrlUploadImagemRota } from "../infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
+import { ProxyImagemRota } from "../infra/api/express/rotas/imagem/proxyImagem.express.route";
 import { BuscarAnunciosRota } from "../infra/api/express/rotas/site/buscarAnuncios.express.route";
 import { BuscarAnunciosAdminRota } from "../infra/api/express/rotas/site/buscarAnunciosAdmin.express.route";
 import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/buscarEstatisticasSite.express.route";
@@ -140,6 +141,7 @@ export function criarRotas(casos: CasosDeUso) {
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
+        ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),
         ExcluirStoryFundoRota.criar(casos.excluirStoryFundo),

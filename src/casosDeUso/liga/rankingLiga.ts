@@ -9,6 +9,32 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 
+function normalizarNomeCartaRanking(nome: string): string {
+  return nome
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .trim();
+}
+
+/** Terrenos básicos (EN/PT) excluídos do ranking de cartas da liga. */
+const TERRENOS_BASICOS_RANKING = new Set([
+  "plains",
+  "island",
+  "swamp",
+  "mountain",
+  "forest",
+  "planicie",
+  "ilha",
+  "pantano",
+  "montanha",
+  "floresta",
+]);
+
+function ehTerrenoBasicoRanking(nome: string): boolean {
+  return TERRENOS_BASICOS_RANKING.has(normalizarNomeCartaRanking(nome));
+}
+
 export type RankingLigaInputDto = {
   ligaId: string;
   limiteJogadores?: number;
@@ -298,13 +324,18 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
     const usuarioPorId = new Map(usuarios.map((u) => [u.id, u]));
 
-    const limJogadores = input.limiteJogadores ?? 10;
-    const limDecks = input.limiteDecks ?? 10;
-    const limCartas = input.limiteCartas ?? 10;
+    const limJogadores = input.limiteJogadores ?? 50;
+    const limDecks = input.limiteDecks ?? 50;
+    const limCartas = input.limiteCartas ?? 50;
 
-    // Ranking jogadores - ordenado por pontos desc, vitorias desc
+    const winrateDe = (stats: { vitorias: number; derrotas: number; empates: number }) => {
+      const total = stats.vitorias + stats.derrotas + stats.empates;
+      return total > 0 ? stats.vitorias / total : 0;
+    };
+
+    // Ranking jogadores — pontos, desempate por % de vitória
     const jogadoresOrdenados = Array.from(statsJogadores.entries())
-      .sort(([, a], [, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias);
+      .sort(([, a], [, b]) => b.pontos - a.pontos || winrateDe(b) - winrateDe(a) || b.vitorias - a.vitorias);
 
     const rankingJogadores = jogadoresOrdenados
       .slice(0, limJogadores)
@@ -337,8 +368,9 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         };
       });
 
-    // Ranking cartas - ordenado por totalCopias desc
+    // Ranking cartas — exclui terrenos básicos; ordenado por totalCopias desc
     const cartasOrdenadas = Array.from(statsCartas.entries())
+      .filter(([nomeCarta]) => !ehTerrenoBasicoRanking(nomeCarta))
       .sort(([, a], [, b]) => b.totalCopias - a.totalCopias || b.totalDecks - a.totalDecks);
 
     const rankingCartas = cartasOrdenadas
@@ -365,9 +397,11 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       const times = timeIds.length > 0 ? await this.timeGateway.buscarVarios(timeIds) : [];
       const nomesPorTimeId = new Map(times.map((t) => [t.id, t.nome]));
 
-      const limTimes = input.limiteTimes ?? input.limiteJogadores ?? 10;
+      const limTimes = input.limiteTimes ?? input.limiteJogadores ?? 50;
       const timesOrdenados = Array.from(statsTimesMap.entries())
-        .sort(([timeIdA, a], [timeIdB, b]) => b.pontos - a.pontos || b.vitorias - a.vitorias || timeIdA.localeCompare(timeIdB));
+        .sort(([timeIdA, a], [timeIdB, b]) =>
+          b.pontos - a.pontos || winrateDe(b) - winrateDe(a) || b.vitorias - a.vitorias || timeIdA.localeCompare(timeIdB)
+        );
 
       totalTimes = timesOrdenados.length;
       rankingTimes = timesOrdenados

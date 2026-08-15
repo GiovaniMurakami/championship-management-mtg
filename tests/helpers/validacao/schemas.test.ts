@@ -329,10 +329,12 @@ describe("schemas de validacao", () => {
     });
 
     describe("rankingLigaQuerySchema", () => {
-        it("aplica default de 10 nos limites", () => {
+        it("aplica default de 50 nos limites", () => {
             const parsed = rankingLigaQuerySchema.parse({});
-            expect(parsed.limiteJogadores).toBe(10);
-            expect(parsed.limiteTimes).toBe(10);
+            expect(parsed.limiteJogadores).toBe(50);
+            expect(parsed.limiteTimes).toBe(50);
+            expect(parsed.limiteDecks).toBe(50);
+            expect(parsed.limiteCartas).toBe(50);
         });
     });
 

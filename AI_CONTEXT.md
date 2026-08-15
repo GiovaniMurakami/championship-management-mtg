@@ -298,8 +298,10 @@ MongoDB Atlas via Mongoose.
 **Coleções principais:** usuarios, decks, torneios, inscricoes, partidas, ligas, times, tokenblacklists, refreshtokens, loginattempts, resetsenhas, linkingressos, siteconfigs, ratelimits.
 
 ```bash
-npm run db:create-indexes   # src/infra/mongodb/criarIndices.ts
+npm run db:create-indexes   # syncIndexes: cria faltantes e remove órfãos do schema
 ```
+
+Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `torneios_nao_secretos_*` (`secreto: false`).
 
 ---
 

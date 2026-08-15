@@ -68,13 +68,12 @@ const deckSchema = new Schema<DeckDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
-deckSchema.index({ usuarioId: 1 });
-deckSchema.index({ criadoEm: -1 });
 deckSchema.index({ usuarioId: 1, formato: 1 });
 deckSchema.index({ oculto: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ usuarioId: 1, oculto: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ usuarioId: 1, oculto: 1, formato: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ torneioId: 1 });
+deckSchema.index({ deckOriginalId: 1 });
 
 const DeckModel =
   mongoose.models.Deck ||
