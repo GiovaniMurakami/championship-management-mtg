@@ -11,6 +11,8 @@ interface InscricaoDocument extends Document {
   timeId?: string;
   checkInRodada: number;
   dropped: boolean;
+  droppedRodada?: number | null;
+  dropPartidaIds?: string[];
   byeCount: number;
   criadoEm: Date;
 }
@@ -23,6 +25,8 @@ const inscricaoSchema = new Schema<InscricaoDocument>({
   timeId: { type: String },
   checkInRodada: { type: Number, required: true, default: -1 },
   dropped: { type: Boolean, required: true, default: false },
+  droppedRodada: { type: Number, default: null },
+  dropPartidaIds: { type: [String], default: [] },
   byeCount: { type: Number, required: true, default: 0 },
   criadoEm: { type: Date, default: Date.now },
 });
@@ -45,6 +49,8 @@ function docParaInscricao(doc: InscricaoDocument): Inscricao {
     timeId: doc.get("timeId") ?? undefined,
     checkInRodada: doc.get("checkInRodada") ?? -1,
     dropped: doc.get("dropped") ?? false,
+    droppedRodada: doc.get("droppedRodada") ?? null,
+    dropPartidaIds: doc.get("dropPartidaIds") ?? [],
     byeCount: doc.get("byeCount") ?? 0,
     criadoEm: doc.get("criadoEm"),
   });
@@ -67,6 +73,8 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
       timeId: inscricao.timeId,
       checkInRodada: inscricao.checkInRodada,
       dropped: inscricao.dropped,
+      droppedRodada: inscricao.droppedRodada,
+      dropPartidaIds: inscricao.dropPartidaIds,
       byeCount: inscricao.byeCount,
       criadoEm: inscricao.criadoEm,
     });
@@ -116,6 +124,8 @@ export class InscricaoRepositorio extends BaseRepositorio implements InscricaoGa
         timeId: inscricao.timeId,
         checkInRodada: inscricao.checkInRodada,
         dropped: inscricao.dropped,
+        droppedRodada: inscricao.droppedRodada,
+        dropPartidaIds: inscricao.dropPartidaIds,
         byeCount: inscricao.byeCount,
       }
     );

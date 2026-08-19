@@ -35,6 +35,7 @@ export type ListarTorneiosOutputDto = {
     linkBanner?: string;
     somRodada?: string;
     storyFundoUrl?: string;
+    storyFundoTextoRodape?: "claro" | "escuro";
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
@@ -116,6 +117,7 @@ export class ListarTorneios
         linkBanner: t.linkBanner,
         somRodada: t.somRodada,
         storyFundoUrl: t.storyFundoUrl,
+        storyFundoTextoRodape: t.storyFundoTextoRodape,
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,

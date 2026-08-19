@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { ExibirNomeJogador, Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
+import { ExibirNomeJogador, StoryFundoTextoRodape, Torneio, StatusTorneio } from "../../../dominio/entidade/torneio";
 import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseRepositorio } from "./baseRepositorio";
@@ -22,6 +22,7 @@ interface TorneioDocument extends Document {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape?: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -50,6 +51,7 @@ const torneioSchema = new Schema<TorneioDocument>({
   linkBanner: { type: String, maxlength: 500 },
   somRodada: { type: String, maxlength: 500 },
   storyFundoUrl: { type: String, maxlength: 500 },
+  storyFundoTextoRodape: { type: String, enum: ["claro", "escuro"], default: "escuro" },
   maxJogadores: { type: Number, max: 512 },
   maxRodadas: { type: Number, max: 30 },
   corteTop: { type: Number, max: 64 },
@@ -98,6 +100,7 @@ function docParaTorneio(doc: TorneioDocument): Torneio {
     linkBanner: doc.get("linkBanner") ?? undefined,
     somRodada: doc.get("somRodada") ?? undefined,
     storyFundoUrl: doc.get("storyFundoUrl") ?? undefined,
+    storyFundoTextoRodape: doc.get("storyFundoTextoRodape") ?? "escuro",
     maxJogadores: doc.get("maxJogadores") ?? undefined,
     maxRodadas: doc.get("maxRodadas") ?? undefined,
     corteTop: doc.get("corteTop") ?? undefined,
@@ -136,6 +139,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
       storyFundoUrl: torneio.storyFundoUrl,
+      storyFundoTextoRodape: torneio.storyFundoTextoRodape,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
@@ -230,6 +234,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         linkBanner: torneio.linkBanner,
         somRodada: torneio.somRodada,
         storyFundoUrl: torneio.storyFundoUrl,
+        storyFundoTextoRodape: torneio.storyFundoTextoRodape,
         maxJogadores: torneio.maxJogadores,
         maxRodadas: torneio.maxRodadas,
         corteTop: torneio.corteTop,

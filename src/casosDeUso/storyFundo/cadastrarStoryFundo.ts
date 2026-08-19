@@ -1,4 +1,5 @@
 import { StoryFundo } from "../../dominio/entidade/storyFundo";
+import type { StoryTextoRodape } from "../../dominio/entidade/storyFundo";
 import { StoryFundoGateway } from "../../dominio/gateway/storyFundoGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -8,12 +9,14 @@ import { toBrasiliaISO } from "../../helpers/data/brasilia";
 export type CadastrarStoryFundoInputDto = {
   nome: string;
   url: string;
+  textoRodape?: StoryTextoRodape;
 };
 
 export type CadastrarStoryFundoOutputDto = {
   id: string;
   nome: string;
   url: string;
+  textoRodape: StoryTextoRodape;
   criadoEm: string;
 };
 
@@ -52,7 +55,7 @@ export class CadastrarStoryFundo
       });
     }
 
-    const fundo = StoryFundo.criar({ nome, url });
+    const fundo = StoryFundo.criar({ nome, url, textoRodape: input.textoRodape });
     try {
       await this.storyFundoGateway.salvar(fundo);
     } catch (error) {
@@ -70,6 +73,7 @@ export class CadastrarStoryFundo
       id: fundo.id,
       nome: fundo.nome,
       url: fundo.url,
+      textoRodape: fundo.textoRodape,
       criadoEm: toBrasiliaISO(fundo.criadoEm)!,
     };
   }

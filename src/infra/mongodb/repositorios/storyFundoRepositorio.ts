@@ -7,6 +7,7 @@ interface StoryFundoDocument extends Document {
   id: string;
   nome: string;
   url: string;
+  textoRodape?: "claro" | "escuro";
   criadoEm: Date;
 }
 
@@ -14,6 +15,7 @@ const storyFundoSchema = new Schema<StoryFundoDocument>({
   id: { type: String, required: true, unique: true },
   nome: { type: String, required: true, maxlength: 100 },
   url: { type: String, required: true, maxlength: 500 },
+  textoRodape: { type: String, enum: ["claro", "escuro"], default: "claro" },
   criadoEm: { type: Date, default: Date.now },
 });
 
@@ -28,6 +30,7 @@ function docParaStoryFundo(doc: StoryFundoDocument): StoryFundo {
     id: doc.get("id"),
     nome: doc.get("nome"),
     url: doc.get("url"),
+    textoRodape: doc.get("textoRodape") ?? "claro",
     criadoEm: doc.get("criadoEm"),
   });
 }
@@ -47,6 +50,7 @@ export class StoryFundoRepositorio extends BaseRepositorio implements StoryFundo
       id: fundo.id,
       nome: fundo.nome,
       url: fundo.url,
+      textoRodape: fundo.textoRodape,
       criadoEm: fundo.criadoEm,
     });
   }
