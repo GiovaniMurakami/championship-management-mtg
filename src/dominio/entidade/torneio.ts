@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export type StatusTorneio = "inscricoes_abertas" | "em_andamento" | "finalizado";
 export type ExibirNomeJogador = "nome" | "nickMOL" | "nickArena";
+export type StoryFundoTextoRodape = "claro" | "escuro";
 
 export interface TorneioProps {
   id: string;
@@ -19,6 +20,7 @@ export interface TorneioProps {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape?: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -47,6 +49,7 @@ export class Torneio {
   public linkBanner?: string;
   public somRodada?: string;
   public storyFundoUrl?: string;
+  public storyFundoTextoRodape: StoryFundoTextoRodape;
   public maxJogadores?: number;
   public maxRodadas?: number;
   public corteTop?: number;
@@ -74,6 +77,7 @@ export class Torneio {
     this.linkBanner = props.linkBanner;
     this.somRodada = props.somRodada;
     this.storyFundoUrl = props.storyFundoUrl;
+    this.storyFundoTextoRodape = props.storyFundoTextoRodape === "escuro" ? "escuro" : "claro";
     this.maxJogadores = props.maxJogadores;
     this.maxRodadas = props.maxRodadas;
     this.corteTop = props.corteTop;

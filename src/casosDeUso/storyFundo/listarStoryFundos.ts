@@ -1,4 +1,5 @@
 import { StoryFundoGateway } from "../../dominio/gateway/storyFundoGateway";
+import type { StoryTextoRodape } from "../../dominio/entidade/storyFundo";
 import { CasoDeUso } from "../casoDeUso";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
@@ -7,6 +8,7 @@ export type ListarStoryFundosOutputDto = {
     id: string;
     nome: string;
     url: string;
+    textoRodape: StoryTextoRodape;
     criadoEm: string;
   }>;
 };
@@ -26,6 +28,7 @@ export class ListarStoryFundos
         id: f.id,
         nome: f.nome,
         url: f.url,
+        textoRodape: f.textoRodape,
         criadoEm: toBrasiliaISO(f.criadoEm)!,
       })),
     };

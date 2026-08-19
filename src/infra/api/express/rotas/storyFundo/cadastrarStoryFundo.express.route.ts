@@ -34,6 +34,7 @@ export class CadastrarStoryFundoRota implements Rotas {
         const resultado = await this.cadastrarStoryFundoServico.executar({
           nome: dados.nome,
           url: dados.url,
+          textoRodape: dados.textoRodape,
         });
         response.status(201).json(resultado);
       } catch (error) {

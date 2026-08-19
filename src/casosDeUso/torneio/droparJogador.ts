@@ -115,35 +115,46 @@ export class DroparJogador
       };
     }
 
-    inscricao.dropped = true;
-    await this.inscricaoGateway.atualizar(inscricao);
-
     // Auto-resolve pending matches: give WO (2-0) to the opponent
     if (torneio.status === "em_andamento") {
       const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
       const pendentes = partidas.filter(
         (p) =>
           p.status === "pendente" &&
+          p.rodada === torneio.rodadaAtual &&
           (p.jogador1Id === input.jogadorId || p.jogador2Id === input.jogadorId)
       );
 
       for (const partida of pendentes) {
+        let vencedorId: string | null = null;
+
         if (partida.jogador2Id === null) {
           partida.vitoriasJogador1 = 2;
           partida.vitoriasJogador2 = 0;
+          vencedorId = partida.jogador1Id;
         } else if (partida.jogador1Id === input.jogadorId) {
           partida.vitoriasJogador1 = 0;
           partida.vitoriasJogador2 = 2;
-          partidasResolvidas.push({ partidaId: partida.id, vencedorId: partida.jogador2Id });
+          vencedorId = partida.jogador2Id;
         } else {
           partida.vitoriasJogador1 = 2;
           partida.vitoriasJogador2 = 0;
-          partidasResolvidas.push({ partidaId: partida.id, vencedorId: partida.jogador1Id });
+          vencedorId = partida.jogador1Id;
         }
         partida.status = "finalizada";
+        partida.confirmadoPor = [];
         await this.partidaGateway.atualizar(partida);
+
+        if (vencedorId) {
+          partidasResolvidas.push({ partidaId: partida.id, vencedorId });
+        }
       }
     }
+
+    inscricao.dropped = true;
+    inscricao.droppedRodada = torneio.status === "em_andamento" ? torneio.rodadaAtual : null;
+    inscricao.dropPartidaIds = partidasResolvidas.map((p) => p.partidaId);
+    await this.inscricaoGateway.atualizar(inscricao);
 
     eventosTorneio.emit("jogador_dropou", {
       torneioId: input.torneioId,
