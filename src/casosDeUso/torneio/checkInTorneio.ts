@@ -5,7 +5,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
-import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { formatarDataHoraBrasilia } from "../../helpers/data/brasilia";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type CheckInTorneioInputDto = {
@@ -72,7 +72,7 @@ export class CheckInTorneio
       const umHoraAntes = new Date(torneio.horario.getTime() - 60 * 60 * 1000);
       if (new Date() < umHoraAntes) {
         throw ErroPersonalizado.criar({
-          mensagem: `O check-in só abre 1 hora antes do torneio (a partir de ${toBrasiliaISO(umHoraAntes)}).`,
+          mensagem: `O check-in só abre 1 hora antes do torneio (a partir de ${formatarDataHoraBrasilia(umHoraAntes)}, horário de Brasília).`,
           status: StatusErro.erroParametro,
         });
       }
