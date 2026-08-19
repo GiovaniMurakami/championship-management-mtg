@@ -6,6 +6,7 @@ describe("clonarDeckParaTorneio", () => {
         const original = Deck.criar({
             nome: "Mono Red",
             nomeConsolidado: "Mono Red Aggro",
+            cartaRepresentativa: "Goblin Token",
             formato: "Pauper",
             linkLigaMagic: "https://ligamagic.com/deck",
             maindeck: [{ nome: "Mountain", quantidade: 20 }, { nome: "Goblin", quantidade: 40 }],
@@ -21,6 +22,7 @@ describe("clonarDeckParaTorneio", () => {
         expect(clone.id).not.toBe(original.id);
         expect(clone.nome).toBe("Mono Red");
         expect(clone.nomeConsolidado).toBe("Mono Red Aggro");
+        expect(clone.cartaRepresentativa).toBe("Goblin Token");
         expect(clone.formato).toBe("Pauper");
         expect(clone.linkLigaMagic).toBe("https://ligamagic.com/deck");
         expect(clone.usuarioId).toBe("u-1");

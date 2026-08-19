@@ -324,7 +324,6 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
     const usuarioPorId = new Map(usuarios.map((u) => [u.id, u]));
 
-    const limJogadores = input.limiteJogadores ?? 50;
     const limDecks = input.limiteDecks ?? 50;
     const limCartas = input.limiteCartas ?? 50;
 
@@ -337,9 +336,11 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const jogadoresOrdenados = Array.from(statsJogadores.entries())
       .sort(([, a], [, b]) => b.pontos - a.pontos || winrateDe(b) - winrateDe(a) || b.vitorias - a.vitorias);
 
-    const rankingJogadores = jogadoresOrdenados
-      .slice(0, limJogadores)
-      .map(([jogadorId, stats], idx) => ({
+    const rankingJogadores = (
+      input.limiteJogadores == null
+        ? jogadoresOrdenados
+        : jogadoresOrdenados.slice(0, input.limiteJogadores)
+    ).map(([jogadorId, stats], idx) => ({
         posicao: idx + 1,
         jogador: toUsuarioPublico(usuarioPorId.get(jogadorId), jogadorId),
         vitorias: stats.vitorias,

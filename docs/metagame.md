@@ -30,5 +30,5 @@ Jogador em `listas` / `resultados` / `recentes`: `usuario.nome` é o **nick MOL*
 - Bye não entra em winrate/matchup.
 - Meta % = cópias do arquétipo / total de decks com inscrição.
 - Winrate = vitórias / (V+D+E).
-- Carta representativa: não-terreno básico mais copiado no main (commander: carta de commander).
-- Admin autenticado pode alterar `nomeConsolidado` de um deck (ou de todas as listas do arquétipo) pela página de detalhe; usa `PUT /deck/:id`.
+- Carta representativa: por padrão, não-terreno básico mais copiado no main (commander: carta de commander). Se algum deck do grupo tiver `cartaRepresentativa`, usa a mais votada entre os overrides. O valor pode ser o nome da carta ou o UUID Scryfall da arte escolhida pelo admin.
+- Admin autenticado pode alterar `nomeConsolidado` e `cartaRepresentativa` de um deck (ou de todas as listas do arquétipo) pela página de detalhe; usa `PUT /deck/:id`. Deck travado aceita esses dois campos.

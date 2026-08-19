@@ -32,13 +32,13 @@ function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
 
 // Login, cadastro e reset de senha — mesmo bucket por IP (brute-force / spam de conta)
 export const authRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(5, "auth"),
+  ...criarOpcoesRateLimit(50, "auth"),
   message: MSG_TENTATIVAS,
 });
 
 // Refresh de token — precisa aguentar retornos de idle + cold start sem matar a sessão
 export const refreshTokenRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(40, "refresh"),
+  ...criarOpcoesRateLimit(50, "refresh"),
   message: MSG_TENTATIVAS,
 });
 
@@ -86,6 +86,6 @@ export const publicActionRateLimiter = rateLimit({
 
 // Upload de imagem — restritivo para evitar abuso e custos S3
 export const uploadImagemRateLimiter = rateLimit({
-  ...criarOpcoesRateLimit(8, "upload"),
+  ...criarOpcoesRateLimit(20, "upload"),
   message: { mensagem: "Limite de uploads atingido. Tente novamente em 15 minutos." },
 });

@@ -22,6 +22,29 @@ function criarPartida(overrides: Partial<Partida> & Pick<Partida, "jogador1Id" |
     });
 }
 
+function statsJogador(usuarioId: string, pontosMesa: number): EstatisticasJogador {
+    return {
+        usuarioId,
+        pontosMesa,
+        vitoriasPartida: 0,
+        empatesPartida: 0,
+        derrotasPartida: 0,
+        totalPartidasJogadas: 0,
+        vitoriasJogo: 0,
+        totalJogosJogados: 0,
+        oponentesIds: [],
+    };
+}
+
+function parDoJogador(
+    pares: Array<{ jogador1Id: string; jogador2Id: string | null }>,
+    id: string
+): string | null {
+    const par = pares.find((p) => p.jogador1Id === id || p.jogador2Id === id);
+    if (!par) return null;
+    return par.jogador1Id === id ? par.jogador2Id : par.jogador1Id;
+}
+
 describe("Swiss - calcularEstatisticas", () => {
     it("deve retornar estatísticas zeradas quando não há partidas", () => {
         const stats = calcularEstatisticas(["j1", "j2"], []);
@@ -497,5 +520,57 @@ describe("Swiss - gerarPareamentos", () => {
         const byes = pares.filter((p) => p.jogador2Id === null);
         expect(byes).toHaveLength(1);
         expect(byes[0].jogador1Id).toBe("j3");
+    });
+
+    it("deve desfazer pares anteriores para evitar rematch no último confronto", () => {
+        // Guloso parearia A-C, B-D, E-F (E-F já jogaram). Backtracking acha A-E, B-C, D-F.
+        const jogadores = ["A", "B", "C", "D", "E", "F"].map((id, i) =>
+            statsJogador(id, 3 - Math.floor(i / 2) * 3)
+        );
+        const historico = new Set([
+            parKey("A", "B"),
+            parKey("C", "F"),
+            parKey("E", "F"),
+        ]);
+
+        const pares = gerarPareamentos(jogadores, historico);
+        const rematches = pares.filter(
+            (p) => p.jogador2Id && historico.has(parKey(p.jogador1Id, p.jogador2Id))
+        );
+
+        expect(pares).toHaveLength(3);
+        expect(rematches).toHaveLength(0);
+        expect(parDoJogador(pares, "E")).not.toBe("F");
+        expect(parDoJogador(pares, "C")).not.toBe("F");
+    });
+
+    it("nao deve trocar BYE se a troca criar rematch", () => {
+        const jogadores = [
+            statsJogador("j1", 6),
+            statsJogador("j2", 3),
+            statsJogador("j3", 0),
+        ];
+        const historico = new Set([parKey("j1", "j3")]);
+        const pares = gerarPareamentos(jogadores, historico, new Set(["j3"]));
+
+        const rematches = pares.filter(
+            (p) => p.jogador2Id && historico.has(parKey(p.jogador1Id, p.jogador2Id))
+        );
+        expect(rematches).toHaveLength(0);
+        expect(parDoJogador(pares, "j1")).not.toBe("j3");
+    });
+
+    it("deve dar BYE a quem ja enfrentou todos quando isso evita rematch", () => {
+        const jogadores = [
+            statsJogador("j1", 6),
+            statsJogador("j2", 3),
+            statsJogador("j3", 0),
+        ];
+        const historico = new Set([parKey("j1", "j2"), parKey("j1", "j3")]);
+        const pares = gerarPareamentos(jogadores, historico);
+
+        expect(pares.filter((p) => p.jogador2Id === null)).toHaveLength(1);
+        expect(parDoJogador(pares, "j2")).toBe("j3");
+        expect(parDoJogador(pares, "j1")).toBeNull();
     });
 });

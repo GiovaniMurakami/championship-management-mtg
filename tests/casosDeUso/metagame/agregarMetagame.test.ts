@@ -146,6 +146,27 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[1].winrate).toBe(0);
     });
 
+    it("usa cartaRepresentativa definida pelo admin no lugar da mais jogada", () => {
+        const t = torneio();
+        const terrorComCarta = deck({
+            id: "deck-terror",
+            usuarioId: "user-1",
+            cartaRepresentativa: "Tolarian Terror",
+        });
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            torneios: [t],
+            inscricoes: [inscricao("torneio-1", "user-1", "deck-terror")],
+            partidas: [],
+            decks: [terrorComCarta],
+            usuarios: [alice],
+        });
+
+        expect(resultado.arquetipos[0].cartaRepresentativa).toBe("Tolarian Terror");
+    });
+
     it("ignora bye no winrate", () => {
         const t = torneio();
         const resultado = agregarMetagame({

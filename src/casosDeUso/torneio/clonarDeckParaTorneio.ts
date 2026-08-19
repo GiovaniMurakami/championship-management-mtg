@@ -4,6 +4,7 @@ export function clonarDeckParaTorneio(deck: Deck, torneioId: string): Deck {
   return Deck.criar({
     nome: deck.nome,
     nomeConsolidado: deck.nomeConsolidado,
+    cartaRepresentativa: deck.cartaRepresentativa,
     formato: deck.formato,
     linkLigaMagic: deck.linkLigaMagic,
     maindeck: deck.maindeck.map((carta) => ({ ...carta })),

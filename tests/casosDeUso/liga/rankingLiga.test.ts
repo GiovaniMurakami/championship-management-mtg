@@ -305,6 +305,9 @@ describe("RankingLiga", () => {
         expect(resultado.totalDecks).toBe(2);
         expect(resultado.rankingCartas).toHaveLength(1);
         expect(resultado.totalCartas).toBeGreaterThan(1);
+
+        const completo = await uc.executar({ ligaId: "liga-1" });
+        expect(completo.rankingJogadores).toHaveLength(2);
     });
 
     it("deve ignorar partidas pendentes no ranking", async () => {

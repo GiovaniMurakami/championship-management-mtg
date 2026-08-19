@@ -9,6 +9,7 @@ export interface DeckProps {
   id: string;
   nome: string;
   nomeConsolidado?: string | null;
+  cartaRepresentativa?: string | null;
   formato: string;
   linkLigaMagic?: string | null;
   maindeck: Carta[];
@@ -27,6 +28,7 @@ export class Deck {
   public id: string;
   public nome: string;
   public nomeConsolidado: string | null;
+  public cartaRepresentativa: string | null;
   public formato: string;
   public linkLigaMagic: string | null;
   public maindeck: Carta[];
@@ -44,6 +46,7 @@ export class Deck {
     id,
     nome,
     nomeConsolidado,
+    cartaRepresentativa,
     formato,
     linkLigaMagic,
     maindeck,
@@ -60,6 +63,7 @@ export class Deck {
     this.id = id;
     this.nome = nome;
     this.nomeConsolidado = nomeConsolidado ?? null;
+    this.cartaRepresentativa = cartaRepresentativa ?? null;
     this.formato = formato;
     this.linkLigaMagic = linkLigaMagic ?? null;
     this.maindeck = maindeck;
