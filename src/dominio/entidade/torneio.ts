@@ -77,7 +77,7 @@ export class Torneio {
     this.linkBanner = props.linkBanner;
     this.somRodada = props.somRodada;
     this.storyFundoUrl = props.storyFundoUrl;
-    this.storyFundoTextoRodape = props.storyFundoTextoRodape === "escuro" ? "escuro" : "claro";
+    this.storyFundoTextoRodape = props.storyFundoTextoRodape === "claro" ? "claro" : "escuro";
     this.maxJogadores = props.maxJogadores;
     this.maxRodadas = props.maxRodadas;
     this.corteTop = props.corteTop;
