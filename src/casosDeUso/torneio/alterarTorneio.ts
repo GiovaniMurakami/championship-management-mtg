@@ -1,4 +1,4 @@
-import { ExibirNomeJogador } from "../../dominio/entidade/torneio";
+import { ExibirNomeJogador, StoryFundoTextoRodape } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -19,6 +19,7 @@ export type AlterarTorneioInputDto = {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape?: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -41,6 +42,7 @@ export type AlterarTorneioOutputDto = {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -91,6 +93,7 @@ export class AlterarTorneio
     if (input.linkBanner !== undefined) torneio.linkBanner = input.linkBanner?.trim();
     if (input.somRodada !== undefined) torneio.somRodada = input.somRodada?.trim();
     if (input.storyFundoUrl !== undefined) torneio.storyFundoUrl = input.storyFundoUrl?.trim();
+    if (input.storyFundoTextoRodape !== undefined) torneio.storyFundoTextoRodape = input.storyFundoTextoRodape;
     if (input.maxJogadores !== undefined) torneio.maxJogadores = input.maxJogadores;
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
@@ -114,6 +117,7 @@ export class AlterarTorneio
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
       storyFundoUrl: torneio.storyFundoUrl,
+      storyFundoTextoRodape: torneio.storyFundoTextoRodape,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,

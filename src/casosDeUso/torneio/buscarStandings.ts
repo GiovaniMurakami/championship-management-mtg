@@ -53,6 +53,7 @@ export type BuscarStandingsOutputDto = {
     deckId?: string | null;
     deckNome?: string | null;
     dropped: boolean;
+    droppedRodada?: number | null;
     resultadosExpressivos: number;
   }>;
 };
@@ -141,6 +142,7 @@ export class BuscarStandings
         deckId: i.deckId ?? null,
         deckNome: i.deckId ? (deckMap.get(i.deckId)?.nomeConsolidado || deckMap.get(i.deckId)?.nome || null) : null,
         dropped: i.dropped,
+        droppedRodada: i.droppedRodada,
         resultadosExpressivos: u?.resultadosExpressivos ?? 0,
         };
       });
@@ -229,6 +231,7 @@ export class BuscarStandings
             ? (deckMap.get(inscricao.deckId)?.nomeConsolidado || deckMap.get(inscricao.deckId)?.nome || null)
             : null,
           dropped: inscricao?.dropped ?? false,
+          droppedRodada: inscricao?.droppedRodada ?? null,
           resultadosExpressivos: u?.resultadosExpressivos ?? 0,
         };
       }),

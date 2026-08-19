@@ -1,4 +1,4 @@
-import { ExibirNomeJogador, Torneio } from "../../dominio/entidade/torneio";
+import { ExibirNomeJogador, StoryFundoTextoRodape, Torneio } from "../../dominio/entidade/torneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -18,6 +18,7 @@ export type CriarTorneioInputDto = {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape?: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -39,6 +40,7 @@ export type CriarTorneioOutputDto = {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape: StoryFundoTextoRodape;
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -77,6 +79,7 @@ export class CriarTorneio
       linkBanner: input.linkBanner?.trim(),
       somRodada: input.somRodada?.trim(),
       storyFundoUrl: input.storyFundoUrl?.trim(),
+      storyFundoTextoRodape: input.storyFundoTextoRodape,
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
@@ -100,6 +103,7 @@ export class CriarTorneio
       linkBanner: torneio.linkBanner,
       somRodada: torneio.somRodada,
       storyFundoUrl: torneio.storyFundoUrl,
+      storyFundoTextoRodape: torneio.storyFundoTextoRodape,
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,

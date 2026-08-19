@@ -38,6 +38,7 @@ export type BuscarTorneioOutputDto = {
   linkBanner?: string;
   somRodada?: string;
   storyFundoUrl?: string;
+  storyFundoTextoRodape?: "claro" | "escuro";
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
@@ -148,6 +149,7 @@ export class BuscarTorneio
       linkBanner: torneioAtual.linkBanner,
       somRodada: torneioAtual.somRodada,
       storyFundoUrl: torneioAtual.storyFundoUrl,
+      storyFundoTextoRodape: torneioAtual.storyFundoTextoRodape,
       maxJogadores: torneioAtual.maxJogadores,
       maxRodadas: torneioAtual.maxRodadas,
       corteTop: torneioAtual.corteTop,

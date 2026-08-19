@@ -22,6 +22,7 @@ function s3ImagemUrlOuVazio() {
 export const cadastrarStoryFundoSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório.").max(100, "Nome pode ter no máximo 100 caracteres."),
   url: s3ImagemUrl(),
+  textoRodape: z.enum(["claro", "escuro"]).optional().default("claro"),
 });
 
 /** Query de GET /imagem/proxy — só URLs do bucket S3 configurado (anti-SSRF). */
@@ -102,6 +103,7 @@ export const criarTorneioSchema = z.object({
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   storyFundoUrl: s3ImagemUrlOuVazio().optional(),
+  storyFundoTextoRodape: z.enum(["claro", "escuro"]).optional(),
   maxJogadores: z.number().int().min(2).optional(),
   maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
@@ -120,6 +122,7 @@ export const alterarTorneioSchema = z.object({
   linkBanner: z.string().optional(),
   somRodada: z.string().optional(),
   storyFundoUrl: s3ImagemUrlOuVazio().optional(),
+  storyFundoTextoRodape: z.enum(["claro", "escuro"]).optional(),
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
@@ -160,6 +163,10 @@ export const ajustarTotalRodadasSchema = z.object({
 });
 
 export const droparJogadorSchema = z.object({
+  jogadorId: uuidCampo("jogadorId").optional(),
+});
+
+export const desdroparJogadorSchema = z.object({
   jogadorId: uuidCampo("jogadorId").optional(),
 });
 
