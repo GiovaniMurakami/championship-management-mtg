@@ -15,6 +15,7 @@ export function resolverNomeJogador(u: Usuario, modo: ExibirNomeJogador = "nome"
   return u.nome;
 }
 
+/** Payload público de jogador: nick MOL (`nickMTGO`), com fallback para o nome cadastrado. */
 export function toUsuarioPublico(
   usuario: Usuario | null | undefined,
   fallbackId = "",
@@ -29,7 +30,7 @@ export function toUsuarioPublico(
 
   return {
     id: usuario.id,
-    nome: isUsuarioExcluido(usuario) ? USUARIO_EXCLUIDO_NOME : usuario.nome,
+    nome: resolverNomeJogador(usuario, "nickMOL"),
     excluido: isUsuarioExcluido(usuario),
   };
 }

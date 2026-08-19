@@ -4,9 +4,13 @@ import { app, inicializarDependenciasDeProcesso } from "./app";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { preloadJwtKeys } from "./helpers/jwt";
 import { logger } from "./helpers/logger";
+import { LAMBDA_BINARY_MEDIA_TYPES } from "./helpers/lambdaBinaryMedia";
 
 const aplicacao = app();
-const serverlessApp = serverless(aplicacao);
+// Sem isso, API Gateway devolve JPEG do /imagem/proxy como base64 texto / UTF-8 corrompido.
+const serverlessApp = serverless(aplicacao, {
+  binary: [...LAMBDA_BINARY_MEDIA_TYPES],
+});
 
 const runtimeReady = Promise.all([
   preloadJwtKeys(),

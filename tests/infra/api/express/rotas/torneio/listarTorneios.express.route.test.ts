@@ -20,6 +20,18 @@ describe("ListarTorneiosRota", () => {
 
     beforeEach(() => jest.clearAllMocks());
 
+  it("retorna 200 sem usuario autenticado (visitante)", async () => {
+        const saida = { torneios: [], total: 0, limite: 20, offset: 0 };
+        servico.executar.mockResolvedValue(saida);
+        const { req, res, next } = makeReqRes();
+        delete req.usuario;
+        await rota.getHandler()(req, res, next);
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(servico.executar).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: undefined,
+        }));
+    });
+
     it("retorna 200 com lista de torneios paginada", async () => {
         const saida = { torneios: [], total: 0, limite: 20, offset: 0 };
         servico.executar.mockResolvedValue(saida);

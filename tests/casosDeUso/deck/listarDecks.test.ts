@@ -10,7 +10,7 @@ describe("ListarDecks", () => {
             new Deck({ id: "d2", nome: "Storm", formato: "modern", maindeck: [], sideboard: [], usuarioId: "u1" }),
         ];
         const usuarios = [
-            new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" }),
+            new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" }),
         ];
         const deckGateway = criarMockDeckGateway({
             listar: jest.fn().mockResolvedValue(decks),
@@ -27,9 +27,9 @@ describe("ListarDecks", () => {
         expect(resultado.total).toBe(2);
         expect(resultado.decks[0].nome).toBe("Burn");
         expect(resultado.decks[0].linkLigaMagic).toBeNull();
-        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "Joao", excluido: false });
+        expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
         expect(resultado.decks[1].nome).toBe("Storm");
-        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "Joao", excluido: false });
+        expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
     });
 
     it("deve retornar lista vazia quando nao ha decks", async () => {

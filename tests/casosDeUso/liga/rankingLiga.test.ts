@@ -22,8 +22,22 @@ describe("RankingLiga", () => {
         torneioIds: ["torneio-1"],
     });
 
-    const usuario1 = new Usuario({ id: "user-1", nome: "Alice", email: "a@a.com", senha: "hash", role: "user" });
-    const usuario2 = new Usuario({ id: "user-2", nome: "Bob", email: "b@b.com", senha: "hash", role: "user" });
+    const usuario1 = new Usuario({
+        id: "user-1",
+        nome: "Alice",
+        email: "a@a.com",
+        senha: "hash",
+        role: "user",
+        nickMTGO: "alice_mtgo",
+    });
+    const usuario2 = new Usuario({
+        id: "user-2",
+        nome: "Bob",
+        email: "b@b.com",
+        senha: "hash",
+        role: "user",
+        nickMTGO: "bob_mtgo",
+    });
 
     const deck1 = new Deck({
         id: "deck-1",
@@ -111,10 +125,10 @@ describe("RankingLiga", () => {
         const resultado = await uc.executar({ ligaId: "liga-1" });
 
         expect(resultado.rankingJogadores).toHaveLength(2);
-        expect(resultado.rankingJogadores[0].jogador.nome).toBe("Alice");
+        expect(resultado.rankingJogadores[0].jogador.nome).toBe("alice_mtgo");
         expect(resultado.rankingJogadores[0].vitorias).toBe(1);
         expect(resultado.rankingJogadores[0].pontos).toBe(3);
-        expect(resultado.rankingJogadores[1].jogador.nome).toBe("Bob");
+        expect(resultado.rankingJogadores[1].jogador.nome).toBe("bob_mtgo");
         expect(resultado.rankingJogadores[1].derrotas).toBe(1);
         expect(resultado.rankingJogadores[1].pontos).toBe(0);
     });
@@ -291,6 +305,9 @@ describe("RankingLiga", () => {
         expect(resultado.totalDecks).toBe(2);
         expect(resultado.rankingCartas).toHaveLength(1);
         expect(resultado.totalCartas).toBeGreaterThan(1);
+
+        const completo = await uc.executar({ ligaId: "liga-1" });
+        expect(completo.rankingJogadores).toHaveLength(2);
     });
 
     it("deve ignorar partidas pendentes no ranking", async () => {

@@ -4,6 +4,14 @@ provider:
   name: aws
   runtime: nodejs22.x
   timeout: 29
+  apiGateway:
+    # Só tipos de imagem. NÃO use "*/*" — quebra OPTIONS/CORS do API Gateway.
+    binaryMediaTypes:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - application/octet-stream
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
     MONGODB_MAX_POOL_SIZE: ${env:MONGODB_MAX_POOL_SIZE, '1'}
@@ -11,7 +19,6 @@ provider:
     JWT_SSM_PRIVATE_KEY_PARAM: ${env:JWT_SSM_PRIVATE_KEY_PARAM, self:custom.jwtSsmParams.private.${sls:stage}}
     JWT_SSM_PUBLIC_KEY_PARAM: ${env:JWT_SSM_PUBLIC_KEY_PARAM, self:custom.jwtSsmParams.public.${sls:stage}}
     ABLY_API_KEY: ${env:ABLY_API_KEY}
-    CHATGPT_API_KEY: ${env:CHATGPT_API_KEY}
     CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
@@ -122,6 +129,22 @@ functions:
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
       - http:
+          path: /metagame
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /metagame/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
           path: /health
           method: get
           cors:
@@ -187,6 +210,22 @@ functions:
             allowCredentials: true
       - http:
           path: /site/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /story-fundo
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /story-fundo/{proxy+}
           method: any
           cors:
             origins: *corsOrigins

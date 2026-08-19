@@ -35,7 +35,7 @@ import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProxim
 import { BuscarStandings } from "../../src/casosDeUso/torneio/buscarStandings";
 import { DroparJogador } from "../../src/casosDeUso/torneio/droparJogador";
 
-import { criarMockEmailGateway, criarMockChatGptGateway, criarMockTimeGateway } from "../mocks/gateways";
+import { criarMockEmailGateway, criarMockTimeGateway } from "../mocks/gateways";
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -305,7 +305,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
 
     it("1. Deve cadastrar 150 jogadores com nickMTGO e criar um deck por jogador", async () => {
         const cadastrarUsuario = CadastrarUsuario.criar(usuarioGw, criarMockEmailGateway());
-        const cadastrarDeck = CadastrarDeck.criar(deckGw, criarMockChatGptGateway());
+        const cadastrarDeck = CadastrarDeck.criar(deckGw);
 
         const dono = await cadastrarUsuario.executar({
             nome: "Organizador",

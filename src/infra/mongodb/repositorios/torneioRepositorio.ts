@@ -62,14 +62,20 @@ const torneioSchema = new Schema<TorneioDocument>({
   rodadaIniciadaEm: { type: Date },
 });
 
-torneioSchema.index({ criadoEm: -1 });
-torneioSchema.index({ horario: 1 });
 torneioSchema.index({ donoId: 1 });
 torneioSchema.index({ anfitriaoId: 1 });
-torneioSchema.index({ status: 1, criadoEm: -1 });
-torneioSchema.index({ secreto: 1, criadoEm: -1, id: 1 });
-torneioSchema.index({ secreto: 1, status: 1, criadoEm: -1, id: 1 });
-torneioSchema.index({ secreto: 1, horario: 1, criadoEm: -1, id: 1 });
+// Listagem pública: igualdade em secreto (usa o índice; docs sem campo devem ser false)
+torneioSchema.index(
+  { horario: 1, id: 1 },
+  { name: "torneios_nao_secretos_horario", partialFilterExpression: { secreto: false } },
+);
+torneioSchema.index(
+  { status: 1, horario: 1, id: 1 },
+  { name: "torneios_nao_secretos_status_horario", partialFilterExpression: { secreto: false } },
+);
+// Inclui secretos (incluirSecretos) e metagame/admin
+torneioSchema.index({ horario: 1, id: 1 }, { name: "torneios_horario" });
+torneioSchema.index({ status: 1, horario: 1, id: 1 }, { name: "torneios_status_horario" });
 
 const TorneioModel =
   mongoose.models.Torneio ||
@@ -152,7 +158,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
-    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    if (!filtros.incluirSecretos) filtroQuery.secreto = false;
     if (filtros.status) filtroQuery.status = filtros.status;
     if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
     if (filtros.dataInicio || filtros.dataFim) {
@@ -161,7 +167,9 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
         ...(filtros.dataFim ? { $lte: filtros.dataFim } : {}),
       };
     }
-    let query = TorneioModel.find(filtroQuery).sort({ criadoEm: -1, id: 1 });
+    let query = TorneioModel.find(filtroQuery).sort(
+      filtros.horarioDesc ? { horario: -1, id: -1 } : { horario: 1, id: 1 },
+    );
     if (filtros.offset !== undefined) query = query.skip(filtros.offset);
     if (filtros.limite !== undefined) query = query.limit(filtros.limite);
     const docs = await query;
@@ -173,7 +181,7 @@ export class TorneioRepositorio extends BaseRepositorio implements TorneioGatewa
   ): Promise<number> {
     await this.conectar();
     const filtroQuery: Record<string, unknown> = {};
-    if (!filtros.incluirSecretos) filtroQuery.secreto = { $ne: true };
+    if (!filtros.incluirSecretos) filtroQuery.secreto = false;
     if (filtros.status) filtroQuery.status = filtros.status;
     if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
     if (filtros.dataInicio || filtros.dataFim) {

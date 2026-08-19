@@ -9,7 +9,8 @@ const LIMITE_MAXIMO_TORNEIOS = 100;
 const LIMITE_PADRAO_TORNEIOS = 20;
 
 export type ListarTorneiosInputDto = {
-  usuarioId: string;
+  /** Ausente para visitante sem login — todos os torneios saem com inscrito=false. */
+  usuarioId?: string;
   limite?: number;
   offset?: number;
   status?: StatusTorneio;
@@ -29,13 +30,16 @@ export type ListarTorneiosOutputDto = {
     rodadaAtual: number;
     totalRodadas: number;
     descricao?: string;
+    regras?: string;
     bannerUrl?: string;
     linkBanner?: string;
     somRodada?: string;
+    storyFundoUrl?: string;
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
     linkLive?: string;
+    exibirNomeJogador?: string;
     emCorte: boolean;
     secreto: boolean;
     visualizacoes: number;
@@ -84,9 +88,10 @@ export class ListarTorneios
         nome,
         dataInicio,
         dataFim,
+        horarioDesc: status === "finalizado",
       }),
       this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
-      this.inscricaoGateway.listarPorUsuario(usuarioId),
+      usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
     ]);
 
     const torneiosInscritos = new Set(inscricoes.map((i) => i.torneioId));
@@ -106,15 +111,18 @@ export class ListarTorneios
         rodadaAtual: t.rodadaAtual,
         totalRodadas: t.totalRodadas,
         descricao: t.descricao,
+        regras: t.regras,
         bannerUrl: t.bannerUrl,
         linkBanner: t.linkBanner,
         somRodada: t.somRodada,
+        storyFundoUrl: t.storyFundoUrl,
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,
         linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
+        exibirNomeJogador: t.exibirNomeJogador,
         visualizacoes: t.visualizacoes,
         criadoEm: toBrasiliaISO(t.criadoEm)!,
         inscrito: torneiosInscritos.has(t.id),

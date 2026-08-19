@@ -20,6 +20,7 @@ interface DeckProps {
   sideboard: Carta[];
   usuarioId: string;
   nomeConsolidado?: string | null;
+  cartaRepresentativa?: string | null;
   criadoEm?: Date;
 }
 ```
@@ -34,7 +35,8 @@ interface DeckProps {
 | maindeck        | Carta[]        | Sim         | Array de cartas do deck principal                                                               |
 | sideboard       | Carta[]        | Sim         | Array de cartas do sideboard/banco de reservas                                                  |
 | usuarioId       | string         | Sim         | ID do usuário proprietário do deck                                                              |
-| nomeConsolidado | string \| null | Não         | Nome de arquétipo identificado via ChatGPT (ex: "Burn", "Storm"). `null` se não identificado.  |
+| nomeConsolidado | string \| null | Não         | Nome do arquétipo: começa igual ao `nome` do deck; admin pode alterar. `null` se limpo. |
+| cartaRepresentativa | string \| null | Não     | Carta cuja arte representa o arquétipo no metagame. Admin define; `null` volta à mais jogada. |
 | criadoEm        | Date           | Não         | Data de criação do registro (gerada automaticamente)                                            |
 
 ### Tipo Carta
@@ -47,6 +49,8 @@ interface DeckProps {
 ## Endpoints
 
 > **⚠️ Atenção:** Todos os endpoints de deck requerem autenticação via token JWT no header.
+>
+> Em `GET /deck/listar` e `GET /deck/:id`, `usuario.nome` é o **nick MOL** (`nickMTGO`), com fallback para o nome cadastrado.
 
 ### POST /deck/cadastrar
 
@@ -225,7 +229,7 @@ Authorization: Bearer {token}
   "sideboard": [],
   "usuario": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "nome": "João Silva"
+    "nome": "fel_mtgo"
   },
   "criadoEm": "2026-03-09T22:00:00.000Z"
 }
@@ -272,7 +276,7 @@ Array de decks do usuário:
     "sideboard": [],
     "usuario": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
-      "nome": "João Silva"
+      "nome": "fel_mtgo"
     },
     "nomeConsolidado": "Atraxa Superfriends",
     "criadoEm": "2026-03-09T22:00:00.000Z"
@@ -285,7 +289,7 @@ Array de decks do usuário:
     "sideboard": [],
     "usuario": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
-      "nome": "João Silva"
+      "nome": "fel_mtgo"
     },
     "nomeConsolidado": "Burn",
     "criadoEm": "2026-03-08T10:30:00.000Z"
@@ -312,7 +316,8 @@ Array de decks do usuário:
    - Nome: obrigatório, mínimo 3 caracteres
    - Formato: obrigatório
    - Maindeck: obrigatório, deve conter pelo menos 1 carta
-6. **Nome Consolidado**: Ao cadastrar um deck, o serviço ChatGPT é consultado automaticamente para identificar o arquétipo do deck com base nos nomes usados em sites como MTGGoldfish, MTGTop8 e EDHREC. O campo `nomeConsolidado` será `null` caso a chave de API não esteja configurada ou o arquétipo não seja reconhecido.
+6. **Nome Consolidado**: Ao cadastrar um deck, `nomeConsolidado` recebe o mesmo valor de `nome`. Admin pode alterar depois (ex.: na página de metagame). Enviar `null` limpa o campo.
+7. **Carta representativa**: Admin pode definir `cartaRepresentativa` (também em deck travado de torneio). Enviar `null` remove o override e o metagame volta à carta mais jogada.
 
 ## Casos de Uso
 

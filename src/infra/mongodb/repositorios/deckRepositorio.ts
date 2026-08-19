@@ -7,6 +7,7 @@ interface DeckDocument extends Document {
   id: string;
   nome: string;
   nomeConsolidado?: string | null;
+  cartaRepresentativa?: string | null;
   formato: string;
   linkLigaMagic?: string | null;
   maindeck: Carta[];
@@ -33,6 +34,7 @@ const deckSchema = new Schema<DeckDocument>({
   id: { type: String, required: true, unique: true },
   nome: { type: String, required: true, maxlength: 100 },
   nomeConsolidado: { type: String, default: null, maxlength: 100 },
+  cartaRepresentativa: { type: String, default: null, maxlength: 200 },
   formato: { type: String, required: true, maxlength: 50 },
   linkLigaMagic: { type: String, default: null, maxlength: 500 },
   maindeck: {
@@ -68,13 +70,12 @@ const deckSchema = new Schema<DeckDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
-deckSchema.index({ usuarioId: 1 });
-deckSchema.index({ criadoEm: -1 });
 deckSchema.index({ usuarioId: 1, formato: 1 });
 deckSchema.index({ oculto: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ usuarioId: 1, oculto: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ usuarioId: 1, oculto: 1, formato: 1, criadoEm: -1, id: 1 });
 deckSchema.index({ torneioId: 1 });
+deckSchema.index({ deckOriginalId: 1 });
 
 const DeckModel =
   mongoose.models.Deck ||
@@ -85,6 +86,7 @@ function docParaDeck(doc: Document): Deck {
     id: doc.get("id"),
     nome: doc.get("nome"),
     nomeConsolidado: doc.get("nomeConsolidado") ?? null,
+    cartaRepresentativa: doc.get("cartaRepresentativa") ?? null,
     formato: doc.get("formato"),
     linkLigaMagic: doc.get("linkLigaMagic") ?? null,
     maindeck: doc.get("maindeck"),
@@ -113,6 +115,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       id: deck.id,
       nome: deck.nome,
       nomeConsolidado: deck.nomeConsolidado,
+      cartaRepresentativa: deck.cartaRepresentativa,
       formato: deck.formato,
       linkLigaMagic: deck.linkLigaMagic,
       maindeck: deck.maindeck,
@@ -188,6 +191,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
       {
         nome: deck.nome,
         nomeConsolidado: deck.nomeConsolidado,
+        cartaRepresentativa: deck.cartaRepresentativa,
         formato: deck.formato,
         linkLigaMagic: deck.linkLigaMagic,
         maindeck: deck.maindeck,

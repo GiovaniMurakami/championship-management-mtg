@@ -44,6 +44,24 @@ describe("ListarTorneios", () => {
         expect(resultado.torneios.every((t) => t.totalInscritos === 0)).toBe(true);
     });
 
+    it("deve listar sem usuarioId (visitante) com inscrito=false e sem consultar inscricoes do usuario", async () => {
+        const torneioGateway = criarMockTorneioGateway({
+            listar: jest.fn().mockResolvedValue(torneios),
+            listarTotal: jest.fn().mockResolvedValue(2),
+        });
+        const inscricaoGateway = criarMockInscricaoGateway({
+            listarPorUsuario: jest.fn(),
+            contarPorTorneios: jest.fn().mockResolvedValue({ t1: 1, t2: 2 }),
+        });
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({});
+
+        expect(inscricaoGateway.listarPorUsuario).not.toHaveBeenCalled();
+        expect(resultado.torneios.every((t) => t.inscrito === false)).toBe(true);
+        expect(resultado.torneios[0].totalInscritos).toBe(1);
+    });
+
     it("deve retornar lista vazia", async () => {
         const torneioGateway = criarMockTorneioGateway();
         const inscricaoGateway = criarMockInscricaoGateway();
@@ -63,6 +81,34 @@ describe("ListarTorneios", () => {
         await uc.executar({ usuarioId: "u1", limite: 5, offset: 10 });
 
         expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ limite: 5, offset: 10, incluirSecretos: false }));
+    });
+
+    it("deve pedir horarioDesc ao listar finalizados (mais recente primeiro)", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        await uc.executar({ usuarioId: "u1", status: "finalizado" });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({
+            status: "finalizado",
+            horarioDesc: true,
+        }));
+    });
+
+    it("nao deve pedir horarioDesc para inscricoes abertas", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        await uc.executar({ usuarioId: "u1", status: "inscricoes_abertas" });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({
+            status: "inscricoes_abertas",
+            horarioDesc: false,
+        }));
     });
 
     it("deve limitar paginação profunda para evitar skip excessivo", async () => {

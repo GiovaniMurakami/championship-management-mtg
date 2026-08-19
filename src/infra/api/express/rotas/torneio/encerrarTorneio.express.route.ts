@@ -2,7 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { EncerrarTorneio } from "../../../../../casosDeUso/torneio/encerrarTorneio";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { mutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
@@ -26,7 +26,7 @@ export class EncerrarTorneioRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(torneioIdParamSchema), mutationRateLimiter, autenticarJwt];
+    return [validarParamsMiddleware(torneioIdParamSchema), torneioMutationRateLimiter, autenticarJwt];
   }
 
   public getHandler() {

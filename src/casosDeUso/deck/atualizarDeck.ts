@@ -1,4 +1,4 @@
-import { Carta } from "../../dominio/entidade/deck";
+import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -11,6 +11,27 @@ import {
   validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
 
+function normalizarCartaRepresentativa(valor: string | null): string | null {
+  if (valor === null) return null;
+  return String(valor).trim() || null;
+}
+
+function saidaDeck(deck: Deck, usuarioNome: string): AtualizarDeckOutputDto {
+  return {
+    id: deck.id,
+    nome: deck.nome,
+    nomeConsolidado: deck.nomeConsolidado,
+    cartaRepresentativa: deck.cartaRepresentativa,
+    formato: deck.formato,
+    linkLigaMagic: deck.linkLigaMagic,
+    maindeck: deck.maindeck,
+    sideboard: deck.sideboard,
+    commander: deck.commander,
+    usuario: { id: deck.usuarioId, nome: usuarioNome },
+    criadoEm: deck.criadoEm,
+  };
+}
+
 export type AtualizarDeckInputDto = {
   id: string;
   usuarioIdRequisitante: string;
@@ -18,6 +39,7 @@ export type AtualizarDeckInputDto = {
   usuarioNome: string;
   nome?: string;
   nomeConsolidado?: string | null;
+  cartaRepresentativa?: string | null;
   formato?: string;
   linkLigaMagic?: string | null;
   maindeck?: Carta[];
@@ -29,6 +51,7 @@ export type AtualizarDeckOutputDto = {
   id: string;
   nome: string;
   nomeConsolidado: string | null;
+  cartaRepresentativa: string | null;
   formato: string;
   linkLigaMagic: string | null;
   maindeck: Carta[];
@@ -59,38 +82,43 @@ export class AtualizarDeck
     }
 
     if (deck.travado) {
-      // Deck de torneio: cartas/formato ficam congelados; só nomeConsolidado pode mudar
-      // (o front costuma reenviar o payload completo no PUT).
-      if (input.nomeConsolidado === undefined) {
+      // Deck de torneio: cartas/formato ficam congelados; admin pode só meta (nome/carta).
+      const temMeta =
+        input.nomeConsolidado !== undefined || input.cartaRepresentativa !== undefined;
+      if (!temMeta) {
         throw ErroPersonalizado.criar({
           mensagem: "Este deck está travado porque está vinculado a um torneio.",
           status: StatusErro.erroParametro,
         });
       }
 
-      deck.nomeConsolidado =
-        input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;
+      if (input.nomeConsolidado !== undefined) {
+        deck.nomeConsolidado =
+          input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;
+      }
+      if (input.cartaRepresentativa !== undefined) {
+        deck.cartaRepresentativa = normalizarCartaRepresentativa(input.cartaRepresentativa);
+      }
 
       await this.deckGateway.atualizar(deck);
-
-      return {
-        id: deck.id,
-        nome: deck.nome,
-        nomeConsolidado: deck.nomeConsolidado,
-        formato: deck.formato,
-        linkLigaMagic: deck.linkLigaMagic,
-        maindeck: deck.maindeck,
-        sideboard: deck.sideboard,
-        commander: deck.commander,
-        usuario: { id: deck.usuarioId, nome: input.usuarioNome },
-        criadoEm: deck.criadoEm,
-      };
+      return saidaDeck(deck, input.usuarioNome);
     }
 
-    if (input.nome !== undefined) deck.nome = input.nome.trim();
+    if (input.nome !== undefined) {
+      const novoNome = input.nome.trim();
+      const consolidadoSegueNomeDoUsuario =
+        !deck.nomeConsolidado || deck.nomeConsolidado === deck.nome;
+      deck.nome = novoNome;
+      if (input.nomeConsolidado === undefined && consolidadoSegueNomeDoUsuario) {
+        deck.nomeConsolidado = novoNome;
+      }
+    }
     if (input.nomeConsolidado !== undefined) {
       deck.nomeConsolidado =
         input.nomeConsolidado === null ? null : String(input.nomeConsolidado).trim() || null;
+    }
+    if (input.cartaRepresentativa !== undefined) {
+      deck.cartaRepresentativa = normalizarCartaRepresentativa(input.cartaRepresentativa);
     }
     if (input.formato !== undefined) deck.formato = normalizarFormatoDeck(input.formato);
     if (input.linkLigaMagic !== undefined) deck.linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
@@ -107,18 +135,6 @@ export class AtualizarDeck
     });
 
     await this.deckGateway.atualizar(deck);
-
-    return {
-      id: deck.id,
-      nome: deck.nome,
-      nomeConsolidado: deck.nomeConsolidado,
-      formato: deck.formato,
-      linkLigaMagic: deck.linkLigaMagic,
-      maindeck: deck.maindeck,
-      sideboard: deck.sideboard,
-      commander: deck.commander,
-      usuario: { id: deck.usuarioId, nome: input.usuarioNome },
-      criadoEm: deck.criadoEm,
-    };
+    return saidaDeck(deck, input.usuarioNome);
   }
 }

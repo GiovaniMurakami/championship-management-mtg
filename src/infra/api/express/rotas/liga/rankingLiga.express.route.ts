@@ -2,8 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { RankingLiga } from "../../../../../casosDeUso/liga/rankingLiga";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { heavyReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { idParamSchema, rankingLigaQuerySchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
@@ -26,10 +25,9 @@ export class RankingLigaRota implements Rotas {
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
     return [
+      heavyReadRateLimiter,
       validarParamsMiddleware(idParamSchema),
       validarQueryMiddleware(rankingLigaQuerySchema),
-      publicReadRateLimiter,
-      autenticarJwt,
     ];
   }
 

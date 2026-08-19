@@ -18,7 +18,6 @@ const storyFundoSchema = new Schema<StoryFundoDocument>({
 });
 
 storyFundoSchema.index({ nome: 1 }, { unique: true });
-storyFundoSchema.index({ criadoEm: -1 });
 
 const StoryFundoModel =
   mongoose.models.StoryFundo ||

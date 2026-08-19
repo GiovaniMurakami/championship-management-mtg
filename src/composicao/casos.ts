@@ -66,6 +66,8 @@ import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
 import { CadastrarStoryFundo } from "../casosDeUso/storyFundo/cadastrarStoryFundo";
 import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
 import { ExcluirStoryFundo } from "../casosDeUso/storyFundo/excluirStoryFundo";
+import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
+import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -94,7 +96,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     );
 
     // --- Deck ---
-    const cadastrarDeck = CadastrarDeck.criar(repos.deck, servicos.chatGpt);
+    const cadastrarDeck = CadastrarDeck.criar(repos.deck);
     const atualizarDeck = AtualizarDeck.criar(repos.deck);
     const excluirDeck = ExcluirDeck.criar(repos.deck);
     const buscarDeck = BuscarDeck.criar(repos.deck, repos.usuario, repos.partida);
@@ -164,6 +166,13 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const listarStoryFundos = ListarStoryFundos.criar(repos.storyFundo);
     const excluirStoryFundo = ExcluirStoryFundo.criar(repos.storyFundo);
 
+    const listarMetagame = ListarMetagame.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario
+    );
+    const buscarArquetipoMetagame = BuscarArquetipoMetagame.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario
+    );
+
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
         solicitarResetSenha, confirmarResetSenha, listarUsuarios, alterarBloqueioTorneios, excluirConta,
@@ -179,6 +188,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
+        listarMetagame, buscarArquetipoMetagame,
     };
 }
 

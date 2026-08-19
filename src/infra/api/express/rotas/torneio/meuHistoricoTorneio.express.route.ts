@@ -3,7 +3,7 @@ import { MeuHistoricoTorneio } from "../../../../../casosDeUso/torneio/meuHistor
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
-import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
@@ -25,7 +25,7 @@ export class MeuHistoricoTorneioRota implements Rotas {
     public getCaminho(): string { return this.caminho; }
     public getMetodo(): HttpMethod { return this.metodo; }
     public getMiddlewares(): RequestHandler[] {
-        return [validarParamsMiddleware(torneioIdParamSchema), publicReadRateLimiter, autenticarJwt];
+        return [validarParamsMiddleware(torneioIdParamSchema), torneioReadRateLimiter, autenticarJwt];
     }
 
     public getHandler() {

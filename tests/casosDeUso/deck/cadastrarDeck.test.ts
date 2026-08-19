@@ -1,5 +1,5 @@
 import { CadastrarDeck } from "../../../src/casosDeUso/deck/cadastrarDeck";
-import { criarMockDeckGateway, criarMockChatGptGateway } from "../../mocks/gateways";
+import { criarMockDeckGateway } from "../../mocks/gateways";
 import { Carta } from "../../../src/dominio/entidade/deck";
 
 describe("CadastrarDeck", () => {
@@ -18,8 +18,7 @@ describe("CadastrarDeck", () => {
 
     it("deve cadastrar um deck com sucesso", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             nome: "Burn",
@@ -39,13 +38,11 @@ describe("CadastrarDeck", () => {
         expect(resultado.usuario).toEqual({ id: "user-1", nome: "Jogador Teste" });
         expect(resultado.nomeConsolidado).toBe("Burn");
         expect(gateway.salvar).toHaveBeenCalledTimes(1);
-        expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledTimes(1);
     });
 
     it("deve exigir commander explicito para o formato commander", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -61,8 +58,7 @@ describe("CadastrarDeck", () => {
 
     it("deve aceitar deck commander com commander separado do sideboard", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             nome: "Atraxa Superfriends",
@@ -80,8 +76,7 @@ describe("CadastrarDeck", () => {
 
     it("deve cadastrar deck commander500 com linkLigaMagic", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             nome: "Meu Deck C500",
@@ -100,8 +95,7 @@ describe("CadastrarDeck", () => {
 
     it("deve exigir linkLigaMagic para commander500", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -118,8 +112,7 @@ describe("CadastrarDeck", () => {
 
     it("deve lancar erro se o maindeck tiver menos de 60 cartas em formatos sem commander", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -135,8 +128,7 @@ describe("CadastrarDeck", () => {
 
     it("deve lancar erro se o sideboard tiver mais de 15 cartas quando houver limite", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -152,8 +144,7 @@ describe("CadastrarDeck", () => {
 
     it("deve lancar erro se commander tradicional tiver mais de uma entrada", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -173,8 +164,7 @@ describe("CadastrarDeck", () => {
 
     it("deve validar URL de linkLigaMagic em commander500", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -192,8 +182,7 @@ describe("CadastrarDeck", () => {
 
     it("deve normalizar nomes de cartas para minusculas", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             nome: "Test",
@@ -210,58 +199,28 @@ describe("CadastrarDeck", () => {
         expect(resultado.commander[0].nome).toBe("commander card");
     });
 
-    it("deve chamar o ChatGPT com as cartas normalizadas e o formato correto", async () => {
+    it("deve usar o nome do usuario como nomeConsolidado", async () => {
         const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
-
-        await uc.executar({
-            nome: "Burn",
-            formato: "Legacy",
-            maindeck: maindeckValido,
-            sideboard: sideboardValido,
-            commander: [],
-            usuarioId: "user-1",
-            usuarioNome: "Jogador Teste",
-        });
-
-        expect(chatGpt.obterNomeConsolidado).toHaveBeenCalledWith(
-            expect.arrayContaining([
-                expect.objectContaining({ nome: "lightning bolt" }),
-            ]),
-            expect.arrayContaining([
-                expect.objectContaining({ nome: "red elemental blast" }),
-            ]),
-            [],
-            "legacy"
-        );
-    });
-
-    it("deve salvar nomeConsolidado como null quando o ChatGPT retorna null", async () => {
-        const gateway = criarMockDeckGateway();
-        const chatGpt = criarMockChatGptGateway({
-            obterNomeConsolidado: jest.fn().mockResolvedValue(null),
-        });
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
-            nome: "Deck Desconhecido",
-            formato: "modern",
+            nome: "  Meu Pauper  ",
+            formato: "pauper",
             maindeck: maindeckValido,
             sideboard: [],
             usuarioId: "u",
             usuarioNome: "Usuario",
         });
 
-        expect(resultado.nomeConsolidado).toBeNull();
+        expect(resultado.nome).toBe("Meu Pauper");
+        expect(resultado.nomeConsolidado).toBe("Meu Pauper");
     });
 
     it("deve lancar 400 quando usuario ja atingiu o limite de 50 decks", async () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(50),
         });
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         await expect(
             uc.executar({
@@ -279,8 +238,7 @@ describe("CadastrarDeck", () => {
         const gateway = criarMockDeckGateway({
             listarTotal: jest.fn().mockResolvedValue(49),
         });
-        const chatGpt = criarMockChatGptGateway();
-        const uc = CadastrarDeck.criar(gateway, chatGpt);
+        const uc = CadastrarDeck.criar(gateway);
 
         const resultado = await uc.executar({
             nome: "Deck 50",

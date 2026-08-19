@@ -2,7 +2,6 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { ListarTimes } from "../../../../../casosDeUso/time/listarTimes";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { listarTimesQuerySchema } from "../../../../../helpers/validacao/schemas";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
@@ -24,7 +23,7 @@ export class ListarTimesRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarQueryMiddleware(listarTimesQuerySchema), publicReadRateLimiter, autenticarJwt];
+    return [validarQueryMiddleware(listarTimesQuerySchema), publicReadRateLimiter];
   }
 
   public getHandler() {

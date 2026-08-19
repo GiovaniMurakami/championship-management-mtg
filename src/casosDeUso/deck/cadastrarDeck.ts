@@ -1,6 +1,5 @@
 import { Carta, Deck } from "../../dominio/entidade/deck";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
-import { ChatGptGateway } from "../../dominio/gateway/chatGptGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -40,13 +39,10 @@ export type CadastrarDeckOutputDto = {
 
 export class CadastrarDeck
   implements CasoDeUso<CadastrarDeckInputDto, CadastrarDeckOutputDto> {
-  private constructor(
-    private readonly deckGateway: DeckGateway,
-    private readonly chatGptGateway: ChatGptGateway
-  ) { }
+  private constructor(private readonly deckGateway: DeckGateway) { }
 
-  public static criar(deckGateway: DeckGateway, chatGptGateway: ChatGptGateway) {
-    return new CadastrarDeck(deckGateway, chatGptGateway);
+  public static criar(deckGateway: DeckGateway) {
+    return new CadastrarDeck(deckGateway);
   }
 
   public async executar(
@@ -60,6 +56,7 @@ export class CadastrarDeck
       });
     }
 
+    const nome = input.nome.trim();
     const formato = normalizarFormatoDeck(input.formato);
     const linkLigaMagic = normalizarLinkLigaMagic(input.linkLigaMagic);
     const maindeckNormalizado = normalizarListaCartas(input.maindeck);
@@ -74,16 +71,9 @@ export class CadastrarDeck
       commander: commanderNormalizado,
     });
 
-    const nomeConsolidado = await this.chatGptGateway.obterNomeConsolidado(
-      maindeckNormalizado,
-      sideboardNormalizado,
-      commanderNormalizado,
-      formato
-    );
-
     const deck = Deck.criar({
-      nome: input.nome.trim(),
-      nomeConsolidado,
+      nome,
+      nomeConsolidado: nome,
       formato,
       linkLigaMagic,
       maindeck: maindeckNormalizado,

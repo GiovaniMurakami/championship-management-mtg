@@ -16,7 +16,7 @@ app.ts → criarRepositorios() + criarServicos() → criarCasosDeUso() → criar
 |--------|-------|------------------|
 | Domínio | `src/dominio/` | Entidades + interfaces (gateways) |
 | Aplicação | `src/casosDeUso/` | Regras de negócio por domínio |
-| Infra | `src/infra/` | Express, MongoDB, S3, Ably, ChatGPT, Email |
+| Infra | `src/infra/` | Express, MongoDB, S3, Ably, Email |
 | Composição | `src/composicao/` | Wiring de dependências |
 | Cross-cutting | `src/middlewares/`, `src/helpers/` | Auth, validação, erros, logs |
 
@@ -35,7 +35,7 @@ app.ts → criarRepositorios() + criarServicos() → criarCasosDeUso() → criar
 
 ### Deck (`casosDeUso/deck/`)
 - CRUD de decks (maindeck, sideboard, commander)
-- `nomeConsolidado` via ChatGPT (opcional, não bloqueia cadastro)
+- `nomeConsolidado` = nome dado pelo usuário (admin pode alterar)
 - Flag `oculto` — decks ocultos não aparecem em listagens públicas
 - Flag `travado` — deck vinculado a torneio
 - Visualizações incrementadas em `buscarDeck`
@@ -50,7 +50,12 @@ app.ts → criarRepositorios() + criarServicos() → criarCasosDeUso() → criar
 
 ### Liga (`casosDeUso/liga/`)
 - Agrupa até 25 torneios, tipos individual/times
-- Ranking consolidado por liga
+- Ranking consolidado por liga (`jogador.nome` = nick MOL)
+
+### Metagame (`casosDeUso/metagame/`)
+- `GET /metagame` e `GET /metagame/:formato/:slug` (público, sem JWT)
+- Agrega torneios `finalizado` não secretos; arquétipo = `nomeConsolidado` ou `nome`
+- `usuario.nome` = nick MOL
 
 ### Time (`casosDeUso/time/`)
 - CRUD, convites (token UUID), solicitações de entrada (aprovar/rejeitar)
@@ -98,7 +103,6 @@ MongoDB Atlas via Mongoose. Coleções: usuarios, decks, torneios, inscricoes, p
 | AWS SSM | Chaves JWT prod | — |
 | AWS S3 | Upload imagens | presigned 5min |
 | Ably | Realtime torneio | 3 tentativas, aguarda no handler |
-| OpenAI gpt-4o-mini | Nome arquétipo deck | 3 tentativas, 3.5s timeout |
 | Gmail/Nodemailer | Emails transacionais | erros logados, não propagados |
 
 ## Padrão de Erros
@@ -108,9 +112,11 @@ Handler global trata Mongoose validation → 400, demais → 500 genérico.
 
 ## Rate Limiting
 
-Tiers por rota (15min window). Store configurável via `RATE_LIMIT_STORE`:
+Tiers por rota (15 min / IP). Store configurável via `RATE_LIMIT_STORE`:
 - `memory` — padrão local (`IS_LOCAL=true`)
 - `mongo` — padrão em produção (distribuído entre instâncias Lambda)
+
+`heavyReadRateLimiter` (40) em `GET /metagame` e `GET /liga/:id/ranking`. `publicReadRateLimiter` (100) nas demais leituras públicas. `publicActionRateLimiter` (30) em clique de anúncio. Auth continua 5/15min no mesmo bucket.
 
 ## Auth opcional
 

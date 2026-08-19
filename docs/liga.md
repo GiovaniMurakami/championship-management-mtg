@@ -129,18 +129,18 @@ Exclui a liga. Apenas admins podem excluir.
 
 ---
 
-### `GET /liga/:id/ranking` 🔒
+### `GET /liga/:id/ranking`
 
-Retorna o ranking consolidado da liga. Suporta parâmetros de query para limitar resultados.
+Retorna o ranking consolidado da liga. Leitura pública. Rate limit **40 req / 15 min** por IP (`heavy-read`). Suporta parâmetros de query para limitar resultados.
 
 **Query params:**
 
 | Parâmetro | Tipo | Default | Máximo |
 |---|---|---|---|
-| `limiteJogadores` | number | `10` | `200` |
-| `limiteTimes` | number | `10` | `200` |
-| `limiteDecks` | number | `10` | `200` |
-| `limiteCartas` | number | `10` | `200` |
+| `limiteJogadores` | number | sem limite (todos) | `200` (só se enviado) |
+| `limiteTimes` | number | `50` | `200` |
+| `limiteDecks` | number | `50` | `200` |
+| `limiteCartas` | number | `50` | `200` |
 
 **Resposta `200` — Liga Individual:**
 
@@ -152,7 +152,7 @@ Retorna o ranking consolidado da liga. Suporta parâmetros de query para limitar
   "rankingJogadores": [
     {
       "posicao": 1,
-      "jogador": { "id": "uuid", "nome": "João Silva" },
+      "jogador": { "id": "uuid", "nome": "fel_mtgo" },
       "vitorias": 10,
       "derrotas": 2,
       "empates": 1,
@@ -214,7 +214,7 @@ Retorna o ranking consolidado da liga. Suporta parâmetros de query para limitar
 
 #### Cálculo do ranking
 
-- **Jogadores**: ordenados por pontos (desc), depois vitórias (desc).
+- **Jogadores**: ordenados por pontos (desc), depois vitórias (desc). `jogador.nome` é o nick MOL (`nickMTGO`), com fallback para o nome cadastrado.
 - **Decks**: agrupados por `nomeConsolidado` (ou `nome`), ordenados por `totalUsos` (desc), depois vitórias (desc). `winrate` e `loserate` em porcentagem com 1 casa decimal.
 - **Cartas**: contagem de cópias no maindeck de todos os decks usados na liga, ordenadas por `totalCopias` (desc).
 - **Times**: calculados diretamente por partida finalizada, usando o `timeId` da inscrição do jogador naquele torneio. Vitória soma 3 pontos, empate soma 1 e derrota soma 0. Partidas entre membros do mesmo time não alteram o ranking coletivo. Apenas para `tipo: "times"`.

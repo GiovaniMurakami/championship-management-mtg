@@ -59,6 +59,7 @@ import { SolicitarEntradaTimeRota } from "../infra/api/express/rotas/time/solici
 import { AprovarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/aprovarSolicitacaoTime.express.route";
 import { RejeitarSolicitacaoTimeRota } from "../infra/api/express/rotas/time/rejeitarSolicitacaoTime.express.route";
 import { GerarUrlUploadImagemRota } from "../infra/api/express/rotas/imagem/gerarUrlUploadImagem.express.route";
+import { ProxyImagemRota } from "../infra/api/express/rotas/imagem/proxyImagem.express.route";
 import { BuscarAnunciosRota } from "../infra/api/express/rotas/site/buscarAnuncios.express.route";
 import { BuscarAnunciosAdminRota } from "../infra/api/express/rotas/site/buscarAnunciosAdmin.express.route";
 import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/buscarEstatisticasSite.express.route";
@@ -68,6 +69,8 @@ import { CadastrarStoryFundoRota } from "../infra/api/express/rotas/storyFundo/c
 import { ListarStoryFundosRota } from "../infra/api/express/rotas/storyFundo/listarStoryFundos.express.route";
 import { ExcluirStoryFundoRota } from "../infra/api/express/rotas/storyFundo/excluirStoryFundo.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
+import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
+import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
 import { type CasosDeUso } from "./casos";
 
 export function criarRotas(casos: CasosDeUso) {
@@ -97,7 +100,7 @@ export function criarRotas(casos: CasosDeUso) {
         RefazerRodadaRota.criar(casos.refazerRodada),
         AjustarTotalRodadasRota.criar(casos.ajustarTotalRodadas),
         EncerrarTorneioRota.criar(casos.encerrarTorneio),
-        RegistrarResultadoRota.criar(casos.registrarResultado, casos.buscarStandings),
+        RegistrarResultadoRota.criar(casos.registrarResultado),
         ContestarResultadoRota.criar(casos.contestarResultado),
         ConfirmarResultadoRota.criar(casos.confirmarResultado),
         AtualizarMesaPartidaRota.criar(casos.atualizarMesaPartida),
@@ -138,9 +141,12 @@ export function criarRotas(casos: CasosDeUso) {
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
+        ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),
         ExcluirStoryFundoRota.criar(casos.excluirStoryFundo),
+        ListarMetagameRota.criar(casos.listarMetagame),
+        BuscarArquetipoMetagameRota.criar(casos.buscarArquetipoMetagame),
         HealthRota.criar(),
     ];
 }

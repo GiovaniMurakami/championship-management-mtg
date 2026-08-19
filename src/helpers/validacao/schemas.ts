@@ -24,6 +24,11 @@ export const cadastrarStoryFundoSchema = z.object({
   url: s3ImagemUrl(),
 });
 
+/** Query de GET /imagem/proxy — só URLs do bucket S3 configurado (anti-SSRF). */
+export const proxyImagemQuerySchema = z.object({
+  url: s3ImagemUrl(),
+});
+
 const cartaSchema = z.object({
   nome: z.string().min(1),
   quantidade: z.number().int().min(1),
@@ -79,6 +84,7 @@ export const cadastrarDeckSchema = z.object({
 export const atualizarDeckSchema = z.object({
   nome: z.string().min(1).optional(),
   nomeConsolidado: z.string().optional().nullable(),
+  cartaRepresentativa: z.string().max(200).optional().nullable(),
   formato: z.string().min(1).optional(),
   linkLigaMagic: linkLigaMagicSchema,
   maindeck: z.array(cartaSchema).min(1).optional(),
@@ -276,13 +282,13 @@ export const listarTimesQuerySchema = z.object({
   ...paginacaoQueryCampos,
 });
 
-const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional().default(10);
+const limiteRankingCampo = z.coerce.number().int().min(1).max(200).optional();
 
 export const rankingLigaQuerySchema = z.object({
   limiteJogadores: limiteRankingCampo,
-  limiteTimes: limiteRankingCampo,
-  limiteDecks: limiteRankingCampo,
-  limiteCartas: limiteRankingCampo,
+  limiteTimes: limiteRankingCampo.default(50),
+  limiteDecks: limiteRankingCampo.default(50),
+  limiteCartas: limiteRankingCampo.default(50),
 });
 
 // --- Body adicional ---
@@ -322,4 +328,33 @@ export const entrarPorConviteTimeSchema = z.object({
 
 export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
+});
+
+const diasMetagameSchema = z.preprocess(
+  (valor) => (valor === undefined || valor === null || valor === "" ? 30 : valor),
+  z.coerce
+    .number()
+    .int("dias deve ser inteiro.")
+    .refine((n) => [7, 14, 30, 90].includes(n), {
+      message: "dias deve ser 7, 14, 30 ou 90.",
+    })
+);
+
+export const listarMetagameQuerySchema = z.object({
+  formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
+  dias: diasMetagameSchema,
+});
+
+export const metagameDiasQuerySchema = z.object({
+  dias: diasMetagameSchema,
+});
+
+export const metagameArquetipoParamsSchema = z.object({
+  formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
+  slug: z
+    .string()
+    .trim()
+    .min(1, "slug é obrigatório.")
+    .max(120)
+    .regex(/^[a-z0-9-]+$/, "slug inválido."),
 });

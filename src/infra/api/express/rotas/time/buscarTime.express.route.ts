@@ -4,7 +4,6 @@ import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { idParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
-import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
 export class BuscarTimeRota implements Rotas {
@@ -20,7 +19,7 @@ export class BuscarTimeRota implements Rotas {
 
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
-  public getMiddlewares(): RequestHandler[] { return [validarParamsMiddleware(idParamSchema), publicReadRateLimiter, autenticarJwt]; }
+  public getMiddlewares(): RequestHandler[] { return [validarParamsMiddleware(idParamSchema), publicReadRateLimiter]; }
 
   public getHandler() {
     return async (

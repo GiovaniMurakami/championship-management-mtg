@@ -36,8 +36,9 @@ const usuarioSchema = new Schema<UsuarioDocument>({
   criadoEm: { type: Date, default: Date.now },
 });
 
-usuarioSchema.index({ bloqueadoTorneios: 1, nome: 1 });
-usuarioSchema.index({ excluido: 1 });
+usuarioSchema.index({ nome: 1, id: 1 });
+usuarioSchema.index({ bloqueadoTorneios: 1, nome: 1, id: 1 });
+usuarioSchema.index({ excluido: 1, nome: 1, id: 1 });
 
 const UsuarioModel =
   mongoose.models.Usuario ||
