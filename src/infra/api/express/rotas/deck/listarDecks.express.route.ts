@@ -45,13 +45,14 @@ export class ListarDecksRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { usuarioId, formato, nome, criadoApos, criadoAntes, limite, offset } =
+        const { usuarioId, formato, nome, jogador, criadoApos, criadoAntes, limite, offset } =
           request.queryValidados as ListarDecksQuery;
 
         const resultado = await this.listarDecksServico.executar({
           usuarioId,
           formato,
           nome,
+          jogador,
           criadoApos,
           criadoAntes,
           limite,

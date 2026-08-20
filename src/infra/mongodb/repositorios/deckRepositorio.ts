@@ -157,6 +157,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
   private construirQueryDeck(filtros: FiltrosListarDecks): FilterQuery<DeckDocument> {
     const query: FilterQuery<DeckDocument> = {};
     if (filtros.usuarioId) query.usuarioId = filtros.usuarioId;
+    if (filtros.usuarioIds) query.usuarioId = { $in: filtros.usuarioIds };
     if (!filtros.incluirOcultos) query.oculto = { $ne: true };
     if (filtros.formato) query.formato = { $regex: this.escaparRegex(filtros.formato), $options: "i" };
     if (filtros.nome) query.nome = { $regex: this.escaparRegex(filtros.nome), $options: "i" };
@@ -178,7 +179,7 @@ export class DeckRepositorio extends BaseRepositorio implements DeckGateway {
     return docs.map(docParaDeck);
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "formato"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome"> = {}): Promise<number> {
     await this.conectar();
     const query = this.construirQueryDeck(filtros);
     return DeckModel.countDocuments(query);
