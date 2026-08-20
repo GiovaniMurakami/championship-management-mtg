@@ -24,8 +24,8 @@ describe("ListarTimes", () => {
 
         const resultado = await uc.executar({});
 
-        expect(listarMock).toHaveBeenCalledWith({ limite: 20, offset: 0, nome: undefined });
-        expect(listarTotalMock).toHaveBeenCalledWith({ nome: undefined });
+        expect(listarMock).toHaveBeenCalledWith({ limite: 20, offset: 0, nome: undefined, membroId: undefined });
+        expect(listarTotalMock).toHaveBeenCalledWith({ nome: undefined, membroId: undefined });
         expect(resultado.times).toEqual([{
             id: "time-1",
             nome: "Team Alpha",
@@ -51,8 +51,8 @@ describe("ListarTimes", () => {
 
         const resultado = await uc.executar({ limite: 150, offset: -10, nome: "Alpha" });
 
-        expect(listarMock).toHaveBeenCalledWith({ limite: 100, offset: 0, nome: "Alpha" });
-        expect(listarTotalMock).toHaveBeenCalledWith({ nome: "Alpha" });
+        expect(listarMock).toHaveBeenCalledWith({ limite: 100, offset: 0, nome: "Alpha", membroId: undefined });
+        expect(listarTotalMock).toHaveBeenCalledWith({ nome: "Alpha", membroId: undefined });
         expect(resultado.limite).toBe(100);
         expect(resultado.offset).toBe(0);
     });
@@ -64,8 +64,28 @@ describe("ListarTimes", () => {
 
         const resultado = await uc.executar({ limite: 5, offset: 10 });
 
-        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10, nome: undefined });
+        expect(listarMock).toHaveBeenCalledWith({ limite: 5, offset: 10, nome: undefined, membroId: undefined });
         expect(resultado.limite).toBe(5);
         expect(resultado.offset).toBe(10);
+    });
+
+    it("deve filtrar os times pelo membro informado", async () => {
+        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarTotalMock = jest.fn().mockResolvedValue(0);
+        const gateway = criarMockTimeGateway({ listar: listarMock, listarTotal: listarTotalMock });
+        const uc = ListarTimes.criar(gateway);
+
+        await uc.executar({ membroId: "550e8400-e29b-41d4-a716-446655440000", limite: 1 });
+
+        expect(listarMock).toHaveBeenCalledWith({
+            limite: 1,
+            offset: 0,
+            nome: undefined,
+            membroId: "550e8400-e29b-41d4-a716-446655440000",
+        });
+        expect(listarTotalMock).toHaveBeenCalledWith({
+            nome: undefined,
+            membroId: "550e8400-e29b-41d4-a716-446655440000",
+        });
     });
 });

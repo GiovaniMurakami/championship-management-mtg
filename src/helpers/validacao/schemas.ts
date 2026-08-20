@@ -286,6 +286,7 @@ export const listarLigasQuerySchema = z.object({
 
 export const listarTimesQuerySchema = z.object({
   nome: z.string().max(200).optional(),
+  membroId: uuidCampo("membroId").optional(),
   ...paginacaoQueryCampos,
 });
 

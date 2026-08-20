@@ -9,6 +9,7 @@ export type ListarTimesInputDto = {
     limite?: number;
     offset?: number;
     nome?: string;
+    membroId?: string;
 };
 
 export type ListarTimesOutputDto = {
@@ -40,11 +41,11 @@ export class ListarTimes implements CasoDeUso<ListarTimesInputDto, ListarTimesOu
             LIMITE_PADRAO_TIMES,
             LIMITE_MAXIMO_TIMES
         );
-        const { nome } = input;
+        const { nome, membroId } = input;
 
         const [times, total] = await Promise.all([
-            this.timeGateway.listar({ limite, offset, nome }),
-            this.timeGateway.listarTotal({ nome }),
+            this.timeGateway.listar({ limite, offset, nome, membroId }),
+            this.timeGateway.listarTotal({ nome, membroId }),
         ]);
 
         return {

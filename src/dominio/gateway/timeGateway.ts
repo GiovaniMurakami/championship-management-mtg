@@ -4,6 +4,7 @@ export interface FiltrosListarTimes {
     limite?: number;
     offset?: number;
     nome?: string;
+    membroId?: string;
 }
 
 export interface TimeGateway {
@@ -13,7 +14,7 @@ export interface TimeGateway {
     buscarPorMembros(usuarioIds: string[]): Promise<Time[]>;
     buscarPorConviteToken(token: string): Promise<Time | null>;
     listar(filtros?: FiltrosListarTimes): Promise<Time[]>;
-    listarTotal(filtros?: Pick<FiltrosListarTimes, 'nome'>): Promise<number>;
+    listarTotal(filtros?: Pick<FiltrosListarTimes, 'nome' | 'membroId'>): Promise<number>;
     atualizar(time: Time): Promise<void>;
     excluir(id: string): Promise<void>;
 }
