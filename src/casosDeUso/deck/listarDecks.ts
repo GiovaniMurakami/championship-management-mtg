@@ -12,6 +12,7 @@ export type ListarDecksInputDto = {
   usuarioId?: string;
   formato?: string;
   nome?: string;
+  jogador?: string;
   criadoApos?: string;
   criadoAntes?: string;
   limite?: number;
@@ -61,12 +62,16 @@ export class ListarDecks
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
     if (input.formato) filtros.formato = input.formato;
     if (input.nome) filtros.nome = input.nome;
+    if (input.jogador) {
+      const usuariosEncontrados = await this.usuarioGateway.listar({ nome: input.jogador });
+      filtros.usuarioIds = usuariosEncontrados.map((usuario) => usuario.id);
+    }
     if (input.criadoApos) filtros.criadoApos = new Date(input.criadoApos);
     if (input.criadoAntes) filtros.criadoAntes = new Date(input.criadoAntes);
 
     const [decks, total] = await Promise.all([
       this.deckGateway.listar(filtros),
-      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, formato: filtros.formato, nome: filtros.nome }),
+      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, usuarioIds: filtros.usuarioIds, formato: filtros.formato, nome: filtros.nome }),
     ]);
 
     const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];

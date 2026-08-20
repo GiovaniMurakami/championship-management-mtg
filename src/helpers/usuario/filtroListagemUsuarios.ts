@@ -15,7 +15,7 @@ export function montarFiltroListagemUsuarios(
 
   if (filtros.nome) {
     const regex = { $regex: escaparRegex(filtros.nome), $options: "i" };
-    filtroQuery.$or = [{ nome: regex }, { email: regex }];
+    filtroQuery.$or = [{ nome: regex }, { nickMTGO: regex }, { nickArena: regex }, { email: regex }];
   }
 
   if (filtros.bloqueadoTorneios !== undefined) {
