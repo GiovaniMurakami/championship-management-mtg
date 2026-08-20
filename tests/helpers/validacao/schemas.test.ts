@@ -333,6 +333,13 @@ describe("schemas de validacao", () => {
         });
     });
 
+    describe("listarTimesQuerySchema", () => {
+        it("aceita membroId UUID e rejeita identificador inválido", () => {
+            expect(listarTimesQuerySchema.parse({ membroId: UUID }).membroId).toBe(UUID);
+            expect(listarTimesQuerySchema.safeParse({ membroId: "usuario-invalido" }).success).toBe(false);
+        });
+    });
+
     describe("rankingLigaQuerySchema", () => {
         it("aplica default de 50 nos limites de times, decks e cartas; jogadores sem teto", () => {
             const parsed = rankingLigaQuerySchema.parse({});

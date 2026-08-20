@@ -104,6 +104,7 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
         await this.conectar();
         const filtroQuery: Record<string, unknown> = {};
         if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+        if (filtros.membroId) filtroQuery.membroIds = filtros.membroId;
         let query = TimeModel.find(filtroQuery).sort({ criadoEm: -1, id: 1 });
         if (filtros.offset !== undefined) query = query.skip(filtros.offset);
         if (filtros.limite !== undefined) query = query.limit(filtros.limite);
@@ -111,10 +112,11 @@ export class TimeRepositorio extends BaseRepositorio implements TimeGateway {
         return docs.map((doc) => docParaTime(doc as unknown as TimeDocument));
     }
 
-    public async listarTotal(filtros: Pick<FiltrosListarTimes, 'nome'> = {}): Promise<number> {
+    public async listarTotal(filtros: Pick<FiltrosListarTimes, 'nome' | 'membroId'> = {}): Promise<number> {
         await this.conectar();
         const filtroQuery: Record<string, unknown> = {};
         if (filtros.nome) filtroQuery.nome = { $regex: escaparRegex(filtros.nome), $options: "i" };
+        if (filtros.membroId) filtroQuery.membroIds = filtros.membroId;
         return TimeModel.countDocuments(filtroQuery);
     }
 

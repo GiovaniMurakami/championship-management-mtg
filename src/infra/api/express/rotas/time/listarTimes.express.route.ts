@@ -33,11 +33,12 @@ export class ListarTimesRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { limite, offset, nome } = request.queryValidados as ListarTimesQuery;
+        const { limite, offset, nome, membroId } = request.queryValidados as ListarTimesQuery;
         const resultado = await this.listarTimesServico.executar({
           limite,
           offset,
           nome,
+          membroId,
         });
         response.status(200).json(resultado);
       } catch (error) {
