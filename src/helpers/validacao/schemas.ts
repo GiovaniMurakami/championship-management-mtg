@@ -260,6 +260,7 @@ export const listarDecksQuerySchema = z.object({
   usuarioId: uuidCampo("usuarioId").optional(),
   formato: z.string().max(100).optional(),
   nome: z.string().max(200).optional(),
+  jogador: z.string().max(200).optional(),
   criadoApos: z.string().optional(),
   criadoAntes: z.string().optional(),
   ...paginacaoQueryCampos,

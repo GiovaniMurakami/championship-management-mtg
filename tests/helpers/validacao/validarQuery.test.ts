@@ -27,4 +27,11 @@ describe("validarQuery", () => {
         expect(resultado).toBeNull();
         expect(res.status).toHaveBeenCalledWith(400);
     });
+
+    it("deve aceitar o filtro por jogador", () => {
+        const res = makeMockResponse();
+        const resultado = validarQuery(listarDecksQuerySchema, { jogador: "maria" }, res);
+
+        expect(resultado).toEqual({ jogador: "maria" });
+    });
 });
