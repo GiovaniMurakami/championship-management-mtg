@@ -20,6 +20,7 @@ import {
 
 const tabela = process.env.DYNAMODB_CACHE_TABLE ?? "";
 const executar = process.env.RUN_DYNAMODB_CACHE_E2E === "true";
+const permitirCacheCompartilhado = process.env.E2E_ALLOW_NONLOCAL_CACHE === "true";
 const describeCloud = executar ? describe : describe.skip;
 
 const EVENTOS_QUE_INVALIDAM_CACHE = [
@@ -60,9 +61,9 @@ describeCloud("E2E - cache DynamoDB cloud", () => {
   };
 
   beforeAll(async () => {
-    if (!/(?:local|test)/i.test(tabela)) {
+    if (!permitirCacheCompartilhado && !/(?:local|test)/i.test(tabela)) {
       throw new Error(
-        `DYNAMODB_CACHE_TABLE deve conter "local" ou "test" para executar o E2E; recebido: "${tabela}".`
+        `DYNAMODB_CACHE_TABLE deve conter "local" ou "test", ou E2E_ALLOW_NONLOCAL_CACHE=true; recebido: "${tabela}".`
       );
     }
     process.env.DYNAMODB_CACHE_ENABLED = "true";

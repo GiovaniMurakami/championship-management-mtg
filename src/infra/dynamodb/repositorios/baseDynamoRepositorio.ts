@@ -15,6 +15,8 @@ import { logger } from "../../../helpers/logger";
 type DynamoItem = Record<string, AttributeValue>;
 type DynamoWriteRequest = WriteRequest;
 
+export const MAX_TENTATIVAS_BATCH_WRITE = 8;
+
 export abstract class BaseDynamoRepositorio {
   protected readonly cliente: DynamoDBClient;
   protected readonly tabela: string;
@@ -90,10 +92,19 @@ export abstract class BaseDynamoRepositorio {
         }));
         pendentes = resposta.UnprocessedItems?.[this.tabela] ?? [];
         if (pendentes.length > 0) {
-          await new Promise((resolve) => setTimeout(resolve, Math.min(1000, 50 * 2 ** tentativa)));
+          if (tentativa + 1 >= MAX_TENTATIVAS_BATCH_WRITE) {
+            throw new Error(
+              `DynamoDB nao processou ${pendentes.length} item(ns) da tabela ${this.tabela} apos ${MAX_TENTATIVAS_BATCH_WRITE} tentativas`
+            );
+          }
+          await this.aguardarRetryBatch(tentativa);
         }
       }
     }
+  }
+
+  protected async aguardarRetryBatch(tentativa: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, Math.min(1000, 50 * 2 ** tentativa)));
   }
 
   protected async transactPutJson<T>(
@@ -121,6 +132,7 @@ export abstract class BaseDynamoRepositorio {
     this.assertTabelaConfigurada();
     const resposta = await this.cliente.send(new GetItemCommand({
       TableName: this.tabela,
+      ConsistentRead: true,
       Key: {
         pk: { S: pk },
         sk: { S: sk },
@@ -132,17 +144,29 @@ export abstract class BaseDynamoRepositorio {
 
   protected async queryJson<T>(pk: string): Promise<T[]> {
     this.assertTabelaConfigurada();
-    const resposta = await this.cliente.send(new QueryCommand({
-      TableName: this.tabela,
-      KeyConditionExpression: "pk = :pk",
-      ExpressionAttributeValues: {
-        ":pk": { S: pk },
-      },
-    }));
+    const itens: T[] = [];
+    let exclusiveStartKey: DynamoItem | undefined;
 
-    return (resposta.Items ?? [])
-      .map((item) => this.itemParaJson<T>(item))
-      .filter((item): item is T => item !== null);
+    do {
+      const resposta = await this.cliente.send(new QueryCommand({
+        TableName: this.tabela,
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: {
+          ":pk": { S: pk },
+        },
+        ConsistentRead: true,
+        ExclusiveStartKey: exclusiveStartKey,
+      }));
+
+      itens.push(
+        ...(resposta.Items ?? [])
+          .map((item) => this.itemParaJson<T>(item))
+          .filter((item): item is T => item !== null)
+      );
+      exclusiveStartKey = resposta.LastEvaluatedKey;
+    } while (exclusiveStartKey);
+
+    return itens;
   }
 
   protected async delete(pk: string, sk: string): Promise<void> {

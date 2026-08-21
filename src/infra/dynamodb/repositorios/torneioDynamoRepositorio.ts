@@ -75,8 +75,12 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
 
   public async atualizar(torneio: Torneio): Promise<void> {
     const anterior = await this.buscarPorId(torneio.id);
-    if (anterior) await this.removerIndices(this.torneioParaItem(anterior));
-    await this.salvarIndices(this.torneioParaItem(torneio));
+    const itemAtual = this.torneioParaItem(torneio);
+    await this.salvarIndices(itemAtual);
+
+    if (anterior) {
+      await this.removerIndicesObsoletos(this.torneioParaItem(anterior), itemAtual);
+    }
   }
 
   public async incrementarVisualizacoes(id: string): Promise<Torneio | null> {
@@ -152,6 +156,20 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       requests.push(this.toDeleteRequest(`ANFITRIAO#${item.anfitriaoId}`, `TORNEIO#${item.id}`));
     }
     await this.batchWrite(requests);
+  }
+
+  private async removerIndicesObsoletos(anterior: TorneioItem, atual: TorneioItem): Promise<void> {
+    const requests = [];
+    if (this.skTorneio(anterior) !== this.skTorneio(atual)) {
+      requests.push(this.toDeleteRequest(TORNEIOS_PK, this.skTorneio(anterior)));
+    }
+    if (anterior.donoId !== atual.donoId) {
+      requests.push(this.toDeleteRequest(`DONO#${anterior.donoId}`, `TORNEIO#${anterior.id}`));
+    }
+    if (anterior.anfitriaoId && anterior.anfitriaoId !== atual.anfitriaoId) {
+      requests.push(this.toDeleteRequest(`ANFITRIAO#${anterior.anfitriaoId}`, `TORNEIO#${anterior.id}`));
+    }
+    if (requests.length > 0) await this.batchWrite(requests);
   }
 
   private skTorneio(item: TorneioItem): string {

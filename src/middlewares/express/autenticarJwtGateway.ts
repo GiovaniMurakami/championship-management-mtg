@@ -1,5 +1,5 @@
 import { TokenBlacklistGateway } from "../../dominio/gateway/tokenBlacklistGateway";
-import { TokenBlacklistRepositorio } from "../../infra/mongodb/repositorios/tokenBlacklistRepositorio";
+import { TokenBlacklistDynamoRepositorio } from "../../infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio";
 
 let _blacklistGateway: TokenBlacklistGateway | undefined;
 
@@ -9,7 +9,7 @@ export function inicializarAutenticarJwt(gateway: TokenBlacklistGateway): void {
 
 export function getBlacklistGateway(): TokenBlacklistGateway {
   if (!_blacklistGateway) {
-    _blacklistGateway = TokenBlacklistRepositorio.criar();
+    _blacklistGateway = TokenBlacklistDynamoRepositorio.criar();
   }
   return _blacklistGateway;
 }

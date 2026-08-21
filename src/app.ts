@@ -16,12 +16,7 @@ if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
 let runtimeInicializado = false;
 
 function validarConfiguracaoRuntime(): void {
-  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase() || "mongodb";
-  if (provider !== "dynamodb" && !process.env.MONGODB_URI) {
-    throw new Error("Variável de ambiente obrigatória não definida: MONGODB_URI");
-  }
-
-  if (provider === "dynamodb" && !process.env.DYNAMODB_DATA_TABLE) {
+  if (!process.env.DYNAMODB_DATA_TABLE) {
     throw new Error("Variável de ambiente obrigatória não definida: DYNAMODB_DATA_TABLE");
   }
 

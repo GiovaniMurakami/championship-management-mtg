@@ -13,8 +13,6 @@ provider:
       - image/webp
       - application/octet-stream
   environment:
-    MONGODB_URI: ${env:MONGODB_URI}
-    MONGODB_MAX_POOL_SIZE: ${env:MONGODB_MAX_POOL_SIZE, '1'}
     JWT_SECRET: ${env:JWT_SECRET}
     JWT_SSM_PRIVATE_KEY_PARAM: ${env:JWT_SSM_PRIVATE_KEY_PARAM, self:custom.jwtSsmParams.private.${sls:stage}}
     JWT_SSM_PUBLIC_KEY_PARAM: ${env:JWT_SSM_PUBLIC_KEY_PARAM, self:custom.jwtSsmParams.public.${sls:stage}}
@@ -25,8 +23,7 @@ provider:
     DYNAMODB_CACHE_ENABLED: ${env:DYNAMODB_CACHE_ENABLED, 'true'}
     DYNAMODB_CACHE_TABLE: ${self:custom.cacheTableName.${sls:stage}}
     DYNAMODB_CACHE_REGION: ${env:DYNAMODB_CACHE_REGION, 'us-east-1'}
-    DATABASE_PROVIDER: ${env:DATABASE_PROVIDER, 'mongodb'}
-    DYNAMODB_DATA_TABLE: ${env:DYNAMODB_DATA_TABLE, self:custom.dataTableName.${sls:stage}}
+    DYNAMODB_DATA_TABLE: ${self:custom.dataTableName.${sls:stage}}
     DYNAMODB_DATA_REGION: ${env:DYNAMODB_DATA_REGION, 'us-east-1'}
     DYNAMODB_CACHE_TTL_METAGAME_SECONDS: ${env:DYNAMODB_CACHE_TTL_METAGAME_SECONDS, '900'}
     DYNAMODB_CACHE_TTL_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_TORNEIO_SECONDS, '60'}
@@ -54,6 +51,7 @@ provider:
         - Effect: Allow
           Action:
             - dynamodb:GetItem
+            - dynamodb:DescribeTable
             - dynamodb:PutItem
             - dynamodb:DeleteItem
             - dynamodb:Query
@@ -105,7 +103,23 @@ package:
     - "build/**"
 
 resources:
+  Conditions:
+    HasAlarmNotificationEmail:
+      Fn::Not:
+        - Fn::Equals:
+            - ${env:ALARM_NOTIFICATION_EMAIL, ''}
+            - ''
   Resources:
+    AlarmTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${sls:stage}-alarms
+        Subscription:
+          Fn::If:
+            - HasAlarmNotificationEmail
+            - - Protocol: email
+                Endpoint: ${env:ALARM_NOTIFICATION_EMAIL, ''}
+            - Ref: AWS::NoValue
     CacheTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -127,7 +141,7 @@ resources:
     DataTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${env:DYNAMODB_DATA_TABLE, self:custom.dataTableName.${sls:stage}}
+        TableName: ${self:custom.dataTableName.${sls:stage}}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: pk
@@ -142,9 +156,122 @@ resources:
         TimeToLiveSpecification:
           AttributeName: expiresAt
           Enabled: true
+    LambdaErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-lambda-errors
+        AlarmDescription: Erros nao tratados na Lambda da API
+        Namespace: AWS/Lambda
+        MetricName: Errors
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref ApiLambdaFunction
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: notBreaching
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
+    LambdaThrottlesAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-lambda-throttles
+        AlarmDescription: Invocacoes recusadas por throttling na Lambda da API
+        Namespace: AWS/Lambda
+        MetricName: Throttles
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref ApiLambdaFunction
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: notBreaching
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
+    CacheDynamoThrottlesAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-cache-dynamodb-throttles
+        AlarmDescription: Requisicoes limitadas na tabela DynamoDB de cache
+        Namespace: AWS/DynamoDB
+        MetricName: ThrottledRequests
+        Dimensions:
+          - Name: TableName
+            Value: !Ref CacheTable
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: notBreaching
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
+    DataDynamoThrottlesAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-data-dynamodb-throttles
+        AlarmDescription: Requisicoes limitadas na tabela DynamoDB de dados
+        Namespace: AWS/DynamoDB
+        MetricName: ThrottledRequests
+        Dimensions:
+          - Name: TableName
+            Value: !Ref DataTable
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: notBreaching
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
+    CacheErrorMetricFilter:
+      Type: AWS::Logs::MetricFilter
+      Properties:
+        LogGroupName: !Ref ApiLogGroup
+        FilterPattern: '%falha ao (ler|gravar|remover) cache DynamoDB%'
+        MetricTransformations:
+          - MetricNamespace: ChampionshipManagementMtg/Cache
+            MetricName: OperacoesComFalha
+            MetricValue: '1'
+            DefaultValue: 0
+    CacheErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      DependsOn: CacheErrorMetricFilter
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-cache-errors
+        AlarmDescription: Falhas de leitura, gravacao ou remocao no cache DynamoDB
+        Namespace: ChampionshipManagementMtg/Cache
+        MetricName: OperacoesComFalha
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        DatapointsToAlarm: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        TreatMissingData: notBreaching
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
 
 functions:
-  # Uma única Lambda (um pool Mongo por instância). Paths explícitos —
+  # Uma unica Lambda para todas as rotas. Paths explicitos para preservar CORS.
   # catch-all /{proxy+} quebrou o httpMethod/path no API Gateway + serverless-http.
   api:
     handler: build/handler.handler
