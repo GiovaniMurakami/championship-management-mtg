@@ -25,6 +25,9 @@ provider:
     DYNAMODB_CACHE_ENABLED: ${env:DYNAMODB_CACHE_ENABLED, 'true'}
     DYNAMODB_CACHE_TABLE: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
     DYNAMODB_CACHE_REGION: ${env:DYNAMODB_CACHE_REGION, 'us-east-1'}
+    DATABASE_PROVIDER: ${env:DATABASE_PROVIDER, 'mongodb'}
+    DYNAMODB_DATA_TABLE: ${env:DYNAMODB_DATA_TABLE, self:custom.dataTableName.${sls:stage}}
+    DYNAMODB_DATA_REGION: ${env:DYNAMODB_DATA_REGION, 'us-east-1'}
     DYNAMODB_CACHE_TTL_METAGAME_SECONDS: ${env:DYNAMODB_CACHE_TTL_METAGAME_SECONDS, '900'}
     DYNAMODB_CACHE_TTL_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_TORNEIO_SECONDS, '60'}
     DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS: ${env:DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS, '30'}
@@ -54,8 +57,12 @@ provider:
             - dynamodb:PutItem
             - dynamodb:DeleteItem
             - dynamodb:Query
+            - dynamodb:BatchWriteItem
+            - dynamodb:UpdateItem
+            - dynamodb:TransactWriteItems
           Resource:
             - !GetAtt CacheTable.Arn
+            - !GetAtt DataTable.Arn
 
 build:
   esbuild: false
@@ -70,6 +77,9 @@ custom:
   cacheTableName:
     dev: championship-management-mtg-dev-cache
     prod: championship-management-mtg-prod-cache
+  dataTableName:
+    dev: championship-management-mtg-dev-data
+    prod: championship-management-mtg-prod-data
   jwtSsmParams:
     private:
       dev: /championship-mtg/dev/jwt-private-key
@@ -98,6 +108,24 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
+    DataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMODB_DATA_TABLE, self:custom.dataTableName.${sls:stage}}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: pk

@@ -14,8 +14,13 @@ dotenv.config();
 let runtimeInicializado = false;
 
 function validarConfiguracaoRuntime(): void {
-  if (!process.env.MONGODB_URI) {
+  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase() || "mongodb";
+  if (provider !== "dynamodb" && !process.env.MONGODB_URI) {
     throw new Error("Variável de ambiente obrigatória não definida: MONGODB_URI");
+  }
+
+  if (provider === "dynamodb" && !process.env.DYNAMODB_DATA_TABLE) {
+    throw new Error("Variável de ambiente obrigatória não definida: DYNAMODB_DATA_TABLE");
   }
 
   assertJwtConfig();

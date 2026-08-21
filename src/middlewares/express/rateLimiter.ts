@@ -10,6 +10,7 @@ function usarStoreMongo(): boolean {
   const store = process.env.RATE_LIMIT_STORE?.trim().toLowerCase();
   if (store === "mongo") return true;
   if (store === "memory") return false;
+  if (process.env.DATABASE_PROVIDER?.trim().toLowerCase() === "dynamodb") return false;
   return !isExecucaoLocal();
 }
 
