@@ -7,14 +7,13 @@ import {
   QueryCommand,
   TransactWriteItemsCommand,
   UpdateItemCommand,
+  type AttributeValue,
+  type WriteRequest,
 } from "@aws-sdk/client-dynamodb";
 import { logger } from "../../../helpers/logger";
 
-type DynamoItem = Record<string, { S?: string; N?: string }>;
-type DynamoWriteRequest = {
-  PutRequest?: { Item: DynamoItem };
-  DeleteRequest?: { Key: DynamoItem };
-};
+type DynamoItem = Record<string, AttributeValue>;
+type DynamoWriteRequest = WriteRequest;
 
 export abstract class BaseDynamoRepositorio {
   protected readonly cliente: DynamoDBClient;
