@@ -1,15 +1,20 @@
 import { SiteConfigGateway } from "../../dominio/gateway/siteConfigGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_SITE, cacheSkAnunciosSite } from "../../helpers/cache/chavesCache";
 
 type RegistrarCliqueAnuncioInput = {
   anuncioId?: string;
 };
 
 export class RegistrarCliqueAnuncio {
-  private constructor(private readonly siteConfigGateway: SiteConfigGateway) {}
+  private constructor(
+    private readonly siteConfigGateway: SiteConfigGateway,
+    private readonly cache?: CacheDynamoDbServico
+  ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway) {
-    return new RegistrarCliqueAnuncio(siteConfigGateway);
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+    return new RegistrarCliqueAnuncio(siteConfigGateway, cache);
   }
 
   public async executar(input: RegistrarCliqueAnuncioInput) {
@@ -31,6 +36,7 @@ export class RegistrarCliqueAnuncio {
         status: 404,
       });
     }
+    await this.cache?.remover(CACHE_PK_SITE, cacheSkAnunciosSite(true));
 
     return {
       anuncioId,

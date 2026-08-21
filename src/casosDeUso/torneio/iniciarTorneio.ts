@@ -9,6 +9,7 @@ import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -124,6 +125,11 @@ export class IniciarTorneio
     }
 
     await this.torneioGateway.atualizarECriarPartidas(torneio, partidas);
+    eventosTorneio.emit("torneio_iniciado", {
+      torneioId: torneio.id,
+      rodadaAtual: torneio.rodadaAtual,
+      totalRodadas: torneio.totalRodadas,
+    });
 
     return {
       torneioId: torneio.id,

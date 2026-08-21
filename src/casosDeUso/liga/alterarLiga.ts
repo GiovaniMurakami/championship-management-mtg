@@ -4,6 +4,8 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_LIGAS } from "../../helpers/cache/chavesCache";
 
 export type AlterarLigaInputDto = {
   id: string;
@@ -28,11 +30,16 @@ export type AlterarLigaOutputDto = {
 export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOutputDto> {
   private constructor(
     private readonly ligaGateway: LigaGateway,
-    private readonly torneioGateway: TorneioGateway
+    private readonly torneioGateway: TorneioGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) {}
 
-  public static criar(ligaGateway: LigaGateway, torneioGateway: TorneioGateway) {
-    return new AlterarLiga(ligaGateway, torneioGateway);
+  public static criar(
+    ligaGateway: LigaGateway,
+    torneioGateway: TorneioGateway,
+    cache?: CacheDynamoDbServico
+  ) {
+    return new AlterarLiga(ligaGateway, torneioGateway, cache);
   }
 
   public async executar(input: AlterarLigaInputDto): Promise<AlterarLigaOutputDto> {
@@ -70,6 +77,7 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
     if (input.tipo !== undefined) liga.tipo = input.tipo;
 
     await this.ligaGateway.atualizar(liga);
+    await this.cache?.invalidarParticao(CACHE_PK_LIGAS);
 
     return {
       id: liga.id,

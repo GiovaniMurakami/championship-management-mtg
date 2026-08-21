@@ -2,6 +2,8 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { cachePkTorneio, cacheSkSeoTorneio } from "../../helpers/cache/chavesCache";
 
 export type BuscarSeoTorneioInputDto = {
   torneioId: string;
@@ -43,13 +45,21 @@ export function detectarImageType(url: string | null | undefined): string | null
 
 export class BuscarSeoTorneio
   implements CasoDeUso<BuscarSeoTorneioInputDto, BuscarSeoTorneioOutputDto> {
-  private constructor(private readonly torneioGateway: TorneioGateway) { }
+  private constructor(
+    private readonly torneioGateway: TorneioGateway,
+    private readonly cache?: CacheDynamoDbServico
+  ) { }
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new BuscarSeoTorneio(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway, cache?: CacheDynamoDbServico) {
+    return new BuscarSeoTorneio(torneioGateway, cache);
   }
 
   public async executar(input: BuscarSeoTorneioInputDto): Promise<BuscarSeoTorneioOutputDto> {
+    const cachePk = cachePkTorneio(input.torneioId);
+    const cacheSk = cacheSkSeoTorneio();
+    const cacheado = await this.cache?.buscar<BuscarSeoTorneioOutputDto>(cachePk, cacheSk);
+    if (cacheado) return cacheado;
+
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
@@ -60,7 +70,7 @@ export class BuscarSeoTorneio
 
     const image = torneio.bannerUrl?.trim() || null;
 
-    return {
+    const saida = {
       torneioId: torneio.id,
       title: torneio.nome,
       image,
@@ -68,5 +78,7 @@ export class BuscarSeoTorneio
       description: sanitizarDescricaoSeo(torneio.descricao),
       url: torneio.linkBanner?.trim() || null,
     };
+    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS", 1800));
+    return saida;
   }
 }

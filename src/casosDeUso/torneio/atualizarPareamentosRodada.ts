@@ -8,6 +8,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 type PartidaAtualizadaInput = {
   id?: string | null;
@@ -305,6 +306,10 @@ export class AtualizarPareamentosRodada
     const partidasOrdenadas = [...resultadoPartidas].sort(
       (a, b) => (a.mesa ?? Number.MAX_SAFE_INTEGER) - (b.mesa ?? Number.MAX_SAFE_INTEGER)
     );
+    eventosTorneio.emit("pareamentos_atualizados", {
+      torneioId: torneio.id,
+      rodada: input.rodada,
+    });
 
     return {
       torneioId: torneio.id,

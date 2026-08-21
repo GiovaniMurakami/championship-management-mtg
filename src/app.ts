@@ -6,6 +6,7 @@ import { criarServicos } from "./composicao/servicos";
 import { criarCasosDeUso } from "./composicao/casos";
 import { criarRotas } from "./composicao/rotas";
 import { assertJwtConfig } from "./helpers/jwt";
+import { iniciarInvalidadorCacheTorneio } from "./infra/cache/invalidadorCacheTorneio";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -35,6 +36,7 @@ export function app() {
 
   const repos = criarRepositorios();
   const servicos = criarServicos();
+  iniciarInvalidadorCacheTorneio(servicos.cache);
   const casos = criarCasosDeUso(repos, servicos);
   const rotas = criarRotas(casos);
 

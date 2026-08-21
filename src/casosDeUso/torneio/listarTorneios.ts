@@ -4,6 +4,8 @@ import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_TORNEIOS, cacheSkListarTorneios } from "../../helpers/cache/chavesCache";
 
 const LIMITE_MAXIMO_TORNEIOS = 100;
 const LIMITE_PADRAO_TORNEIOS = 20;
@@ -57,11 +59,16 @@ export class ListarTorneios
   implements CasoDeUso<ListarTorneiosInputDto, ListarTorneiosOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly inscricaoGateway: InscricaoGateway
+    private readonly inscricaoGateway: InscricaoGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) { }
 
-  public static criar(torneioGateway: TorneioGateway, inscricaoGateway: InscricaoGateway) {
-    return new ListarTorneios(torneioGateway, inscricaoGateway);
+  public static criar(
+    torneioGateway: TorneioGateway,
+    inscricaoGateway: InscricaoGateway,
+    cache?: CacheDynamoDbServico
+  ) {
+    return new ListarTorneios(torneioGateway, inscricaoGateway, cache);
   }
 
   public async executar({
@@ -79,6 +86,17 @@ export class ListarTorneios
       LIMITE_PADRAO_TORNEIOS,
       LIMITE_MAXIMO_TORNEIOS
     );
+    const cacheKey = cacheSkListarTorneios({
+      usuarioId: usuarioId ?? null,
+      limite: paginacao.limite,
+      offset: paginacao.offset,
+      status: status ?? null,
+      nome: nome ?? null,
+      dataInicio: dataInicio?.toISOString() ?? null,
+      dataFim: dataFim?.toISOString() ?? null,
+    });
+    const cacheado = await this.cache?.buscar<ListarTorneiosOutputDto>(CACHE_PK_TORNEIOS, cacheKey);
+    if (cacheado) return cacheado;
 
     const [torneios, total, inscricoes] = await Promise.all([
       this.torneioGateway.listar({
@@ -101,7 +119,7 @@ export class ListarTorneios
       ? await this.inscricaoGateway.contarPorTorneios(torneioIds)
       : {};
 
-    return {
+    const saida = {
       torneios: torneios.map((t) => ({
         id: t.id,
         nome: t.nome,
@@ -134,5 +152,7 @@ export class ListarTorneios
       limite: paginacao.limite,
       offset: paginacao.offset,
     };
+    await this.cache?.salvar(CACHE_PK_TORNEIOS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS", 30));
+    return saida;
   }
 }

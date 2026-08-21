@@ -22,6 +22,15 @@ provider:
     CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://app.tiagofuguete.com.br'}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
+    DYNAMODB_CACHE_ENABLED: ${env:DYNAMODB_CACHE_ENABLED, 'true'}
+    DYNAMODB_CACHE_TABLE: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
+    DYNAMODB_CACHE_REGION: ${env:DYNAMODB_CACHE_REGION, 'us-east-1'}
+    DYNAMODB_CACHE_TTL_METAGAME_SECONDS: ${env:DYNAMODB_CACHE_TTL_METAGAME_SECONDS, '900'}
+    DYNAMODB_CACHE_TTL_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_TORNEIO_SECONDS, '60'}
+    DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS: ${env:DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS, '30'}
+    DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS, '1800'}
+    DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS: ${env:DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS, '300'}
+    DYNAMODB_CACHE_TTL_SITE_SECONDS: ${env:DYNAMODB_CACHE_TTL_SITE_SECONDS, '300'}
     EMAIL_USER: ${env:EMAIL_USER, ''}
     EMAIL_PASS: ${env:EMAIL_PASS, ''}
     FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
@@ -39,6 +48,14 @@ provider:
             - s3:PutObject
           Resource:
             - !Sub "arn:aws:s3:::${env:AWS_S3_BUCKET, 'placeholder'}/*"
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+          Resource:
+            - !GetAtt CacheTable.Arn
 
 build:
   esbuild: false
@@ -50,6 +67,9 @@ custom:
   frontendUrl:
     dev: https://app.tiagofuguete.com.br
     prod: https://app.tiagofuguete.com.br
+  cacheTableName:
+    dev: championship-management-mtg-dev-cache
+    prod: championship-management-mtg-prod-cache
   jwtSsmParams:
     private:
       dev: /championship-mtg/dev/jwt-private-key
@@ -71,6 +91,27 @@ package:
   patterns:
     - "src/**"
     - "build/**"
+
+resources:
+  Resources:
+    CacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
 
 functions:
   # Uma única Lambda (um pool Mongo por instância). Paths explícitos —

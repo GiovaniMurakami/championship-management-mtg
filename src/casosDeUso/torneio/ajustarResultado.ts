@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type AjustarResultadoInputDto = {
     partidaId: string;
@@ -100,6 +101,11 @@ export class AjustarResultado
                 status: StatusErro.erroParametro,
             });
         }
+        eventosTorneio.emit("resultado_ajustado", {
+            torneioId: partidaAjustada.torneioId,
+            partidaId: partidaAjustada.id,
+            rodada: partidaAjustada.rodada,
+        });
 
         return {
             id: partidaAjustada.id,

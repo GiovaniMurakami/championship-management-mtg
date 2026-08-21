@@ -8,6 +8,8 @@ import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_LIGAS, cacheSkRankingLiga } from "../../helpers/cache/chavesCache";
 
 function normalizarNomeCartaRanking(nome: string): string {
   return nome
@@ -119,7 +121,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly deckGateway: DeckGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly timeGateway: TimeGateway
+    private readonly timeGateway: TimeGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) { }
 
   public static criar(
@@ -128,12 +131,22 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     inscricaoGateway: InscricaoGateway,
     deckGateway: DeckGateway,
     usuarioGateway: UsuarioGateway,
-    timeGateway: TimeGateway
+    timeGateway: TimeGateway,
+    cache?: CacheDynamoDbServico
   ) {
-    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway);
+    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway, cache);
   }
 
   public async executar(input: RankingLigaInputDto): Promise<RankingLigaOutputDto> {
+    const cacheKey = cacheSkRankingLiga(input.ligaId, {
+      limiteJogadores: input.limiteJogadores ?? null,
+      limiteTimes: input.limiteTimes ?? null,
+      limiteDecks: input.limiteDecks ?? null,
+      limiteCartas: input.limiteCartas ?? null,
+    });
+    const cacheado = await this.cache?.buscar<RankingLigaOutputDto>(CACHE_PK_LIGAS, cacheKey);
+    if (cacheado) return cacheado;
+
     const liga = await this.ligaGateway.buscarPorId(input.ligaId);
 
     if (!liga) {
@@ -417,7 +430,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         }));
     }
 
-    return {
+    const saida = {
       ligaId: liga.id,
       ligaNome: liga.nome,
       tipo: liga.tipo,
@@ -429,6 +442,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       totalCartas: cartasOrdenadas.length,
       ...(liga.tipo === "times" ? { rankingTimes, totalTimes } : {}),
     };
+    await this.cache?.salvar(CACHE_PK_LIGAS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS", 300));
+    return saida;
   }
 
   private registrarUsoDeck(

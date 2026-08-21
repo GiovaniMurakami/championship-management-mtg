@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type AtualizarMesaPartidaInputDto = {
     partidaId: string;
@@ -82,6 +83,12 @@ export class AtualizarMesaPartida
                 status: StatusErro.erroParametro,
             });
         }
+        eventosTorneio.emit("mesa_atualizada", {
+            torneioId: partidaAtualizada.torneioId,
+            partidaId: partidaAtualizada.id,
+            rodada: partidaAtualizada.rodada,
+            mesa: partidaAtualizada.mesa,
+        });
 
         return {
             id: partidaAtualizada.id,

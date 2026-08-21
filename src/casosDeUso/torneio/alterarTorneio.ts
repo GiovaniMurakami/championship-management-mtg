@@ -5,6 +5,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type AlterarTorneioInputDto = {
   id: string;
@@ -102,6 +103,9 @@ export class AlterarTorneio
     if (input.exibirNomeJogador !== undefined) torneio.exibirNomeJogador = input.exibirNomeJogador;
 
     await this.torneioGateway.atualizar(torneio);
+    eventosTorneio.emit("torneio_alterado", {
+      torneioId: torneio.id,
+    });
 
     return {
       id: torneio.id,

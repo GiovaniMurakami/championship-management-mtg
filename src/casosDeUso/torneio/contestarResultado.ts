@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type ContestarResultadoInputDto = {
     partidaId: string;
@@ -107,6 +108,11 @@ export class ContestarResultado
                 status: StatusErro.erroParametro,
             });
         }
+        eventosTorneio.emit("resultado_contestado", {
+            torneioId: partidaContestada.torneioId,
+            partidaId: partidaContestada.id,
+            rodada: partidaContestada.rodada,
+        });
 
         return {
             id: partidaContestada.id,
