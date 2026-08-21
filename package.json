@@ -12,6 +12,7 @@
     "deploy:dev": "npm run build && serverless deploy --stage dev --region us-east-1",
     "deploy:prod": "npm run build && serverless deploy --stage prod --region us-east-1",
     "test": "jest --verbose",
+    "test:e2e:cache": "node -r dotenv/config -e \"process.env.RUN_DYNAMODB_CACHE_E2E='true'; require('jest').run(['--runInBand','tests/e2e/cacheDynamoDb.e2e.test.ts'])\"",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --testPathIgnorePatterns=e2e"
   },
