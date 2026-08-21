@@ -23,7 +23,7 @@ provider:
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, ''}
     AWS_S3_REGION: ${env:AWS_S3_REGION, 'us-east-1'}
     DYNAMODB_CACHE_ENABLED: ${env:DYNAMODB_CACHE_ENABLED, 'true'}
-    DYNAMODB_CACHE_TABLE: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
+    DYNAMODB_CACHE_TABLE: ${self:custom.cacheTableName.${sls:stage}}
     DYNAMODB_CACHE_REGION: ${env:DYNAMODB_CACHE_REGION, 'us-east-1'}
     DYNAMODB_CACHE_TTL_METAGAME_SECONDS: ${env:DYNAMODB_CACHE_TTL_METAGAME_SECONDS, '900'}
     DYNAMODB_CACHE_TTL_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_TORNEIO_SECONDS, '60'}
@@ -89,6 +89,8 @@ custom:
 
 package:
   patterns:
+    - "!.env"
+    - "!.env.*"
     - "src/**"
     - "build/**"
 
@@ -97,7 +99,7 @@ resources:
     CacheTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${env:DYNAMODB_CACHE_TABLE, self:custom.cacheTableName.${sls:stage}}
+        TableName: ${self:custom.cacheTableName.${sls:stage}}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: pk

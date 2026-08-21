@@ -9,7 +9,9 @@ import { assertJwtConfig } from "./helpers/jwt";
 import { iniciarInvalidadorCacheTorneio } from "./infra/cache/invalidadorCacheTorneio";
 import dotenv from "dotenv";
 
-dotenv.config();
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  dotenv.config();
+}
 
 let runtimeInicializado = false;
 

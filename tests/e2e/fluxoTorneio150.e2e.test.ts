@@ -55,6 +55,8 @@ dotenv.config();
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
 process.env.LOG_LEVEL = "silent";
+// This suite silences the EventEmitter, so cloud cache invalidation cannot run.
+process.env.DYNAMODB_CACHE_ENABLED = "false";
 // Setup com 150 jogadores em paralelo precisa de pool > 1 (evita timeout no beforeAll)
 const poolSize = Number(process.env.MONGODB_MAX_POOL_SIZE || "1");
 if (!Number.isFinite(poolSize) || poolSize < 10) {

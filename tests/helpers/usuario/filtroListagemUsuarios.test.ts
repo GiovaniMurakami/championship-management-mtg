@@ -26,10 +26,12 @@ describe("montarFiltroListagemUsuarios", () => {
     });
   });
 
-  it("filtra por nome/email escapando regex", () => {
+  it("filtra por nome, nicks e email escapando regex", () => {
     const filtro = montarFiltroListagemUsuarios({ nome: "a+b" });
     expect(filtro.$or).toEqual([
       { nome: { $regex: "a\\+b", $options: "i" } },
+      { nickMTGO: { $regex: "a\\+b", $options: "i" } },
+      { nickArena: { $regex: "a\\+b", $options: "i" } },
       { email: { $regex: "a\\+b", $options: "i" } },
     ]);
   });

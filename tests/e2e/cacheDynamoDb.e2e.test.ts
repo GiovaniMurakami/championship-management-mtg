@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto";
-import { DeleteItemCommand, DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DeleteItemCommand,
+  DescribeTableCommand,
+  DynamoDBClient,
+  PutItemCommand,
+} from "@aws-sdk/client-dynamodb";
 import { CacheDynamoDbServico } from "../../src/infra/services/cacheDynamoDbServico";
 import {
   aguardarInvalidacoesCachePendentes,
@@ -47,23 +52,27 @@ describeCloud("E2E - cache DynamoDB cloud", () => {
   const cliente = new DynamoDBClient({ region });
   const cache = CacheDynamoDbServico.criar();
   const chavesCriadas = new Set<string>();
+  let tabelaDisponivel = false;
 
   const salvar = async (pk: string, sk: string, valor: unknown, ttl = 60) => {
     chavesCriadas.add(`${pk}\n${sk}`);
     await cache.salvar(pk, sk, valor, ttl);
   };
 
-  beforeAll(() => {
+  beforeAll(async () => {
     if (!/(?:local|test)/i.test(tabela)) {
       throw new Error(
         `DYNAMODB_CACHE_TABLE deve conter "local" ou "test" para executar o E2E; recebido: "${tabela}".`
       );
     }
     process.env.DYNAMODB_CACHE_ENABLED = "true";
+    await cliente.send(new DescribeTableCommand({ TableName: tabela }));
+    tabelaDisponivel = true;
     iniciarInvalidadorCacheTorneio(cache);
   });
 
   afterEach(async () => {
+    if (!tabelaDisponivel) return;
     await Promise.all([...chavesCriadas].map(async (chave) => {
       const [pk, sk] = chave.split("\n");
       await cliente.send(new DeleteItemCommand({
