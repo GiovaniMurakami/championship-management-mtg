@@ -21,7 +21,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Anúncios do site + estatísticas
 - Notificações em tempo real via **Ably**
 
-**Deploy:** AWS Lambda (Serverless Framework) + MongoDB Atlas. Dev local: Express em `PORT` (default 3000).
+**Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS configuradas no `.env`.
 
 ---
 
@@ -32,7 +32,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 | Node.js 22 | Runtime |
 | TypeScript 5 | Linguagem |
 | Express 4 | HTTP |
-| Mongoose 8 | MongoDB |
+| AWS SDK v3 | DynamoDB (dados e cache) |
 | Zod 4 | Validação de entrada |
 | JWT (jsonwebtoken) | Auth RS256/HS256 |
 | Ably | Pub/Sub realtime |
@@ -52,7 +52,7 @@ src/
 ├── handler.ts                  # Entry Lambda (serverless-http)
 ├── iniciarServidor.ts          # Dev local (nodemon)
 ├── composicao/
-│   ├── repositorios.ts         # Wiring MongoDB
+│   ├── repositorios.ts         # Wiring dos repositórios DynamoDB
 │   ├── servicos.ts             # Email, S3, etc.
 │   ├── casos.ts                # Todos os use cases
 │   └── rotas.ts                # Registro das rotas Express
@@ -70,7 +70,8 @@ src/
 │   └── imagem/
 ├── infra/
 │   ├── api/express/            # ApiExpress + rotas *Rota
-│   ├── mongodb/repositorios/   # Implementações Mongoose
+│   ├── dynamodb/repositorios/  # Implementações DynamoDB e índices de acesso
+│   ├── cache/                  # Invalidação compartilhada por evento
 │   ├── ably/                   # NotificacaoAbly
 │   ├── s3/, email/
 │   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably
@@ -83,7 +84,7 @@ src/
     └── jwt.ts, env.ts, logger.ts
 
 docs/                           # Documentação por entidade (usuario, torneio, etc.)
-tests/                          # Jest (~859 testes de unidade/integração)
+tests/                          # Jest (876 unitários + E2E DynamoDB opt-in)
 ```
 
 **Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
@@ -97,7 +98,7 @@ tests/                          # Jest (~859 testes de unidade/integração)
 - **Gateway** — interface do repositório
 - **Caso de uso** — `Classe.criar(deps)` factory + `executar(input)` async
 - **Rota Express** — classe `*Rota implements Rotas` com `getCaminho()`, `getMetodo()`, `getMiddlewares()`, `getHandler()`
-- **Repositório** — implementa gateway; Mongoose schemas na infra
+- **Repositório** — implementa gateway; itens e índices DynamoDB ficam na infra
 
 ### Nomenclatura
 - Arquivos: `camelCase` com sufixo de papel (`criarTorneio.ts`, `buscarTorneio.express.route.ts`)
@@ -130,7 +131,8 @@ app.ts
 
 **Lambda:** uma função no `serverless.yaml`:
 - `api` (512MB/29s): todas as rotas (`/usuario`, `/deck`, `/torneio`, `/liga`, `/time`, `/site`, `/story-fundo`, `/imagem`, `/health`)
-- `MONGODB_MAX_POOL_SIZE` default `1` (env + provider) para limitar conexões Atlas por instância
+- Persistência e cache usam clientes DynamoDB; não existe conexão MongoDB no runtime
+- Mutações HTTP aguardam invalidações pendentes antes de responder, evitando leitura antiga em outra instância
 - Paths explícitos (não usar só `/{proxy+}` — quebra method/path no API Gateway + serverless-http)
 
 ---
@@ -292,17 +294,13 @@ Inicialização: `ABLY_API_KEY` em `app.ts` → `NotificacaoAbly.iniciar()`. Sem
 
 ---
 
-## 11. Banco de dados
+## 11. Banco de dados e cache
 
-MongoDB Atlas via Mongoose.
+Amazon DynamoDB é a persistência exclusiva do runtime. `DYNAMODB_DATA_TABLE` guarda entidades e índices de acesso com chaves `pk`/`sk`; os repositórios estão em `src/infra/dynamodb/repositorios/`. Queries paginam até `LastEvaluatedKey` e operações em lote reenviam `UnprocessedItems`.
 
-**Coleções principais:** usuarios, decks, torneios, inscricoes, partidas, ligas, times, tokenblacklists, refreshtokens, loginattempts, resetsenhas, linkingressos, siteconfigs, ratelimits.
+O cache compartilhado usa `DYNAMODB_CACHE_TABLE`. Standings, partidas, detalhe/listagem de torneios, metagame, ligas e site possuem chaves próprias. Eventos de mutação invalidam a partição do torneio e partições agregadas por `infra/cache/invalidadorCacheTorneio.ts`.
 
-```bash
-npm run db:create-indexes   # syncIndexes: cria faltantes e remove órfãos do schema
-```
-
-Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `torneios_nao_secretos_*` (`secreto: false`).
+MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `devDependencies` para `migrarMongoParaDynamo.ts`. O migrador valida a origem antes de `--truncate`, só limpa tabelas com `local` ou `test`, ignora partidas/inscrições de torneios inexistentes e filtra referências órfãs das ligas.
 
 ---
 
@@ -310,7 +308,8 @@ Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `tornei
 
 | Serviço | Uso |
 |---|---|
-| MongoDB | Persistência |
+| AWS DynamoDB | Persistência principal e cache compartilhado |
+| MongoDB Atlas | Somente origem temporária da migração |
 | AWS SSM | Chaves JWT (prod) |
 | AWS S3 | Presigned upload (5 min, max 5 MB, image/*) |
 | Ably | Realtime |
@@ -322,16 +321,16 @@ Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `tornei
 
 1. trust proxy → helmet → cors → compression
 2. `express.json` / `urlencoded` (100kb)
-3. `express-mongo-sanitize`
-4. `sanitizarEntrada` (strip HTML/null bytes)
-5. Request logging (pino)
+3. `sanitizarEntrada` (strip HTML/null bytes)
+4. Request ID + logging (pino)
+5. Em mutações, aguarda invalidações de cache antes de enviar JSON
 
-**Rate limiting:** janela de 15 min por IP (`ipv6Subnet` /56). Store `memory` (local) ou `mongo` (prod/Lambda).
+**Rate limiting:** janela de 15 min por IP (`ipv6Subnet` /56), armazenado em memória por instância.
 
 | Limiter | Máx/15min | Uso |
 |---|---|---|
-| `auth` | 5 | login, cadastro, reset senha (mesmo bucket) |
-| `refresh` | 40 | refresh token |
+| `auth` | 50 | login, cadastro, reset senha (mesmo bucket) |
+| `refresh` | 50 | refresh token |
 | `account` | 15 | logout, perfil |
 | `deck` | 40 | criar deck |
 | `inscricao` | 400 | inscrever, check-in, escolher deck |
@@ -342,7 +341,7 @@ Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `tornei
 | `torneio-read` | 800 | detalhe/listar/standings/partidas de torneio |
 | `heavy-read` | 40 | metagame e ranking de liga |
 | `public-action` | 30 | POST público (clique anúncio) |
-| `upload` | 8 | presigned URL S3 |
+| `upload` | 20 | presigned URL S3 |
 
 `GET /health` sem limiter. Em rotas caras o limiter vem **antes** da validação, para contar spam de payload inválido.
 
@@ -353,15 +352,19 @@ Listagem de torneios: sort `{ horario: 1, id: 1 }` com índices parciais `tornei
 Ver `.env.example`. Obrigatórias para rodar:
 
 ```bash
-MONGODB_URI=...
 JWT_PRIVATE_KEY_BASE64=...   # ou JWT_SECRET em dev
 JWT_PUBLIC_KEY_BASE64=...
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
 IS_LOCAL=true
+DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
+DYNAMODB_DATA_REGION=us-east-1
+DYNAMODB_CACHE_ENABLED=true
+DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_REGION=us-east-1
 ```
 
-Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `RATE_LIMIT_STORE`, `LOG_LEVEL`.
+Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `LOG_LEVEL` e TTLs `DYNAMODB_CACHE_TTL_*`. `MONGODB_MIGRATION_URI` e `MONGODB_MIGRATION_DB_NAME` são usados somente pelo migrador.
 
 **Nunca commitar `.env`.**
 
@@ -370,7 +373,9 @@ Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEN
 ## 15. Testes
 
 ```bash
-npm test              # jest --verbose (~859 testes; e2e em tests/e2e/)
+npm test              # 876 unitários + todos os E2E DynamoDB em série (~15 min)
+npm run test:unit     # suíte rápida, sem E2E/AWS
+npm run test:e2e      # cache, paginação, coerência e torneio de 150 jogadores
 npm run test:coverage # cobertura; limiar 95/90/95/95 em casosDeUso, entidades, helpers, middlewares (exclui e2e)
 npm run lint          # eslint
 npm run dev           # nodemon + ts-node (porta 3000)
@@ -378,7 +383,7 @@ npm run build         # esbuild
 npm run deploy:dev    # serverless deploy stage dev
 ```
 
-Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `middlewares/`. Rotas Express com cobertura mais esparsa; fluxos E2E de torneio em `tests/integracao/` e `tests/e2e/`.
+Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `middlewares/`. E2E validam cache compartilhado, paginação acima de 1 MB, falhas parciais de batch e o fluxo completo de 150 jogadores. Consulte `docs/testes.md`.
 
 ---
 
@@ -394,6 +399,9 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | Pareamento Swiss | `casosDeUso/torneio/iniciarTorneio.ts`, `iniciarProximaRodada.ts`, helpers em `helpers/torneio/` |
 | Metagame | `casosDeUso/metagame/`, `docs/metagame.md` |
 | Standings | `buscarStandings.ts` |
+| Persistência DynamoDB | `infra/dynamodb/repositorios/`, especialmente `baseDynamoRepositorio.ts` |
+| Cache e invalidação | `infra/services/cacheDynamoDbServico.ts`, `infra/cache/invalidadorCacheTorneio.ts` |
+| Migração de dados | `infra/dynamodb/migrarMongoParaDynamo.ts`, `docs/testes.md` |
 | Datas Brasília | `helpers/data/brasilia.ts` + rotas que serializam torneio |
 | Validação API | `helpers/validacao/schemas.ts` |
 | Eventos realtime | emit em use case/rota + `infra/ably/notificacaoAbly.ts` |
@@ -405,8 +413,8 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 
 ## 17. Gotchas e armadilhas
 
-1. **`docs/README.md` pode estar parcialmente desatualizado** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts` e o código.
-2. **Lambda cold start** — pool Mongo max 1 (`MONGODB_MAX_POOL_SIZE`); Ably aguarda publicação no handler.
+1. **Fonte de verdade** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts`, os gateways e o código adjacente.
+2. **Cache compartilhado** — toda mutação de torneio deve emitir evento com `torneioId`; a resposta HTTP aguarda a invalidação. Não use cache apenas em memória para dados vistos por múltiplas Lambdas.
 3. **Emails** — falhas são logadas, não propagadas ao cliente.
 4. **`nomeConsolidado` / `cartaRepresentativa`** — nome do arquétipo e arte no metagame; admin altera depois. Deck travado de torneio aceita só esses dois campos. `cartaRepresentativa: null` volta à carta mais jogada.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
@@ -415,6 +423,8 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 8. **Não alterar contratos da API** sem alinhar com o front (`backendApi.js`).
 9. **Eventos Ably** — incluir `torneioId` no payload; front assina `torneio-{id}`.
 10. **Não criar commits** a menos que o usuário peça.
+11. **Migração destrutiva** — `db:migrate-dynamodb:reset` valida Mongo antes de limpar e só aceita destino com `local`/`test`. Nunca use `--truncate` em homologação ou produção.
+12. **Paginação DynamoDB** — toda Query/Scan que pode superar 1 MB deve consumir `LastEvaluatedKey`; batch write deve tratar `UnprocessedItems`.
 
 ---
 
@@ -429,11 +439,13 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 6. Side effect realtime → `eventosTorneio.emit` após persistência bem-sucedida
 
 ### Ao debugar
-1. Verificar `.env` (MONGODB_URI, JWT)
+1. Verificar `.env` (`DYNAMODB_DATA_TABLE`, regiões, credenciais AWS e JWT)
 2. Erro 403 em torneio → checar dono/admin/anfitrião
 3. 400 validação → `schemas.ts` + mensagens Zod
 4. Realtime não chega → `ABLY_API_KEY` + `NotificacaoAbly`
 5. Horário errado → `parseHorarioBrasilia` na rota de criar/alterar
+6. Standings/partidas antigos → conferir evento emitido, `torneioId`, invalidador e conteúdo da partição `TORNEIO#<id>` no cache
+7. Migração → executar primeiro `npm run db:migrate-dynamodb:dry-run`; origem Mongo deste projeto usa banco `test`
 
 ### O que evitar
 - Framework DI (Inversify, etc.) — composição manual é o padrão

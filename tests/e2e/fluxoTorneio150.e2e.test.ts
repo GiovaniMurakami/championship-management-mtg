@@ -37,10 +37,6 @@ jest.mock("../../src/infra/ably/notificacaoAbly", () => ({
     NotificacaoAbly: { iniciar: jest.fn() },
 }));
 
-jest.mock("../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn(), on: jest.fn() },
-}));
-
 jest.mock("../../src/infra/services/emailServico", () => ({
     EmailServico: {
         criar: () => ({ enviar: jest.fn().mockResolvedValue(undefined) }),
@@ -61,8 +57,8 @@ dotenv.config();
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
 process.env.LOG_LEVEL = "silent";
-// This suite silences the EventEmitter, so cloud cache invalidation cannot run.
-process.env.DYNAMODB_CACHE_ENABLED = "false";
+// O front local pode acompanhar este fluxo; cada mutacao deve invalidar o cache compartilhado.
+process.env.DYNAMODB_CACHE_ENABLED = "true";
 import { app } from "../../src/app";
 import { criarRepositorios } from "../../src/composicao/repositorios";
 
@@ -122,7 +118,7 @@ async function limparFixturesDynamo(
 }
 
 async function limparResiduosPorMarcador(marcador: string): Promise<number> {
-    if (!/^e2e_[a-z]*\d+_/i.test(marcador)) {
+    if (!/^e2e_(?:[a-z]+_)?\d+_$/i.test(marcador)) {
         throw new Error(`Marcador E2E invalido para limpeza: ${marcador}`);
     }
 
@@ -176,7 +172,9 @@ interface PartidaInfo {
     id: string;
     rodada?: number;
     jogador1Id: string;
+    jogador1Nome: string;
     jogador2Id: string | null;
+    jogador2Nome: string | null;
     status?: string;
     vitoriasJogador1?: number;
     vitoriasJogador2?: number;
@@ -593,7 +591,7 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
                 expect(rodadaPartidas).toHaveLength(75);
             }
         }
-    });
+    }, 600_000);
 
     // ── Guardrails pós-rodadas 1-4 (rodada 5 com partidas pendentes) ──────────
 
@@ -802,7 +800,14 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
         // Posição 1 deve existir e ter pontuação >= 0
         const lider = standings[0];
         expect(lider.posicao).toBe(1);
-        expect(lider.pontosMesa).toBeGreaterThanOrEqual(0);
+        expect(lider.pontosMesa).toBeGreaterThanOrEqual(9);
+
+        const jogadoresIniciais = new Set(playerIds);
+        for (const entry of standings) {
+            const partidasContabilizadas =
+                entry.vitoriasPartida + entry.empatesPartida + entry.derrotasPartida;
+            expect(partidasContabilizadas).toBe(jogadoresIniciais.has(entry.usuario.id) ? 4 : 0);
+        }
 
         // Standings em ordem não-decrescente de posição
         for (let i = 0; i < standings.length - 1; i++) {
@@ -1104,7 +1109,7 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
                 }
             }
         }
-    });
+    }, 600_000);
 
     // ── Guardrails pós-finalização ────────────────────────────────────────────
 
