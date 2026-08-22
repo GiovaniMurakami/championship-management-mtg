@@ -69,4 +69,30 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
     expect(salvar).toHaveBeenCalledWith([partida]);
     expect(excluir).toHaveBeenCalledWith([partida.id]);
   });
+
+  it("inicializa o contador atomico a partir do valor legado antes de incrementar", async () => {
+    const torneio = criarTorneio();
+    torneio.visualizacoes = 247;
+    sendSpy
+      .mockResolvedValueOnce({ Item: { payload: { S: JSON.stringify({
+        ...torneio,
+        horario: torneio.horario.toISOString(),
+        criadoEm: torneio.criadoEm.toISOString(),
+      }) } } } as never)
+      .mockResolvedValueOnce({} as never)
+      .mockResolvedValueOnce({ Item: { payload: { S: JSON.stringify({
+        ...torneio,
+        visualizacoes: 247,
+        horario: torneio.horario.toISOString(),
+        criadoEm: torneio.criadoEm.toISOString(),
+      }) }, visualizacoes: { N: "248" } } } as never);
+
+    const atualizado = await TorneioDynamoRepositorio.criar().incrementarVisualizacoes(torneio.id);
+
+    const comando = sendSpy.mock.calls[1][0] as TransactWriteItemsCommand;
+    const update = comando.input.TransactItems?.[0].Update;
+    expect(update?.UpdateExpression).toContain("if_not_exists(visualizacoes, :base)");
+    expect(update?.ExpressionAttributeValues?.[":base"]).toEqual({ N: "247" });
+    expect(atualizado?.visualizacoes).toBe(248);
+  });
 });

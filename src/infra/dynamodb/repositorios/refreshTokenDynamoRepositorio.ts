@@ -36,10 +36,32 @@ export class RefreshTokenDynamoRepositorio extends BaseDynamoRepositorio impleme
     const item = await this.getJson<RefreshTokenItem>(`REFRESH_TOKEN#${tokenHash}`, "DATA");
     if (!item) return null;
 
-    await this.transactWriteRequests([
-      this.toDeleteRequest(`REFRESH_TOKEN#${tokenHash}`, "DATA"),
-      this.toDeleteRequest(`USER#${item.usuarioId}`, `REFRESH_TOKEN#${tokenHash}`),
-    ]);
+    try {
+      await this.transactWrite([
+        {
+          Delete: {
+            TableName: this.tabela,
+            Key: {
+              pk: { S: `REFRESH_TOKEN#${tokenHash}` },
+              sk: { S: "DATA" },
+            },
+            ConditionExpression: "attribute_exists(pk)",
+          },
+        },
+        {
+          Delete: {
+            TableName: this.tabela,
+            Key: {
+              pk: { S: `USER#${item.usuarioId}` },
+              sk: { S: `REFRESH_TOKEN#${tokenHash}` },
+            },
+          },
+        },
+      ]);
+    } catch (error) {
+      if ((error as { name?: string }).name === "TransactionCanceledException") return null;
+      throw error;
+    }
 
     const expiresAt = new Date(item.expiresAt);
     if (expiresAt < new Date()) return null;

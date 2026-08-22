@@ -132,8 +132,11 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       Update: {
         TableName: this.tabela,
         Key: { pk: { S: pk }, sk: { S: sk } },
-        UpdateExpression: "ADD visualizacoes :incremento",
-        ExpressionAttributeValues: { ":incremento": { N: "1" } },
+        UpdateExpression: "SET visualizacoes = if_not_exists(visualizacoes, :base) + :incremento",
+        ExpressionAttributeValues: {
+          ":base": { N: String(item.visualizacoes) },
+          ":incremento": { N: "1" },
+        },
         ConditionExpression: "attribute_exists(pk)",
       },
     })));
