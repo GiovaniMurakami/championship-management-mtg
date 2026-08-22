@@ -250,7 +250,7 @@ resources:
       Type: AWS::Logs::MetricFilter
       Properties:
         LogGroupName: !Ref ApiLogGroup
-        FilterPattern: '%falha ao (ler|gravar|remover) cache DynamoDB%'
+        FilterPattern: '{ ($.msg = "falha ao ler cache DynamoDB") || ($.msg = "falha ao gravar cache DynamoDB") || ($.msg = "falha ao remover item do cache DynamoDB") }'
         MetricTransformations:
           - MetricNamespace: ChampionshipManagementMtg/Cache
             MetricName: OperacoesComFalha
