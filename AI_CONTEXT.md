@@ -478,3 +478,4 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 - O rate limiter e distribuido pela tabela `DYNAMODB_CACHE_TABLE` quando ela esta configurada.
 - `DataTable` usa PITR; `DataTable` e `CacheTable` usam `DeletionPolicy` e `UpdateReplacePolicy` como `Retain`.
 - O pipeline `npm test` roda unidades e todos os E2E sequencialmente e pode levar cerca de 15 minutos.
+- `npm run test:coverage` usa o provider V8 e exige globalmente 95% de statements, functions e lines, alem de 90% de branches.

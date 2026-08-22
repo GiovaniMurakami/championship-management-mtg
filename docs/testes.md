@@ -44,6 +44,17 @@ npm run test:e2e:torneio150
 
 `npm run test:watch` e `npm run test:coverage` executam somente testes unitarios.
 
+## Coverage
+
+O Jest usa o provider V8 e falha automaticamente se o coverage global ficar abaixo destes limites:
+
+- statements: 95%
+- functions: 95%
+- lines: 95%
+- branches: 90%
+
+Execute `npm run test:coverage` antes de enviar alteracoes. O limite separado de branches considera a quantidade elevada de defaults, encadeamentos opcionais e caminhos defensivos do dominio; ele nao reduz a meta de 95% aplicada as demais metricas.
+
 ## Seguranca e limpeza
 
 Os testes da tabela de dados recusam nomes que nao contenham `local` ou `test`. Os testes de cache usam chaves isoladas e os fluxos removem suas fixtures ao terminar. O agregador permite a tabela de cache configurada porque o ambiente local pode compartilhar o cache de desenvolvimento; durante a execucao, particoes de cache relacionadas a torneios, ligas e metagame podem ser invalidadas.
