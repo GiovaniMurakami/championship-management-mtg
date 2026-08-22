@@ -173,6 +173,7 @@ export const desdroparJogadorSchema = z.object({
 export const criarLigaSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });
@@ -180,6 +181,7 @@ export const criarLigaSchema = z.object({
 export const alterarLigaSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });

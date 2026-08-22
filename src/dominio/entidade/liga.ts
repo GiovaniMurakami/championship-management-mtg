@@ -6,6 +6,7 @@ export type LigaProps = {
   id?: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
   torneioIds?: string[];
   tipo?: TipoLiga;
@@ -16,6 +17,7 @@ export class Liga {
   public id: string;
   public nome: string;
   public descricao?: string;
+  public bannerUrl?: string;
   public donoId: string;
   public torneioIds: string[];
   public tipo: TipoLiga;
@@ -25,6 +27,7 @@ export class Liga {
     this.id = props.id ?? randomUUID();
     this.nome = props.nome;
     this.descricao = props.descricao;
+    this.bannerUrl = props.bannerUrl;
     this.donoId = props.donoId;
     this.torneioIds = props.torneioIds ?? [];
     this.tipo = props.tipo ?? "individual";

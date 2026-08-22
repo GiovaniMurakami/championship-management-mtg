@@ -67,6 +67,7 @@ export type RankingLigaOutputDto = {
     empates: number;
     winrate: number;
     loserate: number;
+    cartaRepresentativa: string | null;
   }[];
   totalDecks: number;
   rankingCartas: {
@@ -96,6 +97,7 @@ type StatsJogador = {
 
 type StatsDeck = {
   nome: string;
+  cartaRepresentativa: string | null;
   totalUsos: number;
   vitorias: number;
   derrotas: number;
@@ -307,9 +309,13 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         existing.vitorias += stats.vitorias;
         existing.derrotas += stats.derrotas;
         existing.empates += stats.empates;
+        if (!existing.cartaRepresentativa && deck?.cartaRepresentativa) {
+          existing.cartaRepresentativa = deck.cartaRepresentativa;
+        }
       } else {
         statsDecksFinal.set(nomeDeck, {
           nome: nomeDeck,
+          cartaRepresentativa: deck?.cartaRepresentativa ?? null,
           totalUsos: stats.totalUsos,
           vitorias: stats.vitorias,
           derrotas: stats.derrotas,
@@ -379,6 +385,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
           empates: stats.empates,
           winrate: totalPartidas > 0 ? Math.round((stats.vitorias / totalPartidas) * 1000) / 10 : 0,
           loserate: totalPartidas > 0 ? Math.round((stats.derrotas / totalPartidas) * 1000) / 10 : 0,
+          cartaRepresentativa: stats.cartaRepresentativa,
         };
       });
 
@@ -460,6 +467,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     } else {
       statsDecks.set(deckId, {
         nome: deckId,
+        cartaRepresentativa: null,
         totalUsos: 1,
         vitorias: resultado === "vitoria" ? 1 : 0,
         derrotas: resultado === "derrota" ? 1 : 0,

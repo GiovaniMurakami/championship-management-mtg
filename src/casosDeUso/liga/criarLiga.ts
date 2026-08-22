@@ -11,6 +11,7 @@ export type CriarLigaInputDto = {
   nome: string;
   donoId: string;
   descricao?: string;
+  bannerUrl?: string;
   torneioIds?: string[];
   tipo?: TipoLiga;
 };
@@ -19,6 +20,7 @@ export type CriarLigaOutputDto = {
   id: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
   torneioIds: string[];
   tipo: TipoLiga;
@@ -56,6 +58,7 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
     const liga = Liga.criar({
       nome: input.nome.trim(),
       descricao: input.descricao?.trim(),
+      bannerUrl: input.bannerUrl?.trim(),
       donoId: input.donoId,
       torneioIds,
       tipo: input.tipo,
@@ -68,6 +71,7 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
       id: liga.id,
       nome: liga.nome,
       descricao: liga.descricao,
+      bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
       tipo: liga.tipo,

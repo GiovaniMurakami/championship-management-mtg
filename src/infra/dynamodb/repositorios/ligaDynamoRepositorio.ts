@@ -6,6 +6,7 @@ type LigaItem = {
   id: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
   torneioIds: string[];
   tipo: TipoLiga;
@@ -117,6 +118,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
       id: liga.id,
       nome: liga.nome,
       descricao: liga.descricao,
+      bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
       tipo: liga.tipo,
@@ -129,6 +131,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
       id: item.id,
       nome: item.nome,
       descricao: item.descricao,
+      bannerUrl: item.bannerUrl,
       donoId: item.donoId,
       torneioIds: item.torneioIds,
       tipo: item.tipo,

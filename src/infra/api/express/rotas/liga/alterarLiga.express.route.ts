@@ -37,7 +37,7 @@ export class AlterarLigaRota implements Rotas {
         const dados = validarBody(alterarLigaSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, descricao, torneioIds, tipo } = dados;
+        const { nome, descricao, bannerUrl, torneioIds, tipo } = dados;
 
         const resultado = await this.alterarLigaServico.executar({
           id,
@@ -45,6 +45,7 @@ export class AlterarLigaRota implements Rotas {
           isAdmin: request.usuario!.role === "admin",
           nome,
           descricao,
+          bannerUrl,
           torneioIds,
           tipo,
         });

@@ -13,6 +13,7 @@ export type AlterarLigaInputDto = {
   isAdmin: boolean;
   nome?: string;
   descricao?: string;
+  bannerUrl?: string;
   torneioIds?: string[];
   tipo?: TipoLiga;
 };
@@ -21,6 +22,7 @@ export type AlterarLigaOutputDto = {
   id: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
   torneioIds: string[];
   tipo: TipoLiga;
@@ -74,6 +76,7 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
 
     if (input.nome !== undefined) liga.nome = input.nome.trim();
     if (input.descricao !== undefined) liga.descricao = input.descricao?.trim();
+    if (input.bannerUrl !== undefined) liga.bannerUrl = input.bannerUrl?.trim() || undefined;
     if (input.tipo !== undefined) liga.tipo = input.tipo;
 
     await this.ligaGateway.atualizar(liga);
@@ -83,6 +86,7 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
       id: liga.id,
       nome: liga.nome,
       descricao: liga.descricao,
+      bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
       tipo: liga.tipo,
