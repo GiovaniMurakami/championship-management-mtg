@@ -31,6 +31,7 @@ type TorneioItem = {
   visualizacoes: number;
   criadoEm: string;
   rodadaIniciadaEm?: string;
+  version: number;
 };
 
 const TORNEIOS_PK = "TORNEIOS";
@@ -45,7 +46,19 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
   }
 
   public async salvar(torneio: Torneio): Promise<void> {
-    await this.salvarIndices(this.torneioParaItem(torneio));
+    const item = this.torneioParaItem(torneio);
+    const requests = this.requestsSalvarIndices(item);
+    const principal = requests.shift()!.PutRequest!.Item!;
+    await this.transactWrite([
+      {
+        Put: {
+          TableName: this.tabela,
+          Item: principal,
+          ConditionExpression: "attribute_not_exists(pk)",
+        },
+      },
+      ...requests.map((request) => ({ Put: { TableName: this.tabela, Item: request.PutRequest!.Item! } })),
+    ]);
   }
 
   public async buscarPorId(id: string): Promise<Torneio | null> {
@@ -75,26 +88,70 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
 
   public async atualizar(torneio: Torneio): Promise<void> {
     const anterior = await this.buscarPorId(torneio.id);
-    const itemAtual = this.torneioParaItem(torneio);
-    await this.salvarIndices(itemAtual);
-
-    if (anterior) {
-      await this.removerIndicesObsoletos(this.torneioParaItem(anterior), itemAtual);
+    if (!anterior) return;
+    const versaoEsperada = torneio.version;
+    const itemAnterior = this.torneioParaItem(anterior);
+    const itemAtual = { ...this.torneioParaItem(torneio), version: versaoEsperada + 1 };
+    const requests = this.requestsSalvarIndices(itemAtual);
+    const principal = requests.shift()!.PutRequest!.Item!;
+    const obsoletos = this.requestsIndicesObsoletos(itemAnterior, itemAtual);
+    try {
+      await this.transactWrite([
+        {
+          Put: {
+            TableName: this.tabela,
+            Item: principal,
+            ConditionExpression: "attribute_not_exists(#version) OR #version = :version",
+            ExpressionAttributeNames: { "#version": "version" },
+            ExpressionAttributeValues: { ":version": { N: String(versaoEsperada) } },
+          },
+        },
+        ...requests.map((request) => ({ Put: { TableName: this.tabela, Item: request.PutRequest!.Item! } })),
+        ...obsoletos.map((request) => ({ Delete: { TableName: this.tabela, Key: request.DeleteRequest!.Key! } })),
+      ]);
+      torneio.version = itemAtual.version;
+    } catch (error) {
+      if ((error as { name?: string }).name === "TransactionCanceledException") {
+        throw new Error(`Conflito de concorrencia ao atualizar torneio ${torneio.id}`);
+      }
+      throw error;
     }
   }
 
   public async incrementarVisualizacoes(id: string): Promise<Torneio | null> {
     const torneio = await this.buscarPorId(id);
     if (!torneio) return null;
-    torneio.visualizacoes += 1;
-    await this.atualizar(torneio);
-    return torneio;
+    const item = this.torneioParaItem(torneio);
+    const chaves = [
+      { pk: `TORNEIO#${item.id}`, sk: "METADATA" },
+      { pk: TORNEIOS_PK, sk: this.skTorneio(item) },
+      { pk: `DONO#${item.donoId}`, sk: `TORNEIO#${item.id}` },
+      ...(item.anfitriaoId ? [{ pk: `ANFITRIAO#${item.anfitriaoId}`, sk: `TORNEIO#${item.id}` }] : []),
+    ];
+    await this.transactWrite(chaves.map(({ pk, sk }) => ({
+      Update: {
+        TableName: this.tabela,
+        Key: { pk: { S: pk }, sk: { S: sk } },
+        UpdateExpression: "ADD visualizacoes :incremento",
+        ExpressionAttributeValues: { ":incremento": { N: "1" } },
+        ConditionExpression: "attribute_exists(pk)",
+      },
+    })));
+    return this.buscarPorId(id);
   }
 
   public async atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void> {
-    await this.atualizar(torneio);
-    if (partidas.length > 0) {
-      await PartidaDynamoRepositorio.criar().salvarVarias(partidas);
+    const partidaRepositorio = PartidaDynamoRepositorio.criar();
+    if (partidas.length === 0) {
+      await this.atualizar(torneio);
+      return;
+    }
+    try {
+      await partidaRepositorio.salvarVarias(partidas);
+      await this.atualizar(torneio);
+    } catch (error) {
+      await partidaRepositorio.excluirPorIds(partidas.map((partida) => partida.id)).catch(() => undefined);
+      throw error;
     }
   }
 
@@ -134,16 +191,16 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     });
   }
 
-  private async salvarIndices(item: TorneioItem): Promise<void> {
+  private requestsSalvarIndices(item: TorneioItem) {
     const requests = [
-      this.toPutRequest(`TORNEIO#${item.id}`, "METADATA", item, { entity: "TORNEIO", status: item.status }),
-      this.toPutRequest(TORNEIOS_PK, this.skTorneio(item), item, { entity: "TORNEIO_INDEX", status: item.status }),
-      this.toPutRequest(`DONO#${item.donoId}`, `TORNEIO#${item.id}`, item, { entity: "TORNEIO_DONO", status: item.status }),
+      this.toPutRequest(`TORNEIO#${item.id}`, "METADATA", item, { entity: "TORNEIO", status: item.status, version: item.version, visualizacoes: item.visualizacoes }),
+      this.toPutRequest(TORNEIOS_PK, this.skTorneio(item), item, { entity: "TORNEIO_INDEX", status: item.status, visualizacoes: item.visualizacoes }),
+      this.toPutRequest(`DONO#${item.donoId}`, `TORNEIO#${item.id}`, item, { entity: "TORNEIO_DONO", status: item.status, visualizacoes: item.visualizacoes }),
     ];
     if (item.anfitriaoId) {
-      requests.push(this.toPutRequest(`ANFITRIAO#${item.anfitriaoId}`, `TORNEIO#${item.id}`, item, { entity: "TORNEIO_ANFITRIAO", status: item.status }));
+      requests.push(this.toPutRequest(`ANFITRIAO#${item.anfitriaoId}`, `TORNEIO#${item.id}`, item, { entity: "TORNEIO_ANFITRIAO", status: item.status, visualizacoes: item.visualizacoes }));
     }
-    await this.batchWrite(requests);
+    return requests;
   }
 
   private async removerIndices(item: TorneioItem): Promise<void> {
@@ -155,10 +212,10 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     if (item.anfitriaoId) {
       requests.push(this.toDeleteRequest(`ANFITRIAO#${item.anfitriaoId}`, `TORNEIO#${item.id}`));
     }
-    await this.batchWrite(requests);
+    await this.transactWriteRequests(requests);
   }
 
-  private async removerIndicesObsoletos(anterior: TorneioItem, atual: TorneioItem): Promise<void> {
+  private requestsIndicesObsoletos(anterior: TorneioItem, atual: TorneioItem) {
     const requests = [];
     if (this.skTorneio(anterior) !== this.skTorneio(atual)) {
       requests.push(this.toDeleteRequest(TORNEIOS_PK, this.skTorneio(anterior)));
@@ -169,7 +226,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     if (anterior.anfitriaoId && anterior.anfitriaoId !== atual.anfitriaoId) {
       requests.push(this.toDeleteRequest(`ANFITRIAO#${anterior.anfitriaoId}`, `TORNEIO#${anterior.id}`));
     }
-    if (requests.length > 0) await this.batchWrite(requests);
+    return requests;
   }
 
   private skTorneio(item: TorneioItem): string {
@@ -204,6 +261,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm.toISOString(),
       rodadaIniciadaEm: torneio.rodadaIniciadaEm?.toISOString(),
+      version: torneio.version,
     };
   }
 
@@ -235,6 +293,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: item.visualizacoes,
       criadoEm: new Date(item.criadoEm),
       rodadaIniciadaEm: item.rodadaIniciadaEm ? new Date(item.rodadaIniciadaEm) : undefined,
+      version: item.version ?? 0,
     });
   }
 }

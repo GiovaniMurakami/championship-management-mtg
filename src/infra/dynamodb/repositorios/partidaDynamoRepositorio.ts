@@ -19,6 +19,7 @@ type PartidaItem = {
   confirmadoPor: string[];
   mesa: number | null;
   criadoEm: string;
+  version: number;
 };
 
 export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements PartidaGateway {
@@ -83,8 +84,39 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
 
   public async atualizar(partida: Partida): Promise<void> {
     const anterior = await this.buscarPorId(partida.id);
-    if (anterior) await this.removerIndices(this.partidaParaItem(anterior));
-    await this.salvarIndices(this.partidaParaItem(partida));
+    const expectedVersion = partida.version;
+    const atual = this.partidaParaItem(partida);
+    atual.version = expectedVersion + 1;
+    const requests = this.requestsSalvarIndices(atual).slice(1);
+    if (anterior) {
+      const antigo = this.partidaParaItem(anterior);
+      if (this.skTorneio(antigo) !== this.skTorneio(atual)) {
+        requests.push(this.toDeleteRequest(`TORNEIO#${antigo.torneioId}`, this.skTorneio(antigo)));
+      }
+      const decksAtuais = new Set([atual.deckJogador1Id, atual.deckJogador2Id].filter(Boolean));
+      for (const deckId of [antigo.deckJogador1Id, antigo.deckJogador2Id].filter((id): id is string => Boolean(id))) {
+        if (!decksAtuais.has(deckId)) requests.push(this.toDeleteRequest(`DECK#${deckId}`, `PARTIDA#${antigo.id}`));
+      }
+    }
+    await this.transactWrite([
+      {
+        Put: {
+          TableName: this.tabela,
+          Item: this.itemJson(`PARTIDA#${atual.id}`, "DATA", atual, {
+            entity: "PARTIDA",
+            status: atual.status,
+            version: atual.version,
+          }),
+          ConditionExpression: "attribute_not_exists(#version) OR #version = :version",
+          ExpressionAttributeNames: { "#version": "version" },
+          ExpressionAttributeValues: { ":version": { N: String(expectedVersion) } },
+        },
+      },
+      ...requests.map((request) => request.PutRequest?.Item
+        ? { Put: { TableName: this.tabela, Item: request.PutRequest.Item } }
+        : { Delete: { TableName: this.tabela, Key: request.DeleteRequest!.Key! } }),
+    ]);
+    partida.version = atual.version;
   }
 
   public async finalizarAtomicamente(id: string, v1: number, v2: number): Promise<Partida | null> {
@@ -176,15 +208,19 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
   }
 
   private async salvarIndices(item: PartidaItem): Promise<void> {
+    await this.transactWriteRequests(this.requestsSalvarIndices(item));
+  }
+
+  private requestsSalvarIndices(item: PartidaItem) {
     const requests = [
-      this.toPutRequest(`PARTIDA#${item.id}`, "DATA", item, { entity: "PARTIDA", status: item.status }),
+      this.toPutRequest(`PARTIDA#${item.id}`, "DATA", item, { entity: "PARTIDA", status: item.status, version: item.version }),
       this.toPutRequest(`TORNEIO#${item.torneioId}`, this.skTorneio(item), item, { entity: "PARTIDA_TORNEIO", status: item.status }),
       this.toPutRequest(`TORNEIO#${item.torneioId}#RODADA#${item.rodada}`, `PARTIDA#${item.id}`, item, { entity: "PARTIDA_RODADA", status: item.status }),
     ];
     for (const deckId of [item.deckJogador1Id, item.deckJogador2Id].filter((deckId): deckId is string => Boolean(deckId))) {
       requests.push(this.toPutRequest(`DECK#${deckId}`, `PARTIDA#${item.id}`, item, { entity: "PARTIDA_DECK", status: item.status }));
     }
-    await this.batchWrite(requests);
+    return requests;
   }
 
   private async removerIndices(item: PartidaItem): Promise<void> {
@@ -196,7 +232,7 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
     for (const deckId of [item.deckJogador1Id, item.deckJogador2Id].filter((deckId): deckId is string => Boolean(deckId))) {
       requests.push(this.toDeleteRequest(`DECK#${deckId}`, `PARTIDA#${item.id}`));
     }
-    await this.batchWrite(requests);
+    await this.transactWriteRequests(requests);
   }
 
   private async excluirPartida(partida: Partida): Promise<void> {
@@ -225,6 +261,7 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
       confirmadoPor: partida.confirmadoPor,
       mesa: partida.mesa,
       criadoEm: partida.criadoEm.toISOString(),
+      version: partida.version,
     };
   }
 
@@ -246,6 +283,7 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
       confirmadoPor: item.confirmadoPor,
       mesa: item.mesa,
       criadoEm: new Date(item.criadoEm),
+      version: item.version ?? 0,
     });
   }
 }

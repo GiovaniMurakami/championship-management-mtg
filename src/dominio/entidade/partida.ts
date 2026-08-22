@@ -20,6 +20,7 @@ export interface PartidaProps {
   confirmadoPor?: string[];
   mesa?: number | null;
   criadoEm?: Date;
+  version?: number;
 }
 
 export class Partida {
@@ -39,6 +40,7 @@ export class Partida {
   public confirmadoPor: string[];
   public mesa: number | null;
   public criadoEm: Date;
+  public version: number;
 
   constructor(props: PartidaProps) {
     this.id = props.id;
@@ -57,6 +59,7 @@ export class Partida {
     this.confirmadoPor = props.confirmadoPor ?? [];
     this.mesa = props.mesa ?? null;
     this.criadoEm = props.criadoEm || new Date();
+    this.version = props.version ?? 0;
   }
 
   public static criar(

@@ -76,8 +76,19 @@ export class TimeDynamoRepositorio extends BaseDynamoRepositorio implements Time
 
   public async atualizar(time: Time): Promise<void> {
     const anterior = await this.buscarPorId(time.id);
-    if (anterior) await this.removerIndices(this.timeParaItem(anterior));
-    await this.salvarIndices(this.timeParaItem(time));
+    const atual = this.timeParaItem(time);
+    const requests = this.requestsSalvarIndices(atual);
+    if (anterior) {
+      const antigo = this.timeParaItem(anterior);
+      if (this.skTime(antigo) !== this.skTime(atual)) requests.push(this.toDeleteRequest(TIMES_PK, this.skTime(antigo)));
+      for (const membroId of antigo.membroIds.filter((id) => !atual.membroIds.includes(id))) {
+        requests.push(this.toDeleteRequest(`MEMBRO#${membroId}`, `TIME#${antigo.id}`));
+      }
+      if (antigo.conviteToken && antigo.conviteToken !== atual.conviteToken) {
+        requests.push(this.toDeleteRequest(`TIME_CONVITE#${antigo.conviteToken}`, "DATA"));
+      }
+    }
+    await this.transactWriteRequests(requests);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -92,6 +103,10 @@ export class TimeDynamoRepositorio extends BaseDynamoRepositorio implements Time
   }
 
   private async salvarIndices(item: TimeItem): Promise<void> {
+    await this.transactWriteRequests(this.requestsSalvarIndices(item));
+  }
+
+  private requestsSalvarIndices(item: TimeItem) {
     const requests = [
       this.toPutRequest(`TIME#${item.id}`, "DATA", item, { entity: "TIME" }),
       this.toPutRequest(TIMES_PK, this.skTime(item), item, { entity: "TIME_INDEX" }),
@@ -102,7 +117,7 @@ export class TimeDynamoRepositorio extends BaseDynamoRepositorio implements Time
     if (item.conviteToken) {
       requests.push(this.toPutRequest(`TIME_CONVITE#${item.conviteToken}`, "DATA", { timeId: item.id, token: item.conviteToken }, { entity: "TIME_CONVITE" }));
     }
-    await this.batchWrite(requests);
+    return requests;
   }
 
   private async removerIndices(item: TimeItem): Promise<void> {
@@ -116,7 +131,7 @@ export class TimeDynamoRepositorio extends BaseDynamoRepositorio implements Time
     if (item.conviteToken) {
       requests.push(this.toDeleteRequest(`TIME_CONVITE#${item.conviteToken}`, "DATA"));
     }
-    await this.batchWrite(requests);
+    await this.transactWriteRequests(requests);
   }
 
   private skTime(item: TimeItem): string {

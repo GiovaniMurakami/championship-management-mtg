@@ -469,3 +469,12 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 ---
 
 *Última revisão: agosto/2026 — alinhado com v1.1.26 (busca de decks por jogador)*
+# Consistencia e protecao DynamoDB
+
+- Escritas que mantem item principal e indices derivados usam transacoes DynamoDB.
+- Torneios e partidas possuem controle otimista por `version`; conflitos nao devem sobrescrever estado silenciosamente.
+- E-mail de usuario e reservado por indice com condicao atomica.
+- Contadores usam incremento atomico no DynamoDB.
+- O rate limiter e distribuido pela tabela `DYNAMODB_CACHE_TABLE` quando ela esta configurada.
+- `DataTable` usa PITR; `DataTable` e `CacheTable` usam `DeletionPolicy` e `UpdateReplacePolicy` como `Retain`.
+- O pipeline `npm test` roda unidades e todos os E2E sequencialmente e pode levar cerca de 15 minutos.

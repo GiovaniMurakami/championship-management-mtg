@@ -1,3 +1,4 @@
+import "./configurarAmbiente";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { inicializarAutenticarJwt } from "./middlewares/express/autenticarJwt";
@@ -7,11 +8,6 @@ import { criarCasosDeUso } from "./composicao/casos";
 import { criarRotas } from "./composicao/rotas";
 import { assertJwtConfig } from "./helpers/jwt";
 import { iniciarInvalidadorCacheTorneio } from "./infra/cache/invalidadorCacheTorneio";
-import dotenv from "dotenv";
-
-if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  dotenv.config();
-}
 
 let runtimeInicializado = false;
 

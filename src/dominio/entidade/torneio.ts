@@ -31,6 +31,7 @@ export interface TorneioProps {
   visualizacoes?: number;
   criadoEm?: Date;
   rodadaIniciadaEm?: Date;
+  version?: number;
 }
 
 export class Torneio {
@@ -60,6 +61,7 @@ export class Torneio {
   public visualizacoes: number;
   public criadoEm: Date;
   public rodadaIniciadaEm?: Date;
+  public version: number;
 
   constructor(props: TorneioProps) {
     this.id = props.id;
@@ -88,6 +90,7 @@ export class Torneio {
     this.visualizacoes = props.visualizacoes ?? 0;
     this.criadoEm = props.criadoEm || new Date();
     this.rodadaIniciadaEm = props.rodadaIniciadaEm;
+    this.version = props.version ?? 0;
   }
 
   public static criar(

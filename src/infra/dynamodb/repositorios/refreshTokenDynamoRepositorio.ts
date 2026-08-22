@@ -25,9 +25,9 @@ export class RefreshTokenDynamoRepositorio extends BaseDynamoRepositorio impleme
       expiresAt: dados.expiresAt.toISOString(),
     };
 
-    await Promise.all([
-      this.putJson(`REFRESH_TOKEN#${tokenHash}`, "DATA", item, { entity: "REFRESH_TOKEN", expiresAt: dados.expiresAt }),
-      this.putJson(`USER#${dados.usuarioId}`, `REFRESH_TOKEN#${tokenHash}`, item, { entity: "REFRESH_TOKEN_INDEX", expiresAt: dados.expiresAt }),
+    await this.transactWriteRequests([
+      this.toPutRequest(`REFRESH_TOKEN#${tokenHash}`, "DATA", item, { entity: "REFRESH_TOKEN", expiresAt: dados.expiresAt }),
+      this.toPutRequest(`USER#${dados.usuarioId}`, `REFRESH_TOKEN#${tokenHash}`, item, { entity: "REFRESH_TOKEN_INDEX", expiresAt: dados.expiresAt }),
     ]);
   }
 
@@ -36,9 +36,9 @@ export class RefreshTokenDynamoRepositorio extends BaseDynamoRepositorio impleme
     const item = await this.getJson<RefreshTokenItem>(`REFRESH_TOKEN#${tokenHash}`, "DATA");
     if (!item) return null;
 
-    await Promise.all([
-      this.safeDelete(`REFRESH_TOKEN#${tokenHash}`, "DATA"),
-      this.safeDelete(`USER#${item.usuarioId}`, `REFRESH_TOKEN#${tokenHash}`),
+    await this.transactWriteRequests([
+      this.toDeleteRequest(`REFRESH_TOKEN#${tokenHash}`, "DATA"),
+      this.toDeleteRequest(`USER#${item.usuarioId}`, `REFRESH_TOKEN#${tokenHash}`),
     ]);
 
     const expiresAt = new Date(item.expiresAt);
@@ -53,9 +53,11 @@ export class RefreshTokenDynamoRepositorio extends BaseDynamoRepositorio impleme
 
   public async excluirPorUsuario(usuarioId: string): Promise<void> {
     const itens = await this.queryJson<RefreshTokenItem>(`USER#${usuarioId}`);
-    await Promise.all(itens.map((item) => Promise.all([
-      this.safeDelete(`REFRESH_TOKEN#${item.tokenHash}`, "DATA"),
-      this.safeDelete(`USER#${usuarioId}`, `REFRESH_TOKEN#${item.tokenHash}`),
-    ])));
+    for (const item of itens) {
+      await this.transactWriteRequests([
+        this.toDeleteRequest(`REFRESH_TOKEN#${item.tokenHash}`, "DATA"),
+        this.toDeleteRequest(`USER#${usuarioId}`, `REFRESH_TOKEN#${item.tokenHash}`),
+      ]);
+    }
   }
 }

@@ -55,8 +55,16 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
 
   public async atualizar(liga: Liga): Promise<void> {
     const anterior = await this.buscarPorId(liga.id);
-    if (anterior) await this.removerIndices(this.ligaParaItem(anterior));
-    await this.salvarIndices(this.ligaParaItem(liga));
+    const atual = this.ligaParaItem(liga);
+    const requests = this.requestsSalvarIndices(atual);
+    if (anterior) {
+      const antigo = this.ligaParaItem(anterior);
+      if (this.skLiga(antigo) !== this.skLiga(atual)) requests.push(this.toDeleteRequest(LIGAS_PK, this.skLiga(antigo)));
+      for (const torneioId of antigo.torneioIds.filter((id) => !atual.torneioIds.includes(id))) {
+        requests.push(this.toDeleteRequest(`TORNEIO#${torneioId}#LIGAS`, `LIGA#${antigo.id}`));
+      }
+    }
+    await this.transactWriteRequests(requests);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -75,6 +83,10 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
   }
 
   private async salvarIndices(item: LigaItem): Promise<void> {
+    await this.transactWriteRequests(this.requestsSalvarIndices(item));
+  }
+
+  private requestsSalvarIndices(item: LigaItem) {
     const requests = [
       this.toPutRequest(`LIGA#${item.id}`, "DATA", item, { entity: "LIGA" }),
       this.toPutRequest(LIGAS_PK, this.skLiga(item), item, { entity: "LIGA_INDEX" }),
@@ -82,7 +94,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
     for (const torneioId of item.torneioIds) {
       requests.push(this.toPutRequest(`TORNEIO#${torneioId}#LIGAS`, `LIGA#${item.id}`, item, { entity: "LIGA_TORNEIO" }));
     }
-    await this.batchWrite(requests);
+    return requests;
   }
 
   private async removerIndices(item: LigaItem): Promise<void> {
@@ -93,7 +105,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
     for (const torneioId of item.torneioIds) {
       requests.push(this.toDeleteRequest(`TORNEIO#${torneioId}#LIGAS`, `LIGA#${item.id}`));
     }
-    await this.batchWrite(requests);
+    await this.transactWriteRequests(requests);
   }
 
   private skLiga(item: LigaItem): string {

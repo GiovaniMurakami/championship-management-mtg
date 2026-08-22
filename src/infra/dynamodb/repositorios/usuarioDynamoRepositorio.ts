@@ -1,5 +1,5 @@
 import { Usuario } from "../../../dominio/entidade/usuario";
-import { FiltrosListarUsuarios, UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
+import { EmailUsuarioJaExisteErro, FiltrosListarUsuarios, UsuarioGateway } from "../../../dominio/gateway/usuarioGateway";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 
 type UsuarioItem = {
@@ -36,11 +36,24 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
 
   public async salvar(usuario: Usuario): Promise<void> {
     const item = this.usuarioParaItem(usuario);
-    await Promise.all([
-      this.putJson(`USER#${usuario.id}`, "DATA", item, { entity: "USER" }),
-      this.putJson(USUARIOS_PK, `USER#${usuario.id}`, item, { entity: "USER_INDEX" }),
-      this.putJson(`USER_EMAIL#${this.normalizarEmail(usuario.email)}`, "DATA", { id: usuario.id, email: usuario.email }, { entity: "USER_EMAIL_INDEX" }),
-    ]);
+    try {
+      await this.transactWrite([
+        { Put: { TableName: this.tabela, Item: this.itemJson(`USER#${usuario.id}`, "DATA", item, { entity: "USER", resultadosExpressivos: item.resultadosExpressivos }) } },
+        { Put: { TableName: this.tabela, Item: this.itemJson(USUARIOS_PK, `USER#${usuario.id}`, item, { entity: "USER_INDEX", resultadosExpressivos: item.resultadosExpressivos }) } },
+        {
+          Put: {
+            TableName: this.tabela,
+            Item: this.itemJson(`USER_EMAIL#${this.normalizarEmail(usuario.email)}`, "DATA", { id: usuario.id, email: usuario.email }, { entity: "USER_EMAIL_INDEX" }),
+            ConditionExpression: "attribute_not_exists(pk)",
+          },
+        },
+      ]);
+    } catch (error) {
+      if ((error as { name?: string }).name === "TransactionCanceledException") {
+        throw new EmailUsuarioJaExisteErro();
+      }
+      throw error;
+    }
   }
 
   public async buscarPorEmail(email: string): Promise<Usuario | null> {
@@ -80,32 +93,65 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
   public async atualizar(usuario: Usuario): Promise<void> {
     const atual = await this.buscarPorId(usuario.id);
     const item = this.usuarioParaItem(usuario);
-    await Promise.all([
-      this.putJson(`USER#${usuario.id}`, "DATA", item, { entity: "USER" }),
-      this.putJson(USUARIOS_PK, `USER#${usuario.id}`, item, { entity: "USER_INDEX" }),
-      this.putJson(`USER_EMAIL#${this.normalizarEmail(usuario.email)}`, "DATA", { id: usuario.id, email: usuario.email }, { entity: "USER_EMAIL_INDEX" }),
-      atual && this.normalizarEmail(atual.email) !== this.normalizarEmail(usuario.email)
-        ? this.safeDelete(`USER_EMAIL#${this.normalizarEmail(atual.email)}`, "DATA")
-        : Promise.resolve(),
-    ]);
+    const emailAnterior = atual ? this.normalizarEmail(atual.email) : null;
+    const emailAtual = this.normalizarEmail(usuario.email);
+    try {
+      await this.transactWrite([
+        { Put: { TableName: this.tabela, Item: this.itemJson(`USER#${usuario.id}`, "DATA", item, { entity: "USER", resultadosExpressivos: item.resultadosExpressivos }) } },
+        { Put: { TableName: this.tabela, Item: this.itemJson(USUARIOS_PK, `USER#${usuario.id}`, item, { entity: "USER_INDEX", resultadosExpressivos: item.resultadosExpressivos }) } },
+        {
+          Put: {
+            TableName: this.tabela,
+            Item: this.itemJson(`USER_EMAIL#${emailAtual}`, "DATA", { id: usuario.id, email: usuario.email }, { entity: "USER_EMAIL_INDEX" }),
+            ...(emailAnterior !== emailAtual ? { ConditionExpression: "attribute_not_exists(pk)" } : {}),
+          },
+        },
+        ...(emailAnterior && emailAnterior !== emailAtual ? [{
+          Delete: {
+            TableName: this.tabela,
+            Key: { pk: { S: `USER_EMAIL#${emailAnterior}` }, sk: { S: "DATA" } },
+          },
+        }] : []),
+      ]);
+    } catch (error) {
+      if ((error as { name?: string }).name === "TransactionCanceledException") {
+        throw new EmailUsuarioJaExisteErro();
+      }
+      throw error;
+    }
   }
 
   public async excluir(id: string): Promise<void> {
     const usuario = await this.buscarPorId(id);
-    await Promise.all([
-      this.safeDelete(`USER#${id}`, "DATA"),
-      this.safeDelete(USUARIOS_PK, `USER#${id}`),
-      usuario ? this.safeDelete(`USER_EMAIL#${this.normalizarEmail(usuario.email)}`, "DATA") : Promise.resolve(),
+    await this.transactWriteRequests([
+      this.toDeleteRequest(`USER#${id}`, "DATA"),
+      this.toDeleteRequest(USUARIOS_PK, `USER#${id}`),
+      ...(usuario ? [this.toDeleteRequest(`USER_EMAIL#${this.normalizarEmail(usuario.email)}`, "DATA")] : []),
     ]);
   }
 
   public async incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void> {
     if (ids.length === 0 || incremento === 0) return;
-    const usuarios = await this.buscarVarios(ids);
-    await Promise.all(usuarios.map((usuario) => {
-      usuario.resultadosExpressivos += incremento;
-      return this.atualizar(usuario);
-    }));
+    await Promise.all(Array.from(new Set(ids)).map((id) => this.transactWrite([
+      {
+        Update: {
+          TableName: this.tabela,
+          Key: { pk: { S: `USER#${id}` }, sk: { S: "DATA" } },
+          UpdateExpression: "ADD resultadosExpressivos :incremento",
+          ExpressionAttributeValues: { ":incremento": { N: String(incremento) } },
+          ConditionExpression: "attribute_exists(pk)",
+        },
+      },
+      {
+        Update: {
+          TableName: this.tabela,
+          Key: { pk: { S: USUARIOS_PK }, sk: { S: `USER#${id}` } },
+          UpdateExpression: "ADD resultadosExpressivos :incremento",
+          ExpressionAttributeValues: { ":incremento": { N: String(incremento) } },
+          ConditionExpression: "attribute_exists(pk)",
+        },
+      },
+    ])));
   }
 
   private filtrar(itens: UsuarioItem[], filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "excluido">): UsuarioItem[] {

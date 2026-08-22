@@ -63,7 +63,7 @@ export class InscricaoDynamoRepositorio extends BaseDynamoRepositorio implements
   public async excluir(id: string): Promise<void> {
     const item = await this.getJson<InscricaoItem>(`INSCRICAO#${id}`, "DATA");
     if (!item) return;
-    await this.batchWrite([
+    await this.transactWriteRequests([
       this.toDeleteRequest(`INSCRICAO#${id}`, "DATA"),
       this.toDeleteRequest(`TORNEIO#${item.torneioId}`, `INSCRICAO#${item.usuarioId}`),
       this.toDeleteRequest(`USER#${item.usuarioId}`, `INSCRICAO#${item.torneioId}`),
@@ -94,7 +94,7 @@ export class InscricaoDynamoRepositorio extends BaseDynamoRepositorio implements
   }
 
   private async salvarIndices(item: InscricaoItem): Promise<void> {
-    await this.batchWrite([
+    await this.transactWriteRequests([
       this.toPutRequest(`INSCRICAO#${item.id}`, "DATA", item, { entity: "INSCRICAO" }),
       this.toPutRequest(`TORNEIO#${item.torneioId}`, `INSCRICAO#${item.usuarioId}`, item, { entity: "INSCRICAO_TORNEIO" }),
       this.toPutRequest(`USER#${item.usuarioId}`, `INSCRICAO#${item.torneioId}`, item, { entity: "INSCRICAO_USUARIO" }),

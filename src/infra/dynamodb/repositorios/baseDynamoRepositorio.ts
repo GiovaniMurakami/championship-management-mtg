@@ -8,6 +8,7 @@ import {
   TransactWriteItemsCommand,
   UpdateItemCommand,
   type AttributeValue,
+  type TransactWriteItem,
   type WriteRequest,
 } from "@aws-sdk/client-dynamodb";
 import { logger } from "../../../helpers/logger";
@@ -103,6 +104,49 @@ export abstract class BaseDynamoRepositorio {
     }
   }
 
+  protected async transactWriteRequests(requests: DynamoWriteRequest[]): Promise<void> {
+    this.assertTabelaConfigurada();
+    if (requests.length > 100) {
+      throw new Error(`Transacao DynamoDB excede o limite de 100 operacoes: ${requests.length}`);
+    }
+    const itens: TransactWriteItem[] = requests.map((request) => {
+      if (request.PutRequest?.Item) {
+        return { Put: { TableName: this.tabela, Item: request.PutRequest.Item } };
+      }
+      if (request.DeleteRequest?.Key) {
+        return { Delete: { TableName: this.tabela, Key: request.DeleteRequest.Key } };
+      }
+      throw new Error("WriteRequest DynamoDB sem PutRequest ou DeleteRequest");
+    });
+    if (itens.length > 0) {
+      await this.cliente.send(new TransactWriteItemsCommand({ TransactItems: itens }));
+    }
+  }
+
+  protected async transactWrite(itens: TransactWriteItem[]): Promise<void> {
+    this.assertTabelaConfigurada();
+    if (itens.length > 100) {
+      throw new Error(`Transacao DynamoDB excede o limite de 100 operacoes: ${itens.length}`);
+    }
+    if (itens.length > 0) {
+      await this.cliente.send(new TransactWriteItemsCommand({ TransactItems: itens }));
+    }
+  }
+
+  protected itemJson<T>(
+    pk: string,
+    sk: string,
+    payload: T,
+    extras: Record<string, string | number | Date | undefined> = {}
+  ): DynamoItem {
+    return {
+      pk: { S: pk },
+      sk: { S: sk },
+      payload: { S: JSON.stringify(payload) },
+      ...this.extrasParaItem(extras),
+    };
+  }
+
   protected async aguardarRetryBatch(tentativa: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, Math.min(1000, 50 * 2 ** tentativa)));
   }
@@ -117,10 +161,7 @@ export abstract class BaseDynamoRepositorio {
           Put: {
             TableName: this.tabela,
             Item: {
-              pk: { S: item.pk },
-              sk: { S: item.sk },
-              payload: { S: JSON.stringify(item.payload) },
-              ...this.extrasParaItem(item.extras ?? {}),
+              ...this.itemJson(item.pk, item.sk, item.payload, item.extras ?? {}),
             },
           },
         })),
@@ -237,7 +278,11 @@ export abstract class BaseDynamoRepositorio {
 
   private itemParaJson<T>(item?: DynamoItem): T | null {
     if (!item?.payload?.S) return null;
-    return JSON.parse(item.payload.S) as T;
+    const payload = JSON.parse(item.payload.S) as Record<string, unknown>;
+    for (const campo of ["visualizacoes", "resultadosExpressivos"]) {
+      if (item[campo]?.N !== undefined) payload[campo] = Number(item[campo].N);
+    }
+    return payload as T;
   }
 
   private extrasParaItem(extras: Record<string, string | number | Date | undefined>): DynamoItem {

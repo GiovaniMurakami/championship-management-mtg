@@ -65,3 +65,16 @@ npm run db:migrate-dynamodb:reset
 `--truncate` somente aceita tabelas cujo nome contenha `local` ou `test`. Antes de apagar o destino, o script conecta na origem e exige as colecoes `usuarios`, `torneios` e `partidas`, alem de pelo menos um torneio. Para escolher colecoes sem limpar a tabela, use `npm run db:migrate-dynamodb -- --only=usuarios,torneios`.
 
 Durante o reset, o script informa o progresso a cada 500 itens removidos e a cada 100 documentos lidos por colecao. Depois de `Origem validada`, ele pode permanecer alguns segundos trabalhando no primeiro lote; aguarde as mensagens de progresso e nao interrompa o processo durante o truncate.
+
+## Garantias DynamoDB para homologacao
+
+- Entidades com indices duplicados sao gravadas e removidas por `TransactWriteItems`.
+- E-mail possui indice unico protegido por condicao atomica.
+- Torneios e partidas usam `version` para rejeitar atualizacoes concorrentes sobre dados antigos.
+- Contadores de visualizacoes e resultados expressivos usam `ADD` atomico.
+- O rate limiter usa a tabela de cache como armazenamento compartilhado entre instancias; sem `DYNAMODB_CACHE_TABLE`, usa memoria apenas para desenvolvimento/testes unitarios.
+- A tabela de dados tem Point-in-Time Recovery habilitado.
+- As tabelas possuem `DeletionPolicy: Retain` e `UpdateReplacePolicy: Retain` para impedir perda automatica de dados em exclusao ou substituicao da stack.
+- Alarmes monitoram erros da Lambda e throttling nas tabelas de cache e dados.
+
+`DeletionPolicy: Retain` mantem a tabela existente quando o recurso sai do template ou a stack e excluida. `UpdateReplacePolicy: Retain` mantem a tabela antiga quando uma alteracao obriga o CloudFormation a criar outra tabela para substitui-la. Em ambos os casos, a tabela preservada deixa de ser gerenciada automaticamente pela stack e sua remocao posterior deve ser deliberada.

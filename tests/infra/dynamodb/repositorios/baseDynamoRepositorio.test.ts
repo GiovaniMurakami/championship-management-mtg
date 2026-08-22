@@ -2,6 +2,7 @@ import {
   BatchWriteItemCommand,
   DynamoDBClient,
   QueryCommand,
+  TransactWriteItemsCommand,
   type WriteRequest,
 } from "@aws-sdk/client-dynamodb";
 import {
@@ -20,6 +21,10 @@ class RepositorioTeste extends BaseDynamoRepositorio {
 
   public gravar(requests: WriteRequest[]): Promise<void> {
     return this.batchWrite(requests);
+  }
+
+  public gravarAtomicamente(requests: WriteRequest[]): Promise<void> {
+    return this.transactWriteRequests(requests);
   }
 
   protected async aguardarRetryBatch(): Promise<void> {
@@ -105,5 +110,23 @@ describe("BaseDynamoRepositorio", () => {
       `apos ${MAX_TENTATIVAS_BATCH_WRITE} tentativas`
     );
     expect(sendSpy).toHaveBeenCalledTimes(MAX_TENTATIVAS_BATCH_WRITE);
+  });
+
+  it("grava todos os indices da entidade em uma unica transacao", async () => {
+    sendSpy.mockResolvedValueOnce({} as never);
+    const requests = [putRequest("1"), putRequest("2")];
+
+    await new RepositorioTeste().gravarAtomicamente(requests);
+
+    expect(sendSpy).toHaveBeenCalledTimes(1);
+    expect(sendSpy.mock.calls[0][0]).toBeInstanceOf(TransactWriteItemsCommand);
+    expect((sendSpy.mock.calls[0][0] as TransactWriteItemsCommand).input.TransactItems).toHaveLength(2);
+  });
+
+  it("recusa transacao acima do limite do DynamoDB", async () => {
+    const requests = Array.from({ length: 101 }, (_, indice) => putRequest(String(indice)));
+
+    await expect(new RepositorioTeste().gravarAtomicamente(requests)).rejects.toThrow("limite de 100");
+    expect(sendSpy).not.toHaveBeenCalled();
   });
 });

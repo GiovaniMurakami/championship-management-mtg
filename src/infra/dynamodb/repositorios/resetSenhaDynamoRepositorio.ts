@@ -25,9 +25,9 @@ export class ResetSenhaDynamoRepositorio extends BaseDynamoRepositorio implement
       expiresAt: dados.expiresAt.toISOString(),
     };
 
-    await Promise.all([
-      this.putJson(`RESET_SENHA#${tokenHash}`, "DATA", item, { entity: "RESET_SENHA", expiresAt: dados.expiresAt }),
-      this.putJson(`USER#${dados.usuarioId}`, `RESET_SENHA#${tokenHash}`, item, { entity: "RESET_SENHA_INDEX", expiresAt: dados.expiresAt }),
+    await this.transactWriteRequests([
+      this.toPutRequest(`RESET_SENHA#${tokenHash}`, "DATA", item, { entity: "RESET_SENHA", expiresAt: dados.expiresAt }),
+      this.toPutRequest(`USER#${dados.usuarioId}`, `RESET_SENHA#${tokenHash}`, item, { entity: "RESET_SENHA_INDEX", expiresAt: dados.expiresAt }),
     ]);
   }
 
@@ -45,17 +45,18 @@ export class ResetSenhaDynamoRepositorio extends BaseDynamoRepositorio implement
   public async excluirPorToken(token: string): Promise<void> {
     const tokenHash = hashToken(token);
     const item = await this.getJson<ResetSenhaItem>(`RESET_SENHA#${tokenHash}`, "DATA");
-    await this.safeDelete(`RESET_SENHA#${tokenHash}`, "DATA");
-    if (item) {
-      await this.safeDelete(`USER#${item.usuarioId}`, `RESET_SENHA#${tokenHash}`);
-    }
+    const requests = [this.toDeleteRequest(`RESET_SENHA#${tokenHash}`, "DATA")];
+    if (item) requests.push(this.toDeleteRequest(`USER#${item.usuarioId}`, `RESET_SENHA#${tokenHash}`));
+    await this.transactWriteRequests(requests);
   }
 
   public async excluirPorUsuario(usuarioId: string): Promise<void> {
     const itens = await this.queryJson<ResetSenhaItem>(`USER#${usuarioId}`);
-    await Promise.all(itens.map((item) => Promise.all([
-      this.safeDelete(`RESET_SENHA#${item.tokenHash}`, "DATA"),
-      this.safeDelete(`USER#${usuarioId}`, `RESET_SENHA#${item.tokenHash}`),
-    ])));
+    for (const item of itens) {
+      await this.transactWriteRequests([
+        this.toDeleteRequest(`RESET_SENHA#${item.tokenHash}`, "DATA"),
+        this.toDeleteRequest(`USER#${usuarioId}`, `RESET_SENHA#${item.tokenHash}`),
+      ]);
+    }
   }
 }

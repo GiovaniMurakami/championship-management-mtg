@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Usuario } from "../../dominio/entidade/usuario";
-import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
+import { EmailUsuarioJaExisteErro, UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -61,7 +61,17 @@ export class CadastrarUsuario
       senha: senhaHash,
     });
 
-    await this.usuarioGateway.salvar(usuario);
+    try {
+      await this.usuarioGateway.salvar(usuario);
+    } catch (error) {
+      if (error instanceof EmailUsuarioJaExisteErro) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Não foi possível concluir o cadastro.",
+          status: StatusErro.erroParametro,
+        });
+      }
+      throw error;
+    }
 
     await this.emailGateway.enviar({
       para: usuario.email,

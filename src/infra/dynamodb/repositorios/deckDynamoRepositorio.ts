@@ -73,16 +73,39 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
 
   public async atualizar(deck: Deck): Promise<void> {
     const anterior = await this.buscarPorId(deck.id);
-    if (anterior) await this.removerIndices(this.deckParaItem(anterior));
-    await this.salvarIndices(this.deckParaItem(deck));
+    const atual = this.deckParaItem(deck);
+    const requests = this.requestsSalvarIndices(atual);
+    if (anterior) {
+      const antigo = this.deckParaItem(anterior);
+      if (this.skDeck(antigo) !== this.skDeck(atual)) requests.push(this.toDeleteRequest(DECKS_PK, this.skDeck(antigo)));
+      if (antigo.usuarioId !== atual.usuarioId) requests.push(this.toDeleteRequest(`USER#${antigo.usuarioId}`, `DECK#${antigo.id}`));
+      if (antigo.deckOriginalId && antigo.deckOriginalId !== atual.deckOriginalId) {
+        requests.push(this.toDeleteRequest(`DECK_ORIGINAL#${antigo.deckOriginalId}`, `DECK#${antigo.id}`));
+      }
+    }
+    await this.transactWriteRequests(requests);
   }
 
   public async incrementarVisualizacoes(id: string): Promise<Deck | null> {
     const deck = await this.buscarPorId(id);
     if (!deck) return null;
-    deck.visualizacoes += 1;
-    await this.atualizar(deck);
-    return deck;
+    const item = this.deckParaItem(deck);
+    const chaves = [
+      { pk: `DECK#${item.id}`, sk: "DATA" },
+      { pk: DECKS_PK, sk: this.skDeck(item) },
+      { pk: `USER#${item.usuarioId}`, sk: `DECK#${item.id}` },
+      ...(item.deckOriginalId ? [{ pk: `DECK_ORIGINAL#${item.deckOriginalId}`, sk: `DECK#${item.id}` }] : []),
+    ];
+    await this.transactWrite(chaves.map(({ pk, sk }) => ({
+      Update: {
+        TableName: this.tabela,
+        Key: { pk: { S: pk }, sk: { S: sk } },
+        UpdateExpression: "ADD visualizacoes :incremento",
+        ExpressionAttributeValues: { ":incremento": { N: "1" } },
+        ConditionExpression: "attribute_exists(pk)",
+      },
+    })));
+    return this.buscarPorId(id);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -126,15 +149,19 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
   }
 
   private async salvarIndices(item: DeckItem): Promise<void> {
+    await this.transactWriteRequests(this.requestsSalvarIndices(item));
+  }
+
+  private requestsSalvarIndices(item: DeckItem) {
     const requests = [
-      this.toPutRequest(`DECK#${item.id}`, "DATA", item, { entity: "DECK" }),
-      this.toPutRequest(DECKS_PK, this.skDeck(item), item, { entity: "DECK_INDEX" }),
-      this.toPutRequest(`USER#${item.usuarioId}`, `DECK#${item.id}`, item, { entity: "DECK_USUARIO" }),
+      this.toPutRequest(`DECK#${item.id}`, "DATA", item, { entity: "DECK", visualizacoes: item.visualizacoes }),
+      this.toPutRequest(DECKS_PK, this.skDeck(item), item, { entity: "DECK_INDEX", visualizacoes: item.visualizacoes }),
+      this.toPutRequest(`USER#${item.usuarioId}`, `DECK#${item.id}`, item, { entity: "DECK_USUARIO", visualizacoes: item.visualizacoes }),
     ];
     if (item.deckOriginalId) {
-      requests.push(this.toPutRequest(`DECK_ORIGINAL#${item.deckOriginalId}`, `DECK#${item.id}`, item, { entity: "DECK_ORIGINAL_INDEX" }));
+      requests.push(this.toPutRequest(`DECK_ORIGINAL#${item.deckOriginalId}`, `DECK#${item.id}`, item, { entity: "DECK_ORIGINAL_INDEX", visualizacoes: item.visualizacoes }));
     }
-    await this.batchWrite(requests);
+    return requests;
   }
 
   private async removerIndices(item: DeckItem): Promise<void> {
@@ -146,7 +173,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
     if (item.deckOriginalId) {
       requests.push(this.toDeleteRequest(`DECK_ORIGINAL#${item.deckOriginalId}`, `DECK#${item.id}`));
     }
-    await this.batchWrite(requests);
+    await this.transactWriteRequests(requests);
   }
 
   private skDeck(item: DeckItem): string {

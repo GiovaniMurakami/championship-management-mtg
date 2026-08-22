@@ -122,6 +122,8 @@ resources:
             - Ref: AWS::NoValue
     CacheTable:
       Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
       Properties:
         TableName: ${self:custom.cacheTableName.${sls:stage}}
         BillingMode: PAY_PER_REQUEST
@@ -140,6 +142,8 @@ resources:
           Enabled: true
     DataTable:
       Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
       Properties:
         TableName: ${self:custom.dataTableName.${sls:stage}}
         BillingMode: PAY_PER_REQUEST
@@ -156,6 +160,8 @@ resources:
         TimeToLiveSpecification:
           AttributeName: expiresAt
           Enabled: true
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
     LambdaErrorsAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
