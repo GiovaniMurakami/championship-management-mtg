@@ -73,9 +73,22 @@ import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
 import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
 import { type CasosDeUso } from "./casos";
+import { AbandonarCampanhaRanqueadaRota, AjustarResultadoRanqueadaRota, ConfirmarResultadoRanqueadaRota, ContestarResultadoRanqueadaRota, EntrarFilaRanqueadaRota, HistoricoRanqueadaRota, ListarContestacoesRanqueadaRota, RankingRanqueadaRota, ResolverContestacaoDeckRanqueadaRota, ResultadoRanqueadaRota, SairFilaRanqueadaRota, StatusRanqueadaRota } from "../infra/api/express/rotas/ranqueada/ranqueada.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
+        EntrarFilaRanqueadaRota.criar(casos.ranqueada),
+        SairFilaRanqueadaRota.criar(casos.ranqueada),
+        AbandonarCampanhaRanqueadaRota.criar(casos.ranqueada),
+        StatusRanqueadaRota.criar(casos.ranqueada),
+        RankingRanqueadaRota.criar(casos.ranqueada),
+        HistoricoRanqueadaRota.criar(casos.ranqueada),
+        ResultadoRanqueadaRota.criar(casos.ranqueada),
+        ConfirmarResultadoRanqueadaRota.criar(casos.ranqueada),
+        ContestarResultadoRanqueadaRota.criar(casos.ranqueada),
+        AjustarResultadoRanqueadaRota.criar(casos.ranqueada),
+        ListarContestacoesRanqueadaRota.criar(casos.ranqueada),
+        ResolverContestacaoDeckRanqueadaRota.criar(casos.ranqueada),
         CadastrarUsuarioRota.criar(casos.cadastrarUsuario),
         LoginUsuarioRota.criar(casos.loginUsuario),
         AtualizarUsuarioRota.criar(casos.atualizarUsuario),

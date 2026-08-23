@@ -12,6 +12,7 @@ import { PartidaDynamoRepositorio } from "../infra/dynamodb/repositorios/partida
 import { DeckDynamoRepositorio } from "../infra/dynamodb/repositorios/deckDynamoRepositorio";
 import { LigaDynamoRepositorio } from "../infra/dynamodb/repositorios/ligaDynamoRepositorio";
 import { TimeDynamoRepositorio } from "../infra/dynamodb/repositorios/timeDynamoRepositorio";
+import { RanqueadaDynamoRepositorio } from "../infra/dynamodb/repositorios/ranqueadaDynamoRepositorio";
 
 export function criarRepositorios() {
     return {
@@ -29,6 +30,7 @@ export function criarRepositorios() {
         time: TimeDynamoRepositorio.criar(),
         siteConfig: SiteConfigDynamoRepositorio.criar(),
         storyFundo: StoryFundoDynamoRepositorio.criar(),
+        ranqueada: RanqueadaDynamoRepositorio.criar(),
     };
 }
 

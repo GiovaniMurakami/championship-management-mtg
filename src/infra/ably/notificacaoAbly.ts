@@ -1,5 +1,6 @@
 import Ably from "ably";
 import { eventosTorneio } from "../socketio/eventosTorneio";
+import { eventosRanqueada } from "../socketio/eventosRanqueada";
 import { logger } from "../../helpers/logger";
 import { comRetry } from "../../helpers/retry";
 
@@ -24,7 +25,10 @@ export class NotificacaoAbly {
   }
 
   private publicar(torneioId: string, evento: string, payload: unknown) {
-    const canal = `torneio-${torneioId}`;
+    this.publicarNoCanal(`torneio-${torneioId}`, evento, payload);
+  }
+
+  private publicarNoCanal(canal: string, evento: string, payload: unknown) {
     const p: Promise<void> = comRetry(
       () => this.ably.channels.get(canal).publish(evento, payload).then(() => undefined),
       TENTATIVAS,
@@ -52,6 +56,10 @@ export class NotificacaoAbly {
 
     eventosTorneio.on("resultado_contestado", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "resultado_contestado", payload);
+    });
+
+    eventosTorneio.on("resultado_confirmado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "resultado_confirmado", payload);
     });
 
     eventosTorneio.on("participante_inscrito", (payload: Record<string, unknown> & { torneioId: string }) => {
@@ -88,6 +96,15 @@ export class NotificacaoAbly {
 
     eventosTorneio.on("total_rodadas_alterado", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "total_rodadas_alterado", payload);
+    });
+
+    for (const evento of ["fila_atualizada", "partida_encontrada", "resultado_reportado", "resultado_contestado", "resultado_confirmado", "punicao_atualizada"]) {
+      eventosRanqueada.on(evento, (payload: Record<string, unknown> & { jogadorId: string }) => {
+        this.publicarNoCanal(`ranqueada-jogador-${payload.jogadorId}`, evento, payload);
+      });
+    }
+    eventosRanqueada.on("contestacao_atualizada", (payload: Record<string, unknown>) => {
+      this.publicarNoCanal("ranqueada-admin", "contestacao_atualizada", payload);
     });
   }
 }

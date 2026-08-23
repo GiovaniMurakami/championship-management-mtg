@@ -64,6 +64,18 @@ export const torneioReadRateLimiter = rateLimit({
   message: MSG_REQUISICOES,
 });
 
+// Ranqueada usa atualizações em tempo real e consultas frequentes de status/ranking.
+// Buckets separados evitam que a navegação no restante do site consuma seu limite.
+export const ranqueadaMutationRateLimiter = rateLimit({
+  ...criarOpcoesRateLimit(300, "ranqueada-mutation"),
+  message: MSG_REQUISICOES,
+});
+
+export const ranqueadaReadRateLimiter = rateLimit({
+  ...criarOpcoesRateLimit(1000, "ranqueada-read"),
+  message: MSG_REQUISICOES,
+});
+
 // Agregações públicas caras — metagame e ranking de liga (varrem torneios/partidas)
 export const heavyReadRateLimiter = rateLimit({
   ...criarOpcoesRateLimit(40, "heavy-read"),

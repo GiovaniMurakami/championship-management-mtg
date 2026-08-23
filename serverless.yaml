@@ -389,6 +389,22 @@ functions:
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
       - http:
+          path: /ranqueada
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /ranqueada/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
           path: /time
           method: any
           cors:
@@ -436,6 +452,15 @@ functions:
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
+
+  processarResultadosRanqueados:
+    handler: build/handler.processarResultadosRanqueados
+    memorySize: 256
+    timeout: 29
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          enabled: true
 
 outputs:
   usuarioCadastrar:

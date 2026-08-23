@@ -71,6 +71,7 @@ import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
+import { Ranqueada } from "../casosDeUso/ranqueada/ranqueada";
 
 export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     // --- Usuário ---
@@ -174,6 +175,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const buscarArquetipoMetagame = BuscarArquetipoMetagame.criar(
         repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache
     );
+    const ranqueada = Ranqueada.criar(repos.ranqueada, repos.deck, repos.usuario, repos.inscricao, repos.partida);
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
@@ -191,6 +193,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
         listarMetagame, buscarArquetipoMetagame,
+        ranqueada,
     };
 }
 

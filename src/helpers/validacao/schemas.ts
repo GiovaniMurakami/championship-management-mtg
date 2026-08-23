@@ -370,3 +370,14 @@ export const metagameArquetipoParamsSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9-]+$/, "slug inválido."),
 });
+
+export const entrarFilaRanqueadaSchema = z.object({ deckId: uuidCampo("deckId") });
+export const formatoRanqueadaQuerySchema = z.object({ formato: z.string().trim().min(1).max(50) });
+export const partidaRanqueadaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
+export const resultadoRanqueadaSchema = z.object({ vencedorId: uuidCampo("vencedorId").nullable() });
+export const contestarResultadoRanqueadaSchema = z.object({
+  observacao: z.string().trim().max(500).optional(),
+  evidenciaUrl: s3ImagemUrl().optional(),
+  tipoContestacao: z.enum(["resultado", "deck"]).optional(),
+});
+export const resolverContestacaoDeckSchema = z.object({ procedente: z.boolean() });
