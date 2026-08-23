@@ -3,21 +3,13 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import mongoSanitize from "express-mongo-sanitize";
 import { sanitizarEntrada } from "../../../middlewares/express/sanitizarEntrada";
 import { requestIdMiddleware } from "../../../middlewares/express/requestId";
 import { Rotas } from "./rotas/rotas";
 import { ErroPersonalizado } from "../../../helpers/error/ErroPersonalizado";
 import { logger } from "../../../helpers/logger";
 import { getCorsOrigins } from "../../../helpers/env";
-
-function extrairErrosMongoose(err: unknown): string[] {
-  const erros = (err as { errors?: Record<string, { message?: string }> })?.errors;
-  if (!erros) return [];
-  return Object.values(erros)
-    .map((erro) => erro?.message)
-    .filter((mensagem): mensagem is string => Boolean(mensagem));
-}
+import { aguardarInvalidacoesCachePendentes } from "../../cache/invalidadorCacheTorneio";
 
 export class ApiExpress implements Api {
   private app: Express;
@@ -54,9 +46,23 @@ export class ApiExpress implements Api {
     this.app.use(compression());
     this.app.use(express.json({ limit: "100kb" }));
     this.app.use(express.urlencoded({ extended: true, limit: "100kb" }));
-    this.app.use(mongoSanitize());
     this.app.use(sanitizarEntrada);
     this.app.use(requestIdMiddleware);
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+        next();
+        return;
+      }
+
+      const enviarJson = res.json.bind(res);
+      res.json = ((body: unknown) => {
+        void aguardarInvalidacoesCachePendentes()
+          .then(() => enviarJson(body))
+          .catch(next);
+        return res;
+      }) as Response["json"];
+      next();
+    });
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const log = req.log ?? logger;
       log.info({ method: req.method, path: req.path }, "request");
@@ -96,11 +102,6 @@ export class ApiExpress implements Api {
         }
         if (err instanceof Error && err.message.includes("not allowed by CORS")) {
           res.status(403).json({ mensagem: "Origem não permitida." });
-          return;
-        }
-        const errosMongoose = extrairErrosMongoose(err);
-        if (errosMongoose.length > 0) {
-          res.status(400).json({ mensagem: errosMongoose[0], erros: errosMongoose });
           return;
         }
         logger.error({ err }, "erro nao tratado");

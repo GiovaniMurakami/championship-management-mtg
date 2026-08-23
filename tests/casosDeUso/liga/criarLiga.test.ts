@@ -61,4 +61,12 @@ describe("CriarLiga", () => {
 
         expect(ligaGateway.salvar).not.toHaveBeenCalled();
     });
+
+    it("deve criar e persistir uma liga com banner opcional", async () => {
+        const ligaGateway = criarMockLigaGateway();
+        const uc = CriarLiga.criar(ligaGateway, criarMockTorneioGateway());
+        const resultado = await uc.executar({ nome: "Liga com banner", donoId: "user-1", bannerUrl: " https://bucket.s3.us-east-1.amazonaws.com/ligas/banner.webp " });
+        expect(resultado.bannerUrl).toBe("https://bucket.s3.us-east-1.amazonaws.com/ligas/banner.webp");
+        expect(ligaGateway.salvar).toHaveBeenCalledWith(expect.objectContaining({ bannerUrl: resultado.bannerUrl }));
+    });
 });

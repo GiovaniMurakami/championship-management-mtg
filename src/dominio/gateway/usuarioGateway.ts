@@ -1,5 +1,12 @@
 import { Usuario } from "../entidade/usuario";
 
+export class EmailUsuarioJaExisteErro extends Error {
+  public constructor() {
+    super("Email de usuario ja cadastrado");
+    this.name = "EmailUsuarioJaExisteErro";
+  }
+}
+
 export interface FiltrosListarUsuarios {
   nome?: string;
   bloqueadoTorneios?: boolean;

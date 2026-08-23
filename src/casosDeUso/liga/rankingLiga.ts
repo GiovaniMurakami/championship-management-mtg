@@ -8,6 +8,8 @@ import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_LIGAS, cacheSkRankingLiga } from "../../helpers/cache/chavesCache";
 
 function normalizarNomeCartaRanking(nome: string): string {
   return nome
@@ -65,6 +67,7 @@ export type RankingLigaOutputDto = {
     empates: number;
     winrate: number;
     loserate: number;
+    cartaRepresentativa: string | null;
   }[];
   totalDecks: number;
   rankingCartas: {
@@ -94,6 +97,7 @@ type StatsJogador = {
 
 type StatsDeck = {
   nome: string;
+  cartaRepresentativa: string | null;
   totalUsos: number;
   vitorias: number;
   derrotas: number;
@@ -119,7 +123,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly deckGateway: DeckGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly timeGateway: TimeGateway
+    private readonly timeGateway: TimeGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) { }
 
   public static criar(
@@ -128,12 +133,22 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     inscricaoGateway: InscricaoGateway,
     deckGateway: DeckGateway,
     usuarioGateway: UsuarioGateway,
-    timeGateway: TimeGateway
+    timeGateway: TimeGateway,
+    cache?: CacheDynamoDbServico
   ) {
-    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway);
+    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway, cache);
   }
 
   public async executar(input: RankingLigaInputDto): Promise<RankingLigaOutputDto> {
+    const cacheKey = cacheSkRankingLiga(input.ligaId, {
+      limiteJogadores: input.limiteJogadores ?? null,
+      limiteTimes: input.limiteTimes ?? null,
+      limiteDecks: input.limiteDecks ?? null,
+      limiteCartas: input.limiteCartas ?? null,
+    });
+    const cacheado = await this.cache?.buscar<RankingLigaOutputDto>(CACHE_PK_LIGAS, cacheKey);
+    if (cacheado) return cacheado;
+
     const liga = await this.ligaGateway.buscarPorId(input.ligaId);
 
     if (!liga) {
@@ -294,9 +309,13 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         existing.vitorias += stats.vitorias;
         existing.derrotas += stats.derrotas;
         existing.empates += stats.empates;
+        if (!existing.cartaRepresentativa && deck?.cartaRepresentativa) {
+          existing.cartaRepresentativa = deck.cartaRepresentativa;
+        }
       } else {
         statsDecksFinal.set(nomeDeck, {
           nome: nomeDeck,
+          cartaRepresentativa: deck?.cartaRepresentativa ?? null,
           totalUsos: stats.totalUsos,
           vitorias: stats.vitorias,
           derrotas: stats.derrotas,
@@ -366,6 +385,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
           empates: stats.empates,
           winrate: totalPartidas > 0 ? Math.round((stats.vitorias / totalPartidas) * 1000) / 10 : 0,
           loserate: totalPartidas > 0 ? Math.round((stats.derrotas / totalPartidas) * 1000) / 10 : 0,
+          cartaRepresentativa: stats.cartaRepresentativa,
         };
       });
 
@@ -417,7 +437,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         }));
     }
 
-    return {
+    const saida = {
       ligaId: liga.id,
       ligaNome: liga.nome,
       tipo: liga.tipo,
@@ -429,6 +449,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       totalCartas: cartasOrdenadas.length,
       ...(liga.tipo === "times" ? { rankingTimes, totalTimes } : {}),
     };
+    await this.cache?.salvar(CACHE_PK_LIGAS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS", 300));
+    return saida;
   }
 
   private registrarUsoDeck(
@@ -445,6 +467,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     } else {
       statsDecks.set(deckId, {
         nome: deckId,
+        cartaRepresentativa: null,
         totalUsos: 1,
         vitorias: resultado === "vitoria" ? 1 : 0,
         derrotas: resultado === "derrota" ? 1 : 0,

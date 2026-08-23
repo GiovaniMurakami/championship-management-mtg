@@ -1,19 +1,14 @@
 import rateLimit, { type Options } from "express-rate-limit";
-import { MongoRateLimitStore } from "../../infra/mongodb/rateLimitStore";
-import { isExecucaoLocal } from "../../helpers/env";
+import { DynamoRateLimitStore } from "../../infra/dynamodb/dynamoRateLimitStore";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 const MSG_TENTATIVAS = { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." };
 const MSG_REQUISICOES = { mensagem: "Muitas requisições. Tente novamente em 15 minutos." };
 
-function usarStoreMongo(): boolean {
-  const store = process.env.RATE_LIMIT_STORE?.trim().toLowerCase();
-  if (store === "mongo") return true;
-  if (store === "memory") return false;
-  return !isExecucaoLocal();
-}
-
 function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
+  const store = process.env.DYNAMODB_CACHE_TABLE
+    ? new DynamoRateLimitStore(prefix)
+    : undefined;
   const opcoes: Partial<Options> = {
     windowMs: WINDOW_MS,
     max,
@@ -21,11 +16,8 @@ function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
     legacyHeaders: false,
     ipv6Subnet: 56,
     message: MSG_TENTATIVAS,
+    ...(store ? { store } : {}),
   };
-
-  if (usarStoreMongo()) {
-    opcoes.store = new MongoRateLimitStore(WINDOW_MS, prefix);
-  }
 
   return opcoes;
 }

@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 const CORTES_VALIDOS = [2, 4, 8, 16];
 
@@ -89,6 +90,9 @@ export class CriarTorneio
     });
 
     await this.torneioGateway.salvar(torneio);
+    eventosTorneio.emit("torneio_criado", {
+      torneioId: torneio.id,
+    });
 
     return {
       id: torneio.id,

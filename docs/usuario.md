@@ -386,6 +386,6 @@ Interface de comunicação com o repositório:
 
 ## Repositório
 
-Implementação MongoDB:
+Implementação DynamoDB:
 
-- [UsuarioRepositorio](../src/infra/mongodb/repositorios/usuarioRepositorio.ts)
+- [UsuarioDynamoRepositorio](../src/infra/dynamodb/repositorios/usuarioDynamoRepositorio.ts)

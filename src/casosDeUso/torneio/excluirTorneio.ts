@@ -3,6 +3,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type ExcluirTorneioInputDto = {
   id: string;
@@ -47,6 +48,9 @@ export class ExcluirTorneio
     }
 
     await this.torneioGateway.excluir(input.id);
+    eventosTorneio.emit("torneio_excluido", {
+      torneioId: input.id,
+    });
 
     return { mensagem: "Torneio excluído com sucesso." };
   }

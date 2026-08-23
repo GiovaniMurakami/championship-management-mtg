@@ -4,11 +4,14 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_LIGAS } from "../../helpers/cache/chavesCache";
 
 export type CriarLigaInputDto = {
   nome: string;
   donoId: string;
   descricao?: string;
+  bannerUrl?: string;
   torneioIds?: string[];
   tipo?: TipoLiga;
 };
@@ -17,6 +20,7 @@ export type CriarLigaOutputDto = {
   id: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
   torneioIds: string[];
   tipo: TipoLiga;
@@ -26,11 +30,16 @@ export type CriarLigaOutputDto = {
 export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDto> {
   private constructor(
     private readonly ligaGateway: LigaGateway,
-    private readonly torneioGateway: TorneioGateway
+    private readonly torneioGateway: TorneioGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) {}
 
-  public static criar(ligaGateway: LigaGateway, torneioGateway: TorneioGateway) {
-    return new CriarLiga(ligaGateway, torneioGateway);
+  public static criar(
+    ligaGateway: LigaGateway,
+    torneioGateway: TorneioGateway,
+    cache?: CacheDynamoDbServico
+  ) {
+    return new CriarLiga(ligaGateway, torneioGateway, cache);
   }
 
   public async executar(input: CriarLigaInputDto): Promise<CriarLigaOutputDto> {
@@ -49,17 +58,20 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
     const liga = Liga.criar({
       nome: input.nome.trim(),
       descricao: input.descricao?.trim(),
+      bannerUrl: input.bannerUrl?.trim(),
       donoId: input.donoId,
       torneioIds,
       tipo: input.tipo,
     });
 
     await this.ligaGateway.salvar(liga);
+    await this.cache?.invalidarParticao(CACHE_PK_LIGAS);
 
     return {
       id: liga.id,
       nome: liga.nome,
       descricao: liga.descricao,
+      bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
       tipo: liga.tipo,

@@ -4,6 +4,22 @@ import { Deck } from "../../../src/dominio/entidade/deck";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
 describe("ListarDecks", () => {
+    it("deve filtrar decks pelos usuarios encontrados pelo nome do jogador", async () => {
+        const deckGateway = criarMockDeckGateway();
+        const usuarioGateway = criarMockUsuarioGateway({
+            listar: jest.fn().mockResolvedValue([
+                new Usuario({ id: "u2", nome: "Maria", email: "m@e.com", senha: "s", nickMTGO: "maria_mtgo" }),
+            ]),
+        });
+        const uc = ListarDecks.criar(deckGateway, usuarioGateway);
+
+        await uc.executar({ jogador: "maria" });
+
+        expect(usuarioGateway.listar).toHaveBeenCalledWith({ nome: "maria" });
+        expect(deckGateway.listar).toHaveBeenCalledWith(expect.objectContaining({ usuarioIds: ["u2"] }));
+        expect(deckGateway.listarTotal).toHaveBeenCalledWith(expect.objectContaining({ usuarioIds: ["u2"] }));
+    });
+
     it("deve retornar lista de decks com dados do usuario", async () => {
         const decks = [
             new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u1" }),

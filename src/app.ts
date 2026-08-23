@@ -1,3 +1,4 @@
+import "./configurarAmbiente";
 import { ApiExpress } from "./infra/api/express/api.express";
 import { NotificacaoAbly } from "./infra/ably/notificacaoAbly";
 import { inicializarAutenticarJwt } from "./middlewares/express/autenticarJwt";
@@ -6,15 +7,13 @@ import { criarServicos } from "./composicao/servicos";
 import { criarCasosDeUso } from "./composicao/casos";
 import { criarRotas } from "./composicao/rotas";
 import { assertJwtConfig } from "./helpers/jwt";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { iniciarInvalidadorCacheTorneio } from "./infra/cache/invalidadorCacheTorneio";
 
 let runtimeInicializado = false;
 
 function validarConfiguracaoRuntime(): void {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("Variável de ambiente obrigatória não definida: MONGODB_URI");
+  if (!process.env.DYNAMODB_DATA_TABLE) {
+    throw new Error("Variável de ambiente obrigatória não definida: DYNAMODB_DATA_TABLE");
   }
 
   assertJwtConfig();
@@ -35,6 +34,7 @@ export function app() {
 
   const repos = criarRepositorios();
   const servicos = criarServicos();
+  iniciarInvalidadorCacheTorneio(servicos.cache);
   const casos = criarCasosDeUso(repos, servicos);
   const rotas = criarRotas(casos);
 

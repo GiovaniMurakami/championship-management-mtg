@@ -173,6 +173,7 @@ export const desdroparJogadorSchema = z.object({
 export const criarLigaSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   descricao: z.string().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });
@@ -180,6 +181,7 @@ export const criarLigaSchema = z.object({
 export const alterarLigaSchema = z.object({
   nome: z.string().min(1).optional(),
   descricao: z.string().optional(),
+  bannerUrl: s3ImagemUrlOuVazio().optional(),
   torneioIds: z.array(uuidCampo("torneioId")).optional(),
   tipo: z.enum(["individual", "times"]).optional(),
 });
@@ -236,6 +238,7 @@ export const torneioRodadaParamSchema = z.object({
 
 export const listarUsuariosQuerySchema = z.object({
   nome: z.string().max(200).optional(),
+  jogador: z.string().max(200).optional(),
   bloqueadoTorneios: z
     .enum(["true", "false"])
     .optional()
@@ -259,6 +262,7 @@ export const listarDecksQuerySchema = z.object({
   usuarioId: uuidCampo("usuarioId").optional(),
   formato: z.string().max(100).optional(),
   nome: z.string().max(200).optional(),
+  jogador: z.string().max(200).optional(),
   criadoApos: z.string().optional(),
   criadoAntes: z.string().optional(),
   ...paginacaoQueryCampos,
@@ -286,6 +290,7 @@ export const listarLigasQuerySchema = z.object({
 
 export const listarTimesQuerySchema = z.object({
   nome: z.string().max(200).optional(),
+  membroId: uuidCampo("membroId").optional(),
   ...paginacaoQueryCampos,
 });
 

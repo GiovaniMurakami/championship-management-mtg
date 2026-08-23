@@ -18,7 +18,9 @@ export type ListarLigasOutputDto = {
     id: string;
     nome: string;
     descricao?: string;
+    bannerUrl?: string;
     donoId: string;
+    tipo: TipoLiga;
     totalTorneios: number;
     criadoEm: Date;
   }[];
@@ -53,7 +55,9 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
         id: liga.id,
         nome: liga.nome,
         descricao: liga.descricao,
+        bannerUrl: liga.bannerUrl,
         donoId: liga.donoId,
+        tipo: liga.tipo,
         totalTorneios: liga.torneioIds.length,
         criadoEm: liga.criadoEm,
       })),

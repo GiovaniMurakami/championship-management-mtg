@@ -1,4 +1,5 @@
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
+import { TipoLiga } from "../../dominio/entidade/liga";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -12,7 +13,9 @@ export type BuscarLigaOutputDto = {
   id: string;
   nome: string;
   descricao?: string;
+  bannerUrl?: string;
   donoId: string;
+  tipo: TipoLiga;
   torneios: {
     id: string;
     nome: string;
@@ -51,7 +54,9 @@ export class BuscarLiga implements CasoDeUso<BuscarLigaInputDto, BuscarLigaOutpu
       id: liga.id,
       nome: liga.nome,
       descricao: liga.descricao,
+      bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
+      tipo: liga.tipo,
       torneios: torneios
         .filter((t) => t !== null)
         .map((t) => ({

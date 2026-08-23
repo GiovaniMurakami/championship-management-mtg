@@ -253,11 +253,22 @@ describe("schemas de validacao", () => {
         it("rejeita tipo invalido", () => {
             expect(criarLigaSchema.safeParse({ nome: "Liga", tipo: "invalido" }).success).toBe(false);
         });
+        it("aceita banner do bucket configurado e rejeita URL externa", () => {
+            process.env.AWS_S3_BUCKET = "meu-bucket";
+            process.env.AWS_S3_REGION = "us-east-1";
+            expect(criarLigaSchema.safeParse({ nome: "Liga", bannerUrl: "https://meu-bucket.s3.us-east-1.amazonaws.com/liga.png" }).success).toBe(true);
+            expect(criarLigaSchema.safeParse({ nome: "Liga", bannerUrl: "https://externo.example.com/liga.png" }).success).toBe(false);
+            delete process.env.AWS_S3_BUCKET;
+            delete process.env.AWS_S3_REGION;
+        });
     });
 
     describe("alterarLigaSchema", () => {
         it("aceita objeto vazio", () => {
             expect(() => alterarLigaSchema.parse({})).not.toThrow();
+        });
+        it("permite limpar o banner", () => {
+            expect(alterarLigaSchema.parse({ bannerUrl: "" }).bannerUrl).toBe("");
         });
     });
 
@@ -330,6 +341,13 @@ describe("schemas de validacao", () => {
     describe("listarLigasQuerySchema", () => {
         it("aceita filtros e paginacao", () => {
             expect(() => listarLigasQuerySchema.parse({ nome: "Liga", tipo: "times", limite: "20", offset: "0" })).not.toThrow();
+        });
+    });
+
+    describe("listarTimesQuerySchema", () => {
+        it("aceita membroId UUID e rejeita identificador inválido", () => {
+            expect(listarTimesQuerySchema.parse({ membroId: UUID }).membroId).toBe(UUID);
+            expect(listarTimesQuerySchema.safeParse({ membroId: "usuario-invalido" }).success).toBe(false);
         });
     });
 

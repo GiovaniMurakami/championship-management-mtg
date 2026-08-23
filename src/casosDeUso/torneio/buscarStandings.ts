@@ -17,6 +17,8 @@ import {
   ogwp,
 } from "./swiss";
 import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { cachePkTorneio, cacheSkStandings } from "../../helpers/cache/chavesCache";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
   const corte = Number(corteTop || 0);
@@ -66,7 +68,8 @@ export class BuscarStandings
     private readonly partidaGateway: PartidaGateway,
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
-    private readonly timeGateway: TimeGateway
+    private readonly timeGateway: TimeGateway,
+    private readonly cache?: CacheDynamoDbServico
   ) { }
 
   public static criar(
@@ -75,14 +78,20 @@ export class BuscarStandings
     partidaGateway: PartidaGateway,
     usuarioGateway: UsuarioGateway,
     deckGateway: DeckGateway,
-    timeGateway: TimeGateway
+    timeGateway: TimeGateway,
+    cache?: CacheDynamoDbServico
   ) {
-    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway);
+    return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway, cache);
   }
 
   public async executar(
     input: BuscarStandingsInputDto
   ): Promise<BuscarStandingsOutputDto> {
+    const cachePk = cachePkTorneio(input.torneioId);
+    const cacheSk = cacheSkStandings();
+    const cacheado = await this.cache?.buscar<BuscarStandingsOutputDto>(cachePk, cacheSk);
+    if (cacheado) return cacheado;
+
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio) {
       throw ErroPersonalizado.criar({
@@ -147,7 +156,7 @@ export class BuscarStandings
         };
       });
 
-      return {
+      const saida = {
         torneioId: torneio.id,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
@@ -156,6 +165,8 @@ export class BuscarStandings
         rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
         standings,
       };
+      await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+      return saida;
     }
 
     const todasPartidas = await this.partidaGateway.listarPorTorneio(
@@ -197,7 +208,7 @@ export class BuscarStandings
       statsMap
     );
 
-    return {
+    const saida = {
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
@@ -236,5 +247,7 @@ export class BuscarStandings
         };
       }),
     };
+    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+    return saida;
   }
 }

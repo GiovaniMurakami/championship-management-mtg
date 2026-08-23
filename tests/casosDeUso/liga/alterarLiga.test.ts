@@ -114,4 +114,15 @@ describe("AlterarLiga", () => {
 
         expect(ligaGateway.atualizar).not.toHaveBeenCalled();
     });
+
+    it("deve atualizar e remover o banner da liga", async () => {
+        const liga = new Liga({ id: "liga-1", nome: "Liga", donoId: "user-1", bannerUrl: "https://bucket/antigo.jpg" });
+        const ligaGateway = criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) });
+        const uc = AlterarLiga.criar(ligaGateway, criarMockTorneioGateway());
+        const atualizado = await uc.executar({ id: "liga-1", requisitanteId: "user-1", isAdmin: false, bannerUrl: " https://bucket/novo.jpg " });
+        expect(atualizado.bannerUrl).toBe("https://bucket/novo.jpg");
+        const removido = await uc.executar({ id: "liga-1", requisitanteId: "user-1", isAdmin: false, bannerUrl: "" });
+        expect(removido.bannerUrl).toBeUndefined();
+        expect(ligaGateway.atualizar).toHaveBeenLastCalledWith(expect.objectContaining({ bannerUrl: undefined }));
+    });
 });
