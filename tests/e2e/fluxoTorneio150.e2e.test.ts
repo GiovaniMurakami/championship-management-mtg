@@ -1,7 +1,7 @@
 /**
  * E2E: Torneio Swiss com 150 jogadores
  *
- * Fluxo completo com banco real (MongoDB Atlas) e endpoints HTTP reais via supertest.
+ * Fluxo completo com DynamoDB e endpoints HTTP reais via supertest.
  * Rate limiters são neutralizados para permitir o volume de requisições do teste.
  * Ably e EventEmitter de eventos são silenciados (sem efeitos colaterais externos).
  *
@@ -37,31 +37,134 @@ jest.mock("../../src/infra/ably/notificacaoAbly", () => ({
     NotificacaoAbly: { iniciar: jest.fn() },
 }));
 
-jest.mock("../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn(), on: jest.fn() },
-}));
-
 jest.mock("../../src/infra/services/emailServico", () => ({
     EmailServico: {
         criar: () => ({ enviar: jest.fn().mockResolvedValue(undefined) }),
     },
 }));
 import supertest from "supertest";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+import {
+    BatchWriteItemCommand,
+    DynamoDBClient,
+    ScanCommand,
+    type AttributeValue,
+    type WriteRequest,
+} from "@aws-sdk/client-dynamodb";
 
 dotenv.config();
 
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
 process.env.LOG_LEVEL = "silent";
-// Setup com 150 jogadores em paralelo precisa de pool > 1 (evita timeout no beforeAll)
-const poolSize = Number(process.env.MONGODB_MAX_POOL_SIZE || "1");
-if (!Number.isFinite(poolSize) || poolSize < 10) {
-    process.env.MONGODB_MAX_POOL_SIZE = "20";
+// O front local pode acompanhar este fluxo; cada mutacao deve invalidar o cache compartilhado.
+process.env.DYNAMODB_CACHE_ENABLED = "true";
+import { app } from "../../src/app";
+import { criarRepositorios } from "../../src/composicao/repositorios";
+
+const repositoriosE2e = criarRepositorios();
+const executarFluxo150 = process.env.RUN_TORNEIO_150_E2E === "true";
+const manterFixtures = process.env.E2E_KEEP_DATA === "true";
+const atrasoEntreEtapasMs = Math.max(0, Number(process.env.E2E_STEP_DELAY_MS) || 0);
+const describeDynamo = executarFluxo150 ? describe : describe.skip;
+
+async function pausarParaAcompanhamento(): Promise<void> {
+    if (atrasoEntreEtapasMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, atrasoEntreEtapasMs));
+    }
 }
 
-import { app } from "../../src/app";
+function validarTabelaE2e(): void {
+    const tabela = process.env.DYNAMODB_DATA_TABLE ?? "";
+    if (!/(local|test)/i.test(tabela)) {
+        throw new Error(
+            `E2E bloqueado: DYNAMODB_DATA_TABLE deve apontar para tabela local/teste, recebido: ${tabela || "vazio"}`
+        );
+    }
+}
+
+async function promoverAdmin(usuarioId: string): Promise<void> {
+    const usuario = await repositoriosE2e.usuario.buscarPorId(usuarioId);
+    if (!usuario) throw new Error(`Usuario ${usuarioId} nao encontrado para promocao`);
+    usuario.role = "admin";
+    await repositoriosE2e.usuario.atualizar(usuario);
+}
+
+async function limparFixturesDynamo(
+    torneioIds: string[],
+    usuarioIds: string[],
+    marcadorExecucao?: string
+): Promise<void> {
+    for (const torneioId of torneioIds.filter(Boolean)) {
+        const partidas = await repositoriosE2e.partida.listarPorTorneio(torneioId);
+        await repositoriosE2e.partida.excluirPorIds(partidas.map((partida) => partida.id));
+        const inscricoes = await repositoriosE2e.inscricao.listarPorTorneio(torneioId);
+        await Promise.all(inscricoes.map((inscricao) => repositoriosE2e.inscricao.excluir(inscricao.id)));
+        await repositoriosE2e.torneio.excluir(torneioId);
+    }
+
+    const usuarios = usuarioIds.filter(Boolean);
+    await Promise.all(usuarios.map((usuarioId) => repositoriosE2e.deck.excluirPorUsuario(usuarioId)));
+    await Promise.all(usuarios.map((usuarioId) => repositoriosE2e.usuario.excluir(usuarioId)));
+
+    if (marcadorExecucao) {
+        const residuos = await limparResiduosPorMarcador(marcadorExecucao);
+        if (residuos > 0) {
+            throw new Error(
+                `Cleanup E2E encontrou e removeu ${residuos} item(ns) residual(is) para ${marcadorExecucao}`
+            );
+        }
+    }
+}
+
+async function limparResiduosPorMarcador(marcador: string): Promise<number> {
+    if (!/^e2e_(?:[a-z]+_)?\d+_$/i.test(marcador)) {
+        throw new Error(`Marcador E2E invalido para limpeza: ${marcador}`);
+    }
+
+    const tabela = process.env.DYNAMODB_DATA_TABLE!;
+    const region = process.env.DYNAMODB_DATA_REGION || process.env.AWS_REGION || "us-east-1";
+    const cliente = new DynamoDBClient({ region });
+    const chaves: Array<Record<string, AttributeValue>> = [];
+    let ultimaChave: Record<string, AttributeValue> | undefined;
+
+    try {
+        do {
+            const resposta = await cliente.send(new ScanCommand({
+                TableName: tabela,
+                ProjectionExpression: "pk, sk",
+                FilterExpression: "contains(payload, :marcador)",
+                ExpressionAttributeValues: { ":marcador": { S: marcador } },
+                ExclusiveStartKey: ultimaChave,
+                ConsistentRead: true,
+            }));
+            chaves.push(...(resposta.Items ?? []));
+            ultimaChave = resposta.LastEvaluatedKey;
+        } while (ultimaChave);
+
+        for (let indice = 0; indice < chaves.length; indice += 25) {
+            let pendentes: WriteRequest[] = chaves.slice(indice, indice + 25).map((Key) => ({
+                DeleteRequest: { Key },
+            }));
+            for (let tentativa = 0; pendentes.length > 0 && tentativa < 8; tentativa += 1) {
+                const resposta = await cliente.send(new BatchWriteItemCommand({
+                    RequestItems: { [tabela]: pendentes },
+                }));
+                pendentes = resposta.UnprocessedItems?.[tabela] ?? [];
+                if (pendentes.length > 0) {
+                    await new Promise((resolve) => setTimeout(resolve, Math.min(1000, 50 * 2 ** tentativa)));
+                }
+            }
+            if (pendentes.length > 0) {
+                throw new Error(`Nao foi possivel remover ${pendentes.length} residuo(s) E2E do DynamoDB`);
+            }
+        }
+    } finally {
+        cliente.destroy();
+    }
+
+    return chaves.length;
+}
 
 // ─── Tipos auxiliares ────────────────────────────────────────────────────────
 
@@ -69,7 +172,9 @@ interface PartidaInfo {
     id: string;
     rodada?: number;
     jogador1Id: string;
+    jogador1Nome: string;
     jogador2Id: string | null;
+    jogador2Nome: string | null;
     status?: string;
     vitoriasJogador1?: number;
     vitoriasJogador2?: number;
@@ -117,7 +222,7 @@ const MAINDECK_VALIDO = [{ nome: "Island", quantidade: 60 }];
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
-describe("E2E – Torneio Swiss 150 jogadores", () => {
+describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
     jest.setTimeout(600_000);
 
     const PREFIX = `e2e_${Date.now()}_`;
@@ -244,6 +349,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
     // ── Setup global ───────────────────────────────────────────────────────────
     beforeAll(async () => {
+        validarTabelaE2e();
         req = supertest(app());
 
         // 1. Registrar organizador
@@ -253,11 +359,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             .expect(201);
         adminId = orgRes.body.id;
 
-        // 2. Promover organizador para admin diretamente no MongoDB
-        await mongoose.model("Usuario").updateOne(
-            { id: adminId },
-            { $set: { role: "admin" } }
-        );
+        // 2. Promover organizador para admin diretamente no repositorio de teste
+        await promoverAdmin(adminId);
 
         // 3. Login do admin
         const adminLogin = await req
@@ -313,6 +416,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
             })
             .expect(201);
         torneioId = torneioRes.body.id;
+        console.info(`[E2E 150] torneioId=${torneioId} fase=inscricoes`);
+        await pausarParaAcompanhamento();
         expect(torneioRes.body.exibirNomeJogador).toBe("nickMOL");
 
         // 8. Inscrever 150 jogadores
@@ -367,6 +472,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         expect(res.body.rodadaAtual).toBe(1);
         expect(res.body.totalRodadas).toBeGreaterThanOrEqual(7);
         expect(res.body.partidas).toHaveLength(75);
+        console.info(`[E2E 150] torneioId=${torneioId} fase=rodada rodada=1`);
+        await pausarParaAcompanhamento();
 
         // Todos os jogadores referenciados pertencem ao set de inscritos
         const jogadoresNasPartidas = new Set<string>();
@@ -472,6 +579,8 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 .post(`/torneio/${torneioId}/proxima-rodada`)
                 .set("Authorization", `Bearer ${adminToken}`)
                 .expect(200);
+            console.info(`[E2E 150] torneioId=${torneioId} fase=rodada rodada=${avancRes.body.rodadaAtual}`);
+            await pausarParaAcompanhamento();
 
             expect(avancRes.body.finalizado).toBe(false);
             rodadaPartidas = avancRes.body.partidas as PartidaInfo[];
@@ -482,7 +591,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 expect(rodadaPartidas).toHaveLength(75);
             }
         }
-    });
+    }, 600_000);
 
     // ── Guardrails pós-rodadas 1-4 (rodada 5 com partidas pendentes) ──────────
 
@@ -691,7 +800,14 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
         // Posição 1 deve existir e ter pontuação >= 0
         const lider = standings[0];
         expect(lider.posicao).toBe(1);
-        expect(lider.pontosMesa).toBeGreaterThanOrEqual(0);
+        expect(lider.pontosMesa).toBeGreaterThanOrEqual(9);
+
+        const jogadoresIniciais = new Set(playerIds);
+        for (const entry of standings) {
+            const partidasContabilizadas =
+                entry.vitoriasPartida + entry.empatesPartida + entry.derrotasPartida;
+            expect(partidasContabilizadas).toBe(jogadoresIniciais.has(entry.usuario.id) ? 4 : 0);
+        }
 
         // Standings em ordem não-decrescente de posição
         for (let i = 0; i < standings.length - 1; i++) {
@@ -882,11 +998,21 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                     ? activePlayers.filter((player) => !player.late)
                     : activePlayers;
                 await lote(jogadoresParaCheckin, 15, async (player) => {
-                    await req
+                    const resposta = await req
                         .post(`/torneio/${torneioId}/checkin`)
                         .set("Authorization", `Bearer ${player.token}`)
-                        .send()
-                        .expect(200);
+                        .send();
+
+                    if (resposta.status !== 200) {
+                        throw new Error(JSON.stringify({
+                            operacao: "checkin",
+                            torneioId,
+                            jogadorId: player.id,
+                            rodadaAtual: r,
+                            statusHttp: resposta.status,
+                            resposta: resposta.body,
+                        }));
+                    }
                 });
             }
 
@@ -894,6 +1020,10 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 .post(`/torneio/${torneioId}/proxima-rodada`)
                 .set("Authorization", `Bearer ${adminToken}`)
                 .expect(200);
+            console.info(
+                `[E2E 150] torneioId=${torneioId} fase=${avancRes.body.finalizado ? "finalizado" : "rodada"} rodada=${avancRes.body.rodadaAtual}`
+            );
+            await pausarParaAcompanhamento();
 
             if (r < 8) {
                 expect(avancRes.body.finalizado).toBe(false);
@@ -979,7 +1109,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
                 }
             }
         }
-    });
+    }, 600_000);
 
     // ── Guardrails pós-finalização ────────────────────────────────────────────
 
@@ -1218,24 +1348,15 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
 
     // ── Limpeza ────────────────────────────────────────────────────────────────
     afterAll(async () => {
-        if (!torneioId) {
-            await mongoose.disconnect();
+        if (manterFixtures) {
+            console.info(`[E2E 150] fixtures preservadas torneioId=${torneioId}`);
             return;
         }
-
-        const emailRegex = new RegExp(`^${PREFIX.replace(/_/g, "_")}`);
-
-        await mongoose.model("Partida").deleteMany({ torneioId });
-        await mongoose.model("Inscricao").deleteMany({ torneioId });
-        await mongoose.model("Torneio").deleteMany({ id: torneioId });
-        await mongoose.model("Deck").deleteMany({
-            usuarioId: { $in: [adminId, ...playerIds] },
-        });
-        await mongoose.model("Usuario").deleteMany({ email: emailRegex });
-
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.disconnect();
-        }
+        await limparFixturesDynamo(
+            torneioId ? [torneioId] : [],
+            [adminId, ...playerIds, ...latePlayerIds],
+            PREFIX
+        );
     }, 60_000);
 });
 
@@ -1243,7 +1364,7 @@ describe("E2E – Torneio Swiss 150 jogadores", () => {
  * E2E menor: cobre ajuste de rodadas + encerramento antecipado sem corte.
  * Separado do fluxo 150 para não interferir nas expectativas de Top 8.
  */
-describe("E2E – Ajuste de rodadas e encerramento antecipado", () => {
+describeDynamo("E2E – Ajuste de rodadas e encerramento antecipado", () => {
     jest.setTimeout(120_000);
 
     const PREFIX = `e2e_end_${Date.now()}_`;
@@ -1258,18 +1379,15 @@ describe("E2E – Ajuste de rodadas e encerramento antecipado", () => {
     let playerTokens: string[] = [];
 
     beforeAll(async () => {
+        validarTabelaE2e();
         req = supertest(app());
-
-        if (mongoose.connection.readyState === 0) {
-            await mongoose.connect(process.env.MONGODB_URI as string);
-        }
 
         const orgRes = await req
             .post("/usuario/cadastrar")
             .send({ nome: "Org End", email: `${PREFIX}org@end.com`, senha: SENHA })
             .expect(201);
         adminId = orgRes.body.id;
-        await mongoose.model("Usuario").updateOne({ id: adminId }, { $set: { role: "admin" } });
+        await promoverAdmin(adminId);
 
         const adminLogin = await req
             .post("/usuario/login")
@@ -1420,20 +1538,8 @@ describe("E2E – Ajuste de rodadas e encerramento antecipado", () => {
     });
 
     afterAll(async () => {
-        if (torneioId) {
-            await mongoose.model("Partida").deleteMany({ torneioId });
-            await mongoose.model("Inscricao").deleteMany({ torneioId });
-            await mongoose.model("Torneio").deleteMany({ id: torneioId });
-        }
-        await mongoose.model("Deck").deleteMany({
-            usuarioId: { $in: [adminId, ...playerIds].filter(Boolean) },
-        });
-        await mongoose.model("Usuario").deleteMany({
-            email: new RegExp(`^${PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-        });
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.disconnect();
-        }
+        if (manterFixtures) return;
+        await limparFixturesDynamo(torneioId ? [torneioId] : [], [adminId, ...playerIds], PREFIX);
     }, 60_000);
 });
 
@@ -1441,7 +1547,7 @@ describe("E2E – Ajuste de rodadas e encerramento antecipado", () => {
  * E2E focado: contestação com observação + rodadas além do limite Swiss.
  * 4 jogadores → Swiss natural = 2; maxRodadas=3 força a 3ª; PUT sobe para 4 e joga até o fim.
  */
-describe("E2E – Contestação com observação e rodadas acima do Swiss", () => {
+describeDynamo("E2E – Contestação com observação e rodadas acima do Swiss", () => {
     jest.setTimeout(180_000);
 
     const PREFIX = `e2e_extra_${Date.now()}_`;
@@ -1479,18 +1585,15 @@ describe("E2E – Contestação com observação e rodadas acima do Swiss", () =
     };
 
     beforeAll(async () => {
+        validarTabelaE2e();
         req = supertest(app());
-
-        if (mongoose.connection.readyState === 0) {
-            await mongoose.connect(process.env.MONGODB_URI as string);
-        }
 
         const orgRes = await req
             .post("/usuario/cadastrar")
             .send({ nome: "Org Extra", email: `${PREFIX}org@extra.com`, senha: SENHA })
             .expect(201);
         adminId = orgRes.body.id;
-        await mongoose.model("Usuario").updateOne({ id: adminId }, { $set: { role: "admin" } });
+        await promoverAdmin(adminId);
 
         const adminLogin = await req
             .post("/usuario/login")
@@ -1747,25 +1850,11 @@ describe("E2E – Contestação com observação e rodadas acima do Swiss", () =
             .expect(400);
         expect(res.body.mensagem || JSON.stringify(res.body)).toMatch(/500|Observação|observacao/i);
 
-        await mongoose.model("Partida").deleteMany({ torneioId: tid });
-        await mongoose.model("Inscricao").deleteMany({ torneioId: tid });
-        await mongoose.model("Torneio").deleteMany({ id: tid });
+        await limparFixturesDynamo([tid], []);
     });
 
     afterAll(async () => {
-        if (torneioId) {
-            await mongoose.model("Partida").deleteMany({ torneioId });
-            await mongoose.model("Inscricao").deleteMany({ torneioId });
-            await mongoose.model("Torneio").deleteMany({ id: torneioId });
-        }
-        await mongoose.model("Deck").deleteMany({
-            usuarioId: { $in: [adminId, ...playerIds].filter(Boolean) },
-        });
-        await mongoose.model("Usuario").deleteMany({
-            email: new RegExp(`^${PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-        });
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.disconnect();
-        }
+        if (manterFixtures) return;
+        await limparFixturesDynamo(torneioId ? [torneioId] : [], [adminId, ...playerIds], PREFIX);
     }, 60_000);
 });

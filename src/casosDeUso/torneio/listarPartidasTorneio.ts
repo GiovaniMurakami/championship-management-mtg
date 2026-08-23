@@ -8,6 +8,8 @@ import {
   isUsuarioExcluido,
   resolverNomeJogador as resolverNome,
 } from "../../helpers/torneio/resolverNomeJogador";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { cachePkTorneio, cacheSkPartidas } from "../../helpers/cache/chavesCache";
 
 export type ListarPartidasTorneioInputDto = {
     torneioId: string;
@@ -44,20 +46,27 @@ export class ListarPartidasTorneio
     private constructor(
         private readonly torneioGateway: TorneioGateway,
         private readonly partidaGateway: PartidaGateway,
-        private readonly usuarioGateway: UsuarioGateway
+        private readonly usuarioGateway: UsuarioGateway,
+        private readonly cache?: CacheDynamoDbServico
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
         partidaGateway: PartidaGateway,
-        usuarioGateway: UsuarioGateway
+        usuarioGateway: UsuarioGateway,
+        cache?: CacheDynamoDbServico
     ) {
-        return new ListarPartidasTorneio(torneioGateway, partidaGateway, usuarioGateway);
+        return new ListarPartidasTorneio(torneioGateway, partidaGateway, usuarioGateway, cache);
     }
 
     public async executar(
         input: ListarPartidasTorneioInputDto
     ): Promise<ListarPartidasTorneioOutputDto> {
+        const cachePk = cachePkTorneio(input.torneioId);
+        const cacheSk = cacheSkPartidas(input.rodada);
+        const cacheado = await this.cache?.buscar<ListarPartidasTorneioOutputDto>(cachePk, cacheSk);
+        if (cacheado) return cacheado;
+
         const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
         if (!torneio) {
             throw ErroPersonalizado.criar({
@@ -92,7 +101,7 @@ export class ListarPartidasTorneio
             return { count, total: 2, fullyConfirmed: count >= 2 };
         };
 
-        return {
+        const saida = {
             torneioId: input.torneioId,
             rodada: input.rodada,
             partidas: partidas.map((p) => {
@@ -122,5 +131,7 @@ export class ListarPartidasTorneio
                 };
             }),
         };
+        await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+        return saida;
     }
 }

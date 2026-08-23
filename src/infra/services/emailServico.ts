@@ -57,10 +57,15 @@ export class EmailServico implements EmailGateway {
             html,
         });
 
+        let timeoutId: ReturnType<typeof setTimeout>;
         const timeout = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("Email timeout")), EMAIL_TIMEOUT_MS);
+            timeoutId = setTimeout(() => reject(new Error("Email timeout")), EMAIL_TIMEOUT_MS);
         });
 
-        await Promise.race([envio, timeout]);
+        try {
+            await Promise.race([envio, timeout]);
+        } finally {
+            clearTimeout(timeoutId!);
+        }
     }
 }

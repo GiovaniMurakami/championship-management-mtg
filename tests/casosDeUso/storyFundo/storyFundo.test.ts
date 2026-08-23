@@ -48,7 +48,7 @@ describe("StoryFundo use cases", () => {
     ).rejects.toMatchObject({ message: expect.stringMatching(/Já existe/i) });
   });
 
-  it("mapeia erro Mongo 11000 para nome duplicado", async () => {
+  it("mapeia erro de chave duplicada para nome duplicado", async () => {
     const gateway = criarMockStoryFundoGateway();
     gateway.listar.mockResolvedValue([]);
     gateway.salvar.mockRejectedValue({ code: 11000 });

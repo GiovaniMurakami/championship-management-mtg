@@ -37,6 +37,8 @@ describe("ListarLigas", () => {
             descricao: "Descrição da liga",
             donoId: "user-1",
             torneioIds: [],
+            bannerUrl: "https://bucket/banner.png",
+            tipo: "times",
         });
         const gateway = criarMockLigaGateway({
             listar: jest.fn().mockResolvedValue([liga]),
@@ -46,5 +48,7 @@ describe("ListarLigas", () => {
         const resultado = await uc.executar({});
 
         expect(resultado.ligas[0].descricao).toBe("Descrição da liga");
+        expect(resultado.ligas[0].bannerUrl).toBe("https://bucket/banner.png");
+        expect(resultado.ligas[0].tipo).toBe("times");
     });
 });

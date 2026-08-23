@@ -107,14 +107,14 @@ src/
 
 - **Domínio**: Entidades de negócio e interfaces (gateways)
 - **Casos de Uso**: Lógica de aplicação independente de framework
-- **Infraestrutura**: Implementações técnicas (Express, MongoDB)
+- **Infraestrutura**: Implementações técnicas (Express, DynamoDB, cache, S3 e Ably)
 - **Middlewares**: Interceptadores de requisições
 
 ## Tecnologias
 
 - **Node.js** + **TypeScript**
 - **Express** - Framework web
-- **MongoDB** + **Mongoose** - Banco de dados
+- **Amazon DynamoDB** - Persistência principal e cache compartilhado
 - **JWT** - Autenticação
 - **bcryptjs** - Criptografia de senhas
 - **CORS** - Controle de acesso entre origens
@@ -127,9 +127,13 @@ src/
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ```env
-MONGODB_URI=sua_connection_string_mongodb
 JWT_SECRET=seu_secret_jwt
 PORT=3000
+DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
+DYNAMODB_DATA_REGION=us-east-1
+DYNAMODB_CACHE_ENABLED=true
+DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_REGION=us-east-1
 ```
 
 ## Executando Localmente
@@ -138,6 +142,10 @@ PORT=3000
 npm install
 npm run dev
 ```
+
+## Testes
+
+`npm test` executa os testes unitarios e todos os fluxos E2E com DynamoDB. Consulte o [guia de testes](./testes.md) para configurar credenciais, tabelas e executar suites individuais.
 
 ## Deploy
 

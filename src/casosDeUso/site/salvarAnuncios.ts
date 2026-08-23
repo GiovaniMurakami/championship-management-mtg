@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { AnuncioSite, SiteConfigGateway, TipoAnuncioSite } from "../../dominio/gateway/siteConfigGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_SITE } from "../../helpers/cache/chavesCache";
 
 type AnuncioInput = Partial<AnuncioSite>;
 
@@ -24,10 +26,13 @@ const normalizarTipo = (tipo: unknown): TipoAnuncioSite => (
 );
 
 export class SalvarAnuncios {
-  private constructor(private readonly siteConfigGateway: SiteConfigGateway) {}
+  private constructor(
+    private readonly siteConfigGateway: SiteConfigGateway,
+    private readonly cache?: CacheDynamoDbServico
+  ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway) {
-    return new SalvarAnuncios(siteConfigGateway);
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+    return new SalvarAnuncios(siteConfigGateway, cache);
   }
 
   public async executar(input: SalvarAnunciosInput) {
@@ -86,9 +91,11 @@ export class SalvarAnuncios {
       };
     });
 
-    return this.siteConfigGateway.salvarAnuncios({
+    const salvo = await this.siteConfigGateway.salvarAnuncios({
       anuncios,
       atualizadoEm: new Date(),
     });
+    await this.cache?.invalidarParticao(CACHE_PK_SITE);
+    return salvo;
   }
 }

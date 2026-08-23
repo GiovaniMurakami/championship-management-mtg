@@ -4,6 +4,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type RefazerRodadaInputDto = {
   torneioId: string;
@@ -104,6 +105,13 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     torneio.voltarRodada(rodadaAnterior, estadoAnterior.totalRodadas, estadoAnterior.emCorte);
     await this.torneioGateway.atualizar(torneio);
+    eventosTorneio.emit("rodada_refeita", {
+      torneioId: torneio.id,
+      rodadaAtual: rodadaAnterior,
+      rodadaRemovida,
+      partidasRemovidas,
+      emCorte: torneio.emCorte,
+    });
 
     return {
       rodadaAtual: rodadaAnterior,

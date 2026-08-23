@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type AjustarTotalRodadasInputDto = {
   torneioId: string;
@@ -90,6 +91,11 @@ export class AjustarTotalRodadas
     const totalAnterior = torneio.totalRodadas;
     torneio.totalRodadas = novoTotal;
     await this.torneioGateway.atualizar(torneio);
+    eventosTorneio.emit("total_rodadas_alterado", {
+      torneioId: torneio.id,
+      totalRodadasAnterior: totalAnterior,
+      totalRodadas: torneio.totalRodadas,
+    });
 
     return {
       torneioId: torneio.id,

@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type ConfirmarResultadoInputDto = {
     partidaId: string;
@@ -93,6 +94,12 @@ export class ConfirmarResultado
                 status: StatusErro.erroParametro,
             });
         }
+        eventosTorneio.emit("resultado_confirmado", {
+            torneioId: partidaAtualizada.torneioId,
+            partidaId: partidaAtualizada.id,
+            usuarioId: input.usuarioId,
+            rodada: partidaAtualizada.rodada,
+        });
 
         const confirmadoPor = partidaAtualizada.confirmadoPor ?? [];
 

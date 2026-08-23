@@ -1,6 +1,5 @@
+import { DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { NextFunction, Request, Response } from "express";
-import mongoose from "mongoose";
-import { conectarMongoDB } from "../../../mongodb/conexao";
 import { HttpMethod, Rotas } from "./rotas";
 
 export class HealthRota implements Rotas {
@@ -23,19 +22,24 @@ export class HealthRota implements Rotas {
             response: Response,
             _next: NextFunction
         ): Promise<void> => {
-            let mongoStatus = "unknown";
+            const tabela = process.env.DYNAMODB_DATA_TABLE || "";
+            const region = process.env.DYNAMODB_DATA_REGION || process.env.AWS_REGION || "us-east-1";
+            const cliente = new DynamoDBClient({ region });
+            let dynamodb = "disconnected";
+
             try {
-                await conectarMongoDB();
-                await mongoose.connection.db!.admin().command({ ping: 1 });
-                mongoStatus = "ok";
+                const resultado = await cliente.send(new DescribeTableCommand({ TableName: tabela }));
+                dynamodb = resultado.Table?.TableStatus === "ACTIVE" ? "ok" : "degraded";
             } catch {
-                mongoStatus = mongoose.connection.readyState === 1 ? "error" : "disconnected";
+                dynamodb = "error";
+            } finally {
+                cliente.destroy();
             }
 
-            const degraded = mongoStatus !== "ok";
+            const degraded = dynamodb !== "ok";
             response.status(degraded ? 503 : 200).json({
                 status: degraded ? "degraded" : "ok",
-                mongo: mongoStatus,
+                dynamodb,
                 timestamp: new Date().toISOString(),
             });
         };

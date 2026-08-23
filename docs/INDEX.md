@@ -93,12 +93,12 @@ _(A ser adicionado)_
 
 - Guia de contribuição
 - Padrões de código
-- Testes
+- [Testes](./testes.md) - Suites unitarias e E2E com DynamoDB
 - CI/CD
 
 ## Referências
 
 - [Express Documentation](https://expressjs.com/)
-- [MongoDB Documentation](https://www.mongodb.com/docs/)
+- [Amazon DynamoDB Documentation](https://docs.aws.amazon.com/dynamodb/)
 - [Serverless Framework](https://www.serverless.com/framework/docs)
 - [Magic: The Gathering API](https://docs.magicthegathering.io/)

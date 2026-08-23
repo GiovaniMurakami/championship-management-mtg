@@ -3,6 +3,8 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { ArquetipoDetalhe } from "./agregarMetagame";
 import { carregarEAgregarMetagame, MetagameGateways } from "./carregarMetagame";
+import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CACHE_PK_METAGAME, cacheSkMetagameArquetipo } from "../../helpers/cache/chavesCache";
 
 export type BuscarArquetipoMetagameInputDto = {
   formato: string;
@@ -18,16 +20,20 @@ export type BuscarArquetipoMetagameOutputDto = ArquetipoDetalhe & {
 export class BuscarArquetipoMetagame
   implements CasoDeUso<BuscarArquetipoMetagameInputDto, BuscarArquetipoMetagameOutputDto>
 {
-  private constructor(private readonly gateways: MetagameGateways) {}
+  private constructor(
+    private readonly gateways: MetagameGateways,
+    private readonly cache?: CacheDynamoDbServico
+  ) {}
 
   public static criar(
     torneio: MetagameGateways["torneio"],
     inscricao: MetagameGateways["inscricao"],
     partida: MetagameGateways["partida"],
     deck: MetagameGateways["deck"],
-    usuario: MetagameGateways["usuario"]
+    usuario: MetagameGateways["usuario"],
+    cache?: CacheDynamoDbServico
   ) {
-    return new BuscarArquetipoMetagame({ torneio, inscricao, partida, deck, usuario });
+    return new BuscarArquetipoMetagame({ torneio, inscricao, partida, deck, usuario }, cache);
   }
 
   public async executar(
@@ -41,7 +47,12 @@ export class BuscarArquetipoMetagame
       });
     }
 
-    const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, input.dias ?? 30);
+    const dias = input.dias ?? 30;
+    const cacheKey = cacheSkMetagameArquetipo(input.formato, slug, dias);
+    const cacheado = await this.cache?.buscar<BuscarArquetipoMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey);
+    if (cacheado) return cacheado;
+
+    const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias);
     const detalhe = agregado.porSlug.get(slug);
     if (!detalhe) {
       throw ErroPersonalizado.criar({
@@ -50,10 +61,12 @@ export class BuscarArquetipoMetagame
       });
     }
 
-    return {
+    const saida = {
       formato: agregado.formato,
       dias: agregado.dias,
       ...detalhe,
     };
+    await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900));
+    return saida;
   }
 }

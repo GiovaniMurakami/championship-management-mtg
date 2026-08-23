@@ -2,6 +2,7 @@ import { CadastrarUsuario } from "../../../src/casosDeUso/usuario/cadastrarUsuar
 import { criarMockUsuarioGateway, criarMockEmailGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
+import { EmailUsuarioJaExisteErro } from "../../../src/dominio/gateway/usuarioGateway";
 
 jest.mock("bcryptjs", () => ({
     hash: jest.fn().mockResolvedValue("hashed_password"),
@@ -70,5 +71,30 @@ describe("CadastrarUsuario", () => {
         const chamadas = (gateway.salvar as jest.Mock).mock.calls;
         const usuarioSalvo = chamadas[0][0] as Usuario;
         expect(usuarioSalvo.senha).toBe("hashed_password");
+    });
+
+    it("deve traduzir conflito atomico de email do repositorio", async () => {
+        const gateway = criarMockUsuarioGateway({
+            salvar: jest.fn().mockRejectedValue(new EmailUsuarioJaExisteErro()),
+        });
+        const emailGateway = criarMockEmailGateway();
+        const uc = CadastrarUsuario.criar(gateway, emailGateway);
+
+        await expect(
+            uc.executar({ nome: "Joao", email: "concorrente@email.com", senha: "senha" })
+        ).rejects.toMatchObject({ status: 400 });
+        expect(emailGateway.enviar).not.toHaveBeenCalled();
+    });
+
+    it("deve preservar falhas inesperadas do repositorio", async () => {
+        const falha = new Error("Dynamo indisponivel");
+        const gateway = criarMockUsuarioGateway({
+            salvar: jest.fn().mockRejectedValue(falha),
+        });
+        const uc = CadastrarUsuario.criar(gateway, criarMockEmailGateway());
+
+        await expect(
+            uc.executar({ nome: "Joao", email: "erro@email.com", senha: "senha" })
+        ).rejects.toBe(falha);
     });
 });

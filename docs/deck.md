@@ -335,9 +335,9 @@ Interface de comunicação com o repositório:
 
 ## Repositório
 
-Implementação MongoDB:
+Implementação DynamoDB:
 
-- [DeckRepositorio](../src/infra/mongodb/repositorios/deckRepositorio.ts)
+- [DeckDynamoRepositorio](../src/infra/dynamodb/repositorios/deckDynamoRepositorio.ts)
 
 ## Middleware de Autenticação
 

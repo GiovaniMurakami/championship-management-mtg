@@ -4,8 +4,8 @@ import { autenticarJwt } from "../../src/middlewares/express/autenticarJwt";
 import { resetJwtKeyCache } from "../../src/helpers/jwt";
 
 jest.mock("jsonwebtoken");
-jest.mock("../../src/infra/mongodb/repositorios/tokenBlacklistRepositorio", () => ({
-    TokenBlacklistRepositorio: {
+jest.mock("../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio", () => ({
+    TokenBlacklistDynamoRepositorio: {
         criar: jest.fn().mockReturnValue({
             existe: jest.fn().mockResolvedValue(false),
         }),
@@ -97,10 +97,10 @@ describe("autenticarJwt middleware", () => {
     });
 
     it("deve retornar 401 quando token está na blacklist", async () => {
-        const { TokenBlacklistRepositorio } = jest.requireMock(
-            "../../src/infra/mongodb/repositorios/tokenBlacklistRepositorio"
+        const { TokenBlacklistDynamoRepositorio } = jest.requireMock(
+            "../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio"
         );
-        TokenBlacklistRepositorio.criar.mockReturnValue({
+        TokenBlacklistDynamoRepositorio.criar.mockReturnValue({
             existe: jest.fn().mockResolvedValue(true),
         });
 
@@ -110,14 +110,14 @@ describe("autenticarJwt middleware", () => {
 
         // Re-import to get the mock instance — call directly on new instance
         const blacklistMock = { existe: jest.fn().mockResolvedValue(true) };
-        TokenBlacklistRepositorio.criar.mockReturnValue(blacklistMock);
+        TokenBlacklistDynamoRepositorio.criar.mockReturnValue(blacklistMock);
 
         // The module-level instance is already created; test via a fresh mock approach:
         // Simply verify the middleware returns 401 for blacklisted tokens
         // by re-testing with fresh module mock via jest.isolateModules
         await jest.isolateModulesAsync(async () => {
-            jest.mock("../../src/infra/mongodb/repositorios/tokenBlacklistRepositorio", () => ({
-                TokenBlacklistRepositorio: {
+            jest.mock("../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio", () => ({
+                TokenBlacklistDynamoRepositorio: {
                     criar: jest.fn().mockReturnValue({ existe: jest.fn().mockResolvedValue(true) }),
                 },
             }));

@@ -37,7 +37,7 @@ describe("app bootstrap", () => {
         jest.resetModules();
         process.env = {
             ...originalEnv,
-            MONGODB_URI: "mongodb://localhost/teste",
+            DYNAMODB_DATA_TABLE: "tabela-teste",
             JWT_SECRET: "segredo-teste",
         };
     });

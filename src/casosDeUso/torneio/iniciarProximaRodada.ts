@@ -18,6 +18,7 @@ import {
   parKey,
   gerarPareamentos,
 } from "./swiss";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
   const corte = Number(corteTop || 0);
@@ -219,6 +220,12 @@ export class IniciarProximaRodada
 
       torneio.entrarEmCorte(proximaRodada, proximaRodada + rodadasCorte - 1);
       await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      eventosTorneio.emit("rodada_iniciada", {
+        torneioId: torneio.id,
+        rodadaAtual: proximaRodada,
+        totalRodadas: torneio.totalRodadas,
+        emCorte: torneio.emCorte,
+      });
 
       return {
         finalizado: false,
@@ -243,6 +250,11 @@ export class IniciarProximaRodada
       const top8Ids = statsOrdenados.slice(0, 8).map((s) => s.usuarioId);
       await this.usuarioGateway.incrementarResultadosExpressivos(top8Ids, 1);
       await this.torneioGateway.atualizar(torneio);
+      eventosTorneio.emit("torneio_finalizado", {
+        torneioId: torneio.id,
+        rodadaAtual: torneio.rodadaAtual,
+        totalRodadas: torneio.totalRodadas,
+      });
 
       const classificacao = statsOrdenados.map((s, idx) => ({
         posicao: idx + 1,
@@ -295,6 +307,12 @@ export class IniciarProximaRodada
 
       torneio.avancarRodada(proximaRodada);
       await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      eventosTorneio.emit("rodada_iniciada", {
+        torneioId: torneio.id,
+        rodadaAtual: proximaRodada,
+        totalRodadas: torneio.totalRodadas,
+        emCorte: torneio.emCorte,
+      });
 
       return {
         finalizado: false,
@@ -346,6 +364,12 @@ export class IniciarProximaRodada
 
     torneio.avancarRodada(proximaRodada);
     await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+    eventosTorneio.emit("rodada_iniciada", {
+      torneioId: torneio.id,
+      rodadaAtual: proximaRodada,
+      totalRodadas: torneio.totalRodadas,
+      emCorte: torneio.emCorte,
+    });
 
     return {
       finalizado: false,

@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type EncerrarTorneioInputDto = {
   torneioId: string;
@@ -60,6 +61,11 @@ export class EncerrarTorneio
     torneio.totalRodadas = Math.max(torneio.totalRodadas, torneio.rodadaAtual);
     torneio.finalizar();
     await this.torneioGateway.atualizar(torneio);
+    eventosTorneio.emit("torneio_finalizado", {
+      torneioId: torneio.id,
+      rodadaAtual: torneio.rodadaAtual,
+      totalRodadas: torneio.totalRodadas,
+    });
 
     return {
       torneioId: torneio.id,
