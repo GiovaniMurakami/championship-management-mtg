@@ -10,6 +10,7 @@ import {
   validarDeckPorFormato,
   validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
+import { classificarArquetipo } from "../../dominio/servicos/classificadorArquetipo";
 
 const MAXIMO_DECKS_POR_USUARIO = 50;
 
@@ -71,9 +72,20 @@ export class CadastrarDeck
       commander: commanderNormalizado,
     });
 
+    const referencias = await this.deckGateway.listar({
+      formato,
+      incluirOcultos: true,
+      limite: 500,
+    });
+    const classificacao = classificarArquetipo({
+      maindeck: maindeckNormalizado,
+      sideboard: sideboardNormalizado,
+      commander: commanderNormalizado,
+    }, referencias);
+
     const deck = Deck.criar({
       nome,
-      nomeConsolidado: nome,
+      nomeConsolidado: classificacao.nomeConsolidado ?? nome,
       formato,
       linkLigaMagic,
       maindeck: maindeckNormalizado,
