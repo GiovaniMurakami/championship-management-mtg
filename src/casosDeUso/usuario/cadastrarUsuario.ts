@@ -5,6 +5,7 @@ import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { criarEmailBoasVindas } from "../../infra/services/templatesEmail";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -73,14 +74,11 @@ export class CadastrarUsuario
       throw error;
     }
 
+    const emailBoasVindas = criarEmailBoasVindas(usuario.nome);
     await this.emailGateway.enviar({
       para: usuario.email,
-      assunto: "Bem-vindo ao MTG Championship!",
-      html: `
-        <h2>Olá, ${usuario.nome}!</h2>
-        <p>Sua conta foi criada com sucesso. Bem-vindo ao <strong>MTG Championship</strong>!</p>
-        <p>Agora você pode se inscrever em torneios, gerenciar seus decks e muito mais.</p>
-      `,
+      assunto: "Bem-vindo ao Fuguete!",
+      ...emailBoasVindas,
     });
 
     return {

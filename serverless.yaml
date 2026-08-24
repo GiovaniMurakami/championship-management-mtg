@@ -31,8 +31,8 @@ provider:
     DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS, '1800'}
     DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS: ${env:DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS, '300'}
     DYNAMODB_CACHE_TTL_SITE_SECONDS: ${env:DYNAMODB_CACHE_TTL_SITE_SECONDS, '300'}
-    EMAIL_USER: ${env:EMAIL_USER, ''}
-    EMAIL_PASS: ${env:EMAIL_PASS, ''}
+    SES_FROM_EMAIL: ${env:SES_FROM_EMAIL, 'Fuguete <noreply@tiagofuguete.com.br>'}
+    SES_REGION: ${env:SES_REGION, 'us-east-1'}
     FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
   iam:
     role:
@@ -43,6 +43,12 @@ provider:
           Resource:
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/championship-mtg/${sls:stage}/jwt-private-key"
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/championship-mtg/${sls:stage}/jwt-public-key"
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource:
+            - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tiagofuguete.com.br"
         - Effect: Allow
           Action:
             - s3:PutObject

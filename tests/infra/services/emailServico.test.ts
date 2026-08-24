@@ -1,9 +1,11 @@
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { EmailServico } from "../../../src/infra/services/emailServico";
 
-jest.mock("nodemailer", () => ({
-    createTransport: jest.fn(() => ({
-        sendMail: jest.fn().mockResolvedValue({ messageId: "1" }),
-    })),
+const sendMock = jest.fn().mockResolvedValue({ MessageId: "1" });
+
+jest.mock("@aws-sdk/client-ses", () => ({
+    SESClient: jest.fn().mockImplementation(() => ({ send: sendMock })),
+    SendEmailCommand: jest.fn().mockImplementation((input) => ({ input })),
 }));
 
 describe("EmailServico", () => {
@@ -11,30 +13,31 @@ describe("EmailServico", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        sendMock.mockResolvedValue({ MessageId: "1" });
         process.env = { ...originalEnv };
     });
 
-    afterAll(() => {
-        process.env = originalEnv;
+    afterAll(() => { process.env = originalEnv; });
+
+    it("não cria cliente nem envia quando SES_FROM_EMAIL está ausente", async () => {
+        delete process.env.SES_FROM_EMAIL;
+        const servico = EmailServico.criar();
+        await servico.enviar({ para: "a@b.com", assunto: "Teste", html: "<p>oi</p>", texto: "oi" });
+        expect(SESClient).not.toHaveBeenCalled();
+        expect(sendMock).not.toHaveBeenCalled();
     });
 
-    it("deve logar aviso e não enviar quando credenciais ausentes", async () => {
-        delete process.env.EMAIL_USER;
-        delete process.env.EMAIL_PASS;
-
+    it("envia HTML e texto pelo SES quando o remetente está configurado", async () => {
+        process.env.SES_FROM_EMAIL = "Fuguete <noreply@tiagofuguete.com.br>";
+        process.env.SES_REGION = "us-east-1";
         const servico = EmailServico.criar();
-        await expect(
-            servico.enviar({ para: "a@b.com", assunto: "Teste", html: "<p>oi</p>" })
-        ).resolves.toBeUndefined();
-    });
+        await servico.enviar({ para: "a@b.com", assunto: "Teste", html: "<p>oi</p>", texto: "oi" });
 
-    it("deve enviar email quando credenciais configuradas", async () => {
-        process.env.EMAIL_USER = "user@test.com";
-        process.env.EMAIL_PASS = "pass";
-
-        const servico = EmailServico.criar();
-        await expect(
-            servico.enviar({ para: "a@b.com", assunto: "Teste", html: "<p>oi</p>" })
-        ).resolves.toBeUndefined();
+        expect(SESClient).toHaveBeenCalledWith({ region: "us-east-1" });
+        expect(SendEmailCommand).toHaveBeenCalledWith(expect.objectContaining({
+            Source: "Fuguete <noreply@tiagofuguete.com.br>",
+            Destination: { ToAddresses: ["a@b.com"] },
+        }));
+        expect(sendMock).toHaveBeenCalledTimes(1);
     });
 });
