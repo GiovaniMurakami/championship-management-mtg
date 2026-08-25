@@ -116,7 +116,12 @@ describe("RankingLiga", () => {
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway(),
+            criarMockInscricaoGateway({
+                listarPorTorneios: jest.fn().mockResolvedValue([
+                    new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", deckId: "deck-1" }),
+                    new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", deckId: "deck-2" }),
+                ]),
+            }),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
             criarMockTimeGateway()
@@ -181,7 +186,12 @@ describe("RankingLiga", () => {
         const uc = RankingLiga.criar(
             criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
             criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway(),
+            criarMockInscricaoGateway({
+                listarPorTorneios: jest.fn().mockResolvedValue([
+                    new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", deckId: "deck-1" }),
+                    new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", deckId: "deck-2" }),
+                ]),
+            }),
             criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
             criarMockTimeGateway()
@@ -193,6 +203,7 @@ describe("RankingLiga", () => {
         const burnDeck = resultado.rankingDecks.find((d) => d.nome === "Boros Burn");
         expect(burnDeck).toBeDefined();
         expect(burnDeck!.totalUsos).toBe(1);
+        expect(burnDeck!.totalDecks).toBe(1);
         expect(burnDeck!.vitorias).toBe(1);
         expect(burnDeck!.derrotas).toBe(0);
         expect(burnDeck!.empates).toBe(0);
@@ -205,6 +216,7 @@ describe("RankingLiga", () => {
         expect(controlDeck!.derrotas).toBe(1);
         expect(controlDeck!.winrate).toBe(0);
         expect(controlDeck!.loserate).toBe(100);
+        expect(controlDeck!.totalDecks).toBe(1);
 
         expect(resultado.totalDecks).toBe(2);
     });

@@ -151,7 +151,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     // --- Time ---
     const criarTime = CriarTime.criar(repos.time);
     const listarTimes = ListarTimes.criar(repos.time);
-    const buscarTime = BuscarTime.criar(repos.time, repos.usuario);
+    const buscarTime = BuscarTime.criar(repos.time, repos.usuario, repos.inscricao, repos.partida);
     const alterarTime = AlterarTime.criar(repos.time);
     const excluirTime = ExcluirTime.criar(repos.time);
     const entrarTime = EntrarTime.criar(repos.time, repos.usuario);

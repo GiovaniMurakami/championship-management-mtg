@@ -62,6 +62,7 @@ export type RankingLigaOutputDto = {
     posicao: number;
     nome: string;
     totalUsos: number;
+    totalDecks: number;
     vitorias: number;
     derrotas: number;
     empates: number;
@@ -99,6 +100,7 @@ type StatsDeck = {
   nome: string;
   cartaRepresentativa: string | null;
   totalUsos: number;
+  totalDecks: number;
   vitorias: number;
   derrotas: number;
   empates: number;
@@ -162,6 +164,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const statsDecks = new Map<string, StatsDeck>();
     const statsCartas = new Map<string, StatsCarta>();
     const deckIdsUsados = new Set<string>();
+    const inscricoesPorDeck = new Map<string, Set<string>>();
     const timeIdsInscritos = new Set<string>();
 
     // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)
@@ -206,6 +209,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       if (inscricao.deckId) {
         deckPorTorneioEJogador.get(inscricao.torneioId)!.set(inscricao.usuarioId, inscricao.deckId);
         deckIdsUsados.add(inscricao.deckId);
+        if (!inscricoesPorDeck.has(inscricao.deckId)) inscricoesPorDeck.set(inscricao.deckId, new Set());
+        inscricoesPorDeck.get(inscricao.deckId)!.add(`${inscricao.torneioId}:${inscricao.usuarioId}`);
       }
       const timeId = inscricao.timeId ?? timePorMembro.get(inscricao.usuarioId);
       if (timeId) {
@@ -298,6 +303,23 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const decks = deckIds.length > 0 ? await this.deckGateway.buscarVarios(deckIds) : [];
     const deckPorId = new Map(decks.map((d) => [d.id, d]));
 
+    // Uma inscrição de um jogador com um deck em um campeonato equivale a 1 deck,
+    // independentemente de quantas partidas ele tenha disputado.
+    for (const deckId of deckIds) {
+      const totalDecks = inscricoesPorDeck.get(deckId)?.size ?? 0;
+      const stats = statsDecks.get(deckId);
+      if (stats) stats.totalDecks = totalDecks;
+      else statsDecks.set(deckId, {
+        nome: deckId,
+        cartaRepresentativa: null,
+        totalUsos: 0,
+        totalDecks,
+        vitorias: 0,
+        derrotas: 0,
+        empates: 0,
+      });
+    }
+
     // Renomeia stats de decks: de deckId -> nome consolidado (ou nome)
     const statsDecksFinal = new Map<string, StatsDeck>();
     for (const [deckId, stats] of statsDecks.entries()) {
@@ -306,6 +328,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       const existing = statsDecksFinal.get(nomeDeck);
       if (existing) {
         existing.totalUsos += stats.totalUsos;
+        existing.totalDecks += stats.totalDecks;
         existing.vitorias += stats.vitorias;
         existing.derrotas += stats.derrotas;
         existing.empates += stats.empates;
@@ -317,6 +340,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
           nome: nomeDeck,
           cartaRepresentativa: deck?.cartaRepresentativa ?? null,
           totalUsos: stats.totalUsos,
+          totalDecks: stats.totalDecks,
           vitorias: stats.vitorias,
           derrotas: stats.derrotas,
           empates: stats.empates,
@@ -380,6 +404,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
           posicao: idx + 1,
           nome: stats.nome,
           totalUsos: stats.totalUsos,
+          totalDecks: stats.totalDecks,
           vitorias: stats.vitorias,
           derrotas: stats.derrotas,
           empates: stats.empates,
@@ -469,6 +494,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         nome: deckId,
         cartaRepresentativa: null,
         totalUsos: 1,
+        totalDecks: 0,
         vitorias: resultado === "vitoria" ? 1 : 0,
         derrotas: resultado === "derrota" ? 1 : 0,
         empates: resultado === "empate" ? 1 : 0,
