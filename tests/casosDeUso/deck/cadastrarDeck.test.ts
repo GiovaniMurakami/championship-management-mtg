@@ -1,6 +1,6 @@
 import { CadastrarDeck } from "../../../src/casosDeUso/deck/cadastrarDeck";
 import { criarMockDeckGateway } from "../../mocks/gateways";
-import { Carta } from "../../../src/dominio/entidade/deck";
+import { Carta, Deck } from "../../../src/dominio/entidade/deck";
 
 describe("CadastrarDeck", () => {
     const maindeckValido: Carta[] = [
@@ -214,6 +214,50 @@ describe("CadastrarDeck", () => {
 
         expect(resultado.nome).toBe("Meu Pauper");
         expect(resultado.nomeConsolidado).toBe("Meu Pauper");
+    });
+
+    it("deve usar o arquetipo mais parecido quando houver referencia curada confiavel", async () => {
+        const listaTerror: Carta[] = [
+            { nome: "Tolarian Terror", quantidade: 4 },
+            { nome: "Cryptic Serpent", quantidade: 4 },
+            { nome: "Brainstorm", quantidade: 4 },
+            { nome: "Counterspell", quantidade: 4 },
+            { nome: "Mental Note", quantidade: 4 },
+            { nome: "Thought Scour", quantidade: 4 },
+            { nome: "Lorien Revealed", quantidade: 4 },
+            { nome: "Snuff Out", quantidade: 4 },
+            { nome: "Island", quantidade: 28 },
+        ];
+        const referencia = new Deck({
+            id: "deck-referencia",
+            nome: "Lista campea da semana",
+            nomeConsolidado: "Mono-Blue Terror",
+            formato: "pauper",
+            maindeck: listaTerror,
+            sideboard: [],
+            usuarioId: "outro-usuario",
+        });
+        const gateway = criarMockDeckGateway({
+            listar: jest.fn().mockResolvedValue([referencia]),
+        });
+        const uc = CadastrarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "Meu deck azul",
+            formato: "pauper",
+            maindeck: listaTerror,
+            sideboard: [],
+            usuarioId: "u",
+            usuarioNome: "Usuario",
+        });
+
+        expect(resultado.nome).toBe("Meu deck azul");
+        expect(resultado.nomeConsolidado).toBe("Mono-Blue Terror");
+        expect(gateway.listar).toHaveBeenCalledWith({
+            formato: "pauper",
+            incluirOcultos: true,
+            limite: 500,
+        });
     });
 
     it("deve lancar 400 quando usuario ja atingiu o limite de 50 decks", async () => {
