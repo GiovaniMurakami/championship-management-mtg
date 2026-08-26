@@ -6,6 +6,7 @@ import { LogoutUsuario } from "../casosDeUso/usuario/logoutUsuario";
 import { SolicitarResetSenha } from "../casosDeUso/usuario/solicitarResetSenha";
 import { ConfirmarResetSenha } from "../casosDeUso/usuario/confirmarResetSenha";
 import { ListarUsuarios } from "../casosDeUso/usuario/listarUsuarios";
+import { BuscarPerfilPublico } from "../casosDeUso/usuario/buscarPerfilPublico";
 import { AlterarBloqueioTorneios } from "../casosDeUso/usuario/alterarBloqueioTorneios";
 import { ExcluirConta } from "../casosDeUso/usuario/excluirConta";
 import { CadastrarDeck } from "../casosDeUso/deck/cadastrarDeck";
@@ -84,6 +85,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
     const confirmarResetSenha = ConfirmarResetSenha.criar(repos.usuario, repos.resetSenha);
     const listarUsuarios = ListarUsuarios.criar(repos.usuario);
+    const buscarPerfilPublico = BuscarPerfilPublico.criar(repos.usuario, repos.deck, repos.partida, repos.torneio);
     const alterarBloqueioTorneios = AlterarBloqueioTorneios.criar(
       repos.usuario,
       repos.inscricao,
@@ -181,7 +183,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
-        solicitarResetSenha, confirmarResetSenha, listarUsuarios, alterarBloqueioTorneios, excluirConta,
+        solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, alterarBloqueioTorneios, excluirConta,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,

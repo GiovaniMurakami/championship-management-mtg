@@ -11,6 +11,7 @@ type UsuarioItem = {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
   resultadosExpressivos: number;
   bloqueadoTorneios: boolean;
   excluido: boolean;
@@ -184,6 +185,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      fotoUrl: usuario.fotoUrl,
       resultadosExpressivos: usuario.resultadosExpressivos,
       bloqueadoTorneios: usuario.bloqueadoTorneios,
       excluido: usuario.excluido,
@@ -202,6 +204,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       telefone: item.telefone,
       nickMTGO: item.nickMTGO,
       nickArena: item.nickArena,
+      fotoUrl: item.fotoUrl,
       resultadosExpressivos: item.resultadosExpressivos,
       bloqueadoTorneios: item.bloqueadoTorneios,
       excluido: item.excluido,

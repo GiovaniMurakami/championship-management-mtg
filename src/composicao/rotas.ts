@@ -6,6 +6,7 @@ import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsua
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
 import { ConfirmarResetSenhaRota } from "../infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
 import { ListarUsuariosRota } from "../infra/api/express/rotas/usuario/listarUsuarios.express.route";
+import { BuscarPerfilPublicoRota } from "../infra/api/express/rotas/usuario/buscarPerfilPublico.express.route";
 import { AlterarBloqueioTorneiosRota } from "../infra/api/express/rotas/usuario/alterarBloqueioTorneios.express.route";
 import { ExcluirContaRota } from "../infra/api/express/rotas/usuario/excluirConta.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
@@ -87,6 +88,7 @@ export function criarRotas(casos: CasosDeUso) {
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
         ListarUsuariosRota.criar(casos.listarUsuarios),
+        BuscarPerfilPublicoRota.criar(casos.buscarPerfilPublico),
         AlterarBloqueioTorneiosRota.criar(casos.alterarBloqueioTorneios),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),

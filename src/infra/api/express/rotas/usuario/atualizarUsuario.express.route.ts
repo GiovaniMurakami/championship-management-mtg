@@ -55,7 +55,7 @@ export class AtualizarUsuarioRota implements Rotas {
         const dados = validarBody(atualizarUsuarioSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, telefone, nickMTGO, nickArena } = dados;
+        const { nome, telefone, nickMTGO, nickArena, fotoUrl } = dados;
 
         const resultado = await this.atualizarUsuarioServico.executar({
           id: usuarioId,
@@ -63,6 +63,7 @@ export class AtualizarUsuarioRota implements Rotas {
           telefone,
           nickMTGO,
           nickArena,
+          fotoUrl,
         });
 
         response.status(200).json(resultado);
