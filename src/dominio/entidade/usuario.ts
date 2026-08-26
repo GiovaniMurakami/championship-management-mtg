@@ -11,6 +11,7 @@ export interface UsuarioProps {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
   resultadosExpressivos?: number;
   bloqueadoTorneios?: boolean;
   excluido?: boolean;
@@ -27,13 +28,14 @@ export class Usuario {
   public telefone?: string;
   public nickMTGO?: string;
   public nickArena?: string;
+  public fotoUrl?: string;
   public resultadosExpressivos: number;
   public bloqueadoTorneios: boolean;
   public excluido: boolean;
   public excluidoEm?: Date | null;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, resultadosExpressivos, bloqueadoTorneios, excluido, excluidoEm, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, fotoUrl, resultadosExpressivos, bloqueadoTorneios, excluido, excluidoEm, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -42,6 +44,7 @@ export class Usuario {
     this.telefone = telefone;
     this.nickMTGO = nickMTGO;
     this.nickArena = nickArena;
+    this.fotoUrl = fotoUrl;
     this.resultadosExpressivos = resultadosExpressivos ?? 0;
     this.bloqueadoTorneios = bloqueadoTorneios ?? false;
     this.excluido = excluido ?? false;

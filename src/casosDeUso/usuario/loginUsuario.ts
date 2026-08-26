@@ -32,6 +32,7 @@ export type LoginUsuarioOutputDto = {
     telefone?: string;
     nickMTGO?: string;
     nickArena?: string;
+    fotoUrl?: string;
   };
 };
 
@@ -156,6 +157,7 @@ export class LoginUsuario
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
+        fotoUrl: usuario.fotoUrl,
       },
     };
   }

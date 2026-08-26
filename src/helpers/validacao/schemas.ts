@@ -55,6 +55,7 @@ export const atualizarUsuarioSchema = z.object({
   telefone: z.string().optional(),
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
+  fotoUrl: z.string().url("fotoUrl deve ser uma URL válida.").max(2048).optional(),
 });
 
 export const excluirContaSchema = z.object({
