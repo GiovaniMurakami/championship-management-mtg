@@ -210,6 +210,22 @@ export const gerarUrlUploadImagemSchema = z.object({
     .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
 });
 
+export const criarPostSchema = z.object({
+  legenda: z.string().trim().max(2200, "A legenda pode ter no máximo 2200 caracteres.").optional(),
+  imagens: z.array(s3ImagemUrl()).min(1, "Informe ao menos uma imagem."),
+});
+
+export const editarPostSchema = criarPostSchema;
+
+export const comentarPostSchema = z.object({
+  texto: z.string().trim().min(1, "Comentário é obrigatório.").max(1000, "O comentário pode ter no máximo 1000 caracteres."),
+});
+
+export const listarPostsQuerySchema = z.object({
+  limite: z.coerce.number().int().min(1).max(100).optional().default(20),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
 export const solicitarResetSenhaSchema = z.object({
   email: z.email("E-mail inválido."),
 });
@@ -222,6 +238,7 @@ export const confirmarResetSenhaSchema = z.object({
 // --- Params ---
 
 export const idParamSchema = z.object({ id: uuidCampo("id") });
+export const postIdParamSchema = z.object({ postId: uuidCampo("postId") });
 export const torneioIdParamSchema = z.object({ torneioId: uuidCampo("torneioId") });
 export const partidaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
 export const anuncioIdParamSchema = z.object({ anuncioId: uuidCampo("anuncioId") });

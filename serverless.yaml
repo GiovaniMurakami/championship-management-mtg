@@ -52,6 +52,7 @@ provider:
         - Effect: Allow
           Action:
             - s3:PutObject
+            - s3:DeleteObject
           Resource:
             - !Sub "arn:aws:s3:::${env:AWS_S3_BUCKET, 'placeholder'}/*"
         - Effect: Allow
@@ -436,6 +437,22 @@ functions:
             allowCredentials: true
       - http:
           path: /story-fundo/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /post
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /post/{proxy+}
           method: any
           cors:
             origins: *corsOrigins
