@@ -10,12 +10,12 @@ const deckPublico = new Deck({ id: "deck-1", nome: "Pauper", formato: "pauper", 
 const deckOculto = new Deck({ id: "deck-2", nome: "Segredo", formato: "pauper", usuarioId: usuario.id, oculto: true, maindeck: [{ nome: "Island", quantidade: 20 }], sideboard: [] });
 
 const partida = (torneioId: string, deckId: string, v1: number, v2: number) => new Partida({ id: `${torneioId}-${deckId}`, torneioId, rodada: 1, jogador1Id: usuario.id, jogador2Id: "opponent", deckJogador1Id: deckId, vitoriasJogador1: v1, vitoriasJogador2: v2, status: "finalizada" });
-const torneio = (id: string, horario: string, secreto = false) => new Torneio({ id, nome: `Torneio ${id}`, horario: new Date(horario), formato: "pauper", donoId: "admin", status: "finalizado", rodadaAtual: 3, totalRodadas: 3, secreto });
+const torneio = (id: string, horario: string, secreto = false, status: "inscricoes_abertas" | "em_andamento" | "finalizado" = "finalizado") => new Torneio({ id, nome: `Torneio ${id}`, horario: new Date(horario), formato: "pauper", donoId: "admin", status, rodadaAtual: 3, totalRodadas: 3, secreto });
 
 describe("BuscarPerfilPublico", () => {
   it("retorna estatísticas, apenas decks públicos e os três torneios públicos mais recentes", async () => {
-    const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-2", 0, 2), partida("t3", "deck-1", 1, 1), partida("t4", "deck-1", 2, 1), partida("secret", "deck-1", 2, 0)];
-    const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("t4", "2026-04-01"), torneio("secret", "2026-05-01", true)];
+    const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-2", 0, 2), partida("t3", "deck-1", 1, 1), partida("t4", "deck-1", 2, 1), partida("secret", "deck-1", 2, 0), partida("ongoing", "deck-1", 2, 0), partida("open", "deck-1", 2, 0)];
+    const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("t4", "2026-04-01"), torneio("secret", "2026-05-01", true), torneio("ongoing", "2026-06-01", false, "em_andamento"), torneio("open", "2026-07-01", false, "inscricoes_abertas")];
     const uc = BuscarPerfilPublico.criar(
       criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
       criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico, deckOculto]) }),
@@ -26,11 +26,13 @@ describe("BuscarPerfilPublico", () => {
     const resultado = await uc.executar({ id: usuario.id });
 
     expect(resultado.usuario).toMatchObject({ nome: "Giovani", resultadosExpressivos: 3 });
-    expect(resultado.estatisticas).toEqual({ vitorias: 3, derrotas: 1, empates: 1, totalPartidas: 5, winrate: 60 });
+    expect(resultado.estatisticas).toEqual({ vitorias: 5, derrotas: 1, empates: 1, totalPartidas: 7, winrate: 71.4 });
     expect(resultado.decks).toHaveLength(1);
     expect(resultado.decks[0]).toMatchObject({ id: "deck-1", cartaFundo: "Lightning Bolt" });
     expect(resultado.ultimosTorneios.map((item) => item.id)).toEqual(["t4", "t3", "t2"]);
     expect(resultado.ultimosTorneios.find((item) => item.id === "secret")).toBeUndefined();
+    expect(resultado.ultimosTorneios.find((item) => item.id === "ongoing")).toBeUndefined();
+    expect(resultado.ultimosTorneios.find((item) => item.id === "open")).toBeUndefined();
   });
 
   it("não contabiliza BYE", async () => {

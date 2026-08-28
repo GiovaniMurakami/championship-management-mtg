@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
     GerarUrlUploadInput,
@@ -42,5 +42,15 @@ export class S3Servico implements ImagemGateway {
         const urlPublica = `${getS3BaseUrl()}/${input.chave}`;
 
         return { uploadUrl, urlPublica };
+    }
+
+    public async excluirPorUrl(urlPublica: string): Promise<void> {
+        const base = `${getS3BaseUrl()}/`;
+        if (!urlPublica.startsWith(base)) {
+            throw new Error("URL de imagem fora do bucket S3 autorizado.");
+        }
+        const chave = decodeURIComponent(urlPublica.slice(base.length).split("?")[0]);
+        if (!chave) throw new Error("Chave da imagem S3 inválida.");
+        await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: chave }));
     }
 }

@@ -76,6 +76,7 @@ import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
 import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
 import { type CasosDeUso } from "./casos";
+import { CriarPostRota, ListarPostsRota, BuscarPostRota, EditarPostRota, ComentarPostRota, CurtirPostRota, ExcluirPostRota } from "../infra/api/express/rotas/post/postRotas.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
@@ -149,6 +150,14 @@ export function criarRotas(casos: CasosDeUso) {
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
+        CriarPostRota.criar(casos.criarPost),
+        ListarPostsRota.criar(casos.listarPosts),
+        BuscarPostRota.criar(casos.buscarPost),
+        EditarPostRota.criar(casos.editarPost),
+        ComentarPostRota.criar(casos.comentarPost),
+        CurtirPostRota.criar(casos.curtirPost, true),
+        CurtirPostRota.criar(casos.curtirPost, false),
+        ExcluirPostRota.criar(casos.excluirPost),
         ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),

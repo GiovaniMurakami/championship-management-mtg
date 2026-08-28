@@ -85,7 +85,7 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string }, BuscarPerf
     const totalPartidas = vitorias + derrotas + empates;
     const torneioIds = Array.from(new Set(partidas.map((partida) => partida.torneioId)));
     const torneios = (await Promise.all(torneioIds.map((torneioId) => this.torneioGateway.buscarPorId(torneioId))))
-      .filter((torneio) => torneio && !torneio.secreto)
+      .filter((torneio) => torneio?.status === "finalizado" && !torneio.secreto)
       .sort((a, b) => b!.horario.getTime() - a!.horario.getTime())
       .slice(0, 3);
     const ultimosTorneios = torneios.map((torneio) => {

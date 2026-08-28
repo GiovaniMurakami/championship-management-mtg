@@ -173,6 +173,7 @@ export function criarMockImagemGateway(overrides: Partial<ImagemGateway> = {}): 
             uploadUrl: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg?sig=x",
             urlPublica: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg",
         }),
+        excluirPorUrl: jest.fn().mockResolvedValue(undefined),
         ...overrides,
     };
 }

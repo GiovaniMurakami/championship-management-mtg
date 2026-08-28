@@ -15,6 +15,13 @@ import { ExcluirDeck } from "../casosDeUso/deck/excluirDeck";
 import { BuscarDeck } from "../casosDeUso/deck/buscarDeck";
 import { ListarDecks } from "../casosDeUso/deck/listarDecks";
 import { GerarUrlUploadImagem } from "../casosDeUso/imagem/gerarUrlUploadImagem";
+import { CriarPost } from "../casosDeUso/post/criarPost";
+import { ListarPosts } from "../casosDeUso/post/listarPosts";
+import { ComentarPost } from "../casosDeUso/post/comentarPost";
+import { CurtirPost } from "../casosDeUso/post/curtirPost";
+import { ExcluirPost } from "../casosDeUso/post/excluirPost";
+import { BuscarPost } from "../casosDeUso/post/buscarPost";
+import { EditarPost } from "../casosDeUso/post/editarPost";
 import { CriarTorneio } from "../casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "../casosDeUso/torneio/inscreverTorneio";
 import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
@@ -109,6 +116,13 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     // --- Imagem ---
     const gerarUrlUploadImagem = GerarUrlUploadImagem.criar(servicos.s3);
+    const criarPost = CriarPost.criar(repos.post);
+    const listarPosts = ListarPosts.criar(repos.post, repos.usuario);
+    const buscarPost = BuscarPost.criar(repos.post, repos.usuario);
+    const editarPost = EditarPost.criar(repos.post, servicos.s3);
+    const comentarPost = ComentarPost.criar(repos.post);
+    const curtirPost = CurtirPost.criar(repos.post);
+    const excluirPost = ExcluirPost.criar(repos.post, servicos.s3);
 
     // --- Torneio ---
     const criarTorneio = CriarTorneio.criar(repos.torneio);
@@ -186,6 +200,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, alterarBloqueioTorneios, excluirConta,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
+        criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
