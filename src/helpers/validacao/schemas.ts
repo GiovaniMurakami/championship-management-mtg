@@ -377,6 +377,7 @@ export const listarMetagameQuerySchema = z.object({
 
 export const metagameDiasQuerySchema = z.object({
   dias: diasMetagameSchema,
+  limiteListas: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 export const metagameArquetipoParamsSchema = z.object({

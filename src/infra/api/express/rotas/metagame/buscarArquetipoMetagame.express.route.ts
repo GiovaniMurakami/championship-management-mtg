@@ -39,8 +39,8 @@ export class BuscarArquetipoMetagameRota implements Rotas {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
         const { formato, slug } = request.paramsValidados as Params;
-        const { dias } = request.queryValidados as Query;
-        const resultado = await this.servico.executar({ formato, slug, dias });
+        const { dias, limiteListas } = request.queryValidados as Query;
+        const resultado = await this.servico.executar({ formato, slug, dias, limiteListas });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

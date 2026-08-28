@@ -401,6 +401,8 @@ describe("schemas de validacao", () => {
         it("rejeita dias fora da janela e slug inválido", () => {
             expect(listarMetagameQuerySchema.safeParse({ formato: "pauper", dias: 15 }).success).toBe(false);
             expect(metagameDiasQuerySchema.safeParse({ dias: 8 }).success).toBe(false);
+            expect(metagameDiasQuerySchema.parse({ dias: 30, limiteListas: "10" })).toEqual({ dias: 30, limiteListas: 10 });
+            expect(metagameDiasQuerySchema.safeParse({ dias: 30, limiteListas: 101 }).success).toBe(false);
             expect(metagameArquetipoParamsSchema.safeParse({ formato: "pauper", slug: "Blue Terror" }).success).toBe(false);
             expect(metagameArquetipoParamsSchema.parse({ formato: "pauper", slug: "blue-terror" })).toEqual({
                 formato: "pauper",

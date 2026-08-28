@@ -10,12 +10,30 @@ export type BuscarArquetipoMetagameInputDto = {
   formato: string;
   slug: string;
   dias?: number;
+  limiteListas?: number;
 };
 
 export type BuscarArquetipoMetagameOutputDto = ArquetipoDetalhe & {
   formato: string;
   dias: number;
+  deckIds?: string[];
 };
+
+export function limitarListasDoArquetipo(
+  detalhe: BuscarArquetipoMetagameOutputDto,
+  limite?: number
+): BuscarArquetipoMetagameOutputDto {
+  if (limite == null) return detalhe;
+  const horarioPorLista = new Map(
+    detalhe.resultados.map((resultado) => [`${resultado.deckId}:${resultado.torneioId}`, resultado.horario])
+  );
+  const listas = [...detalhe.listas]
+    .sort((a, b) => (horarioPorLista.get(`${b.deckId}:${b.torneioId}`) || "").localeCompare(
+      horarioPorLista.get(`${a.deckId}:${a.torneioId}`) || ""
+    ))
+    .slice(0, limite);
+  return { ...detalhe, deckIds: detalhe.listas.map((lista) => lista.deckId), listas };
+}
 
 export class BuscarArquetipoMetagame
   implements CasoDeUso<BuscarArquetipoMetagameInputDto, BuscarArquetipoMetagameOutputDto>
@@ -50,7 +68,7 @@ export class BuscarArquetipoMetagame
     const dias = input.dias ?? 30;
     const cacheKey = cacheSkMetagameArquetipo(input.formato, slug, dias);
     const cacheado = await this.cache?.buscar<BuscarArquetipoMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey);
-    if (cacheado) return cacheado;
+    if (cacheado) return limitarListasDoArquetipo(cacheado, input.limiteListas);
 
     const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias);
     const detalhe = agregado.porSlug.get(slug);
@@ -67,6 +85,6 @@ export class BuscarArquetipoMetagame
       ...detalhe,
     };
     await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900));
-    return saida;
+    return limitarListasDoArquetipo(saida, input.limiteListas);
   }
 }

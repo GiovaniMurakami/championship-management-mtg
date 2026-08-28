@@ -1,5 +1,5 @@
 import { ListarMetagame } from "../../../src/casosDeUso/metagame/listarMetagame";
-import { BuscarArquetipoMetagame } from "../../../src/casosDeUso/metagame/buscarArquetipoMetagame";
+import { BuscarArquetipoMetagame, limitarListasDoArquetipo } from "../../../src/casosDeUso/metagame/buscarArquetipoMetagame";
 import {
     criarMockTorneioGateway,
     criarMockInscricaoGateway,
@@ -14,6 +14,25 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Partida } from "../../../src/dominio/entidade/partida";
 
 describe("ListarMetagame / BuscarArquetipoMetagame", () => {
+    it("limita a resposta às listas mais recentes e preserva todos os IDs", () => {
+        const listas = Array.from({ length: 12 }, (_, indice) => ({
+            deckId: `d${indice + 1}`,
+            torneioId: `t${indice + 1}`,
+        }));
+        const resultados = listas.map((lista, indice) => ({
+            ...lista,
+            horario: `2026-08-${String(indice + 1).padStart(2, "0")}T12:00:00.000Z`,
+        }));
+
+        const limitado = limitarListasDoArquetipo({ listas, resultados } as any, 10);
+
+        expect(limitado.listas).toHaveLength(10);
+        expect(limitado.listas.map((lista) => lista.deckId)).toEqual([
+            "d12", "d11", "d10", "d9", "d8", "d7", "d6", "d5", "d4", "d3",
+        ]);
+        expect(limitado.deckIds).toHaveLength(12);
+    });
+
     it("lista vazia quando não há torneios finalizados", async () => {
         const uc = ListarMetagame.criar(
             criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue([]) }),
