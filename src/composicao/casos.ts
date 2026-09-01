@@ -109,7 +109,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     // --- Deck ---
     const cadastrarDeck = CadastrarDeck.criar(repos.deck);
-    const atualizarDeck = AtualizarDeck.criar(repos.deck);
+    const atualizarDeck = AtualizarDeck.criar(repos.deck, servicos.cache);
     const excluirDeck = ExcluirDeck.criar(repos.deck);
     const buscarDeck = BuscarDeck.criar(repos.deck, repos.usuario, repos.partida);
     const listarDecks = ListarDecks.criar(repos.deck, repos.usuario);

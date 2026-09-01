@@ -42,7 +42,8 @@ describe("AtualizarDeck", () => {
         const gateway = criarMockDeckGateway({
             buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const invalidarParticao = jest.fn().mockResolvedValue(undefined);
+        const uc = AtualizarDeck.criar(gateway, { invalidarParticao } as any);
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -54,6 +55,25 @@ describe("AtualizarDeck", () => {
 
         expect(resultado.nomeConsolidado).toBe("4C Omnath");
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+        expect(invalidarParticao).toHaveBeenCalledWith("metagame");
+    });
+
+    it("nao invalida metagame quando nomeConsolidado permanece igual", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+        });
+        const invalidarParticao = jest.fn().mockResolvedValue(undefined);
+        const uc = AtualizarDeck.criar(gateway, { invalidarParticao } as any);
+
+        await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            cartaRepresentativa: "Lightning Bolt",
+        });
+
+        expect(invalidarParticao).not.toHaveBeenCalled();
     });
 
     it("deck travado: permite alterar apenas nomeConsolidado", async () => {

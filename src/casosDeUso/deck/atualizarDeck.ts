@@ -3,6 +3,8 @@ import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
+import { CACHE_PK_METAGAME } from "../../helpers/cache/chavesCache";
+import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
 import {
   normalizarFormatoDeck,
   normalizarLinkLigaMagic,
@@ -64,10 +66,13 @@ export type AtualizarDeckOutputDto = {
 
 export class AtualizarDeck
   implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto> {
-  private constructor(private readonly deckGateway: DeckGateway) { }
+  private constructor(
+    private readonly deckGateway: DeckGateway,
+    private readonly cache?: CacheDynamoDbServico,
+  ) { }
 
-  public static criar(deckGateway: DeckGateway) {
-    return new AtualizarDeck(deckGateway);
+  public static criar(deckGateway: DeckGateway, cache?: CacheDynamoDbServico) {
+    return new AtualizarDeck(deckGateway, cache);
   }
 
   public async executar(
@@ -81,6 +86,7 @@ export class AtualizarDeck
         status: StatusErro.erroNaoEncontrado,
       });
     }
+    const nomeConsolidadoAnterior = deck.nomeConsolidado;
 
     if (deck.travado) {
       // Deck de torneio: cartas/formato ficam congelados; admin pode só meta (nome/carta).
@@ -102,6 +108,9 @@ export class AtualizarDeck
       }
 
       await this.deckGateway.atualizar(deck);
+      if (deck.nomeConsolidado !== nomeConsolidadoAnterior) {
+        await this.cache?.invalidarParticao(CACHE_PK_METAGAME);
+      }
       return saidaDeck(deck, input.usuarioNome);
     }
 
@@ -137,6 +146,9 @@ export class AtualizarDeck
     });
 
     await this.deckGateway.atualizar(deck);
+    if (deck.nomeConsolidado !== nomeConsolidadoAnterior) {
+      await this.cache?.invalidarParticao(CACHE_PK_METAGAME);
+    }
     return saidaDeck(deck, input.usuarioNome);
   }
 }
