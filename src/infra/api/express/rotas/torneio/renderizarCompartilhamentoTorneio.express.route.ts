@@ -100,6 +100,10 @@ export class RenderizarCompartilhamentoTorneioRota implements Rotas {
           seoPromise,
           buscarIndexHtml(frontendUrl),
         ]);
+        // Esta resposta inicializa o SPA hospedado no Amplify. A CSP padrão do
+        // Helmet foi criada para a API e bloquearia as conexões do frontend com
+        // API, Ably, S3 e demais origens já permitidas pelo próprio aplicativo.
+        response.removeHeader("Content-Security-Policy");
         response.set("Content-Type", "text/html; charset=utf-8");
         response.set("Cache-Control", "public, max-age=300, s-maxage=1800");
         response.set("Vary", "Host, X-Forwarded-Host");
