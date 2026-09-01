@@ -152,7 +152,7 @@ describe("CheckInTorneio", () => {
         ).resolves.toMatchObject({ checkInRodada: 2 });
     });
 
-    it("deve lancar erro se ja realizou check-in inicial (inscricoes_abertas)", async () => {
+    it("deve retornar sucesso idempotente se ja realizou check-in inicial", async () => {
         const agora = new Date();
         const torneio = new Torneio({
             id: "t-1", nome: "T", horario: new Date(agora.getTime() + 30 * 60 * 1000), formato: "f",
@@ -162,13 +162,22 @@ describe("CheckInTorneio", () => {
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
             checkInRodada: 0, dropped: false, byeCount: 0,
         });
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao),
+        });
+        const uc = CheckInTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioPadrao) }),
+        );
 
-        await expect(
-            criarUc(torneio, inscricao).executar({ torneioId: "t-1", usuarioId: "u-1" })
-        ).rejects.toMatchObject({ status: 400 });
+        await expect(uc.executar({ torneioId: "t-1", usuarioId: "u-1" }))
+            .resolves.toMatchObject({ checkInRodada: 0 });
+        expect(inscricaoGw.atualizar).not.toHaveBeenCalled();
+        expect(eventosTorneio.emit).not.toHaveBeenCalled();
     });
 
-    it("deve lancar erro se ja fez check-in para a rodada atual (em_andamento)", async () => {
+    it("deve retornar sucesso idempotente se ja fez check-in para a rodada atual", async () => {
         const torneio = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "f",
             donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 3,
@@ -177,10 +186,19 @@ describe("CheckInTorneio", () => {
             id: "i-1", torneioId: "t-1", usuarioId: "u-1",
             checkInRodada: 2, dropped: false, byeCount: 0,
         });
+        const inscricaoGw = criarMockInscricaoGateway({
+            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao),
+        });
+        const uc = CheckInTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            inscricaoGw,
+            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioPadrao) }),
+        );
 
-        await expect(
-            criarUc(torneio, inscricao).executar({ torneioId: "t-1", usuarioId: "u-1" })
-        ).rejects.toMatchObject({ status: 400 });
+        await expect(uc.executar({ torneioId: "t-1", usuarioId: "u-1" }))
+            .resolves.toMatchObject({ checkInRodada: 2 });
+        expect(inscricaoGw.atualizar).not.toHaveBeenCalled();
+        expect(eventosTorneio.emit).not.toHaveBeenCalled();
     });
 
     it("deve setar checkInRodada igual a rodadaAtual (independente do valor anterior)", async () => {

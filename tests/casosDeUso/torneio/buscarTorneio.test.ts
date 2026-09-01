@@ -4,6 +4,7 @@ import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { logger } from "../../../src/helpers/logger";
 
 describe("BuscarTorneio", () => {
     const torneio = new Torneio({
@@ -73,5 +74,27 @@ describe("BuscarTorneio", () => {
         await expect(
             uc.executar({ torneioId: "inexistente" })
         ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("deve retornar o torneio mesmo se o incremento de visualizacoes falhar", async () => {
+        const warnSpy = jest.spyOn(logger, "warn").mockImplementation();
+        const uc = BuscarTorneio.criar(
+            criarMockTorneioGateway({
+                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                incrementarVisualizacoes: jest.fn().mockRejectedValue(new Error("TransactionConflict")),
+            }),
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+
+        expect(resultado.id).toBe("t-1");
+        expect(resultado.visualizacoes).toBe(torneio.visualizacoes);
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ torneioId: "t-1" }),
+            "falha ao incrementar visualizacoes do torneio",
+        );
     });
 });

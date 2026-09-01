@@ -47,6 +47,24 @@ describe("IniciarTorneio", () => {
         expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalledTimes(1);
     });
 
+    it("deve gerar os mesmos pareamentos iniciais em retries", async () => {
+        const executarComInscricoes = async (inscricoes: Inscricao[]) => {
+            const uc = IniciarTorneio.criar(
+                criarMockTorneioGateway({
+                    buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+                }),
+                criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+                criarMockPartidaGateway(),
+                criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            );
+            const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
+            return resultado.partidas.map((partida) => [partida.jogador1Id, partida.jogador2Id]);
+        };
+
+        await expect(executarComInscricoes([...inscricoesComCheckIn].reverse()))
+            .resolves.toEqual(await executarComInscricoes(inscricoesComCheckIn));
+    });
+
     it("deve lançar erro se o torneio não for encontrado", async () => {
         const uc = IniciarTorneio.criar(
             criarMockTorneioGateway(),

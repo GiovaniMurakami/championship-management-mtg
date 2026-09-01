@@ -149,13 +149,19 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       await this.atualizar(torneio);
       return;
     }
-    try {
-      await partidaRepositorio.salvarVarias(partidas);
-      await this.atualizar(torneio);
-    } catch (error) {
-      await partidaRepositorio.excluirPorIds(partidas.map((partida) => partida.id)).catch(() => undefined);
-      throw error;
+
+    const partidasPorRodada = new Map<string, Partida[]>();
+    for (const partida of partidas) {
+      const chave = `${partida.torneioId}|${partida.rodada}`;
+      partidasPorRodada.set(chave, [...(partidasPorRodada.get(chave) ?? []), partida]);
     }
+
+    for (const rodadaPartidas of partidasPorRodada.values()) {
+      const primeira = rodadaPartidas[0];
+      await partidaRepositorio.reconciliarRodada(primeira.torneioId, primeira.rodada, rodadaPartidas);
+    }
+
+    await this.atualizar(torneio);
   }
 
   public async excluir(id: string): Promise<void> {

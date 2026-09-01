@@ -8,6 +8,7 @@ import { Deck } from "../../../src/dominio/entidade/deck";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
+import { logger } from "../../../src/helpers/logger";
 
 function criarUc(deckGatewayOverrides = {}, partidaOverrides = {}) {
     return BuscarDeck.criar(
@@ -52,6 +53,33 @@ describe("BuscarDeck", () => {
             totalPartidas: 0,
             winrate: 0,
         });
+    });
+
+    it("deve retornar o deck mesmo se o incremento de visualizacoes falhar", async () => {
+        const warnSpy = jest.spyOn(logger, "warn").mockImplementation();
+        const deck = new Deck({
+            id: "d1",
+            nome: "Burn",
+            formato: "legacy",
+            maindeck: [],
+            sideboard: [],
+            usuarioId: "u1",
+        });
+
+        const uc = criarUc({
+            buscarPorId: jest.fn().mockResolvedValue(deck),
+            incrementarVisualizacoes: jest.fn().mockRejectedValue(new Error("TransactionConflict")),
+            listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
+        });
+
+        const resultado = await uc.executar({ id: "d1" });
+
+        expect(resultado.id).toBe("d1");
+        expect(resultado.visualizacoes).toBe(deck.visualizacoes);
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ deckId: "d1" }),
+            "falha ao incrementar visualizacoes do deck",
+        );
     });
 
     it("deve agregar win rate a partir de copias travadas", async () => {

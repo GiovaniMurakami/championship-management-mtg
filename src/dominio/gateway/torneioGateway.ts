@@ -20,7 +20,7 @@ export interface TorneioGateway {
   listarTotal(filtros?: Pick<FiltrosListarTorneios, 'incluirSecretos' | 'status' | 'nome' | 'dataInicio' | 'dataFim'>): Promise<number>;
   atualizar(torneio: Torneio): Promise<void>;
   incrementarVisualizacoes(id: string): Promise<Torneio | null>;
-  /** Atualiza o torneio e cria as novas partidas numa operacao atomica. */
+  /** Reconcilia as partidas da rodada e atualiza o torneio de forma idempotente. */
   atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void>;
   excluir(id: string): Promise<void>;
   contarPorDono(donoId: string): Promise<number>;

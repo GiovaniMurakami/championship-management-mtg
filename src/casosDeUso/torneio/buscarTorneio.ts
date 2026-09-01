@@ -6,6 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
+import { logger } from "../../helpers/logger";
 import {
   isUsuarioExcluido,
   resolverNomeJogador as resolverNome,
@@ -99,7 +100,12 @@ export class BuscarTorneio
       });
     }
 
-    const torneioAtual = await this.torneioGateway.incrementarVisualizacoes(input.torneioId) ?? torneio;
+    let torneioAtual = torneio;
+    try {
+      torneioAtual = await this.torneioGateway.incrementarVisualizacoes(input.torneioId) ?? torneio;
+    } catch (error) {
+      logger.warn({ err: error, torneioId: input.torneioId }, "falha ao incrementar visualizacoes do torneio");
+    }
 
     const [inscricoes, partidas] = await Promise.all([
       this.inscricaoGateway.listarPorTorneio(input.torneioId),

@@ -68,6 +68,8 @@ export class CheckInTorneio
       });
     }
 
+    let checkinJaRealizado = false;
+
     if (torneio.status === "inscricoes_abertas") {
       const umHoraAntes = new Date(torneio.horario.getTime() - 60 * 60 * 1000);
       if (new Date() < umHoraAntes) {
@@ -77,35 +79,35 @@ export class CheckInTorneio
         });
       }
       if (inscricao.checkInRodada >= 0) {
-        throw ErroPersonalizado.criar({
-          mensagem: "Você já realizou o check-in para este torneio.",
-          status: StatusErro.erroParametro,
-        });
+        checkinJaRealizado = true;
+      } else {
+        inscricao.checkInRodada = 0;
       }
-      inscricao.checkInRodada = 0;
     } else {
       if (inscricao.checkInRodada >= torneio.rodadaAtual) {
-        throw ErroPersonalizado.criar({
-          mensagem: "Você já fez check-in para esta rodada.",
-          status: StatusErro.erroParametro,
-        });
+        checkinJaRealizado = true;
+      } else {
+        inscricao.checkInRodada = torneio.rodadaAtual;
       }
-      inscricao.checkInRodada = torneio.rodadaAtual;
     }
 
-    await this.inscricaoGateway.atualizar(inscricao);
+    if (!checkinJaRealizado) {
+      await this.inscricaoGateway.atualizar(inscricao);
+    }
 
     const usuario = await this.usuarioGateway.buscarPorId(input.usuarioId);
     const usuarioNome = usuario
       ? resolverNomeJogador(usuario, torneio.exibirNomeJogador)
       : (input.usuarioNome ?? input.usuarioId);
 
-    eventosTorneio.emit("checkin_realizado", {
-      torneioId: inscricao.torneioId,
-      usuarioId: inscricao.usuarioId,
-      usuarioNome,
-      checkInRodada: inscricao.checkInRodada,
-    });
+    if (!checkinJaRealizado) {
+      eventosTorneio.emit("checkin_realizado", {
+        torneioId: inscricao.torneioId,
+        usuarioId: inscricao.usuarioId,
+        usuarioNome,
+        checkInRodada: inscricao.checkInRodada,
+      });
+    }
 
     return {
       id: inscricao.id,

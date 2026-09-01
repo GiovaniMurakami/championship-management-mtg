@@ -41,6 +41,43 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
     }
   }
 
+  public async reconciliarRodada(torneioId: string, rodada: number, partidas: Partida[]): Promise<void> {
+    const existentes = await this.listarPorTorneioERodada(torneioId, rodada);
+    const existentesPorMesa = new Map(
+      existentes
+        .filter((partida) => partida.mesa !== null)
+        .map((partida) => [partida.mesa, partida])
+    );
+    const existentesPorAssinatura = new Map(
+      existentes.map((partida) => [this.assinaturaPareamento(partida), partida])
+    );
+    const paraSalvar: Partida[] = [];
+
+    for (const [indice, partida] of partidas.entries()) {
+      partida.mesa = partida.mesa ?? indice + 1;
+      const existente =
+        existentesPorMesa.get(partida.mesa) ??
+        existentesPorAssinatura.get(this.assinaturaPareamento(partida));
+
+      if (existente) {
+        this.aplicarPartidaExistente(partida, existente);
+        continue;
+      }
+
+      partida.id = this.idDeterministicoRodada(torneioId, rodada, partida.mesa);
+      const existentePorId = await this.buscarPorId(partida.id);
+      if (existentePorId) {
+        await this.atualizar(existentePorId);
+        this.aplicarPartidaExistente(partida, existentePorId);
+        continue;
+      }
+
+      paraSalvar.push(partida);
+    }
+
+    await this.salvarVarias(paraSalvar);
+  }
+
   public async buscarPorId(id: string): Promise<Partida | null> {
     const item = await this.getJson<PartidaItem>(`PARTIDA#${id}`, "DATA");
     return item ? this.itemParaPartida(item) : null;
@@ -241,6 +278,32 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
 
   private skTorneio(item: PartidaItem): string {
     return `PARTIDA#${String(item.rodada).padStart(2, "0")}#${String(item.mesa ?? 9999).padStart(4, "0")}#${item.id}`;
+  }
+
+  private idDeterministicoRodada(torneioId: string, rodada: number, mesa: number | null): string {
+    return `${torneioId}-r${rodada}-m${mesa ?? "sem-mesa"}`;
+  }
+
+  private assinaturaPareamento(partida: Partida): string {
+    return [
+      partida.rodada,
+      partida.mesa ?? "sem-mesa",
+      partida.jogador1Id,
+      partida.jogador2Id ?? "bye",
+    ].join("|");
+  }
+
+  private aplicarPartidaExistente(destino: Partida, existente: Partida): void {
+    destino.id = existente.id;
+    destino.vitoriasJogador1 = existente.vitoriasJogador1;
+    destino.vitoriasJogador2 = existente.vitoriasJogador2;
+    destino.status = existente.status;
+    destino.contestado = existente.contestado;
+    destino.observacaoContestacao = existente.observacaoContestacao;
+    destino.tipoBye = existente.tipoBye;
+    destino.confirmadoPor = [...existente.confirmadoPor];
+    destino.criadoEm = existente.criadoEm;
+    destino.version = existente.version;
   }
 
   private partidaParaItem(partida: Partida): PartidaItem {

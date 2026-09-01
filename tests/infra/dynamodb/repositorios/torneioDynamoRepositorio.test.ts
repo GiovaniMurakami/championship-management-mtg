@@ -50,7 +50,7 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
     expect(torneio.version).toBe(3);
   });
 
-  it("remove as partidas criadas quando a publicacao da rodada falha", async () => {
+  it("reconcilia as partidas e nao remove a rodada quando a publicacao do torneio falha", async () => {
     const torneio = criarTorneio();
     const partida = new Partida({
       id: "p-1",
@@ -59,15 +59,15 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
       jogador1Id: "u-1",
       jogador2Id: "u-2",
     });
-    const salvar = jest.spyOn(PartidaDynamoRepositorio.prototype, "salvarVarias").mockResolvedValue();
+    const reconciliar = jest.spyOn(PartidaDynamoRepositorio.prototype, "reconciliarRodada").mockResolvedValue();
     const excluir = jest.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
     const repositorio = TorneioDynamoRepositorio.criar();
     jest.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
 
     await expect(repositorio.atualizarECriarPartidas(torneio, [partida])).rejects.toThrow("conflito");
 
-    expect(salvar).toHaveBeenCalledWith([partida]);
-    expect(excluir).toHaveBeenCalledWith([partida.id]);
+    expect(reconciliar).toHaveBeenCalledWith(torneio.id, 3, [partida]);
+    expect(excluir).not.toHaveBeenCalled();
   });
 
   it("inicializa o contador atomico a partir do valor legado antes de incrementar", async () => {

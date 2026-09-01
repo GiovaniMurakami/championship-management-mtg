@@ -4,6 +4,7 @@ import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { logger } from "../../helpers/logger";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { CasoDeUso } from "../casoDeUso";
 
@@ -111,7 +112,12 @@ export class BuscarDeck
       }
     }
 
-    const deckAtual = await this.deckGateway.incrementarVisualizacoes(input.id) ?? deck;
+    let deckAtual = deck;
+    try {
+      deckAtual = await this.deckGateway.incrementarVisualizacoes(input.id) ?? deck;
+    } catch (error) {
+      logger.warn({ err: error, deckId: input.id }, "falha ao incrementar visualizacoes do deck");
+    }
     const usuarios = await this.usuarioGateway.buscarVarios([deckAtual.usuarioId]);
     const usuario = usuarios[0];
 

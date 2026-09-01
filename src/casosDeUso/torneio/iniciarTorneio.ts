@@ -98,15 +98,16 @@ export class IniciarTorneio
     torneio.avancarParaEmAndamento(1, totalRodadas);
 
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
-    const jogadores = comCheckIn.map((i) => i.usuarioId);
+    const jogadores = comCheckIn
+      .map((i) => i.usuarioId)
+      .sort((a, b) =>
+        chavePareamentoInicial(input.torneioId, a) - chavePareamentoInicial(input.torneioId, b) ||
+        a.localeCompare(b)
+      );
     const usuarios = await this.usuarioGateway.buscarVarios(jogadores);
     const usuarioNomeMap = new Map(
       usuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
     );
-    for (let i = jogadores.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
-    }
 
     const partidas: Partida[] = [];
     for (let i = 0; i < jogadores.length; i += 2) {
@@ -147,4 +148,14 @@ export class IniciarTorneio
       })),
     };
   }
+}
+
+function chavePareamentoInicial(torneioId: string, usuarioId: string): number {
+  const valor = `${torneioId}:${usuarioId}`;
+  let hash = 2166136261;
+  for (let i = 0; i < valor.length; i += 1) {
+    hash ^= valor.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
