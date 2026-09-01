@@ -59,7 +59,7 @@ export class ListarDecks
       LIMITE_MAXIMO_DECKS
     );
 
-    const filtros: FiltrosListarDecks = { limite, offset };
+    const filtros: FiltrosListarDecks = { limite, offset, excluirCopiasTorneio: true };
     if (input.usuarioId && input.usuarioId === input.solicitanteId) filtros.incluirOcultos = true;
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
     if (input.formato) filtros.formato = input.formato;
@@ -73,7 +73,7 @@ export class ListarDecks
 
     const [decks, total] = await Promise.all([
       this.deckGateway.listar(filtros),
-      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, usuarioIds: filtros.usuarioIds, formato: filtros.formato, nome: filtros.nome, incluirOcultos: filtros.incluirOcultos }),
+      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, usuarioIds: filtros.usuarioIds, formato: filtros.formato, nome: filtros.nome, incluirOcultos: filtros.incluirOcultos, excluirCopiasTorneio: true }),
     ]);
 
     const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];

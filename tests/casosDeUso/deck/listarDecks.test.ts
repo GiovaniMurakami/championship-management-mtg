@@ -48,6 +48,24 @@ describe("ListarDecks", () => {
         expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
     });
 
+    it("inclui secretos do dono e exclui copias automaticas de torneio", async () => {
+        const deckGateway = criarMockDeckGateway();
+        const uc = ListarDecks.criar(deckGateway, criarMockUsuarioGateway());
+
+        await uc.executar({ usuarioId: "u1", solicitanteId: "u1" });
+
+        expect(deckGateway.listar).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "u1",
+            incluirOcultos: true,
+            excluirCopiasTorneio: true,
+        }));
+        expect(deckGateway.listarTotal).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "u1",
+            incluirOcultos: true,
+            excluirCopiasTorneio: true,
+        }));
+    });
+
     it("deve retornar lista vazia quando nao ha decks", async () => {
         const uc = ListarDecks.criar(criarMockDeckGateway(), criarMockUsuarioGateway());
 
