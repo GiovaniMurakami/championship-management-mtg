@@ -15,11 +15,12 @@ export interface FiltrosListarDecks {
 export interface DeckGateway {
   salvar(deck: Deck): Promise<void>;
   buscarPorId(id: string): Promise<Deck | null>;
+  buscarPorPrefixo(prefixo: string): Promise<Deck | null>;
   buscarVarios(ids: string[]): Promise<Deck[]>;
   listarPorUsuario(usuarioId: string): Promise<Deck[]>;
   listarPorDeckOriginalId(deckOriginalId: string): Promise<Deck[]>;
   listar(filtros: FiltrosListarDecks): Promise<Deck[]>;
-  listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome">): Promise<number>;
+  listarTotal(filtros?: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome" | "incluirOcultos">): Promise<number>;
   atualizar(deck: Deck): Promise<void>;
   incrementarVisualizacoes(id: string): Promise<Deck | null>;
   excluir(id: string): Promise<void>;

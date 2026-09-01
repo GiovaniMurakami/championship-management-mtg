@@ -73,6 +73,7 @@ export const cadastrarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
   commander: commanderSchema,
+  oculto: z.boolean().optional().default(false),
 }).superRefine((dados, ctx) => {
   if (ehFormatoCommander500(dados.formato) && !dados.linkLigaMagic) {
     ctx.addIssue({
@@ -92,6 +93,7 @@ export const atualizarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1).optional(),
   sideboard: z.array(cartaSchema).optional(),
   commander: commanderSchema,
+  oculto: z.boolean().optional(),
 });
 
 export const criarTorneioSchema = z.object({
@@ -238,8 +240,10 @@ export const confirmarResetSenhaSchema = z.object({
 // --- Params ---
 
 export const idParamSchema = z.object({ id: uuidCampo("id") });
+export const idOuSlugParamSchema = z.object({ id: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "id inválido") });
 export const postIdParamSchema = z.object({ postId: uuidCampo("postId") });
 export const torneioIdParamSchema = z.object({ torneioId: uuidCampo("torneioId") });
+export const torneioIdOuSlugParamSchema = z.object({ torneioId: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "torneioId inválido") });
 export const partidaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
 export const anuncioIdParamSchema = z.object({ anuncioId: uuidCampo("anuncioId") });
 export const tokenIngressoParamSchema = z.object({ token: uuidCampo("token") });

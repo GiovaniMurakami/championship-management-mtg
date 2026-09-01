@@ -45,6 +45,7 @@ export type AtualizarDeckInputDto = {
   maindeck?: Carta[];
   sideboard?: Carta[];
   commander?: Carta[] | null;
+  oculto?: boolean;
 };
 
 export type AtualizarDeckOutputDto = {
@@ -125,6 +126,7 @@ export class AtualizarDeck
     if (input.maindeck !== undefined) deck.maindeck = normalizarListaCartas(input.maindeck);
     if (input.sideboard !== undefined) deck.sideboard = normalizarListaCartas(input.sideboard);
     if (input.commander !== undefined) deck.commander = normalizarListaCartas(input.commander ?? []);
+    if (input.oculto !== undefined) deck.oculto = input.oculto;
 
     validarLinkLigaMagic(deck.formato, deck.linkLigaMagic);
     validarDeckPorFormato({

@@ -41,6 +41,12 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
     return item ? this.itemParaDeck(item) : null;
   }
 
+  public async buscarPorPrefixo(prefixo: string): Promise<Deck | null> {
+    const itens = await this.queryJson<DeckItem>(DECKS_PK);
+    const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
+    return encontrados.length === 1 ? this.itemParaDeck(encontrados[0]) : null;
+  }
+
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
     const decks = await Promise.all(Array.from(new Set(ids)).map((id) => this.buscarPorId(id)));
     return decks.filter((deck): deck is Deck => deck !== null);
@@ -67,7 +73,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
     return filtrados.slice(offset, offset + limite).map((item) => this.itemParaDeck(item));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome" | "incluirOcultos"> = {}): Promise<number> {
     return this.filtrar(await this.carregarBase(filtros), filtros).length;
   }
 

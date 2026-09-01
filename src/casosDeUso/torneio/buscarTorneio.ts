@@ -92,7 +92,10 @@ export class BuscarTorneio
   public async executar(
     input: BuscarTorneioInputDto
   ): Promise<BuscarTorneioOutputDto> {
-    const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
+    let torneio = await this.torneioGateway.buscarPorId(input.torneioId);
+    if (!torneio && /^[a-z0-9]{5}-/.test(input.torneioId)) {
+      torneio = await this.torneioGateway.buscarPorPrefixo(input.torneioId.slice(0, 5));
+    }
     if (!torneio) {
       throw ErroPersonalizado.criar({
         mensagem: "Torneio não encontrado.",
@@ -102,14 +105,14 @@ export class BuscarTorneio
 
     let torneioAtual = torneio;
     try {
-      torneioAtual = await this.torneioGateway.incrementarVisualizacoes(input.torneioId) ?? torneio;
+      torneioAtual = await this.torneioGateway.incrementarVisualizacoes(torneio.id) ?? torneio;
     } catch (error) {
       logger.warn({ err: error, torneioId: input.torneioId }, "falha ao incrementar visualizacoes do torneio");
     }
 
     const [inscricoes, partidas] = await Promise.all([
-      this.inscricaoGateway.listarPorTorneio(input.torneioId),
-      this.partidaGateway.listarPorTorneio(input.torneioId),
+      this.inscricaoGateway.listarPorTorneio(torneio.id),
+      this.partidaGateway.listarPorTorneio(torneio.id),
     ]);
 
     const totalInscritos = inscricoes.length;

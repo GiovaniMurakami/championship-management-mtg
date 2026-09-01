@@ -3,7 +3,7 @@ import { BuscarTorneio } from "../../../../../casosDeUso/torneio/buscarTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { torneioIdOuSlugParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 
 export class BuscarTorneioRota implements Rotas {
@@ -24,7 +24,7 @@ export class BuscarTorneioRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(torneioIdParamSchema), torneioReadRateLimiter];
+    return [validarParamsMiddleware(torneioIdOuSlugParamSchema), torneioReadRateLimiter];
   }
 
   public getHandler() {

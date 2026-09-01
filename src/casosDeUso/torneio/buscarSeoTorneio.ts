@@ -55,18 +55,21 @@ export class BuscarSeoTorneio
   }
 
   public async executar(input: BuscarSeoTorneioInputDto): Promise<BuscarSeoTorneioOutputDto> {
-    const cachePk = cachePkTorneio(input.torneioId);
-    const cacheSk = cacheSkSeoTorneio();
-    const cacheado = await this.cache?.buscar<BuscarSeoTorneioOutputDto>(cachePk, cacheSk);
-    if (cacheado) return cacheado;
-
-    const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
+    let torneio = await this.torneioGateway.buscarPorId(input.torneioId);
+    if (!torneio && /^[a-z0-9]{5}-/.test(input.torneioId)) {
+      torneio = await this.torneioGateway.buscarPorPrefixo(input.torneioId.slice(0, 5));
+    }
     if (!torneio) {
       throw ErroPersonalizado.criar({
         mensagem: "Torneio nao encontrado.",
         status: StatusErro.erroNaoEncontrado,
       });
     }
+
+    const cachePk = cachePkTorneio(torneio.id);
+    const cacheSk = cacheSkSeoTorneio();
+    const cacheado = await this.cache?.buscar<BuscarSeoTorneioOutputDto>(cachePk, cacheSk);
+    if (cacheado) return cacheado;
 
     const image = torneio.bannerUrl?.trim() || null;
 

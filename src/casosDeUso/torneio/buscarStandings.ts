@@ -127,7 +127,10 @@ export class BuscarStandings
     }
 
     if (torneio.status === "inscricoes_abertas" || (torneio.status !== "finalizado" && torneio.rodadaAtual <= 1)) {
-      const standings = inscricoes.map((i, idx) => {
+      const inscricoesOrdenadas = [...inscricoes].sort((a, b) =>
+        a.criadoEm.getTime() - b.criadoEm.getTime() || a.id.localeCompare(b.id)
+      );
+      const standings = inscricoesOrdenadas.map((i, idx) => {
         const u = usuarioMap.get(i.usuarioId);
         const t = timeByMembro.get(i.usuarioId);
         return {

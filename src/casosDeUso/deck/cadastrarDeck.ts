@@ -23,6 +23,7 @@ export type CadastrarDeckInputDto = {
   commander?: Carta[] | null;
   usuarioId: string;
   usuarioNome: string;
+  oculto?: boolean;
 };
 
 export type CadastrarDeckOutputDto = {
@@ -92,6 +93,7 @@ export class CadastrarDeck
       sideboard: sideboardNormalizado,
       commander: commanderNormalizado,
       usuarioId: input.usuarioId,
+      oculto: input.oculto ?? false,
     });
 
     await this.deckGateway.salvar(deck);

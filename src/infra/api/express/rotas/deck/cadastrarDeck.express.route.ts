@@ -48,7 +48,7 @@ export class CadastrarDeckRota implements Rotas {
         const dados = validarBody(cadastrarDeckSchema, request.body, response);
         if (!dados) return;
 
-        const { nome, formato, linkLigaMagic, maindeck, sideboard, commander } = dados;
+        const { nome, formato, linkLigaMagic, maindeck, sideboard, commander, oculto } = dados;
 
         const resultado = await this.cadastrarDeckServico.executar({
           nome,
@@ -59,6 +59,7 @@ export class CadastrarDeckRota implements Rotas {
           commander,
           usuarioId,
           usuarioNome,
+          oculto,
         });
 
         response.status(201).json(resultado);

@@ -1,4 +1,5 @@
 service: championship-management-mtg
+useDotenv: true
 
 provider:
   name: aws
@@ -34,6 +35,8 @@ provider:
     SES_FROM_EMAIL: ${env:SES_FROM_EMAIL, 'Fuguete <noreply@tiagofuguete.com.br>'}
     SES_REGION: ${env:SES_REGION, 'us-east-1'}
     FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
+    AMPLIFY_APP_ID: ${env:AMPLIFY_APP_ID, 'd32mjk9mbam2cb'}
+    SEO_HOMOLOG_API_URL: ${env:SEO_HOMOLOG_API_URL, 'https://ol5gj7iduc.execute-api.us-east-1.amazonaws.com/dev'}
   iam:
     role:
       statements:

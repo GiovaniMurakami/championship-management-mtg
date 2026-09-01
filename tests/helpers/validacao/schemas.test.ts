@@ -24,7 +24,6 @@ import {
     gerarLinkIngressoSchema,
     inscreverTorneioSchema,
     definirAnfitriaoTorneioSchema,
-    listarUsuariosQuerySchema,
     listarMetagameQuerySchema,
     metagameDiasQuerySchema,
     metagameArquetipoParamsSchema,

@@ -396,7 +396,7 @@ describe("Integração - Encerrar torneio antecipadamente", () => {
     const partidaGw = criarPartidaGatewayMemoria(partidaStore);
 
     let donoId: string;
-    let jogadores: string[] = [];
+    const jogadores: string[] = [];
     let torneioId: string;
 
     it("encerra na rodada 1 sem gerar corte", async () => {

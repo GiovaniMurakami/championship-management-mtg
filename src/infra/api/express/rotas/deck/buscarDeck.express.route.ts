@@ -2,7 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { BuscarDeck } from "../../../../../casosDeUso/deck/buscarDeck";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { idParamSchema } from "../../../../../helpers/validacao/schemas";
+import { idOuSlugParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
@@ -27,7 +27,7 @@ export class BuscarDeckRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(idParamSchema), publicReadRateLimiter, autenticarJwtOpcional];
+    return [validarParamsMiddleware(idOuSlugParamSchema), publicReadRateLimiter, autenticarJwtOpcional];
   }
 
   public getHandler() {

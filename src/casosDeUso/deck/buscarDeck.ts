@@ -34,6 +34,7 @@ export type BuscarDeckOutputDto = {
   visualizacoes: number;
   criadoEm: Date;
   estatisticas: EstatisticasDeckDto;
+  oculto: boolean;
 };
 
 function calcularEstatisticasDeck(deckIds: Set<string>, partidas: Partida[]): EstatisticasDeckDto {
@@ -91,7 +92,10 @@ export class BuscarDeck
   }
 
   public async executar(input: BuscarDeckInputDto): Promise<BuscarDeckOutputDto> {
-    const deck = await this.deckGateway.buscarPorId(input.id);
+    let deck = await this.deckGateway.buscarPorId(input.id);
+    if (!deck && /^[a-z0-9]{5}-/.test(input.id)) {
+      deck = await this.deckGateway.buscarPorPrefixo(input.id.slice(0, 5));
+    }
 
     if (!deck) {
       throw ErroPersonalizado.criar({
@@ -114,7 +118,7 @@ export class BuscarDeck
 
     let deckAtual = deck;
     try {
-      deckAtual = await this.deckGateway.incrementarVisualizacoes(input.id) ?? deck;
+      deckAtual = await this.deckGateway.incrementarVisualizacoes(deck.id) ?? deck;
     } catch (error) {
       logger.warn({ err: error, deckId: input.id }, "falha ao incrementar visualizacoes do deck");
     }
@@ -144,6 +148,7 @@ export class BuscarDeck
       visualizacoes: deckAtual.visualizacoes,
       criadoEm: deckAtual.criadoEm,
       estatisticas,
+      oculto: deckAtual.oculto,
     };
   }
 }

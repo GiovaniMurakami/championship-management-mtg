@@ -66,6 +66,12 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return item ? this.itemParaTorneio(item) : null;
   }
 
+  public async buscarPorPrefixo(prefixo: string): Promise<Torneio | null> {
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
+    return encontrados.length === 1 ? this.itemParaTorneio(encontrados[0]) : null;
+  }
+
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
     const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
     const filtrados = this.filtrar(itens, filtros)

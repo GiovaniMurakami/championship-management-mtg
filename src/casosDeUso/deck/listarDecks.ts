@@ -17,6 +17,7 @@ export type ListarDecksInputDto = {
   criadoAntes?: string;
   limite?: number;
   offset?: number;
+  solicitanteId?: string;
 };
 
 export type ListarDecksOutputDto = {
@@ -59,6 +60,7 @@ export class ListarDecks
     );
 
     const filtros: FiltrosListarDecks = { limite, offset };
+    if (input.usuarioId && input.usuarioId === input.solicitanteId) filtros.incluirOcultos = true;
     if (input.usuarioId) filtros.usuarioId = input.usuarioId;
     if (input.formato) filtros.formato = input.formato;
     if (input.nome) filtros.nome = input.nome;
@@ -71,7 +73,7 @@ export class ListarDecks
 
     const [decks, total] = await Promise.all([
       this.deckGateway.listar(filtros),
-      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, usuarioIds: filtros.usuarioIds, formato: filtros.formato, nome: filtros.nome }),
+      this.deckGateway.listarTotal({ usuarioId: filtros.usuarioId, usuarioIds: filtros.usuarioIds, formato: filtros.formato, nome: filtros.nome, incluirOcultos: filtros.incluirOcultos }),
     ]);
 
     const usuarioIds = [...new Set(decks.map((d) => d.usuarioId))];
@@ -92,6 +94,7 @@ export class ListarDecks
         usuario: toUsuarioPublico(usuarioMap.get(deck.usuarioId), deck.usuarioId),
         visualizacoes: deck.visualizacoes,
         criadoEm: deck.criadoEm,
+        oculto: deck.oculto,
       })),
       total,
       limite,
