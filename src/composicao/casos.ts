@@ -143,12 +143,12 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const droparJogadoresSemDeck = DroparJogadoresSemDeck.criar(repos.torneio, repos.inscricao, droparJogador);
     const droparJogadoresSemCheckin = DroparJogadoresSemCheckin.criar(repos.torneio, repos.inscricao, droparJogador);
     const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
-    const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao, servicos.cache);
+    const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio, servicos.cache);
-    const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time, servicos.cache);
+    const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
+    const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
-    const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario, servicos.cache);
+    const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const alterarTorneio = AlterarTorneio.criar(repos.torneio);
     const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
@@ -157,12 +157,12 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const definirAnfitriaoTorneio = DefinirAnfitriaoTorneio.criar(repos.torneio, repos.usuario);
 
     // --- Liga ---
-    const criarLiga = CriarLiga.criar(repos.liga, repos.torneio, servicos.cache);
-    const alterarLiga = AlterarLiga.criar(repos.liga, repos.torneio, servicos.cache);
-    const excluirLiga = ExcluirLiga.criar(repos.liga, servicos.cache);
+    const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);
+    const alterarLiga = AlterarLiga.criar(repos.liga, repos.torneio);
+    const excluirLiga = ExcluirLiga.criar(repos.liga);
     const listarLigas = ListarLigas.criar(repos.liga);
     const buscarLiga = BuscarLiga.criar(repos.liga, repos.torneio);
-    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time, servicos.cache);
+    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time);
 
     // --- Time ---
     const criarTime = CriarTime.criar(repos.time);
@@ -179,10 +179,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const rejeitarSolicitacaoTime = RejeitarSolicitacaoTime.criar(repos.time);
 
     // --- Site ---
-    const buscarAnuncios = BuscarAnuncios.criar(repos.siteConfig, servicos.cache);
+    const buscarAnuncios = BuscarAnuncios.criar(repos.siteConfig);
     const buscarEstatisticasSite = BuscarEstatisticasSite.criar(repos.torneio, repos.inscricao);
-    const registrarCliqueAnuncio = RegistrarCliqueAnuncio.criar(repos.siteConfig, servicos.cache);
-    const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig, servicos.cache);
+    const registrarCliqueAnuncio = RegistrarCliqueAnuncio.criar(repos.siteConfig);
+    const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig);
 
     const cadastrarStoryFundo = CadastrarStoryFundo.criar(repos.storyFundo);
     const listarStoryFundos = ListarStoryFundos.criar(repos.storyFundo);
