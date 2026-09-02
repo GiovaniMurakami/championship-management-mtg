@@ -57,8 +57,6 @@ dotenv.config();
 // Porta 0 → SO escolhe porta aleatória livre; evita conflito com servidor real
 process.env.PORT = "0";
 process.env.LOG_LEVEL = "silent";
-// O front local pode acompanhar este fluxo; cada mutacao deve invalidar o cache compartilhado.
-process.env.DYNAMODB_CACHE_ENABLED = "true";
 import { app } from "../../src/app";
 import { criarRepositorios } from "../../src/composicao/repositorios";
 

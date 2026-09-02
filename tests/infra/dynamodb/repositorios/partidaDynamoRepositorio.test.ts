@@ -32,6 +32,23 @@ describe("PartidaDynamoRepositorio - reconciliarRodada", () => {
     expect(salvarVarias).toHaveBeenCalledWith([partida]);
   });
 
+  it("mantem o UUID para a mesma rodada e mesa e diferencia mesas distintas", async () => {
+    const repositorio = PartidaDynamoRepositorio.criar();
+    jest.spyOn(repositorio, "salvarVarias").mockResolvedValue();
+    jest.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([]);
+    jest.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
+    const primeira = criarPartida({ mesa: 1 });
+    const repetida = criarPartida({ mesa: 1 });
+    const outraMesa = criarPartida({ mesa: 2 });
+
+    await repositorio.reconciliarRodada("t-1", 2, [primeira]);
+    await repositorio.reconciliarRodada("t-1", 2, [repetida]);
+    await repositorio.reconciliarRodada("t-1", 2, [outraMesa]);
+
+    expect(repetida.id).toBe(primeira.id);
+    expect(outraMesa.id).not.toBe(primeira.id);
+  });
+
   it("reaproveita partida existente da mesma mesa sem recriar", async () => {
     const repositorio = PartidaDynamoRepositorio.criar();
     const existente = criarPartida({ id: "p-existente", version: 4 });
