@@ -1,5 +1,6 @@
 import { Partida, StatusPartida, TipoBye } from "../../../dominio/entidade/partida";
 import { PartidaGateway } from "../../../dominio/gateway/partidaGateway";
+import { v5 as uuidv5 } from "uuid";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 
 type PartidaItem = {
@@ -21,6 +22,8 @@ type PartidaItem = {
   criadoEm: string;
   version: number;
 };
+
+const PARTIDA_ID_NAMESPACE = "b24bc6ea-85ca-5a25-a22d-72f73d0c4f32";
 
 export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements PartidaGateway {
   private constructor() {
@@ -281,7 +284,7 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
   }
 
   private idDeterministicoRodada(torneioId: string, rodada: number, mesa: number | null): string {
-    return `${torneioId}-r${rodada}-m${mesa ?? "sem-mesa"}`;
+    return uuidv5(`${torneioId}:rodada:${rodada}:mesa:${mesa ?? "sem-mesa"}`, PARTIDA_ID_NAMESPACE);
   }
 
   private assinaturaPareamento(partida: Partida): string {

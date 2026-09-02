@@ -625,7 +625,7 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
         expect(recriarRes.body.emCorte).toBe(false);
         expect(recriarRes.body.partidas).toHaveLength(75);
         rodadaPartidas = recriarRes.body.partidas as PartidaInfo[];
-        expect(rodadaPartidas.every((p) => !idsRodadaOriginal.has(p.id))).toBe(true);
+        expect(new Set(rodadaPartidas.map((p) => p.id))).toEqual(idsRodadaOriginal);
     });
 
     it("deve aumentar e reduzir o total de rodadas Swiss durante a rodada 5", async () => {
