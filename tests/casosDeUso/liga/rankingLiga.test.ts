@@ -209,6 +209,7 @@ describe("RankingLiga", () => {
         expect(burnDeck!.empates).toBe(0);
         expect(burnDeck!.winrate).toBe(100);
         expect(burnDeck!.loserate).toBe(0);
+        expect(burnDeck!.cartaRepresentativa).toBe("goblin guide");
 
         const controlDeck = resultado.rankingDecks.find((d) => d.nome === "UW Control");
         expect(controlDeck).toBeDefined();
@@ -217,6 +218,7 @@ describe("RankingLiga", () => {
         expect(controlDeck!.winrate).toBe(0);
         expect(controlDeck!.loserate).toBe(100);
         expect(controlDeck!.totalDecks).toBe(1);
+        expect(controlDeck!.cartaRepresentativa).toBe("counterspell");
 
         expect(resultado.totalDecks).toBe(2);
     });

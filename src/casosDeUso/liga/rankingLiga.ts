@@ -31,10 +31,48 @@ const TERRENOS_BASICOS_RANKING = new Set([
   "pantano",
   "montanha",
   "floresta",
+  "wastes",
+  "snow-covered plains",
+  "snow-covered island",
+  "snow-covered swamp",
+  "snow-covered mountain",
+  "snow-covered forest",
 ]);
 
 function ehTerrenoBasicoRanking(nome: string): boolean {
   return TERRENOS_BASICOS_RANKING.has(normalizarNomeCartaRanking(nome));
+}
+
+function escolherCartaRepresentativaRanking(decks: Array<{ cartaRepresentativa: string | null; maindeck: Array<{ nome: string; quantidade: number }>; commander: Array<{ nome: string; quantidade: number }> }>): string | null {
+  const manuais = new Map<string, number>();
+  for (const deck of decks) {
+    const nome = deck.cartaRepresentativa?.trim();
+    if (nome) manuais.set(nome, (manuais.get(nome) ?? 0) + 1);
+  }
+  if (manuais.size > 0) {
+    return [...manuais.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+  }
+
+  const contar = (cartas: Array<{ nome: string; quantidade: number }>, ignorarBasicos: boolean): Map<string, number> => {
+    const contagem = new Map<string, number>();
+    for (const carta of cartas) {
+      const nome = carta.nome?.trim();
+      if (!nome || (ignorarBasicos && ehTerrenoBasicoRanking(nome))) continue;
+      contagem.set(nome, (contagem.get(nome) ?? 0) + carta.quantidade);
+    }
+    return contagem;
+  };
+
+  const escolherMaisUsada = (contagem: Map<string, number>): string | null =>
+    [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
+
+  const maindeck = escolherMaisUsada(contar(decks.flatMap((deck) => deck.maindeck), true));
+  if (maindeck) return maindeck;
+
+  const commander = escolherMaisUsada(contar(decks.flatMap((deck) => deck.commander), false));
+  if (commander) return commander;
+
+  return escolherMaisUsada(contar(decks.flatMap((deck) => deck.maindeck), false));
 }
 
 export type RankingLigaInputDto = {
@@ -322,9 +360,15 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
 
     // Renomeia stats de decks: de deckId -> nome consolidado (ou nome)
     const statsDecksFinal = new Map<string, StatsDeck>();
+    const decksPorNome = new Map<string, typeof decks>();
     for (const [deckId, stats] of statsDecks.entries()) {
       const deck = deckPorId.get(deckId);
       const nomeDeck = deck?.nomeConsolidado ?? deck?.nome ?? deckId;
+      if (deck) {
+        const grupo = decksPorNome.get(nomeDeck) ?? [];
+        grupo.push(deck);
+        decksPorNome.set(nomeDeck, grupo);
+      }
       const existing = statsDecksFinal.get(nomeDeck);
       if (existing) {
         existing.totalUsos += stats.totalUsos;
@@ -346,6 +390,10 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
           empates: stats.empates,
         });
       }
+    }
+
+    for (const [nomeDeck, stats] of statsDecksFinal) {
+      stats.cartaRepresentativa = escolherCartaRepresentativaRanking(decksPorNome.get(nomeDeck) ?? []);
     }
 
     // Cartas mais utilizadas (maindeck de todos os decks usados na liga)
