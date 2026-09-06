@@ -3,9 +3,13 @@ import {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
-  QueryCommand,
+  UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import { randomUUID } from "crypto";
+import { dependenciasCache, dominioParticao } from "../../helpers/cache/dependenciasCache";
 import { logger } from "../../helpers/logger";
+
+const VERSOES_KEY = { pk: { S: "__cache_versions" }, sk: { S: "v1" } };
 
 export type CacheDynamoDbItem<T> = {
   valor: T;
@@ -30,11 +34,14 @@ export class CacheDynamoDbServico {
     return new CacheDynamoDbServico(tabela, habilitado, region);
   }
 
-  public async buscar<T>(pk: string, sk: string): Promise<T | null> {
+  public async buscar<T>(pk: string, sk: string, versao?: string | null): Promise<T | null> {
     if (!this.habilitado) return null;
 
     try {
+      const versaoAtual = versao === undefined ? await this.obterVersao(pk) : versao;
+      if (versaoAtual === null) return null;
       const resposta = await this.cliente.send(new GetItemCommand({
+        ConsistentRead: true,
         TableName: this.tabela,
         Key: {
           pk: { S: pk },
@@ -43,10 +50,9 @@ export class CacheDynamoDbServico {
       }));
 
       const item = resposta.Item;
-      if (!item?.payload?.S || !item?.expiresAt?.N) return null;
+      if (!item?.payload?.S || !item?.expiresAt?.N || item.versao?.S !== versaoAtual) return null;
 
       if (Number(item.expiresAt.N) <= Math.floor(Date.now() / 1000)) {
-        await this.remover(pk, sk);
         return null;
       }
 
@@ -57,17 +63,20 @@ export class CacheDynamoDbServico {
     }
   }
 
-  public async salvar<T>(pk: string, sk: string, valor: T, ttlSegundos: number): Promise<void> {
+  public async salvar<T>(pk: string, sk: string, valor: T, ttlSegundos: number, versao?: string | null): Promise<void> {
     if (!this.habilitado) return;
 
     const now = Math.floor(Date.now() / 1000);
     try {
+      const versaoAtual = await this.obterVersao(pk);
+      if (versaoAtual === null || (versao !== undefined && versao !== versaoAtual)) return;
       await this.cliente.send(new PutItemCommand({
         TableName: this.tabela,
         Item: {
           pk: { S: pk },
           sk: { S: sk },
           payload: { S: JSON.stringify(valor) },
+          versao: { S: versaoAtual },
           createdAt: { N: String(now) },
           expiresAt: { N: String(now + ttlSegundos) },
         },
@@ -93,34 +102,42 @@ export class CacheDynamoDbServico {
     }
   }
 
-  public async invalidarParticao(pk: string): Promise<void> {
-    if (!this.habilitado) return;
-
+  /** Capturada antes de ler os dados; não compartilha estado entre requisições. */
+  public async obterVersao(pk: string): Promise<string | null> {
+    if (!this.habilitado) return null;
     try {
-      let lastEvaluatedKey: Record<string, { S: string }> | undefined;
-      do {
-        const resposta = await this.cliente.send(new QueryCommand({
-          TableName: this.tabela,
-          KeyConditionExpression: "pk = :pk",
-          ExpressionAttributeValues: {
-            ":pk": { S: pk },
-          },
-          ProjectionExpression: "pk, sk",
-          ExclusiveStartKey: lastEvaluatedKey,
-        }));
-
-        const itens = resposta.Items ?? [];
-        await Promise.all(itens.map((item) => {
-          const sk = item.sk?.S;
-          if (!sk) return Promise.resolve();
-          return this.remover(pk, sk);
-        }));
-
-        lastEvaluatedKey = resposta.LastEvaluatedKey as Record<string, { S: string }> | undefined;
-      } while (lastEvaluatedKey);
+      const resposta = await this.cliente.send(new GetItemCommand({
+        TableName: this.tabela,
+        Key: VERSOES_KEY,
+        ConsistentRead: true,
+      }));
+      return JSON.stringify(dependenciasCache(pk).map((dominio) => resposta.Item?.[dominio]?.S ?? "0"));
     } catch (error) {
-      logger.warn({ err: error, pk }, "falha ao invalidar particao do cache DynamoDB");
+      logger.warn({ err: error, pk }, "falha ao ler versao do cache DynamoDB");
+      return null;
     }
+  }
+
+  /** Sem TTL: uma geração antiga nunca pode voltar a ser válida. */
+  public async invalidarDependencias(dominios: string[]): Promise<void> {
+    if (!this.habilitado || dominios.length === 0) return;
+    const unicos = [...new Set(dominios)];
+    try {
+      await this.cliente.send(new UpdateItemCommand({
+        TableName: this.tabela,
+        Key: VERSOES_KEY,
+        UpdateExpression: "SET " + unicos.map((_, i) => `#d${i} = :v${i}`).join(", "),
+        ExpressionAttributeNames: Object.fromEntries(unicos.map((dominio, i) => [`#d${i}`, dominio])),
+        ExpressionAttributeValues: Object.fromEntries(unicos.map((_, i) => [`:v${i}`, { S: randomUUID() }])),
+      }));
+    } catch (error) {
+      logger.error({ err: error, dominios }, "falha ao invalidar cache DynamoDB apos escrita");
+      throw error;
+    }
+  }
+
+  public async invalidarParticao(pk: string): Promise<void> {
+    await this.invalidarDependencias([dominioParticao(pk)]);
   }
 }
 

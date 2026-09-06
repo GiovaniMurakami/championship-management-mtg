@@ -24,6 +24,7 @@ type TorneioItem = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
@@ -38,7 +39,7 @@ const TORNEIOS_PK = "TORNEIOS";
 
 export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements TorneioGateway {
   private constructor() {
-    super();
+    super("torneios");
   }
 
   public static criar() {
@@ -145,7 +146,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
         },
         ConditionExpression: "attribute_exists(pk)",
       },
-    })));
+    })), "visualizacoesTorneio");
     return this.buscarPorId(id);
   }
 
@@ -269,6 +270,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      premio: torneio.premio,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
@@ -301,6 +303,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: item.maxJogadores,
       maxRodadas: item.maxRodadas,
       corteTop: item.corteTop,
+      premio: item.premio,
       linkLive: item.linkLive,
       emCorte: item.emCorte,
       secreto: item.secreto,

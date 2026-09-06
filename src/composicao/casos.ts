@@ -1,3 +1,4 @@
+import { RegistrarPartidaExterna } from "../casosDeUso/usuario/registrarPartidaExterna";
 import { CadastrarUsuario } from "../casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "../casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "../casosDeUso/usuario/atualizarUsuario";
@@ -92,7 +93,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
     const confirmarResetSenha = ConfirmarResetSenha.criar(repos.usuario, repos.resetSenha);
     const listarUsuarios = ListarUsuarios.criar(repos.usuario);
-    const buscarPerfilPublico = BuscarPerfilPublico.criar(repos.usuario, repos.deck, repos.partida, repos.torneio);
+    const registrarPartidaExterna = RegistrarPartidaExterna.criar(repos.partidaExterna, repos.usuario);
+    const buscarPerfilPublico = BuscarPerfilPublico.criar(repos.usuario, repos.deck, repos.partida, repos.torneio, repos.partidaExterna);
     const alterarBloqueioTorneios = AlterarBloqueioTorneios.criar(
       repos.usuario,
       repos.inscricao,
@@ -160,9 +162,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);
     const alterarLiga = AlterarLiga.criar(repos.liga, repos.torneio);
     const excluirLiga = ExcluirLiga.criar(repos.liga);
-    const listarLigas = ListarLigas.criar(repos.liga);
+    const listarLigas = ListarLigas.criar(repos.liga, repos.torneio);
     const buscarLiga = BuscarLiga.criar(repos.liga, repos.torneio);
-    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time);
+    const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time, repos.torneio);
 
     // --- Time ---
     const criarTime = CriarTime.criar(repos.time);
@@ -197,7 +199,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
 
     return {
         cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
-        solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, alterarBloqueioTorneios, excluirConta,
+        solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, registrarPartidaExterna, alterarBloqueioTorneios, excluirConta,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,

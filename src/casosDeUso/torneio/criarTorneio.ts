@@ -23,6 +23,7 @@ export type CriarTorneioInputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
@@ -45,6 +46,7 @@ export type CriarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
@@ -84,6 +86,7 @@ export class CriarTorneio
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
+      premio: input.premio,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
       exibirNomeJogador: input.exibirNomeJogador ?? "nome",
@@ -111,6 +114,7 @@ export class CriarTorneio
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,

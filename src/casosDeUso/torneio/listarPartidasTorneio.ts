@@ -64,7 +64,8 @@ export class ListarPartidasTorneio
     ): Promise<ListarPartidasTorneioOutputDto> {
         const cachePk = cachePkTorneio(input.torneioId);
         const cacheSk = cacheSkPartidas(input.rodada);
-        const cacheado = await this.cache?.buscar<ListarPartidasTorneioOutputDto>(cachePk, cacheSk);
+        const versaoCache = await this.cache?.obterVersao(cachePk);
+        const cacheado = await this.cache?.buscar<ListarPartidasTorneioOutputDto>(cachePk, cacheSk, versaoCache);
         if (cacheado) return cacheado;
 
         const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
@@ -131,7 +132,7 @@ export class ListarPartidasTorneio
                 };
             }),
         };
-        await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+        await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60), versaoCache);
         return saida;
     }
 }

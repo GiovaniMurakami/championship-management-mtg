@@ -67,7 +67,8 @@ export class BuscarArquetipoMetagame
 
     const dias = input.dias ?? 30;
     const cacheKey = cacheSkMetagameArquetipo(input.formato, slug, dias);
-    const cacheado = await this.cache?.buscar<BuscarArquetipoMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_METAGAME);
+    const cacheado = await this.cache?.buscar<BuscarArquetipoMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey, versaoCache);
     if (cacheado) return limitarListasDoArquetipo(cacheado, input.limiteListas);
 
     const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias);
@@ -84,7 +85,23 @@ export class BuscarArquetipoMetagame
       dias: agregado.dias,
       ...detalhe,
     };
-    await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900));
+    await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900), versaoCache);
     return limitarListasDoArquetipo(saida, input.limiteListas);
   }
+}
+
+/** Resposta de navegação: listas completas são buscadas somente na página do deck. */
+export function resumirArquetipoMetagame(detalhe: BuscarArquetipoMetagameOutputDto) {
+  return {
+    ...detalhe,
+    listaTipica: undefined,
+    listas: detalhe.listas.map((lista) => ({
+      deckId: lista.deckId,
+      nome: lista.nome,
+      nomeConsolidado: lista.nomeConsolidado,
+      usuario: lista.usuario,
+      torneioId: lista.torneioId,
+      torneioNome: lista.torneioNome,
+    })),
+  };
 }

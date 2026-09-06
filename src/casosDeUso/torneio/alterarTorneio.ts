@@ -24,6 +24,7 @@ export type AlterarTorneioInputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
@@ -47,6 +48,7 @@ export type AlterarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
@@ -78,11 +80,18 @@ export class AlterarTorneio
       });
     }
 
-    if (torneio.status !== "inscricoes_abertas") {
+    if (torneio.status === "finalizado") {
       throw ErroPersonalizado.criar({
-        mensagem: "Só é possível alterar torneios com inscrições abertas.",
+        mensagem: "Não é possível alterar torneios finalizados.",
         status: StatusErro.erroParametro,
       });
+    }
+
+    if (torneio.status === "em_andamento") {
+      const campos = ["formato", "maxJogadores", "maxRodadas", "corteTop"] as const;
+      if (campos.some((campo) => input[campo] !== undefined && input[campo] !== torneio[campo])) {
+        throw ErroPersonalizado.criar({ mensagem: "A estrutura do torneio não pode ser alterada após o início.", status: StatusErro.erroParametro });
+      }
     }
 
     if (input.nome !== undefined) torneio.nome = input.nome.trim();
@@ -98,6 +107,7 @@ export class AlterarTorneio
     if (input.maxJogadores !== undefined) torneio.maxJogadores = input.maxJogadores;
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
+    if (input.premio !== undefined) torneio.premio = input.premio;
     if (input.linkLive !== undefined) torneio.linkLive = input.linkLive?.trim();
     if (input.secreto !== undefined) torneio.secreto = input.secreto;
     if (input.exibirNomeJogador !== undefined) torneio.exibirNomeJogador = input.exibirNomeJogador;
@@ -125,6 +135,7 @@ export class AlterarTorneio
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,

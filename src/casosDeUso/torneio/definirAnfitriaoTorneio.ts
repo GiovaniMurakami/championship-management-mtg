@@ -1,3 +1,4 @@
+import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -52,6 +53,7 @@ export class DefinirAnfitriaoTorneio
       }
       torneio.anfitriaoId = usuario.id;
       await this.torneioGateway.atualizar(torneio);
+      eventosTorneio.emit("torneio_atualizado", { torneioId: torneio.id });
       return {
         id: torneio.id,
         anfitriaoId: usuario.id,
@@ -65,6 +67,7 @@ export class DefinirAnfitriaoTorneio
 
     torneio.anfitriaoId = null;
     await this.torneioGateway.atualizar(torneio);
+      eventosTorneio.emit("torneio_atualizado", { torneioId: torneio.id });
 
     return {
       id: torneio.id,

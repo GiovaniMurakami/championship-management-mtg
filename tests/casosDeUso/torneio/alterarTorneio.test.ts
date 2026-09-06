@@ -88,10 +88,10 @@ describe("AlterarTorneio", () => {
         expect(resultado.nome).toBe("Alterado pelo Admin");
     });
 
-    it("deve lançar erro se torneio não estiver com inscrições abertas", async () => {
+    it("deve lançar erro se torneio estiver finalizado", async () => {
         const torneioEmAndamento = new Torneio({
             ...torneioExistente,
-            status: "em_andamento",
+            status: "finalizado",
         });
         const gateway = criarMockTorneioGateway({
             buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento),
@@ -101,6 +101,19 @@ describe("AlterarTorneio", () => {
         await expect(
             uc.executar({ id: "torneio-1", requisitanteId: "user-1", isAdmin: false, nome: "Novo" })
         ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("permite atualizar e remover live durante o torneio sem alterar as rodadas", async () => {
+        const torneio = new Torneio({ ...torneioExistente, status: "em_andamento", rodadaAtual: 2, totalRodadas: 5 });
+        const gateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) });
+        const uc = AlterarTorneio.criar(gateway);
+        await uc.executar({ id: torneio.id, requisitanteId: "user-1", isAdmin: false, linkLive: "https://youtube.com/watch?v=abc" });
+        expect(torneio.linkLive).toBe("https://youtube.com/watch?v=abc");
+        await uc.executar({ id: torneio.id, requisitanteId: "user-1", isAdmin: false, linkLive: "" });
+        expect(torneio.linkLive).toBe("");
+        expect(torneio.rodadaAtual).toBe(2);
+        expect(torneio.totalRodadas).toBe(5);
+        await expect(uc.executar({ id: torneio.id, requisitanteId: "user-1", isAdmin: false, formato: "vintage" })).rejects.toMatchObject({ status: 400 });
     });
 
     it("deve alterar todos os campos opcionais", async () => {

@@ -16,7 +16,7 @@ type SiteConfigItem = {
 
 export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implements SiteConfigGateway {
   private constructor() {
-    super();
+    super("site");
   }
 
   public static criar() {

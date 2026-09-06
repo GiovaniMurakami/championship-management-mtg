@@ -25,7 +25,7 @@ const DECKS_PK = "DECKS";
 
 export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements DeckGateway {
   private constructor() {
-    super();
+    super("decks");
   }
 
   public static criar() {
@@ -113,7 +113,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
         },
         ConditionExpression: "attribute_exists(pk)",
       },
-    })));
+    })), null);
     return this.buscarPorId(id);
   }
 

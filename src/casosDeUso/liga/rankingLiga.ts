@@ -1,3 +1,4 @@
+import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
@@ -164,6 +165,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     private readonly deckGateway: DeckGateway,
     private readonly usuarioGateway: UsuarioGateway,
     private readonly timeGateway: TimeGateway,
+    private readonly torneioGateway: TorneioGateway,
     private readonly cache?: CacheDynamoDbServico
   ) { }
 
@@ -174,9 +176,10 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     deckGateway: DeckGateway,
     usuarioGateway: UsuarioGateway,
     timeGateway: TimeGateway,
+    torneioGateway: TorneioGateway,
     cache?: CacheDynamoDbServico
   ) {
-    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway, cache);
+    return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway, torneioGateway, cache);
   }
 
   public async executar(input: RankingLigaInputDto): Promise<RankingLigaOutputDto> {
@@ -186,7 +189,8 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       limiteDecks: input.limiteDecks ?? null,
       limiteCartas: input.limiteCartas ?? null,
     });
-    const cacheado = await this.cache?.buscar<RankingLigaOutputDto>(CACHE_PK_LIGAS, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_LIGAS);
+    const cacheado = await this.cache?.buscar<RankingLigaOutputDto>(CACHE_PK_LIGAS, cacheKey, versaoCache);
     if (cacheado) return cacheado;
 
     const liga = await this.ligaGateway.buscarPorId(input.ligaId);
@@ -205,10 +209,13 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const inscricoesPorDeck = new Map<string, Set<string>>();
     const timeIdsInscritos = new Set<string>();
 
+    const torneios = await Promise.all(liga.torneioIds.map((id) => this.torneioGateway.buscarPorId(id)));
+    const finalizados = torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id);
+
     // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)
     const [todasPartidas, todasInscricoes] = await Promise.all([
-      this.partidaGateway.listarPorTorneios(liga.torneioIds),
-      this.inscricaoGateway.listarPorTorneios(liga.torneioIds),
+      this.partidaGateway.listarPorTorneios(finalizados),
+      this.inscricaoGateway.listarPorTorneios(finalizados),
     ]);
 
     const timePorMembro = new Map<string, string>();
@@ -522,7 +529,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       totalCartas: cartasOrdenadas.length,
       ...(liga.tipo === "times" ? { rankingTimes, totalTimes } : {}),
     };
-    await this.cache?.salvar(CACHE_PK_LIGAS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS", 300));
+    await this.cache?.salvar(CACHE_PK_LIGAS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS", 300), versaoCache);
     return saida;
   }
 

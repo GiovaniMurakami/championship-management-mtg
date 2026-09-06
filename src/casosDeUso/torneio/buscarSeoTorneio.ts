@@ -55,6 +55,7 @@ export class BuscarSeoTorneio
   }
 
   public async executar(input: BuscarSeoTorneioInputDto): Promise<BuscarSeoTorneioOutputDto> {
+    const versaoCache = await this.cache?.obterVersao(cachePkTorneio(input.torneioId));
     let torneio = await this.torneioGateway.buscarPorId(input.torneioId);
     if (!torneio && /^[a-z0-9]{5}-/.test(input.torneioId)) {
       torneio = await this.torneioGateway.buscarPorPrefixo(input.torneioId.slice(0, 5));
@@ -68,7 +69,7 @@ export class BuscarSeoTorneio
 
     const cachePk = cachePkTorneio(torneio.id);
     const cacheSk = cacheSkSeoTorneio();
-    const cacheado = await this.cache?.buscar<BuscarSeoTorneioOutputDto>(cachePk, cacheSk);
+    const cacheado = await this.cache?.buscar<BuscarSeoTorneioOutputDto>(cachePk, cacheSk, versaoCache);
     if (cacheado) return cacheado;
 
     const image = torneio.bannerUrl?.trim() || null;
@@ -81,7 +82,7 @@ export class BuscarSeoTorneio
       description: sanitizarDescricaoSeo(torneio.descricao),
       url: torneio.linkBanner?.trim() || null,
     };
-    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS", 1800));
+    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS", 1800), versaoCache);
     return saida;
   }
 }

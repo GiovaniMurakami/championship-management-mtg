@@ -1,3 +1,4 @@
+import { PartidaExterna, PartidaExternaGateway } from "../../dominio/gateway/partidaExternaGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
@@ -22,6 +23,8 @@ export type BuscarPerfilPublicoOutputDto = {
     totalPartidas: number;
     winrate: number;
   };
+  paginacaoPartidasExternas: { pagina: number; total: number; totalPaginas: number; limite: number };
+  partidasExternas: Array<Omit<PartidaExterna, "usuarioId">>;
   ultimosTorneios: Array<{
     id: string;
     nome: string;
@@ -44,19 +47,20 @@ export type BuscarPerfilPublicoOutputDto = {
   }>;
 };
 
-export class BuscarPerfilPublico implements CasoDeUso<{ id: string }, BuscarPerfilPublicoOutputDto> {
+export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartidasExternas?: number }, BuscarPerfilPublicoOutputDto> {
   private constructor(
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
     private readonly partidaGateway: PartidaGateway,
     private readonly torneioGateway: TorneioGateway,
+    private readonly partidasExternas?: PartidaExternaGateway,
   ) {}
 
-  public static criar(usuarioGateway: UsuarioGateway, deckGateway: DeckGateway, partidaGateway: PartidaGateway, torneioGateway: TorneioGateway) {
-    return new BuscarPerfilPublico(usuarioGateway, deckGateway, partidaGateway, torneioGateway);
+  public static criar(usuarioGateway: UsuarioGateway, deckGateway: DeckGateway, partidaGateway: PartidaGateway, torneioGateway: TorneioGateway, partidasExternas?: PartidaExternaGateway) {
+    return new BuscarPerfilPublico(usuarioGateway, deckGateway, partidaGateway, torneioGateway, partidasExternas);
   }
 
-  public async executar({ id }: { id: string }): Promise<BuscarPerfilPublicoOutputDto> {
+  public async executar({ id, paginaPartidasExternas = 1 }: { id: string; paginaPartidasExternas?: number }): Promise<BuscarPerfilPublicoOutputDto> {
     const usuario = await this.usuarioGateway.buscarPorId(id);
     if (!usuario || usuario.excluido) {
       throw ErroPersonalizado.criar({ mensagem: "Usuário não encontrado", status: 404 });
@@ -82,6 +86,15 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string }, BuscarPerf
       else empates += 1;
     }
 
+    if (!Number.isSafeInteger(paginaPartidasExternas) || paginaPartidasExternas < 1) {
+      throw ErroPersonalizado.criar({ mensagem: "Página inválida.", status: 400 });
+    }
+    const externas = await this.partidasExternas?.listarPorUsuario(id) ?? [];
+    for (const partida of externas) {
+      if (partida.resultado === "vitoria") vitorias++;
+      else if (partida.resultado === "derrota") derrotas++;
+      else empates++;
+    }
     const totalPartidas = vitorias + derrotas + empates;
     const torneioIds = Array.from(new Set(partidas.map((partida) => partida.torneioId)));
     const torneios = (await Promise.all(torneioIds.map((torneioId) => this.torneioGateway.buscarPorId(torneioId))))
@@ -106,9 +119,17 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string }, BuscarPerf
       const total = wins + losses + draws;
       return { id: torneio!.id, nome: torneio!.nome, formato: torneio!.formato, horario: torneio!.horario, vitorias: wins, derrotas: losses, empates: draws, totalPartidas: total, winrate: total ? Math.round((wins / total) * 1000) / 10 : 0 };
     });
+    const limite = 10;
+    const totalPaginas = Math.max(1, Math.ceil(externas.length / limite));
+    const pagina = Math.min(paginaPartidasExternas, totalPaginas);
     return {
+      paginacaoPartidasExternas: { pagina, limite, total: externas.length, totalPaginas },
       usuario: { id: usuario.id, nome: usuario.nome, nickMTGO: usuario.nickMTGO, nickArena: usuario.nickArena, fotoUrl: usuario.fotoUrl, resultadosExpressivos: usuario.resultadosExpressivos, criadoEm: usuario.criadoEm },
       estatisticas: { vitorias, derrotas, empates, totalPartidas, winrate: totalPartidas ? Math.round((vitorias / totalPartidas) * 1000) / 10 : 0 },
+      partidasExternas: [...externas]
+        .sort((a, b) => (b.criadoEm || "").localeCompare(a.criadoEm || "") || b.data.localeCompare(a.data) || a.id.localeCompare(b.id))
+        .slice((pagina - 1) * limite, pagina * limite)
+        .map(({ id, resultado, data, oponente, campeonato, deckNome, deckAdversarioNome }) => ({ id, resultado, data, oponente, campeonato, deckNome, deckAdversarioNome })),
       ultimosTorneios,
       decks: decksPublicos.map((deck) => ({ id: deck.id, nome: deck.nome, formato: deck.formato, cartaRepresentativa: deck.cartaRepresentativa, cartaFundo: deck.cartaRepresentativa || deck.maindeck[0]?.nome || deck.commander[0]?.nome || null, visualizacoes: deck.visualizacoes, criadoEm: deck.criadoEm })),
     };

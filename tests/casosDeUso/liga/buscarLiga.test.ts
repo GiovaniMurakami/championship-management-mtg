@@ -52,10 +52,10 @@ describe("BuscarLiga", () => {
         expect(resultado.id).toBe("liga-1");
         expect(resultado.bannerUrl).toBe("https://bucket/banner.jpg");
         expect(resultado.tipo).toBe("times");
-        expect(resultado.torneios).toHaveLength(2);
+        expect(resultado.torneios).toHaveLength(1);
         expect(resultado.torneios[0].id).toBe("torneio-1");
         expect(resultado.torneios[0].status).toBe("finalizado");
-        expect(resultado.torneios[1].id).toBe("torneio-2");
+        expect(resultado.torneioIds).toEqual(["torneio-1", "torneio-2"]);
     });
 
     it("deve retornar liga com lista de torneios vazia", async () => {

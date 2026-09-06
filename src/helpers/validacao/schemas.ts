@@ -110,6 +110,7 @@ export const criarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional(),
   maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
+  premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
@@ -129,6 +130,7 @@ export const alterarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
+  premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
@@ -380,6 +382,7 @@ export const listarMetagameQuerySchema = z.object({
 });
 
 export const metagameDiasQuerySchema = z.object({
+  resumo: z.enum(["true", "false"]).optional(),
   dias: diasMetagameSchema,
   limiteListas: z.coerce.number().int().min(1).max(100).optional(),
 });

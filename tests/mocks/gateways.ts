@@ -32,6 +32,7 @@ export function criarMockDeckGateway(overrides: Partial<DeckGateway> = {}): Deck
     return {
         salvar: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
+        buscarPorPrefixo: jest.fn().mockResolvedValue(null),
         buscarVarios: jest.fn().mockResolvedValue([]),
         listarPorUsuario: jest.fn().mockResolvedValue([]),
         listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
@@ -49,6 +50,7 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
     return {
         salvar: jest.fn(),
         buscarPorId: jest.fn().mockResolvedValue(null),
+        buscarPorPrefixo: jest.fn().mockResolvedValue(null),
         listar: jest.fn().mockResolvedValue([]),
         listarTotal: jest.fn().mockResolvedValue(0),
         incrementarVisualizacoes: jest.fn().mockResolvedValue(null),

@@ -1,3 +1,4 @@
+import { RegistrarPartidaExternaRota } from "../infra/api/express/rotas/usuario/registrarPartidaExterna.express.route";
 import { CadastrarUsuarioRota } from "../infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "../infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "../infra/api/express/rotas/usuario/atualizarUsuario.express.route";
@@ -90,6 +91,7 @@ export function criarRotas(casos: CasosDeUso) {
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
         ListarUsuariosRota.criar(casos.listarUsuarios),
+        RegistrarPartidaExternaRota.criar(casos.registrarPartidaExterna),
         BuscarPerfilPublicoRota.criar(casos.buscarPerfilPublico),
         AlterarBloqueioTorneiosRota.criar(casos.alterarBloqueioTorneios),
         CadastrarDeckRota.criar(casos.cadastrarDeck),

@@ -27,7 +27,7 @@ const PARTIDA_ID_NAMESPACE = "b24bc6ea-85ca-5a25-a22d-72f73d0c4f32";
 
 export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements PartidaGateway {
   private constructor() {
-    super();
+    super("partidas");
   }
 
   public static criar() {

@@ -89,7 +89,8 @@ export class BuscarStandings
   ): Promise<BuscarStandingsOutputDto> {
     const cachePk = cachePkTorneio(input.torneioId);
     const cacheSk = cacheSkStandings();
-    const cacheado = await this.cache?.buscar<BuscarStandingsOutputDto>(cachePk, cacheSk);
+    const versaoCache = await this.cache?.obterVersao(cachePk);
+    const cacheado = await this.cache?.buscar<BuscarStandingsOutputDto>(cachePk, cacheSk, versaoCache);
     if (cacheado) return cacheado;
 
     const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
@@ -168,7 +169,7 @@ export class BuscarStandings
         rodadaIniciadaEm: toBrasiliaISOLocal(torneio.rodadaIniciadaEm),
         standings,
       };
-      await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+      await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60), versaoCache);
       return saida;
     }
 
@@ -250,7 +251,7 @@ export class BuscarStandings
         };
       }),
     };
-    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60));
+    await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60), versaoCache);
     return saida;
   }
 }

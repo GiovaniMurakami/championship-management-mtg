@@ -31,6 +31,7 @@ npm run dev                    # Express com nodemon
 npm run lint                   # ESLint
 npm run build                  # bundle Lambda com esbuild
 npm run test:unit              # testes unitários
+npm run test:cache             # cache e operações de torneio, sem acessar AWS
 npm run test:e2e               # suíte de integração configurada
 npm run test:coverage          # cobertura unitária
 npm run deploy:dev             # deploy stage dev

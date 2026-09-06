@@ -1,3 +1,4 @@
+import { PartidaExternaDynamoRepositorio } from "../infra/dynamodb/repositorios/partidaExternaDynamoRepositorio";
 import { TokenBlacklistDynamoRepositorio } from "../infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio";
 import { RefreshTokenDynamoRepositorio } from "../infra/dynamodb/repositorios/refreshTokenDynamoRepositorio";
 import { LoginAttemptDynamoRepositorio } from "../infra/dynamodb/repositorios/loginAttemptDynamoRepositorio";
@@ -16,6 +17,7 @@ import { PostDynamoRepositorio } from "../infra/dynamodb/repositorios/postDynamo
 
 export function criarRepositorios() {
     return {
+        partidaExterna: PartidaExternaDynamoRepositorio.criar(),
         usuario: UsuarioDynamoRepositorio.criar(),
         deck: DeckDynamoRepositorio.criar(),
         torneio: TorneioDynamoRepositorio.criar(),

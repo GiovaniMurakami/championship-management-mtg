@@ -38,7 +38,8 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
   public async executar(input: ListarMetagameInputDto): Promise<ListarMetagameOutputDto> {
     const dias = input.dias ?? 30;
     const cacheKey = cacheSkMetagameLista(input.formato, dias);
-    const cacheado = await this.cache?.buscar<ListarMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_METAGAME);
+    const cacheado = await this.cache?.buscar<ListarMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey, versaoCache);
     if (cacheado) return cacheado;
 
     const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias);
@@ -50,7 +51,7 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
       arquetipos: agregado.arquetipos,
       recentes: agregado.recentes,
     };
-    await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900));
+    await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900), versaoCache);
     return saida;
   }
 }

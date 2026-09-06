@@ -23,7 +23,7 @@ const TIMES_PK = "TIMES";
 
 export class TimeDynamoRepositorio extends BaseDynamoRepositorio implements TimeGateway {
   private constructor() {
-    super();
+    super("times");
   }
 
   public static criar() {

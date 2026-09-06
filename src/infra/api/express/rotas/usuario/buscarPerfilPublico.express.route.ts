@@ -16,7 +16,7 @@ export class BuscarPerfilPublicoRota implements Rotas {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
         const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
-        response.status(200).json(await this.buscarPerfil.executar({ id }));
+        response.status(200).json(await this.buscarPerfil.executar({ id, paginaPartidasExternas: request.query.paginaPartidasExternas === undefined ? 1 : Number(request.query.paginaPartidasExternas) }));
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
           response.status(error.status).json({ mensagem: error.message, erros: error.erros });

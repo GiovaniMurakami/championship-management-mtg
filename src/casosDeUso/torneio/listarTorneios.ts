@@ -41,7 +41,8 @@ export type ListarTorneiosOutputDto = {
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
-    linkLive?: string;
+    premio?: { playerPoints: number; tix: number };
+  linkLive?: string;
     exibirNomeJogador?: string;
     emCorte: boolean;
     secreto: boolean;
@@ -95,7 +96,8 @@ export class ListarTorneios
       dataInicio: dataInicio?.toISOString() ?? null,
       dataFim: dataFim?.toISOString() ?? null,
     });
-    const cacheado = await this.cache?.buscar<ListarTorneiosOutputDto>(CACHE_PK_TORNEIOS, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_TORNEIOS);
+    const cacheado = await this.cache?.buscar<ListarTorneiosOutputDto>(CACHE_PK_TORNEIOS, cacheKey, versaoCache);
     if (cacheado) return cacheado;
 
     const [torneios, total, inscricoes] = await Promise.all([
@@ -139,7 +141,8 @@ export class ListarTorneios
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,
-        linkLive: t.linkLive,
+        premio: t.premio,
+      linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
         exibirNomeJogador: t.exibirNomeJogador,
@@ -152,7 +155,7 @@ export class ListarTorneios
       limite: paginacao.limite,
       offset: paginacao.offset,
     };
-    await this.cache?.salvar(CACHE_PK_TORNEIOS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS", 30));
+    await this.cache?.salvar(CACHE_PK_TORNEIOS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS", 30), versaoCache);
     return saida;
   }
 }

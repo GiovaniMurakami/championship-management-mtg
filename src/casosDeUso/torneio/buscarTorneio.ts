@@ -43,6 +43,7 @@ export type BuscarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
@@ -162,6 +163,7 @@ export class BuscarTorneio
       maxJogadores: torneioAtual.maxJogadores,
       maxRodadas: torneioAtual.maxRodadas,
       corteTop: torneioAtual.corteTop,
+      premio: torneioAtual.premio,
       linkLive: torneioAtual.linkLive,
       emCorte: torneioAtual.emCorte,
       secreto: torneioAtual.secreto,

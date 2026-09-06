@@ -3,7 +3,6 @@ import { RefazerRodada } from "../../../../../casosDeUso/torneio/refazerRodada";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
-import { eventosTorneio } from "../../../../socketio/eventosTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
@@ -37,11 +36,6 @@ export class RefazerRodadaRota implements Rotas {
           torneioId,
           donoId: request.usuario!.id,
           isAdmin: request.usuario!.role === "admin",
-        });
-
-        eventosTorneio.emit("rodada_refeita", {
-          torneioId,
-          ...resultado,
         });
 
         response.status(200).json(resultado);

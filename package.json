@@ -14,6 +14,7 @@
     "deploy:dev": "npm run build && serverless deploy --stage dev --region us-east-1",
     "deploy:prod": "npm run build && serverless deploy --stage prod --region us-east-1",
     "test": "npm run test:unit && npm run test:e2e",
+    "test:cache": "jest --runInBand --verbose tests/infra/cache",
     "test:unit": "jest --verbose --runInBand --testPathIgnorePatterns=tests/e2e",
     "test:e2e": "npm run test:e2e:cache && npm run test:e2e:dynamodb && npm run test:e2e:torneio150",
     "test:e2e:cache": "node -r dotenv/config -e \"process.env.RUN_DYNAMODB_CACHE_E2E='true'; process.env.E2E_ALLOW_NONLOCAL_CACHE='true'; require('jest').run(['--runInBand','tests/e2e/cacheDynamoDb.e2e.test.ts'])\"",

@@ -28,7 +28,7 @@ const USUARIOS_PK = "USUARIOS";
 
 export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements UsuarioGateway {
   private constructor() {
-    super();
+    super("usuarios");
   }
 
   public static criar() {
