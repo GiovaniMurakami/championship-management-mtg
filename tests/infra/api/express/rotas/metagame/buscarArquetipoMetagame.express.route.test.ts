@@ -6,7 +6,7 @@ import { heavyReadRateLimiter } from "../../../../../../src/middlewares/express/
 function makeReqRes() {
     const req = {
         paramsValidados: { formato: "pauper", slug: "blue-terror" },
-        queryValidados: { dias: 30, limiteListas: 10 },
+        queryValidados: { dias: 30, limiteListas: 10, offsetListas: 20 },
     } as any;
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
     const next = jest.fn();
@@ -38,6 +38,7 @@ describe("BuscarArquetipoMetagameRota", () => {
             slug: "blue-terror",
             dias: 30,
             limiteListas: 10,
+            offsetListas: 20,
         });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);

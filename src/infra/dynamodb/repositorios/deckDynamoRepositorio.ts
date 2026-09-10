@@ -73,7 +73,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
     return filtrados.slice(offset, offset + limite).map((item) => this.itemParaDeck(item));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio" | "apenasCopiasTorneio"> = {}): Promise<number> {
     return this.filtrar(await this.carregarBase(filtros), filtros).length;
   }
 
@@ -142,13 +142,14 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
 
   private filtrar(
     itens: DeckItem[],
-    filtros: Pick<FiltrosListarDecks, "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio" | "criadoApos" | "criadoAntes">
+    filtros: Pick<FiltrosListarDecks, "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio" | "apenasCopiasTorneio" | "criadoApos" | "criadoAntes">
   ): DeckItem[] {
     const formato = filtros.formato?.trim().toLowerCase();
     const nome = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       if (!filtros.incluirOcultos && item.oculto) return false;
       if (filtros.excluirCopiasTorneio && item.travado && item.torneioId && item.deckOriginalId) return false;
+      if (filtros.apenasCopiasTorneio && !(item.travado && item.torneioId)) return false;
       if (formato && !item.formato.toLowerCase().includes(formato)) return false;
       if (nome && !item.nome.toLowerCase().includes(nome)) return false;
       const criadoEm = new Date(item.criadoEm).getTime();

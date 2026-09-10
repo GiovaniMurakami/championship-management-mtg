@@ -386,6 +386,7 @@ export const metagameDiasQuerySchema = intervaloDatasSchema.and(z.object({
   resumo: z.enum(["true", "false"]).optional(),
   dias: diasMetagameSchema,
   limiteListas: z.coerce.number().int().min(1).max(100).optional(),
+  offsetListas: z.coerce.number().int().min(0).optional(),
 }));
 
 export const metagameArquetipoParamsSchema = z.object({
