@@ -389,3 +389,8 @@ Interface de comunicação com o repositório:
 Implementação DynamoDB:
 
 - [UsuarioDynamoRepositorio](../src/infra/dynamodb/repositorios/usuarioDynamoRepositorio.ts)
+# Filtro de datas no perfil público
+
+`GET /usuario/:id/perfil?dataInicio=2026-08-01&dataFim=2026-08-31&paginaPartidasExternas=1`
+
+As datas são opcionais e devem ser informadas juntas em `YYYY-MM-DD`, com início ≤ fim. Incluem os dias completos no horário de Brasília (UTC−3). O filtro afeta estatísticas, últimos torneios (pelo horário do evento) e partidas externas (pela data informada), antes da paginação. Sem datas, o perfil usa todo o histórico. A coleção de decks públicos e os dados cadastrais permanecem independentes do período.

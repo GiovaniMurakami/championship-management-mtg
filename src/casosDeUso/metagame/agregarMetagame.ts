@@ -117,6 +117,7 @@ export type AgregarMetagameInput = {
   formato: string;
   dias: number;
   agora: Date;
+  intervalo?: { dataInicio: Date; dataFim: Date };
   torneios: Torneio[];
   inscricoes: Inscricao[];
   partidas: Partida[];
@@ -243,13 +244,13 @@ function inverter(resultado: "vitoria" | "derrota" | "empate"): "vitoria" | "der
 
 export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
   const formato = normalizarFormatoDeck(input.formato);
-  const inicio = new Date(input.agora.getTime() - input.dias * 24 * 60 * 60 * 1000);
+  const inicio = input.intervalo?.dataInicio ?? new Date(input.agora.getTime() - input.dias * 24 * 60 * 60 * 1000);
 
   const torneios = input.torneios.filter((t) => {
     if (t.status !== "finalizado") return false;
     if (t.secreto) return false;
     if (normalizarFormatoDeck(t.formato) !== formato) return false;
-    return t.horario.getTime() >= inicio.getTime();
+    return t.horario.getTime() >= inicio.getTime() && (!input.intervalo || t.horario.getTime() <= input.intervalo.dataFim.getTime());
   });
   const torneioIds = new Set(torneios.map((t) => t.id));
   const torneioPorId = new Map(torneios.map((t) => [t.id, t]));

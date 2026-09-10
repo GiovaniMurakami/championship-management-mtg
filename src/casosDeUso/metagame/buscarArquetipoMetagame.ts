@@ -1,3 +1,4 @@
+import { IntervaloDatas, resolverIntervaloDatas } from "../../helpers/data/intervaloDatas";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -6,7 +7,7 @@ import { carregarEAgregarMetagame, MetagameGateways } from "./carregarMetagame";
 import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
 import { CACHE_PK_METAGAME, cacheSkMetagameArquetipo } from "../../helpers/cache/chavesCache";
 
-export type BuscarArquetipoMetagameInputDto = {
+export type BuscarArquetipoMetagameInputDto = IntervaloDatas & {
   formato: string;
   slug: string;
   dias?: number;
@@ -65,13 +66,14 @@ export class BuscarArquetipoMetagame
       });
     }
 
+    const intervalo = resolverIntervaloDatas(input);
     const dias = input.dias ?? 30;
-    const cacheKey = cacheSkMetagameArquetipo(input.formato, slug, dias);
+    const cacheKey = cacheSkMetagameArquetipo(input.formato, slug, dias) + (intervalo ? `#de=${input.dataInicio}#ate=${input.dataFim}` : "");
     const versaoCache = await this.cache?.obterVersao(CACHE_PK_METAGAME);
     const cacheado = await this.cache?.buscar<BuscarArquetipoMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey, versaoCache);
     if (cacheado) return limitarListasDoArquetipo(cacheado, input.limiteListas);
 
-    const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias);
+    const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias, intervalo);
     const detalhe = agregado.porSlug.get(slug);
     if (!detalhe) {
       throw ErroPersonalizado.criar({

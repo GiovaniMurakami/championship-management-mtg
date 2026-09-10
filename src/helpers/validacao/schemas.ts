@@ -1,3 +1,4 @@
+import { intervaloDatasSchema } from "../data/intervaloDatas";
 import { z } from "zod";
 import { getS3BaseUrl } from "../env";
 import { paginacaoQueryCampos, uuidCampo } from "./campos";
@@ -376,16 +377,16 @@ const diasMetagameSchema = z.preprocess(
     })
 );
 
-export const listarMetagameQuerySchema = z.object({
+export const listarMetagameQuerySchema = intervaloDatasSchema.and(z.object({
   formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
   dias: diasMetagameSchema,
-});
+}));
 
-export const metagameDiasQuerySchema = z.object({
+export const metagameDiasQuerySchema = intervaloDatasSchema.and(z.object({
   resumo: z.enum(["true", "false"]).optional(),
   dias: diasMetagameSchema,
   limiteListas: z.coerce.number().int().min(1).max(100).optional(),
-});
+}));
 
 export const metagameArquetipoParamsSchema = z.object({
   formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
@@ -396,3 +397,5 @@ export const metagameArquetipoParamsSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9-]+$/, "slug inválido."),
 });
+
+export const perfilPublicoQuerySchema = intervaloDatasSchema.and(z.object({ paginaPartidasExternas: z.coerce.number().int().min(1).default(1) }));

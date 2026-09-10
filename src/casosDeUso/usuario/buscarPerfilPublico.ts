@@ -1,3 +1,4 @@
+import { IntervaloDatas, resolverIntervaloDatas } from "../../helpers/data/intervaloDatas";
 import { PartidaExterna, PartidaExternaGateway } from "../../dominio/gateway/partidaExternaGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
@@ -47,7 +48,7 @@ export type BuscarPerfilPublicoOutputDto = {
   }>;
 };
 
-export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartidasExternas?: number }, BuscarPerfilPublicoOutputDto> {
+export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartidasExternas?: number } & IntervaloDatas, BuscarPerfilPublicoOutputDto> {
   private constructor(
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
@@ -60,7 +61,8 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     return new BuscarPerfilPublico(usuarioGateway, deckGateway, partidaGateway, torneioGateway, partidasExternas);
   }
 
-  public async executar({ id, paginaPartidasExternas = 1 }: { id: string; paginaPartidasExternas?: number }): Promise<BuscarPerfilPublicoOutputDto> {
+  public async executar({ id, paginaPartidasExternas = 1, dataInicio, dataFim }: { id: string; paginaPartidasExternas?: number } & IntervaloDatas): Promise<BuscarPerfilPublicoOutputDto> {
+    const intervalo = resolverIntervaloDatas({ dataInicio, dataFim });
     const usuario = await this.usuarioGateway.buscarPorId(id);
     if (!usuario || usuario.excluido) {
       throw ErroPersonalizado.criar({ mensagem: "Usuário não encontrado", status: 404 });
@@ -71,10 +73,14 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     const deckIds = new Set(decksDoUsuario.map((deck) => deck.id));
     const partidas = await this.partidaGateway.listarPorDeckIds(Array.from(deckIds));
 
+    const torneioIds = Array.from(new Set(partidas.map(partida => partida.torneioId)));
+    const todosTorneios = await Promise.all(torneioIds.map(torneioId => this.torneioGateway.buscarPorId(torneioId)));
+    const idsNoPeriodo = new Set(todosTorneios.filter(t => t && (!intervalo || (t.horario >= intervalo.dataInicio && t.horario <= intervalo.dataFim))).map(t => t!.id));
+    const partidasNoPeriodo = intervalo ? partidas.filter(p => idsNoPeriodo.has(p.torneioId)) : partidas;
     let vitorias = 0;
     let derrotas = 0;
     let empates = 0;
-    for (const partida of partidas) {
+    for (const partida of partidasNoPeriodo) {
       if (partida.status !== "finalizada" || !partida.jogador2Id) continue;
       const comoJogador1 = partida.jogador1Id === id;
       const comoJogador2 = partida.jogador2Id === id;
@@ -89,15 +95,15 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     if (!Number.isSafeInteger(paginaPartidasExternas) || paginaPartidasExternas < 1) {
       throw ErroPersonalizado.criar({ mensagem: "Página inválida.", status: 400 });
     }
-    const externas = await this.partidasExternas?.listarPorUsuario(id) ?? [];
+    const externas = (await this.partidasExternas?.listarPorUsuario(id) ?? []).filter(p => !intervalo || (p.data >= dataInicio! && p.data <= dataFim!));
     for (const partida of externas) {
       if (partida.resultado === "vitoria") vitorias++;
       else if (partida.resultado === "derrota") derrotas++;
       else empates++;
     }
     const totalPartidas = vitorias + derrotas + empates;
-    const torneioIds = Array.from(new Set(partidas.map((partida) => partida.torneioId)));
-    const torneios = (await Promise.all(torneioIds.map((torneioId) => this.torneioGateway.buscarPorId(torneioId))))
+    const torneios = todosTorneios
+      .filter(t => t && idsNoPeriodo.has(t.id))
       .filter((torneio) => torneio?.status === "finalizado" && !torneio.secreto)
       .sort((a, b) => b!.horario.getTime() - a!.horario.getTime())
       .slice(0, 3);
@@ -105,7 +111,7 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
       let wins = 0;
       let losses = 0;
       let draws = 0;
-      for (const partida of partidas) {
+      for (const partida of partidasNoPeriodo) {
         if (partida.torneioId !== torneio!.id || partida.status !== "finalizada" || !partida.jogador2Id) continue;
         const comoJogador1 = partida.jogador1Id === id;
         const comoJogador2 = partida.jogador2Id === id;
