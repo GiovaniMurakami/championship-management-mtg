@@ -236,6 +236,10 @@ describe("CadastrarDeck", () => {
             maindeck: listaTerror,
             sideboard: [],
             usuarioId: "outro-usuario",
+            oculto: true,
+            travado: true,
+            torneioId: "torneio-finalizado-1",
+            deckOriginalId: "deck-original-1",
         });
         const gateway = criarMockDeckGateway({
             listar: jest.fn().mockResolvedValue([referencia]),
@@ -256,8 +260,69 @@ describe("CadastrarDeck", () => {
         expect(gateway.listar).toHaveBeenCalledWith({
             formato: "pauper",
             incluirOcultos: true,
+            apenasCopiasTorneio: true,
             limite: 500,
         });
+    });
+
+    it("deve usar nome consolidado de lista real de torneio mesmo com pequena variacao de cartas", async () => {
+        const dimirTerrorReferencia: Carta[] = [
+            { nome: "Tolarian Terror", quantidade: 4 },
+            { nome: "Cryptic Serpent", quantidade: 4 },
+            { nome: "Brainstorm", quantidade: 4 },
+            { nome: "Counterspell", quantidade: 4 },
+            { nome: "Mental Note", quantidade: 4 },
+            { nome: "Thought Scour", quantidade: 4 },
+            { nome: "Lorien Revealed", quantidade: 4 },
+            { nome: "Snuff Out", quantidade: 4 },
+            { nome: "Chainer's Edict", quantidade: 2 },
+            { nome: "Island", quantidade: 18 },
+            { nome: "Swamp", quantidade: 4 },
+            { nome: "Ice Tunnel", quantidade: 4 },
+        ];
+        const dimirTerrorComVariacao: Carta[] = [
+            { nome: "Tolarian Terror", quantidade: 4 },
+            { nome: "Cryptic Serpent", quantidade: 4 },
+            { nome: "Brainstorm", quantidade: 4 },
+            { nome: "Counterspell", quantidade: 4 },
+            { nome: "Mental Note", quantidade: 4 },
+            { nome: "Thought Scour", quantidade: 4 },
+            { nome: "Lorien Revealed", quantidade: 3 },
+            { nome: "Consider", quantidade: 1 },
+            { nome: "Snuff Out", quantidade: 4 },
+            { nome: "Chainer's Edict", quantidade: 2 },
+            { nome: "Island", quantidade: 18 },
+            { nome: "Swamp", quantidade: 4 },
+            { nome: "Ice Tunnel", quantidade: 4 },
+        ];
+        const referencia = new Deck({
+            id: "copia-torneio-dimir-terror",
+            nome: "Deck azul preto",
+            nomeConsolidado: "Dimir Terror",
+            formato: "pauper",
+            maindeck: dimirTerrorReferencia,
+            sideboard: [{ nome: "hydroblast", quantidade: 3 }],
+            usuarioId: "jogador-torneio",
+            oculto: true,
+            travado: true,
+            torneioId: "torneio-finalizado-2",
+            deckOriginalId: "deck-original-2",
+        });
+        const gateway = criarMockDeckGateway({
+            listar: jest.fn().mockResolvedValue([referencia]),
+        });
+        const uc = CadastrarDeck.criar(gateway);
+
+        const resultado = await uc.executar({
+            nome: "UB Tempo",
+            formato: "pauper",
+            maindeck: dimirTerrorComVariacao,
+            sideboard: [{ nome: "hydroblast", quantidade: 2 }, { nome: "annul", quantidade: 1 }],
+            usuarioId: "u",
+            usuarioNome: "Usuario",
+        });
+
+        expect(resultado.nomeConsolidado).toBe("Dimir Terror");
     });
 
     it("deve lancar 400 quando usuario ja atingiu o limite de 50 decks", async () => {

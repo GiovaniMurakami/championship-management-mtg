@@ -31,6 +31,36 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
             "d12", "d11", "d10", "d9", "d8", "d7", "d6", "d5", "d4", "d3",
         ]);
         expect(limitado.deckIds).toHaveLength(12);
+        expect(limitado.paginacaoListas).toEqual({
+            total: 12,
+            limite: 10,
+            offset: 0,
+            pagina: 1,
+            totalPaginas: 2,
+        });
+    });
+
+    it("pagina listas do arquétipo preservando ordenação por recência", () => {
+        const listas = Array.from({ length: 12 }, (_, indice) => ({
+            deckId: `d${indice + 1}`,
+            torneioId: `t${indice + 1}`,
+        }));
+        const resultados = listas.map((lista, indice) => ({
+            ...lista,
+            horario: `2026-08-${String(indice + 1).padStart(2, "0")}T12:00:00.000Z`,
+        }));
+
+        const pagina2 = limitarListasDoArquetipo({ listas, resultados } as any, 5, 5);
+
+        expect(pagina2.listas.map((lista) => lista.deckId)).toEqual(["d7", "d6", "d5", "d4", "d3"]);
+        expect(pagina2.deckIds).toHaveLength(12);
+        expect(pagina2.paginacaoListas).toEqual({
+            total: 12,
+            limite: 5,
+            offset: 5,
+            pagina: 2,
+            totalPaginas: 3,
+        });
     });
 
     it("lista vazia quando não há torneios finalizados", async () => {

@@ -76,6 +76,7 @@ export class CadastrarDeck
     const referencias = await this.deckGateway.listar({
       formato,
       incluirOcultos: true,
+      apenasCopiasTorneio: true,
       limite: 500,
     });
     const classificacao = classificarArquetipo({
