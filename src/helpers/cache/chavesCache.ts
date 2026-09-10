@@ -12,7 +12,8 @@ function normalizarParte(valor: string | number | undefined | null): string {
 }
 
 export function cacheSkMetagameLista(formato: string, dias: number): string {
-  return `lista#formato=${normalizarParte(formato.toLowerCase())}#dias=${dias}`;
+  // Isolate older cached responses without matchups.
+  return `lista#formato=${normalizarParte(formato.toLowerCase())}#dias=${dias}#matchups=v1`;
 }
 
 export function cacheSkMetagameArquetipo(formato: string, slug: string, dias: number): string {

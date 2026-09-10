@@ -13,6 +13,24 @@ const partida = (torneioId: string, deckId: string, v1: number, v2: number) => n
 const torneio = (id: string, horario: string, secreto = false, status: "inscricoes_abertas" | "em_andamento" | "finalizado" = "finalizado") => new Torneio({ id, nome: `Torneio ${id}`, horario: new Date(horario), formato: "pauper", donoId: "admin", status, rodadaAtual: 3, totalRodadas: 3, secreto });
 
 describe("BuscarPerfilPublico", () => {
+  it("filtra estatísticas e histórico pelas datas, incluindo o fim do dia e paginando após o filtro", async () => {
+    const torneios = [torneio("dentro", "2026-08-02T02:59:59.999Z"), torneio("fora", "2026-08-02T03:00:00.000Z")];
+    const uc = BuscarPerfilPublico.criar(
+      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico]) }),
+      criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue([partida("dentro", "deck-1", 2, 0), partida("fora", "deck-1", 0, 2)]) }),
+      criarMockTorneioGateway({ buscarPorId: jest.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
+      { salvar: jest.fn(), listarPorUsuario: jest.fn().mockResolvedValue([
+        { id: "e1", data: "2026-08-01", resultado: "empate" },
+        ...Array.from({ length: 12 }, (_, i) => ({ id: `f${i}`, data: "2026-08-02", resultado: "derrota" })),
+      ]) },
+    );
+    const result = await uc.executar({ id: usuario.id, dataInicio: "2026-08-01", dataFim: "2026-08-01", paginaPartidasExternas: 2 });
+    expect(result.estatisticas).toMatchObject({ vitorias: 1, derrotas: 0, empates: 1, totalPartidas: 2, winrate: 50 });
+    expect(result.ultimosTorneios.map(t => t.id)).toEqual(["dentro"]);
+    expect(result.paginacaoPartidasExternas).toMatchObject({ pagina: 1, total: 1, totalPaginas: 1 });
+    expect(result.decks).toHaveLength(1);
+  });
   it("retorna estatísticas, apenas decks públicos e os três torneios públicos mais recentes", async () => {
     const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-2", 0, 2), partida("t3", "deck-1", 1, 1), partida("t4", "deck-1", 2, 1), partida("secret", "deck-1", 2, 0), partida("ongoing", "deck-1", 2, 0), partida("open", "deck-1", 2, 0)];
     const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("t4", "2026-04-01"), torneio("secret", "2026-05-01", true), torneio("ongoing", "2026-06-01", false, "em_andamento"), torneio("open", "2026-07-01", false, "inscricoes_abertas")];

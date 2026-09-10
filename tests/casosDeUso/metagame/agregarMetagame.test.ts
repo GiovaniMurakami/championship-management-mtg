@@ -7,6 +7,19 @@ import { agregarMetagame, slugificarArquetipo } from "../../../src/casosDeUso/me
 
 const agora = new Date("2026-08-14T12:00:00.000Z");
 
+it("usa datas históricas explícitas em vez da janela móvel, incluindo ambos os limites", () => {
+  const inicio = new Date("2025-01-01T03:00:00.000Z");
+  const fim = new Date("2025-01-02T02:59:59.999Z");
+  const torneios = [
+    torneio({ id: "antes", horario: new Date(inicio.getTime() - 1) }),
+    torneio({ id: "inicio", horario: inicio }),
+    torneio({ id: "fim", horario: fim }),
+    torneio({ id: "depois", horario: new Date(fim.getTime() + 1) }),
+  ];
+  const result = agregarMetagame({ formato: "pauper", dias: 30, agora, intervalo: { dataInicio: inicio, dataFim: fim }, torneios, inscricoes: [], partidas: [], decks: [], usuarios: [] });
+  expect(result.totalTorneios).toBe(2);
+});
+
 function torneio(overrides: Partial<ConstructorParameters<typeof Torneio>[0]> = {}) {
     return new Torneio({
         id: "torneio-1",
