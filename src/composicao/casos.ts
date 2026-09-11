@@ -45,6 +45,7 @@ import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
 import { BuscarSeoTorneio } from "../casosDeUso/torneio/buscarSeoTorneio";
 import { BuscarStandings } from "../casosDeUso/torneio/buscarStandings";
+import { ExportarMtggoldfish } from "../casosDeUso/torneio/exportarMtggoldfish";
 import { MeuHistoricoTorneio } from "../casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "../casosDeUso/torneio/listarPartidasTorneio";
 import { AlterarTorneio } from "../casosDeUso/torneio/alterarTorneio";
@@ -149,6 +150,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
     const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
+    const exportarMtggoldfish = ExportarMtggoldfish.criar(repos.torneio, repos.inscricao, repos.usuario, repos.deck, buscarStandings);
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const alterarTorneio = AlterarTorneio.criar(repos.torneio);
@@ -205,7 +207,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
-        droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
+        droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings, exportarMtggoldfish,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
