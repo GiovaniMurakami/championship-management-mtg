@@ -12,6 +12,7 @@ type DeckItem = {
   maindeck: Carta[];
   sideboard: Carta[];
   commander: Carta[];
+  cores?: string[];
   usuarioId: string;
   visualizacoes: number;
   oculto: boolean;
@@ -202,6 +203,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,
+      cores: deck.cores ?? [],
       usuarioId: deck.usuarioId,
       visualizacoes: deck.visualizacoes,
       oculto: deck.oculto,
@@ -223,6 +225,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       maindeck: item.maindeck,
       sideboard: item.sideboard,
       commander: item.commander,
+      cores: item.cores ?? [],
       usuarioId: item.usuarioId,
       visualizacoes: item.visualizacoes,
       oculto: item.oculto,

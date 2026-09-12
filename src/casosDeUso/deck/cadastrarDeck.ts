@@ -11,6 +11,7 @@ import {
   validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
 import { classificarArquetipo } from "../../dominio/servicos/classificadorArquetipo";
+import { inferirCoresDeNomes, normalizarCores } from "../../helpers/deck/coresDeck";
 
 const MAXIMO_DECKS_POR_USUARIO = 50;
 
@@ -21,6 +22,7 @@ export type CadastrarDeckInputDto = {
   maindeck: Carta[];
   sideboard: Carta[];
   commander?: Carta[] | null;
+  cores?: string[] | null;
   usuarioId: string;
   usuarioNome: string;
   oculto?: boolean;
@@ -64,6 +66,12 @@ export class CadastrarDeck
     const maindeckNormalizado = normalizarListaCartas(input.maindeck);
     const sideboardNormalizado = normalizarListaCartas(input.sideboard ?? []);
     const commanderNormalizado = normalizarListaCartas(input.commander ?? []);
+    const nomesParaCores = (formato === "commander" || formato === "commander500")
+      ? commanderNormalizado
+      : maindeckNormalizado;
+    const cores = normalizarCores(input.cores).length
+      ? normalizarCores(input.cores)
+      : inferirCoresDeNomes(nomesParaCores.map((carta) => carta.nome));
 
     validarLinkLigaMagic(formato, linkLigaMagic);
     validarDeckPorFormato({
@@ -93,6 +101,7 @@ export class CadastrarDeck
       maindeck: maindeckNormalizado,
       sideboard: sideboardNormalizado,
       commander: commanderNormalizado,
+      cores,
       usuarioId: input.usuarioId,
       oculto: input.oculto ?? false,
     });

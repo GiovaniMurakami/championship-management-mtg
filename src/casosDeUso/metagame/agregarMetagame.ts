@@ -6,6 +6,7 @@ import { Usuario } from "../../dominio/entidade/usuario";
 import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { calcularEstatisticas, ordenarPorDesempate } from "../torneio/swiss";
+import { coresDoArquetipo } from "../../helpers/deck/coresDeck";
 
 export const DIAS_METAGAME = [7, 14, 30, 90] as const;
 export type DiasMetagame = (typeof DIAS_METAGAME)[number];
@@ -41,6 +42,7 @@ export type ArquetipoResumo = {
   cartaRepresentativa: string | null;
   cartasChave: string[];
   cartasCores: string[];
+  cores: string[];
 };
 
 export type RecenteDeck = {
@@ -364,6 +366,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     const tipicaSide = cartasDoCampo(primeiroDeck, "sideboard");
     const tipicaCmd = cartasDoCampo(primeiroDeck, "commander");
     const ehCommander = formato === "commander" || formato === "commander500";
+    const cartasCores = (ehCommander ? tipicaCmd : tipicaMain).map((c) => c.nome);
     const resumo: ArquetipoResumo = {
       nome,
       slug,
@@ -375,7 +378,8 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
       winrate: winrateDe(stats),
       cartaRepresentativa: cartaRepresentativa(decksUnicos, formato),
       cartasChave: cartasChave(decksUnicos, formato),
-      cartasCores: (ehCommander ? tipicaCmd : tipicaMain).map((c) => c.nome),
+      cartasCores,
+      cores: coresDoArquetipo(decksUnicos, cartasCores),
     };
     arquetipos.push(resumo);
 

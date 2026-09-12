@@ -10,6 +10,7 @@ export function clonarDeckParaTorneio(deck: Deck, torneioId: string): Deck {
     maindeck: deck.maindeck.map((carta) => ({ ...carta })),
     sideboard: deck.sideboard.map((carta) => ({ ...carta })),
     commander: deck.commander.map((carta) => ({ ...carta })),
+    cores: [...(deck.cores ?? [])],
     usuarioId: deck.usuarioId,
     oculto: true,
     travado: true,

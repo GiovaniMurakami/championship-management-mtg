@@ -150,7 +150,9 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("brainstorm");
         expect(resultado.arquetipos[0].cartasChave).toEqual(["brainstorm", "tolarian terror"]);
         expect(resultado.arquetipos[0].cartasCores).toEqual(["tolarian terror", "island", "brainstorm"]);
+        expect(resultado.arquetipos[0].cores).toEqual(["U"]);
         expect(resultado.arquetipos[1].cartasCores).toEqual(["frogmite", "mountain"]);
+        expect(resultado.arquetipos[1].cores).toEqual(["R"]);
         expect(resultado.recentes).toHaveLength(1);
         expect(resultado.recentes[0].torneioNome).toBe("Pauper Semanal");
         expect(resultado.recentes[0].decks.map((d) => d.nome)).toEqual(["Blue Terror", "Affinity"]);
@@ -419,6 +421,34 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("edric, spymaster of trest");
         expect(resultado.arquetipos[0].cartasChave).toEqual(["edric, spymaster of trest"]);
         expect(resultado.arquetipos[0].cartasCores).toEqual(["edric, spymaster of trest"]);
+        expect(resultado.arquetipos[0].cores).toEqual([]);
+    });
+
+    it("usa cores persistidas no deck sem consultar a lista de cartas", () => {
+        const t = torneio();
+        const affinity = deck({
+            id: "deck-grixis",
+            nome: "Grixis Affinity",
+            nomeConsolidado: "Grixis Affinity",
+            usuarioId: "user-2",
+            maindeck: [
+                { nome: "thoughtcast", quantidade: 4 },
+                { nome: "darkslick shores", quantidade: 4 },
+            ],
+            cores: ["U", "B", "R"],
+        });
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            torneios: [t],
+            inscricoes: [inscricao("torneio-1", "user-2", "deck-grixis")],
+            partidas: [],
+            decks: [affinity],
+            usuarios: [bob],
+        });
+
+        expect(resultado.arquetipos[0].cores).toEqual(["U", "B", "R"]);
     });
 
     it("ignora partida não finalizada e usa a primeira lista encontrada", () => {

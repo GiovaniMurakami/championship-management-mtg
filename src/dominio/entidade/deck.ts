@@ -15,6 +15,7 @@ export interface DeckProps {
   maindeck: Carta[];
   sideboard: Carta[];
   commander?: Carta[] | null;
+  cores?: string[] | null;
   usuarioId: string;
   visualizacoes?: number;
   oculto?: boolean;
@@ -34,6 +35,7 @@ export class Deck {
   public maindeck: Carta[];
   public sideboard: Carta[];
   public commander: Carta[];
+  public cores: string[];
   public usuarioId: string;
   public visualizacoes: number;
   public oculto: boolean;
@@ -52,6 +54,7 @@ export class Deck {
     maindeck,
     sideboard,
     commander,
+    cores,
     usuarioId,
     visualizacoes,
     oculto,
@@ -69,6 +72,7 @@ export class Deck {
     this.maindeck = maindeck;
     this.sideboard = sideboard;
     this.commander = commander ?? [];
+    this.cores = cores ?? [];
     this.usuarioId = usuarioId;
     this.visualizacoes = visualizacoes ?? 0;
     this.oculto = oculto ?? false;

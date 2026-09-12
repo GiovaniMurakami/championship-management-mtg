@@ -37,6 +37,10 @@ const cartaSchema = z.object({
 });
 
 const commanderSchema = z.array(cartaSchema).nullable().optional();
+const coresDeckSchema = z
+  .array(z.string().trim().regex(/^[WUBRGwubrg]$/, "Cor de mana inválida."))
+  .max(5)
+  .optional();
 const linkLigaMagicSchema = z.string().url("linkLigaMagic deve ser uma URL válida.").nullable().optional();
 const ehFormatoCommander500 = (formato: string) => formato.toLowerCase().trim().replace(/\s+/g, "") === "commander500";
 
@@ -74,6 +78,7 @@ export const cadastrarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
   commander: commanderSchema,
+  cores: coresDeckSchema,
   oculto: z.boolean().optional().default(false),
 }).superRefine((dados, ctx) => {
   if (ehFormatoCommander500(dados.formato) && !dados.linkLigaMagic) {
@@ -94,6 +99,7 @@ export const atualizarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1).optional(),
   sideboard: z.array(cartaSchema).optional(),
   commander: commanderSchema,
+  cores: coresDeckSchema,
   oculto: z.boolean().optional(),
 });
 
