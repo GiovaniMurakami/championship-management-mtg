@@ -1,4 +1,6 @@
+import { Liga } from "../../dominio/entidade/liga";
 import { ExibirNomeJogador, StoryFundoTextoRodape, Torneio } from "../../dominio/entidade/torneio";
+import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
@@ -27,6 +29,7 @@ export type CriarTorneioInputDto = {
   linkLive?: string;
   secreto?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
+  ligaIds?: string[];
 };
 
 export type CriarTorneioOutputDto = {
@@ -50,15 +53,19 @@ export type CriarTorneioOutputDto = {
   linkLive?: string;
   secreto: boolean;
   exibirNomeJogador: ExibirNomeJogador;
+  ligaIds: string[];
   criadoEm: string;
 };
 
 export class CriarTorneio
   implements CasoDeUso<CriarTorneioInputDto, CriarTorneioOutputDto> {
-  private constructor(private readonly torneioGateway: TorneioGateway) { }
+  private constructor(
+    private readonly torneioGateway: TorneioGateway,
+    private readonly ligaGateway?: LigaGateway,
+  ) { }
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new CriarTorneio(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway, ligaGateway?: LigaGateway) {
+    return new CriarTorneio(torneioGateway, ligaGateway);
   }
 
   public async executar(
@@ -92,7 +99,35 @@ export class CriarTorneio
       exibirNomeJogador: input.exibirNomeJogador ?? "nome",
     });
 
+    const ligaIds = [...new Set((input.ligaIds ?? []).filter(Boolean))];
+    const ligas: Liga[] = [];
+    if (ligaIds.length > 0) {
+      if (!this.ligaGateway) {
+        throw ErroPersonalizado.criar({
+          mensagem: "Não foi possível associar o torneio às ligas.",
+          status: StatusErro.erroParametro,
+        });
+      }
+      for (const ligaId of ligaIds) {
+        const liga = await this.ligaGateway.buscarPorId(ligaId);
+        if (!liga) {
+          throw ErroPersonalizado.criar({
+            mensagem: `Liga não encontrada: ${ligaId}`,
+            status: StatusErro.erroNaoEncontrado,
+          });
+        }
+        ligas.push(liga);
+      }
+    }
+
     await this.torneioGateway.salvar(torneio);
+    for (const liga of ligas) {
+      if (!liga.torneioIds.includes(torneio.id)) {
+        liga.torneioIds = [...liga.torneioIds, torneio.id];
+        await this.ligaGateway!.atualizar(liga);
+      }
+    }
+
     eventosTorneio.emit("torneio_criado", {
       torneioId: torneio.id,
     });
@@ -118,6 +153,7 @@ export class CriarTorneio
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
       exibirNomeJogador: torneio.exibirNomeJogador,
+      ligaIds,
       criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };
   }

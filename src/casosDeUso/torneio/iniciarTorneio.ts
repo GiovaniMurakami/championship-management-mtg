@@ -8,6 +8,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { aplicarPublicacaoRodada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
@@ -15,13 +16,15 @@ export type IniciarTorneioInputDto = {
   torneioId: string;
   donoId: string;
   isAdmin: boolean;
+  publicar?: boolean;
 };
 
 export type IniciarTorneioOutputDto = {
   torneioId: string;
   rodadaAtual: number;
   totalRodadas: number;
-  rodadaIniciadaEm: string;
+  rodadaPublicada: boolean;
+  rodadaIniciadaEm?: string;
   partidas: Array<{
     id: string;
     jogador1Id: string;
@@ -96,6 +99,8 @@ export class IniciarTorneio
       : rodadasCalculadas;
 
     torneio.avancarParaEmAndamento(1, totalRodadas);
+    const publicar = input.publicar !== false;
+    aplicarPublicacaoRodada(torneio, publicar);
 
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
     const jogadores = comCheckIn
@@ -136,7 +141,8 @@ export class IniciarTorneio
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
-      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+      rodadaPublicada: publicar,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

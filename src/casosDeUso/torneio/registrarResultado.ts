@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { rejeitarResultadoSeRodadaNaoPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
 export type RegistrarResultadoInputDto = {
@@ -73,6 +74,8 @@ export class RegistrarResultado
         status: StatusErro.erroProibido,
       });
     }
+
+    rejeitarResultadoSeRodadaNaoPublicada(torneio, partida);
 
     const v1 = input.vitoriasJogador1;
     const v2 = input.vitoriasJogador2;

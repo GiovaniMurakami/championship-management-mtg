@@ -153,7 +153,13 @@ describe("invalidação de caches após persistência", () => {
   });
 
   it("não retorna sucesso da escrita quando a invalidação falha", async () => {
-    send.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("cache indisponivel"));
+    const original = send.getMockImplementation()!;
+    send.mockImplementation(async (command: unknown) => {
+      if (command instanceof UpdateItemCommand && (command as UpdateItemCommand).input.TableName === "cache-test") {
+        throw new Error("cache indisponivel");
+      }
+      return original(command);
+    });
     await expect(new Escrita("inscricoes").executar("transact")).rejects.toThrow("cache indisponivel");
   });
 

@@ -3,6 +3,7 @@ import { ListarPartidasTorneio } from "../../../../../casosDeUso/torneio/listarP
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
+import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
 import { listarPartidasQuerySchema, torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
@@ -29,6 +30,7 @@ export class ListarPartidasTorneioRota implements Rotas {
             validarParamsMiddleware(torneioIdParamSchema),
             validarQueryMiddleware(listarPartidasQuerySchema),
             torneioReadRateLimiter,
+            autenticarJwtOpcional,
         ];
     }
 
@@ -45,6 +47,8 @@ export class ListarPartidasTorneioRota implements Rotas {
                 const resultado = await this.listarPartidasTorneioServico.executar({
                     torneioId,
                     rodada,
+                    usuarioId: request.usuario?.id,
+                    isAdmin: request.usuario?.role === "admin",
                 });
 
                 response.status(200).json(resultado);

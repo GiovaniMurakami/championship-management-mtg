@@ -5,8 +5,9 @@ import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizad
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
-import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { torneioIdParamSchema, publicarRodadaBodySchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class IniciarProximaRodadaRota implements Rotas {
   private constructor(
@@ -36,6 +37,8 @@ export class IniciarProximaRodadaRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
+        const dados = validarBody(publicarRodadaBodySchema, request.body ?? {}, response);
+        if (!dados) return;
         const donoId = request.usuario!.id;
         const torneioId = request.params.torneioId as string;
 
@@ -43,28 +46,31 @@ export class IniciarProximaRodadaRota implements Rotas {
           torneioId,
           donoId,
           isAdmin: request.usuario!.role === "admin",
+          publicar: dados.publicar,
         });
 
         if (!resultado.finalizado) {
-          eventosTorneio.emit("rodada_iniciada", {
-            torneioId,
-            rodadaAtual: resultado.rodadaAtual,
-            totalRodadas: resultado.totalRodadas,
-            emCorte: resultado.emCorte,
-            rodadaIniciadaEm: resultado.rodadaIniciadaEm,
-            partidas: resultado.partidas,
-          });
-
-          if (resultado.emCorte) {
-            eventosTorneio.emit("corte_iniciado", {
+          if (resultado.rodadaPublicada !== false) {
+            eventosTorneio.emit("rodada_iniciada", {
               torneioId,
-              corteTop: resultado.partidas.length * 2,
               rodadaAtual: resultado.rodadaAtual,
-              jogadoresClassificados: resultado.partidas.flatMap((p) => [
-                { usuarioId: p.jogador1Id, nome: p.jogador1Nome },
-                ...(p.jogador2Id ? [{ usuarioId: p.jogador2Id, nome: p.jogador2Nome }] : []),
-              ]),
+              totalRodadas: resultado.totalRodadas,
+              emCorte: resultado.emCorte,
+              rodadaIniciadaEm: resultado.rodadaIniciadaEm,
+              partidas: resultado.partidas,
             });
+
+            if (resultado.emCorte) {
+              eventosTorneio.emit("corte_iniciado", {
+                torneioId,
+                corteTop: resultado.partidas.length * 2,
+                rodadaAtual: resultado.rodadaAtual,
+                jogadoresClassificados: resultado.partidas.flatMap((p) => [
+                  { usuarioId: p.jogador1Id, nome: p.jogador1Nome },
+                  ...(p.jogador2Id ? [{ usuarioId: p.jogador2Id, nome: p.jogador2Nome }] : []),
+                ]),
+              });
+            }
           }
         } else {
           eventosTorneio.emit("torneio_finalizado", {

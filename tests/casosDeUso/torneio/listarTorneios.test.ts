@@ -62,6 +62,17 @@ describe("ListarTorneios", () => {
         expect(resultado.torneios[0].totalInscritos).toBe(1);
     });
 
+    it("não considera inscrição dropada ativa e reconhece o retorno ao torneio", async () => {
+        const inscricao = new Inscricao({ id: "drop", torneioId: "t2", usuarioId: "u2", dropped: true });
+        const uc = ListarTorneios.criar(
+            criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) }),
+            criarMockInscricaoGateway({ listarPorUsuario: jest.fn().mockResolvedValue([inscricao]) }),
+        );
+        expect((await uc.executar({ usuarioId: "u2" })).torneios[1].inscrito).toBe(false);
+        inscricao.dropped = false;
+        expect((await uc.executar({ usuarioId: "u2" })).torneios[1].inscrito).toBe(true);
+    });
+
     it("deve retornar lista vazia", async () => {
         const torneioGateway = criarMockTorneioGateway();
         const inscricaoGateway = criarMockInscricaoGateway();

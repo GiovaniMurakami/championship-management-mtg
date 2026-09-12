@@ -1,4 +1,5 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
+import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
@@ -7,6 +8,8 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { logger } from "../../helpers/logger";
+import { filtrarPartidasNaoPublicadas, rodadaEstaPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import {
   isUsuarioExcluido,
   resolverNomeJogador as resolverNome,
@@ -15,6 +18,8 @@ import {
 
 export type BuscarTorneioInputDto = {
   torneioId: string;
+  usuarioId?: string;
+  isAdmin?: boolean;
 };
 
 export type BuscarTorneioOutputDto = {
@@ -53,6 +58,8 @@ export type BuscarTorneioOutputDto = {
   totalCheckin: number;
   criadoEm: string;
   rodadaIniciadaEm?: string;
+  rodadaPublicada: boolean;
+  ligaIds: string[];
   partidas: Array<{
     id: string;
     rodada: number;
@@ -78,16 +85,18 @@ export class BuscarTorneio
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly ligaGateway?: LigaGateway,
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
+    usuarioGateway: UsuarioGateway,
+    ligaGateway?: LigaGateway,
   ) {
-    return new BuscarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway);
+    return new BuscarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, ligaGateway);
   }
 
   public async executar(
@@ -111,10 +120,13 @@ export class BuscarTorneio
       logger.warn({ err: error, torneioId: input.torneioId }, "falha ao incrementar visualizacoes do torneio");
     }
 
-    const [inscricoes, partidas] = await Promise.all([
+    const [inscricoes, partidasBrutas, ligas] = await Promise.all([
       this.inscricaoGateway.listarPorTorneio(torneio.id),
       this.partidaGateway.listarPorTorneio(torneio.id),
+      this.ligaGateway ? this.ligaGateway.buscarPorTorneioIds([torneio.id]) : Promise.resolve([]),
     ]);
+    const podeVerRascunho = podeGerenciarTorneio(torneioAtual, input.usuarioId ?? "", input.isAdmin === true);
+    const partidas = filtrarPartidasNaoPublicadas(partidasBrutas, torneioAtual, podeVerRascunho);
 
     const totalInscritos = inscricoes.length;
     const totalCheckin = inscricoes.filter((i) => i.checkInRodada >= 0).length;
@@ -173,6 +185,8 @@ export class BuscarTorneio
       totalCheckin,
       criadoEm: toBrasiliaISO(torneioAtual.criadoEm)!,
       rodadaIniciadaEm: toBrasiliaISO(torneioAtual.rodadaIniciadaEm),
+      rodadaPublicada: rodadaEstaPublicada(torneioAtual),
+      ligaIds: ligas.map((liga) => liga.id),
       partidas: partidas.map((p) => {
         const u1 = usuarioMap.get(p.jogador1Id);
         const u2 = p.jogador2Id ? usuarioMap.get(p.jogador2Id) : undefined;

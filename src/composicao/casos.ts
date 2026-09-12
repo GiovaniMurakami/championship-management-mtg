@@ -29,6 +29,7 @@ import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
 import { EscolherDeckTorneio } from "../casosDeUso/torneio/escolherDeckTorneio";
 import { IniciarTorneio } from "../casosDeUso/torneio/iniciarTorneio";
 import { IniciarProximaRodada } from "../casosDeUso/torneio/iniciarProximaRodada";
+import { PublicarRodada } from "../casosDeUso/torneio/publicarRodada";
 import { RefazerRodada } from "../casosDeUso/torneio/refazerRodada";
 import { AjustarTotalRodadas } from "../casosDeUso/torneio/ajustarTotalRodadas";
 import { EncerrarTorneio } from "../casosDeUso/torneio/encerrarTorneio";
@@ -127,12 +128,13 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const excluirPost = ExcluirPost.criar(repos.post, servicos.s3);
 
     // --- Torneio ---
-    const criarTorneio = CriarTorneio.criar(repos.torneio);
+    const criarTorneio = CriarTorneio.criar(repos.torneio, repos.liga);
     const inscreverTorneio = InscreverTorneio.criar(repos.torneio, repos.inscricao, repos.usuario);
     const checkInTorneio = CheckInTorneio.criar(repos.torneio, repos.inscricao, repos.usuario);
     const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck, repos.usuario);
     const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
     const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const publicarRodada = PublicarRodada.criar(repos.torneio, repos.partida, repos.usuario);
     const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
     const ajustarTotalRodadas = AjustarTotalRodadas.criar(repos.torneio);
     const encerrarTorneio = EncerrarTorneio.criar(repos.torneio);
@@ -145,8 +147,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const droparJogadoresSemDeck = DroparJogadoresSemDeck.criar(repos.torneio, repos.inscricao, droparJogador);
     const droparJogadoresSemCheckin = DroparJogadoresSemCheckin.criar(repos.torneio, repos.inscricao, droparJogador);
     const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
-    const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao);
-    const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
+    const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao, repos.liga);
+    const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.liga);
     const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
     const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
@@ -204,7 +206,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarUrlUploadImagem,
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
-        iniciarTorneio, iniciarProximaRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
+        iniciarTorneio, iniciarProximaRodada, publicarRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,

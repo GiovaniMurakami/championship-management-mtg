@@ -311,4 +311,38 @@ describe("ListarPartidasTorneio", () => {
         expect(buscarVarios).not.toHaveBeenCalled();
         expect(resultado.partidas).toEqual([]);
     });
+
+    it("oculta a rodada atual não publicada para visitante", async () => {
+        const torneio = new Torneio({
+            id: "t-1",
+            nome: "FNM",
+            horario: new Date(),
+            formato: "modern",
+            donoId: "u-1",
+            status: "em_andamento",
+            rodadaAtual: 2,
+            totalRodadas: 3,
+            rodadaPublicada: false,
+        });
+        const partidas = [
+            new Partida({ id: "p-1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p-2", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente" }),
+        ];
+        const uc = ListarPartidasTorneio.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({
+                buscarVarios: jest.fn().mockResolvedValue([
+                    { id: "u-1", nome: "Jogador 1" },
+                    { id: "u-2", nome: "Jogador 2" },
+                ]),
+            }),
+        );
+
+        const publico = await uc.executar({ torneioId: "t-1" });
+        const organizador = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
+
+        expect(publico.partidas.map((p) => p.id)).toEqual(["p-1"]);
+        expect(organizador.partidas.map((p) => p.id)).toEqual(["p-1", "p-2"]);
+    });
 });

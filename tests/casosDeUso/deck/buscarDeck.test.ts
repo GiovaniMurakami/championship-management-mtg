@@ -175,6 +175,25 @@ describe("BuscarDeck", () => {
         });
     });
 
+    it("soma partidas do original e das cópias em ambos os lados, ignorando pendentes e BYEs", async () => {
+        const original = new Deck({ id: "original", nome: "Burn", formato: "pauper", maindeck: [], sideboard: [], usuarioId: "u1" });
+        const copia = new Deck({ id: "copia", nome: "Burn", formato: "pauper", maindeck: [], sideboard: [], usuarioId: "u1", travado: true, deckOriginalId: original.id });
+        const base = { torneioId: "t1", rodada: 1, jogador1Id: "u1", jogador2Id: "u2", status: "finalizada" as const };
+        const listarPorDeckIds = jest.fn().mockResolvedValue([
+            new Partida({ ...base, id: "p1", deckJogador1Id: original.id, vitoriasJogador1: 2, vitoriasJogador2: 0 }),
+            new Partida({ ...base, id: "p2", deckJogador2Id: copia.id, vitoriasJogador1: 2, vitoriasJogador2: 0 }),
+            new Partida({ ...base, id: "p3", deckJogador2Id: copia.id, vitoriasJogador1: 1, vitoriasJogador2: 1 }),
+            new Partida({ ...base, id: "p4", deckJogador1Id: original.id, status: "pendente" }),
+            new Partida({ ...base, id: "p5", deckJogador1Id: copia.id, jogador2Id: null, vitoriasJogador1: 2 }),
+        ]);
+        for (const deck of [original, copia]) {
+            const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck), listarPorDeckOriginalId: jest.fn().mockResolvedValue([copia]) }, { listarPorDeckIds });
+            const resultado = await uc.executar({ id: deck.id });
+            expect(listarPorDeckIds).toHaveBeenLastCalledWith([original.id, copia.id]);
+            expect(resultado.estatisticas).toEqual({ vitorias: 1, derrotas: 1, empates: 1, totalPartidas: 3, winrate: 33.3 });
+        }
+    });
+
     it("deve lancar 404 quando deck nao existe", async () => {
         const uc = criarUc();
 

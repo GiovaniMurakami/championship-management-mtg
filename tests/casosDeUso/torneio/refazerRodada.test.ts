@@ -2,8 +2,17 @@ import { RefazerRodada } from "../../../src/casosDeUso/torneio/refazerRodada";
 import { Torneio, TorneioProps } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { criarMockTorneioGateway, criarMockPartidaGateway } from "../../mocks/gateways";
+import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+
+jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: jest.fn() },
+}));
 
 describe("RefazerRodada", () => {
+    beforeEach(() => {
+        (eventosTorneio.emit as jest.Mock).mockClear();
+    });
+
     const torneioSwiss = (overrides: Partial<TorneioProps> = {}) =>
         new Torneio({
             id: "t-1",
@@ -58,6 +67,13 @@ describe("RefazerRodada", () => {
         expect(torneio.rodadaAtual).toBe(2);
         expect(excluir).toHaveBeenCalledWith("t-1", 3);
         expect(atualizar).toHaveBeenCalledWith(torneio);
+        expect(eventosTorneio.emit).toHaveBeenCalledWith("rodada_refeita", {
+            torneioId: "t-1",
+            rodadaAtual: 2,
+            rodadaRemovida: 3,
+            partidasRemovidas: 2,
+            emCorte: false,
+        });
     });
 
     it("ao refazer a primeira rodada de corte, sai do corte e ajusta totalRodadas", async () => {

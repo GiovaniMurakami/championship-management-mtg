@@ -3,7 +3,6 @@ import { RefazerRodadaRota } from "../../../../../../src/infra/api/express/rotas
 import { ListarUsuariosRota } from "../../../../../../src/infra/api/express/rotas/usuario/listarUsuarios.express.route";
 import { ErroPersonalizado } from "../../../../../../src/helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
-import { eventosTorneio } from "../../../../../../src/infra/socketio/eventosTorneio";
 
 describe("DefinirAnfitriaoTorneioRota", () => {
     it("define anfitrião e responde 200", async () => {
@@ -67,7 +66,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
 });
 
 describe("RefazerRodadaRota", () => {
-    it("emite rodada_refeita ao refazer", async () => {
+    it("responde 200 ao refazer a rodada", async () => {
         const resultado = {
             rodadaAtual: 2,
             rodadaRemovida: 3,
@@ -78,7 +77,6 @@ describe("RefazerRodadaRota", () => {
         const torneioId = "550e8400-e29b-41d4-a716-446655440000";
         const servico = { executar: jest.fn().mockResolvedValue(resultado) } as any;
         const rota = RefazerRodadaRota.criar(servico);
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
         const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
 
         await rota.getHandler()(
@@ -95,9 +93,8 @@ describe("RefazerRodadaRota", () => {
             donoId: "dono-1",
             isAdmin: false,
         });
-        expect(emitSpy).toHaveBeenCalledWith("rodada_refeita", { torneioId, ...resultado });
         expect(response.status).toHaveBeenCalledWith(200);
-        emitSpy.mockRestore();
+        expect(response.json).toHaveBeenCalledWith(resultado);
     });
 
     it("marca isAdmin quando role=admin", async () => {

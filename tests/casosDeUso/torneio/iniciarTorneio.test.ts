@@ -45,6 +45,27 @@ describe("IniciarTorneio", () => {
         expect(resultado.partidas).toHaveLength(2);
         expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalledTimes(1);
+        expect(resultado.rodadaPublicada).toBe(true);
+    });
+
+    it("gera pareamentos sem publicar quando publicar=false", async () => {
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+        });
+        const uc = IniciarTorneio.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", donoId: "dono-1", isAdmin: false, publicar: false,
+        });
+
+        expect(resultado.rodadaPublicada).toBe(false);
+        expect(resultado.rodadaIniciadaEm).toBeUndefined();
+        expect(resultado.partidas).toHaveLength(2);
     });
 
     it("deve gerar os mesmos pareamentos iniciais em retries", async () => {

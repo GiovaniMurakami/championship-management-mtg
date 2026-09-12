@@ -2,6 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { BuscarTorneio } from "../../../../../casosDeUso/torneio/buscarTorneio";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
 import { torneioReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { torneioIdOuSlugParamSchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
@@ -24,7 +25,7 @@ export class BuscarTorneioRota implements Rotas {
   public getCaminho(): string { return this.caminho; }
   public getMetodo(): HttpMethod { return this.metodo; }
   public getMiddlewares(): RequestHandler[] {
-    return [validarParamsMiddleware(torneioIdOuSlugParamSchema), torneioReadRateLimiter];
+    return [validarParamsMiddleware(torneioIdOuSlugParamSchema), torneioReadRateLimiter, autenticarJwtOpcional];
   }
 
   public getHandler() {
@@ -38,6 +39,8 @@ export class BuscarTorneioRota implements Rotas {
 
         const resultado = await this.buscarTorneioServico.executar({
           torneioId,
+          usuarioId: request.usuario?.id,
+          isAdmin: request.usuario?.role === "admin",
         });
 
         response.status(200).json(resultado);
