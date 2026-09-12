@@ -282,4 +282,25 @@ describe("RegistrarResultado", () => {
         expect(resultado.vitoriasJogador2).toBe(1);
         expect(resultado.status).toBe("finalizada");
     });
+
+    it("rejeita resultado da rodada atual ainda não publicada", async () => {
+        const torneioNaoPublicado = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3,
+            rodadaPublicada: false,
+        });
+        const partidaGw = criarMockPartidaGateway({
+            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
+        });
+        const uc = RegistrarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNaoPublicado) }),
+            partidaGw,
+        );
+
+        await expect(uc.executar({
+            partidaId: "p-1", usuarioId: "j1", isAdmin: false,
+            vitoriasJogador1: 2, vitoriasJogador2: 0,
+        })).rejects.toMatchObject({ status: 400 });
+        expect(partidaGw.finalizarAtomicamente).not.toHaveBeenCalled();
+    });
 });

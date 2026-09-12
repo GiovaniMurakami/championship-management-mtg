@@ -90,7 +90,7 @@ export type RankingLigaOutputDto = {
   tipo: "individual" | "times";
   rankingJogadores: {
     posicao: number;
-    jogador: { id: string; nome: string; excluido: boolean };
+    jogador: { id: string; nome: string; excluido: boolean; fotoUrl?: string };
     vitorias: number;
     derrotas: number;
     empates: number;
@@ -440,7 +440,10 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
         : jogadoresOrdenados.slice(0, input.limiteJogadores)
     ).map(([jogadorId, stats], idx) => ({
         posicao: idx + 1,
-        jogador: toUsuarioPublico(usuarioPorId.get(jogadorId), jogadorId),
+        jogador: {
+          ...toUsuarioPublico(usuarioPorId.get(jogadorId), jogadorId),
+          fotoUrl: usuarioPorId.get(jogadorId)?.excluido ? undefined : usuarioPorId.get(jogadorId)?.fotoUrl,
+        },
         vitorias: stats.vitorias,
         derrotas: stats.derrotas,
         empates: stats.empates,

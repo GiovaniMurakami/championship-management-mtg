@@ -53,6 +53,27 @@ describe("BuscarPerfilPublico", () => {
     expect(resultado.ultimosTorneios.find((item) => item.id === "open")).toBeUndefined();
   });
 
+  it("exclui torneios sem resultados do jogador antes de selecionar os três mais recentes", async () => {
+    const pendente = partida("pendente", "deck-1", 0, 0);
+    pendente.status = "pendente";
+    const alheia = partida("alheia", "deck-1", 2, 0);
+    alheia.jogador1Id = "outro-jogador";
+    const bye = partida("bye", "deck-1", 2, 0);
+    bye.jogador2Id = null;
+    const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-1", 0, 2), partida("t3", "deck-1", 1, 1), pendente, alheia, bye];
+    const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("pendente", "2026-04-01"), torneio("alheia", "2026-05-01"), torneio("bye", "2026-06-01")];
+    const uc = BuscarPerfilPublico.criar(
+      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico]) }),
+      criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue(partidas) }),
+      criarMockTorneioGateway({ buscarPorId: jest.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
+    );
+    const resultado = await uc.executar({ id: usuario.id });
+    expect(resultado.ultimosTorneios.map(t => t.id)).toEqual(["t3", "t2", "t1"]);
+    expect(resultado.ultimosTorneios.every(t => t.totalPartidas > 0)).toBe(true);
+    expect(resultado.estatisticas).toMatchObject({ vitorias: 1, derrotas: 1, empates: 1, totalPartidas: 3 });
+  });
+
   it("lista partidas externas da mais recente à mais antiga sem misturar torneios", async () => {
     const externas = [
       { id: "a", usuarioId: usuario.id, data: "2026-01-01", resultado: "vitoria", oponente: "Ana" },

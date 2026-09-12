@@ -71,7 +71,13 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     const decksDoUsuario = await this.deckGateway.listar({ usuarioId: id, incluirOcultos: true });
     const decksPublicos = decksDoUsuario.filter((deck) => !deck.oculto && !deck.travado);
     const deckIds = new Set(decksDoUsuario.map((deck) => deck.id));
-    const partidas = await this.partidaGateway.listarPorDeckIds(Array.from(deckIds));
+    const partidasDosDecks = await this.partidaGateway.listarPorDeckIds(Array.from(deckIds));
+    // Usar um deck do usuário não comprova participação; BYEs e partidas pendentes
+    // também não compõem o histórico de resultados do perfil.
+    const partidas = partidasDosDecks.filter(partida =>
+      partida.status === "finalizada" && partida.jogador2Id &&
+      (partida.jogador1Id === id || partida.jogador2Id === id)
+    );
 
     const torneioIds = Array.from(new Set(partidas.map(partida => partida.torneioId)));
     const todosTorneios = await Promise.all(torneioIds.map(torneioId => this.torneioGateway.buscarPorId(torneioId)));

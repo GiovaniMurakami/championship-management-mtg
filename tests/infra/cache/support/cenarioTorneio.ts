@@ -50,7 +50,7 @@ export class CenarioTorneio {
     return {
       standings: BuscarStandings.criar(r.torneio, r.inscricao, r.partida, r.usuario, r.deck, r.time, cache),
       partidas: ListarPartidasTorneio.criar(r.torneio, r.partida, r.usuario, cache),
-      lista: ListarTorneios.criar(r.torneio, r.inscricao, cache),
+      lista: ListarTorneios.criar(r.torneio, r.inscricao, r.liga, cache),
       seo: BuscarSeoTorneio.criar(r.torneio, cache),
       ranking: RankingLiga.criar(r.liga, r.partida, r.inscricao, r.deck, r.usuario, r.time, r.torneio, cache),
       meta: ListarMetagame.criar(r.torneio, r.inscricao, r.partida, r.deck, r.usuario, cache),
@@ -79,8 +79,8 @@ export class CenarioTorneio {
     const before = await this.visoes(this.cache);
     const reads = this.db.leiturasDados();
     expect(await this.visoes(this.leitor)).toEqual(before);
-    // SEO resolve o ID na origem antes do hit; as demais consultas não leem dados.
-    expect(this.db.leiturasDados()).toBe(reads + 1);
+    // SEO resolve o ID na origem; listar partidas lê o torneio para saber se a rodada está publicada.
+    expect(this.db.leiturasDados()).toBe(reads + 5);
     expect([...this.db.itens.keys()].filter((key) => key.startsWith("cache-test/") && !key.includes("__cache_versions"))).toHaveLength(15);
     await this.cache.salvar("site", "independente", { preservado: true }, 3600);
     return before;

@@ -32,6 +32,7 @@ type TorneioItem = {
   visualizacoes: number;
   criadoEm: string;
   rodadaIniciadaEm?: string;
+  rodadaPublicada?: boolean;
   version: number;
 };
 
@@ -278,6 +279,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm.toISOString(),
       rodadaIniciadaEm: torneio.rodadaIniciadaEm?.toISOString(),
+      rodadaPublicada: torneio.rodadaPublicada !== false,
       version: torneio.version,
     };
   }
@@ -311,6 +313,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: item.visualizacoes,
       criadoEm: new Date(item.criadoEm),
       rodadaIniciadaEm: item.rodadaIniciadaEm ? new Date(item.rodadaIniciadaEm) : undefined,
+      rodadaPublicada: item.rodadaPublicada !== false,
       version: item.version ?? 0,
     });
   }

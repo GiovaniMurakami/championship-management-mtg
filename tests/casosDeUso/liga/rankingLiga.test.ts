@@ -31,6 +31,7 @@ describe("RankingLiga", () => {
         senha: "hash",
         role: "user",
         nickMTGO: "alice_mtgo",
+        fotoUrl: "https://example.com/alice.jpg",
     });
     const usuario2 = new Usuario({
         id: "user-2",
@@ -150,6 +151,8 @@ describe("RankingLiga", () => {
 
         expect(resultado.rankingJogadores).toHaveLength(2);
         expect(resultado.rankingJogadores[0].jogador.nome).toBe("alice_mtgo");
+        expect(resultado.rankingJogadores[0].jogador.fotoUrl).toBe(usuario1.fotoUrl);
+        expect(resultado.rankingJogadores[1].jogador.fotoUrl).toBeUndefined();
         expect(resultado.rankingJogadores[0].vitorias).toBe(1);
         expect(resultado.rankingJogadores[0].pontos).toBe(3);
         expect(resultado.rankingJogadores[1].jogador.nome).toBe("bob_mtgo");

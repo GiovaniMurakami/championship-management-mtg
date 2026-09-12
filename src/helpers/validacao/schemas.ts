@@ -115,6 +115,7 @@ export const criarTorneioSchema = z.object({
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
+  ligaIds: z.array(uuidCampo("ligaId")).max(50).optional(),
 });
 
 export const alterarTorneioSchema = z.object({
@@ -166,6 +167,10 @@ export const contestarResultadoSchema = z.object({
 
 export const ajustarTotalRodadasSchema = z.object({
   totalRodadas: z.number().int().min(1, "totalRodadas deve ser >= 1.").max(30, "totalRodadas deve ser <= 30."),
+});
+
+export const publicarRodadaBodySchema = z.object({
+  publicar: z.boolean().optional().default(true),
 });
 
 export const droparJogadorSchema = z.object({

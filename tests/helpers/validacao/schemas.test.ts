@@ -173,6 +173,12 @@ describe("schemas de validacao", () => {
         it("rejeita exibirNomeJogador invalido", () => {
             expect(criarTorneioSchema.safeParse({ nome: "T", horario: "h", formato: "f", exibirNomeJogador: "invalido" }).success).toBe(false);
         });
+        it("aceita ligaIds com UUID", () => {
+            expect(criarTorneioSchema.parse({
+                nome: "T", horario: "h", formato: "f",
+                ligaIds: ["550e8400-e29b-41d4-a716-446655440010"],
+            }).ligaIds).toEqual(["550e8400-e29b-41d4-a716-446655440010"]);
+        });
     });
 
     describe("alterarTorneioSchema", () => {

@@ -10,10 +10,14 @@ import {
 } from "../../helpers/torneio/resolverNomeJogador";
 import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
 import { cachePkTorneio, cacheSkPartidas } from "../../helpers/cache/chavesCache";
+import { filtrarPartidasNaoPublicadas, rodadaEstaPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
+import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
 export type ListarPartidasTorneioInputDto = {
     torneioId: string;
     rodada?: number;
+    usuarioId?: string;
+    isAdmin?: boolean;
 };
 
 export type ListarPartidasTorneioOutputDto = {
@@ -62,18 +66,22 @@ export class ListarPartidasTorneio
     public async executar(
         input: ListarPartidasTorneioInputDto
     ): Promise<ListarPartidasTorneioOutputDto> {
-        const cachePk = cachePkTorneio(input.torneioId);
-        const cacheSk = cacheSkPartidas(input.rodada);
-        const versaoCache = await this.cache?.obterVersao(cachePk);
-        const cacheado = await this.cache?.buscar<ListarPartidasTorneioOutputDto>(cachePk, cacheSk, versaoCache);
-        if (cacheado) return cacheado;
-
         const torneio = await this.torneioGateway.buscarPorId(input.torneioId);
         if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Torneio não encontrado.",
                 status: StatusErro.erroNaoEncontrado,
             });
+        }
+
+        const podeVerRascunho = podeGerenciarTorneio(torneio, input.usuarioId ?? "", input.isAdmin === true);
+        const publicado = rodadaEstaPublicada(torneio);
+        const cachePk = cachePkTorneio(input.torneioId);
+        const cacheSk = cacheSkPartidas(input.rodada);
+        if (publicado) {
+            const versaoCache = await this.cache?.obterVersao(cachePk);
+            const cacheado = await this.cache?.buscar<ListarPartidasTorneioOutputDto>(cachePk, cacheSk, versaoCache);
+            if (cacheado) return cacheado;
         }
 
         if (input.rodada !== undefined && (!Number.isInteger(input.rodada) || input.rodada < 1)) {
@@ -83,9 +91,10 @@ export class ListarPartidasTorneio
             });
         }
 
-        const partidas = input.rodada === undefined
+        const partidasBrutas = input.rodada === undefined
             ? await this.partidaGateway.listarPorTorneio(input.torneioId)
             : await this.partidaGateway.listarPorTorneioERodada(input.torneioId, input.rodada);
+        const partidas = filtrarPartidasNaoPublicadas(partidasBrutas, torneio, podeVerRascunho);
 
         const jogadorIds = Array.from(new Set(
             partidas.flatMap((p) => [p.jogador1Id, ...(p.jogador2Id ? [p.jogador2Id] : [])])
@@ -132,7 +141,10 @@ export class ListarPartidasTorneio
                 };
             }),
         };
-        await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60), versaoCache);
+        if (publicado) {
+            const versaoCache = await this.cache?.obterVersao(cachePk);
+            await this.cache?.salvar(cachePk, cacheSk, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_TORNEIO_SECONDS", 60), versaoCache);
+        }
         return saida;
     }
 }

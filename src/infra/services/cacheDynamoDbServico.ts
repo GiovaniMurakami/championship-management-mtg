@@ -8,6 +8,7 @@ import {
 import { randomUUID } from "crypto";
 import { dependenciasCache, dominioParticao } from "../../helpers/cache/dependenciasCache";
 import { logger } from "../../helpers/logger";
+import { comRetry } from "../../helpers/retry";
 
 const VERSOES_KEY = { pk: { S: "__cache_versions" }, sk: { S: "v1" } };
 
@@ -123,13 +124,17 @@ export class CacheDynamoDbServico {
     if (!this.habilitado || dominios.length === 0) return;
     const unicos = [...new Set(dominios)];
     try {
-      await this.cliente.send(new UpdateItemCommand({
-        TableName: this.tabela,
-        Key: VERSOES_KEY,
-        UpdateExpression: "SET " + unicos.map((_, i) => `#d${i} = :v${i}`).join(", "),
-        ExpressionAttributeNames: Object.fromEntries(unicos.map((dominio, i) => [`#d${i}`, dominio])),
-        ExpressionAttributeValues: Object.fromEntries(unicos.map((_, i) => [`:v${i}`, { S: randomUUID() }])),
-      }));
+      await comRetry(
+        () => this.cliente.send(new UpdateItemCommand({
+          TableName: this.tabela,
+          Key: VERSOES_KEY,
+          UpdateExpression: "SET " + unicos.map((_, i) => `#d${i} = :v${i}`).join(", "),
+          ExpressionAttributeNames: Object.fromEntries(unicos.map((dominio, i) => [`#d${i}`, dominio])),
+          ExpressionAttributeValues: Object.fromEntries(unicos.map((_, i) => [`:v${i}`, { S: randomUUID() }])),
+        })),
+        3,
+        100,
+      );
     } catch (error) {
       logger.error({ err: error, dominios }, "falha ao invalidar cache DynamoDB apos escrita");
       throw error;
