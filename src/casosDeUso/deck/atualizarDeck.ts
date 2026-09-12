@@ -12,6 +12,7 @@ import {
   validarDeckPorFormato,
   validarLinkLigaMagic,
 } from "../../dominio/regras/formatoDeck";
+import { inferirCoresDeNomes, normalizarCores } from "../../helpers/deck/coresDeck";
 
 function normalizarCartaRepresentativa(valor: string | null): string | null {
   if (valor === null) return null;
@@ -47,6 +48,7 @@ export type AtualizarDeckInputDto = {
   maindeck?: Carta[];
   sideboard?: Carta[];
   commander?: Carta[] | null;
+  cores?: string[] | null;
   oculto?: boolean;
 };
 
@@ -136,6 +138,14 @@ export class AtualizarDeck
     if (input.sideboard !== undefined) deck.sideboard = normalizarListaCartas(input.sideboard);
     if (input.commander !== undefined) deck.commander = normalizarListaCartas(input.commander ?? []);
     if (input.oculto !== undefined) deck.oculto = input.oculto;
+    if (input.cores !== undefined) {
+      deck.cores = normalizarCores(input.cores);
+    } else if (input.maindeck !== undefined || input.commander !== undefined) {
+      const nomesParaCores = (deck.formato === "commander" || deck.formato === "commander500")
+        ? deck.commander
+        : deck.maindeck;
+      deck.cores = inferirCoresDeNomes(nomesParaCores.map((carta) => carta.nome));
+    }
 
     validarLinkLigaMagic(deck.formato, deck.linkLigaMagic);
     validarDeckPorFormato({

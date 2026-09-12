@@ -116,6 +116,22 @@ describe("schemas de validacao", () => {
                 commander: [{ nome: "Atraxa", quantidade: 1 }],
             }).commander).toHaveLength(1);
         });
+        it("aceita cores de mana persistidas", () => {
+            expect(cadastrarDeckSchema.parse({
+                nome: "Burn",
+                formato: "Modern",
+                maindeck: [carta],
+                cores: ["r", "G"],
+            }).cores).toEqual(["r", "G"]);
+        });
+        it("rejeita cor de mana inválida", () => {
+            expect(cadastrarDeckSchema.safeParse({
+                nome: "Burn",
+                formato: "Modern",
+                maindeck: [carta],
+                cores: ["X"],
+            }).success).toBe(false);
+        });
     });
 
     describe("atualizarDeckSchema", () => {
