@@ -13,30 +13,24 @@ const escapeHtml = (value: string) => value
 const slugify = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/ç/gi, "c").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-let indexHtmlCache: { html: string; expiresAt: number } | null = null;
+export const HTML_SHELL_COMPARTILHAMENTO =
+  '<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body><div id="root"></div></body></html>';
 
-async function buscarIndexHtml(frontendUrl: string): Promise<string> {
-  if (indexHtmlCache && indexHtmlCache.expiresAt > Date.now() && indexHtmlCache.html.includes(`data-ssr-origin="${escapeHtml(frontendUrl)}"`)) return indexHtmlCache.html;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-  try {
-    const response = await fetch(`${frontendUrl.replace(/\/+$/, "")}/`, {
-      headers: { Accept: "text/html", "User-Agent": "championship-mtg-social-renderer/1.0" },
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`frontend respondeu HTTP ${response.status}`);
-    const html = (await response.text()).replace("<head>", `<head><meta data-ssr-origin="${escapeHtml(frontendUrl)}">`);
-    if (!html.includes("</head>")) throw new Error("index.html do frontend inválido");
-    indexHtmlCache = { html, expiresAt: Date.now() + 5 * 60 * 1000 };
-    return html;
-  } finally {
-    clearTimeout(timeout);
-  }
+function removerAssetsComHash(html: string): string {
+  return html
+    .replace(/<script\b[^>]*\bsrc=["'][^"']*\/assets\/[^"']+["'][^>]*>\s*<\/script>/gi, "")
+    .replace(/<link\b[^>]*(?:rel=["'](?:stylesheet|modulepreload)["'][^>]*href=["'][^"']*\/assets\/[^"']+["']|href=["'][^"']*\/assets\/[^"']+["'][^>]*rel=["'](?:stylesheet|modulepreload)["'])[^>]*>/gi, "");
+}
+
+/** Carrega o bundle atual da SPA no cliente, sem embutir hashes que quebram após o deploy. */
+export function scriptBootstrapSpa(frontendUrl: string): string {
+  const origin = JSON.stringify(frontendUrl.replace(/\/+$/, ""));
+  return `<script data-ssr-bootstrap="spa">(function(){var o=${origin};function boot(html){var c=html.match(/href="(\\/assets\\/[^"]+\\.css)"/);if(c){var l=document.createElement("link");l.rel="stylesheet";l.crossOrigin="";l.href=c[1];document.head.appendChild(l);}var j=html.match(/src="(\\/assets\\/index-[^"]+\\.js)"/);if(!j)throw new Error("bundle");var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=j[1];document.head.appendChild(s);}fetch(o+"/?ssr="+Date.now(),{cache:"no-store",headers:{Accept:"text/html"}}).then(function(r){if(!r.ok)throw new Error("spa");return r.text();}).then(boot).catch(function(){var el=document.getElementById("root");if(el)el.textContent="Não foi possível carregar o torneio. Atualize a página.";});})();</script>`;
 }
 
 export function montarHtmlCompartilhamentoTorneio(
   seo: Awaited<ReturnType<BuscarSeoTorneio["executar"]>>,
-  indexHtml = "<!doctype html><html lang=\"pt-BR\"><head></head><body><div id=\"root\"></div></body></html>",
+  indexHtml = HTML_SHELL_COMPARTILHAMENTO,
   frontendUrl = getFrontendUrl(),
 ): string {
   const appUrl = frontendUrl.replace(/\/+$/, "");
@@ -50,18 +44,29 @@ export function montarHtmlCompartilhamentoTorneio(
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:image" content="${image}">` : "";
-  const metaTags = `<title>${title}</title><meta name="description" content="${description}">
+  const metaTags = `<meta data-ssr-origin="${escapeHtml(appUrl)}"><title>${title}</title><meta name="description" content="${description}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   <meta property="og:type" content="website"><meta property="og:site_name" content="Fuguete Liga Magic">
   <meta property="og:title" content="${title}"><meta property="og:description" content="${description}">
   <meta property="og:url" content="${escapeHtml(canonical)}">${imageTags}
   <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">`;
-  return indexHtml
+  <meta name="twitter:description" content="${description}">${scriptBootstrapSpa(appUrl)}`;
+  return removerAssetsComHash(indexHtml)
     .replace(/<title>[\s\S]*?<\/title>/i, "")
     .replace(/<meta\s+name=["']description["'][^>]*>/i, "")
+    .replace(/<meta\s+data-ssr-origin=["'][^"']*["'][^>]*>/i, "")
+    .replace(/<script[^>]*data-ssr-bootstrap=["']spa["'][^>]*>[\s\S]*?<\/script>/i, "")
     .replace(/<meta\s+(?:property=["']og:[^"']+["']|name=["']twitter:[^"']+["'])[^>]*>\s*/gi, "")
     .replace("</head>", `${metaTags}</head>`);
+}
+
+function removerCabecalhosDaApi(response: Response) {
+  // Helmet da API quebra o SPA: CSP, iframe do WordPress e assets em outro path.
+  response.removeHeader("Content-Security-Policy");
+  response.removeHeader("X-Frame-Options");
+  response.removeHeader("Cross-Origin-Resource-Policy");
+  response.removeHeader("Cross-Origin-Opener-Policy");
+  response.removeHeader("Origin-Agent-Cluster");
 }
 
 export class RenderizarCompartilhamentoTorneioRota implements Rotas {
@@ -89,25 +94,20 @@ export class RenderizarCompartilhamentoTorneioRota implements Rotas {
           || requestHost.startsWith("homolog.");
         const torneioId = request.params.torneioId as string;
         const homologApiUrl = (process.env.SEO_HOMOLOG_API_URL || "https://ol5gj7iduc.execute-api.us-east-1.amazonaws.com/dev").replace(/\/+$/, "");
-        const seoPromise = homolog
-          ? fetch(`${homologApiUrl}/torneio/${encodeURIComponent(torneioId)}/seo`, { headers: { Accept: "application/json" } })
+        const seo = homolog
+          ? await fetch(`${homologApiUrl}/torneio/${encodeURIComponent(torneioId)}/seo`, { headers: { Accept: "application/json" } })
             .then(async (resposta) => {
               if (!resposta.ok) throw new Error(`SEO homolog respondeu HTTP ${resposta.status}`);
               return resposta.json() as ReturnType<BuscarSeoTorneio["executar"]>;
             })
-          : this.servico.executar({ torneioId });
-        const [seo, indexHtml] = await Promise.all([
-          seoPromise,
-          buscarIndexHtml(frontendUrl),
-        ]);
-        // Esta resposta inicializa o SPA hospedado no Amplify. A CSP padrão do
-        // Helmet foi criada para a API e bloquearia as conexões do frontend com
-        // API, Ably, S3 e demais origens já permitidas pelo próprio aplicativo.
-        response.removeHeader("Content-Security-Policy");
+          : await this.servico.executar({ torneioId });
+        removerCabecalhosDaApi(response);
         response.set("Content-Type", "text/html; charset=utf-8");
-        response.set("Cache-Control", "public, max-age=300, s-maxage=1800");
+        // HTML sem hashes de asset: crawlers leem OG; o browser busca o bundle atual.
+        // no-store evita servir HTML antigo com <script src="/assets/index-HASH.js"> 404.
+        response.set("Cache-Control", "private, no-store, must-revalidate");
         response.set("Vary", "Host, X-Forwarded-Host");
-        response.status(200).send(montarHtmlCompartilhamentoTorneio(seo, indexHtml, frontendUrl));
+        response.status(200).send(montarHtmlCompartilhamentoTorneio(seo, HTML_SHELL_COMPARTILHAMENTO, frontendUrl));
       } catch (error) { next(error); }
     };
   }
