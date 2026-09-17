@@ -6,16 +6,16 @@ import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
 
 function makeReqRes(body: Record<string, unknown> = {}, headers: Record<string, string> = {}) {
     const req = { body, headers, usuario: undefined } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("CadastrarUsuarioRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = CadastrarUsuarioRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("retorna 400 se campos obrigatorios ausentes", async () => {
         const { req, res, next } = makeReqRes({ nome: "Joao" });
@@ -52,10 +52,10 @@ describe("CadastrarUsuarioRota", () => {
 });
 
 describe("LoginUsuarioRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = LoginUsuarioRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("retorna 400 se email ou senha ausentes", async () => {
         const { req, res, next } = makeReqRes({ email: "j@j.com" });
@@ -83,10 +83,10 @@ describe("LoginUsuarioRota", () => {
 });
 
 describe("LogoutUsuarioRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = LogoutUsuarioRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("retorna 200 em logout bem-sucedido", async () => {
         const saida = { mensagem: "Logout realizado com sucesso." };

@@ -20,10 +20,10 @@ describe("AjustarResultado", () => {
         const partidaAjustada = new Partida({ ...partidaContestada, vitoriasJogador1: 1, vitoriasJogador2: 2, contestado: false });
 
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partidaContestada),
-                ajustarResultadoContestado: jest.fn().mockResolvedValue(partidaAjustada),
+                buscarPorId: vi.fn().mockResolvedValue(partidaContestada),
+                ajustarResultadoContestado: vi.fn().mockResolvedValue(partidaAjustada),
             }),
         );
 
@@ -52,8 +52,8 @@ describe("AjustarResultado", () => {
         const partidaNaoContestada = new Partida({ ...partidaContestada, contestado: false });
 
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaNaoContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaNaoContestada) }),
         );
 
         await expect(
@@ -65,8 +65,8 @@ describe("AjustarResultado", () => {
         const torneioFinalizado = new Torneio({ ...torneio, status: "finalizado" });
 
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaContestada) }),
         );
 
         await expect(
@@ -76,8 +76,8 @@ describe("AjustarResultado", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaContestada) }),
         );
 
         await expect(
@@ -89,10 +89,10 @@ describe("AjustarResultado", () => {
         const partidaAjustada = new Partida({ ...partidaContestada, vitoriasJogador1: 2, vitoriasJogador2: 1, contestado: false });
 
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partidaContestada),
-                ajustarResultadoContestado: jest.fn().mockResolvedValue(partidaAjustada),
+                buscarPorId: vi.fn().mockResolvedValue(partidaContestada),
+                ajustarResultadoContestado: vi.fn().mockResolvedValue(partidaAjustada),
             }),
         );
 
@@ -106,8 +106,8 @@ describe("AjustarResultado", () => {
 
     it("deve lançar 400 para placar inválido (v1 > 2)", async () => {
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaContestada) }),
         );
 
         await expect(
@@ -117,8 +117,8 @@ describe("AjustarResultado", () => {
 
     it("deve lançar 400 para placar inválido (soma > 3)", async () => {
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaContestada) }),
         );
 
         await expect(
@@ -130,8 +130,8 @@ describe("AjustarResultado", () => {
         const torneioEmCorte = new Torneio({ ...torneio, emCorte: true });
 
         const uc = AjustarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaContestada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmCorte) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaContestada) }),
         );
 
         await expect(

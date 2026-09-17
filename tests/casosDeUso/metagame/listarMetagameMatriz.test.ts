@@ -3,13 +3,13 @@ import { carregarEAgregarMetagame } from "../../../src/casosDeUso/metagame/carre
 import { CacheDynamoDbServico } from "../../../src/infra/services/cacheDynamoDbServico";
 import { criarMockTorneioGateway, criarMockInscricaoGateway, criarMockPartidaGateway, criarMockDeckGateway, criarMockUsuarioGateway } from "../../mocks/gateways";
 
-jest.mock("../../../src/casosDeUso/metagame/carregarMetagame", () => ({ carregarEAgregarMetagame: jest.fn() }));
+vi.mock("../../../src/casosDeUso/metagame/carregarMetagame", () => ({ carregarEAgregarMetagame: vi.fn() }));
 
 it("retorna todos os confrontos em uma agregação e reutiliza o cache versionado sem listas completas", async () => {
   const burn = { slug: "burn", nome: "Burn" };
   const terror = { slug: "terror", nome: "Terror" };
   const matchups = [{ slug: "terror", nome: "Terror", vitorias: 2, derrotas: 1, empates: 1, partidas: 4, winrate: 50 }];
-  (carregarEAgregarMetagame as jest.Mock).mockResolvedValue({
+  (carregarEAgregarMetagame as Mock).mockResolvedValue({
     formato: "pauper", dias: 30, totalDecks: 2, totalTorneios: 1,
     arquetipos: [burn, terror], recentes: [],
     porSlug: new Map([
@@ -17,7 +17,7 @@ it("retorna todos os confrontos em uma agregação e reutiliza o cache versionad
       ["terror", { ...terror, matchups: [], listas: [] }],
     ]),
   });
-  const cache = { obterVersao: jest.fn().mockResolvedValue(1), buscar: jest.fn().mockResolvedValue(null), salvar: jest.fn() };
+  const cache = { obterVersao: vi.fn().mockResolvedValue(1), buscar: vi.fn().mockResolvedValue(null), salvar: vi.fn() };
   const service = ListarMetagame.criar(criarMockTorneioGateway(), criarMockInscricaoGateway(), criarMockPartidaGateway(), criarMockDeckGateway(), criarMockUsuarioGateway(), cache as unknown as CacheDynamoDbServico);
   const result = await service.executar({ formato: "pauper", dias: 30 });
   expect(result.arquetipos).toEqual([{ ...burn, matchups }, { ...terror, matchups: [] }]);

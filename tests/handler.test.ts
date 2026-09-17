@@ -1,29 +1,29 @@
-jest.mock("serverless-http", () => jest.fn());
-jest.mock("../src/app", () => ({
-    app: jest.fn(),
-    inicializarDependenciasDeProcesso: jest.fn(),
+vi.mock("serverless-http", () => ({ default: vi.fn() }));
+vi.mock("../src/app", () => ({
+    app: vi.fn(),
+    inicializarDependenciasDeProcesso: vi.fn(),
 }));
-jest.mock("../src/helpers/jwt", () => ({
-    preloadJwtKeys: jest.fn().mockResolvedValue(undefined),
+vi.mock("../src/helpers/jwt", () => ({
+    preloadJwtKeys: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock("../src/infra/ably/notificacaoAbly", () => ({
+vi.mock("../src/infra/ably/notificacaoAbly", () => ({
     NotificacaoAbly: {
-        aguardarPublicacoesPendentes: jest.fn().mockResolvedValue(undefined),
+        aguardarPublicacoesPendentes: vi.fn().mockResolvedValue(undefined),
     },
 }));
 
 describe("handler bootstrap", () => {
     it("aguarda runtime antes de delegar ao serverless-http", async () => {
-        const serverless = require("serverless-http") as jest.Mock;
-        const appModule = require("../src/app");
-        const jwtModule = require("../src/helpers/jwt");
-        const { NotificacaoAbly } = require("../src/infra/ably/notificacaoAbly");
+        const serverless = (await import("serverless-http")).default as Mock;
+        const appModule = await import("../src/app");
+        const jwtModule = await import("../src/helpers/jwt");
+        const { NotificacaoAbly } = await import("../src/infra/ably/notificacaoAbly");
 
-        const serverlessHandler = jest.fn().mockResolvedValue({ statusCode: 200 });
+        const serverlessHandler = vi.fn().mockResolvedValue({ statusCode: 200 });
         serverless.mockReturnValue(serverlessHandler);
         appModule.app.mockReturnValue({});
 
-        const { handler } = require("../src/handler") as typeof import("../src/handler");
+        const { handler } = await import("../src/handler");
         const resposta = await handler({ path: "/health" }, {});
 
         expect(jwtModule.preloadJwtKeys).toHaveBeenCalledTimes(1);

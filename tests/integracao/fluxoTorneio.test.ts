@@ -25,14 +25,15 @@ import { IniciarProximaRodada } from "../../src/casosDeUso/torneio/iniciarProxim
 import { criarMockEmailGateway } from "../mocks/gateways";
 
 // Mock bcrypt
-jest.mock("bcryptjs", () => ({
-    hash: jest.fn().mockImplementation((s: string) => Promise.resolve(`hashed_${s}`)),
-    compare: jest.fn(),
-}));
+vi.mock("bcryptjs", () => {
+    const hash = vi.fn().mockImplementation((s: string) => Promise.resolve(`hashed_${s}`));
+    const compare = vi.fn();
+    return { default: { hash, compare }, hash, compare };
+});
 
 // Mock eventosTorneio
-jest.mock("../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn() },
+vi.mock("../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: vi.fn() },
 }));
 
 // ------- In-Memory Gateways -------

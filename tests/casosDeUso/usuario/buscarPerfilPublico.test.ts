@@ -16,11 +16,11 @@ describe("BuscarPerfilPublico", () => {
   it("filtra estatísticas e histórico pelas datas, incluindo o fim do dia e paginando após o filtro", async () => {
     const torneios = [torneio("dentro", "2026-08-02T02:59:59.999Z"), torneio("fora", "2026-08-02T03:00:00.000Z")];
     const uc = BuscarPerfilPublico.criar(
-      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
-      criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico]) }),
-      criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue([partida("dentro", "deck-1", 2, 0), partida("fora", "deck-1", 0, 2)]) }),
-      criarMockTorneioGateway({ buscarPorId: jest.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
-      { salvar: jest.fn(), listarPorUsuario: jest.fn().mockResolvedValue([
+      criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({ listar: vi.fn().mockResolvedValue([deckPublico]) }),
+      criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue([partida("dentro", "deck-1", 2, 0), partida("fora", "deck-1", 0, 2)]) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
+      { salvar: vi.fn(), listarPorUsuario: vi.fn().mockResolvedValue([
         { id: "e1", data: "2026-08-01", resultado: "empate" },
         ...Array.from({ length: 12 }, (_, i) => ({ id: `f${i}`, data: "2026-08-02", resultado: "derrota" })),
       ]) },
@@ -35,10 +35,10 @@ describe("BuscarPerfilPublico", () => {
     const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-2", 0, 2), partida("t3", "deck-1", 1, 1), partida("t4", "deck-1", 2, 1), partida("secret", "deck-1", 2, 0), partida("ongoing", "deck-1", 2, 0), partida("open", "deck-1", 2, 0)];
     const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("t4", "2026-04-01"), torneio("secret", "2026-05-01", true), torneio("ongoing", "2026-06-01", false, "em_andamento"), torneio("open", "2026-07-01", false, "inscricoes_abertas")];
     const uc = BuscarPerfilPublico.criar(
-      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
-      criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico, deckOculto]) }),
-      criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue(partidas) }),
-      criarMockTorneioGateway({ buscarPorId: jest.fn((id) => Promise.resolve(torneios.find((item) => item.id === id) ?? null)) }),
+      criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({ listar: vi.fn().mockResolvedValue([deckPublico, deckOculto]) }),
+      criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue(partidas) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn((id) => Promise.resolve(torneios.find((item) => item.id === id) ?? null)) }),
     );
 
     const resultado = await uc.executar({ id: usuario.id });
@@ -63,10 +63,10 @@ describe("BuscarPerfilPublico", () => {
     const partidas = [partida("t1", "deck-1", 2, 0), partida("t2", "deck-1", 0, 2), partida("t3", "deck-1", 1, 1), pendente, alheia, bye];
     const torneios = [torneio("t1", "2026-01-01"), torneio("t2", "2026-02-01"), torneio("t3", "2026-03-01"), torneio("pendente", "2026-04-01"), torneio("alheia", "2026-05-01"), torneio("bye", "2026-06-01")];
     const uc = BuscarPerfilPublico.criar(
-      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
-      criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico]) }),
-      criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue(partidas) }),
-      criarMockTorneioGateway({ buscarPorId: jest.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
+      criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({ listar: vi.fn().mockResolvedValue([deckPublico]) }),
+      criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue(partidas) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn(id => Promise.resolve(torneios.find(t => t.id === id) ?? null)) }),
     );
     const resultado = await uc.executar({ id: usuario.id });
     expect(resultado.ultimosTorneios.map(t => t.id)).toEqual(["t3", "t2", "t1"]);
@@ -79,8 +79,8 @@ describe("BuscarPerfilPublico", () => {
       { id: "a", usuarioId: usuario.id, data: "2026-01-01", resultado: "vitoria", oponente: "Ana" },
       { id: "b", usuarioId: usuario.id, data: "2026-02-01", resultado: "empate" },
     ];
-    const listarPorUsuario = jest.fn().mockResolvedValue(externas);
-    const uc = BuscarPerfilPublico.criar(criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }), criarMockDeckGateway(), criarMockPartidaGateway(), criarMockTorneioGateway(), { salvar: jest.fn(), listarPorUsuario });
+    const listarPorUsuario = vi.fn().mockResolvedValue(externas);
+    const uc = BuscarPerfilPublico.criar(criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }), criarMockDeckGateway(), criarMockPartidaGateway(), criarMockTorneioGateway(), { salvar: vi.fn(), listarPorUsuario });
     const resultado = await uc.executar({ id: usuario.id });
     expect(listarPorUsuario).toHaveBeenCalledWith(usuario.id);
     expect(resultado.partidasExternas).toEqual([
@@ -94,7 +94,7 @@ describe("BuscarPerfilPublico", () => {
 
   it("não contabiliza BYE", async () => {
     const bye = new Partida({ id: "bye", torneioId: "t1", rodada: 1, jogador1Id: usuario.id, jogador2Id: null, deckJogador1Id: deckPublico.id, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" });
-    const uc = BuscarPerfilPublico.criar(criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }), criarMockDeckGateway({ listar: jest.fn().mockResolvedValue([deckPublico]) }), criarMockPartidaGateway({ listarPorDeckIds: jest.fn().mockResolvedValue([bye]) }), criarMockTorneioGateway());
+    const uc = BuscarPerfilPublico.criar(criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }), criarMockDeckGateway({ listar: vi.fn().mockResolvedValue([deckPublico]) }), criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue([bye]) }), criarMockTorneioGateway());
     expect((await uc.executar({ id: usuario.id })).estatisticas.totalPartidas).toBe(0);
   });
 

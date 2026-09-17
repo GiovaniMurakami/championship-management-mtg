@@ -3,8 +3,8 @@ import { validarQuery } from "../../../src/helpers/validacao/validarQuery";
 
 function makeMockResponse() {
     return {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
     } as any;
 }
 

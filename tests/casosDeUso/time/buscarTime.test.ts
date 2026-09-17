@@ -23,8 +23,8 @@ describe("BuscarTime", () => {
         BuscarTime.criar(timeGateway, usuarioGateway, inscricaoGateway, partidaGateway);
 
     it("deve retornar o time com membros resolvidos", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) });
         const uc = criarCasoDeUso(timeGateway, usuarioGateway);
 
         const resultado = await uc.executar({ id: "time-1" });
@@ -51,8 +51,8 @@ describe("BuscarTime", () => {
             membroIds: [],
             solicitacoesPendentes: [],
         });
-        const buscarVarios = jest.fn().mockResolvedValue([]);
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeSemMembros) });
+        const buscarVarios = vi.fn().mockResolvedValue([]);
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeSemMembros) });
         const usuarioGateway = criarMockUsuarioGateway({ buscarVarios });
         const uc = criarCasoDeUso(timeGateway, usuarioGateway);
 
@@ -71,8 +71,8 @@ describe("BuscarTime", () => {
             membroIds: ["user-1", "user-3"],
             solicitacoesPendentes: ["user-4"],
         });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComSolicitacao) });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuarios[0]]) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComSolicitacao) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuarios[0]]) });
         const uc = criarCasoDeUso(timeGateway, usuarioGateway);
 
         const resultado = await uc.executar({ id: "time-1" });
@@ -87,15 +87,15 @@ describe("BuscarTime", () => {
     });
 
     it("deve calcular win rate do time e de cada membro sem contar bye", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) });
         const inscricaoGateway = criarMockInscricaoGateway({
-            listarPorUsuario: jest.fn().mockImplementation((usuarioId: string) => Promise.resolve([
+            listarPorUsuario: vi.fn().mockImplementation((usuarioId: string) => Promise.resolve([
                 new Inscricao({ id: `i-${usuarioId}`, torneioId: "torneio-1", usuarioId }),
             ])),
         });
         const partidaGateway = criarMockPartidaGateway({
-            listarPorTorneios: jest.fn().mockResolvedValue([
+            listarPorTorneios: vi.fn().mockResolvedValue([
                 new Partida({ id: "p1", torneioId: "torneio-1", rodada: 1, jogador1Id: "user-1", jogador2Id: "oponente", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
                 new Partida({ id: "p2", torneioId: "torneio-1", rodada: 2, jogador1Id: "user-2", jogador2Id: "oponente", vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" }),
                 new Partida({ id: "p3", torneioId: "torneio-1", rodada: 3, jogador1Id: "user-1", jogador2Id: null, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),

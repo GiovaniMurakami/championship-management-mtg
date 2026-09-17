@@ -3,8 +3,8 @@ import { validarBody } from "../../../src/helpers/validacao/validarBody";
 
 function makeMockResponse() {
     return {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
     } as any;
 }
 

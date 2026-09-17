@@ -13,7 +13,7 @@ describe("AtualizarUsuario", () => {
 
     it("deve atualizar nome do usuário", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...usuarioExistente }),
         });
         const uc = AtualizarUsuario.criar(gateway);
 
@@ -25,7 +25,7 @@ describe("AtualizarUsuario", () => {
 
     it("deve atualizar telefone, nickMTGO e nickArena", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...usuarioExistente }),
         });
         const uc = AtualizarUsuario.criar(gateway);
 
@@ -52,7 +52,7 @@ describe("AtualizarUsuario", () => {
 
     it("deve lançar erro se o nome for menor que 3 caracteres", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...usuarioExistente }),
         });
         const uc = AtualizarUsuario.criar(gateway);
 
@@ -63,7 +63,7 @@ describe("AtualizarUsuario", () => {
 
     it("deve limpar campo opcional com string vazia", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...usuarioExistente }),
         });
         const uc = AtualizarUsuario.criar(gateway);
 
@@ -73,7 +73,7 @@ describe("AtualizarUsuario", () => {
 
     it("deve limpar nickMTGO e nickArena com string vazia", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...usuarioExistente, nickMTGO: "old", nickArena: "old" }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...usuarioExistente, nickMTGO: "old", nickArena: "old" }),
         });
         const uc = AtualizarUsuario.criar(gateway);
 

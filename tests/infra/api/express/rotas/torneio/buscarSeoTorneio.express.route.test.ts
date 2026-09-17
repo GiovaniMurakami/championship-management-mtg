@@ -6,16 +6,16 @@ const TORNEIO_ID = "550e8400-e29b-41d4-a716-446655440001";
 
 function makeReqRes(torneioId = TORNEIO_ID) {
     const req = { params: { torneioId } } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("BuscarSeoTorneioRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = BuscarSeoTorneioRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("deve ser rota publica sem autenticarJwt", () => {
         expect(rota.getCaminho()).toBe("/torneio/:torneioId/seo");

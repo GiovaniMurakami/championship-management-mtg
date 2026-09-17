@@ -26,10 +26,10 @@ describe("BuscarTorneio", () => {
         ];
 
         const uc = BuscarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -51,10 +51,10 @@ describe("BuscarTorneio", () => {
         const usuarios = [new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })];
 
         const uc = BuscarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -77,15 +77,15 @@ describe("BuscarTorneio", () => {
     });
 
     it("deve retornar o torneio mesmo se o incremento de visualizacoes falhar", async () => {
-        const warnSpy = jest.spyOn(logger, "warn").mockImplementation();
+        const warnSpy = vi.spyOn(logger, "warn").mockImplementation();
         const uc = BuscarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                incrementarVisualizacoes: jest.fn().mockRejectedValue(new Error("TransactionConflict")),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                incrementarVisualizacoes: vi.fn().mockRejectedValue(new Error("TransactionConflict")),
             }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });

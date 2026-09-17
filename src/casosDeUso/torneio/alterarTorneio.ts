@@ -80,7 +80,7 @@ export class AlterarTorneio
       });
     }
 
-    if (torneio.status === "finalizado") {
+    if (torneio.status === "finalizado" && !input.isAdmin) {
       throw ErroPersonalizado.criar({
         mensagem: "Não é possível alterar torneios finalizados.",
         status: StatusErro.erroParametro,

@@ -4,9 +4,10 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { ErroPersonalizado } from "../../../src/helpers/error/ErroPersonalizado";
 import { EmailUsuarioJaExisteErro } from "../../../src/dominio/gateway/usuarioGateway";
 
-jest.mock("bcryptjs", () => ({
-    hash: jest.fn().mockResolvedValue("hashed_password"),
-}));
+vi.mock("bcryptjs", () => {
+    const hash = vi.fn().mockResolvedValue("hashed_password");
+    return { default: { hash }, hash };
+});
 
 describe("CadastrarUsuario", () => {
     it("deve cadastrar um novo usuário com sucesso", async () => {
@@ -42,7 +43,7 @@ describe("CadastrarUsuario", () => {
 
     it("deve lançar erro se o e-mail já estiver cadastrado", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorEmail: jest.fn().mockResolvedValue(
+            buscarPorEmail: vi.fn().mockResolvedValue(
                 new Usuario({ id: "x", nome: "A", email: "joao@email.com", senha: "s" })
             ),
         });
@@ -68,14 +69,14 @@ describe("CadastrarUsuario", () => {
 
         await uc.executar({ nome: "João", email: "j@e.com", senha: "senha" });
 
-        const chamadas = (gateway.salvar as jest.Mock).mock.calls;
+        const chamadas = (gateway.salvar as Mock).mock.calls;
         const usuarioSalvo = chamadas[0][0] as Usuario;
         expect(usuarioSalvo.senha).toBe("hashed_password");
     });
 
     it("deve traduzir conflito atomico de email do repositorio", async () => {
         const gateway = criarMockUsuarioGateway({
-            salvar: jest.fn().mockRejectedValue(new EmailUsuarioJaExisteErro()),
+            salvar: vi.fn().mockRejectedValue(new EmailUsuarioJaExisteErro()),
         });
         const emailGateway = criarMockEmailGateway();
         const uc = CadastrarUsuario.criar(gateway, emailGateway);
@@ -89,7 +90,7 @@ describe("CadastrarUsuario", () => {
     it("deve preservar falhas inesperadas do repositorio", async () => {
         const falha = new Error("Dynamo indisponivel");
         const gateway = criarMockUsuarioGateway({
-            salvar: jest.fn().mockRejectedValue(falha),
+            salvar: vi.fn().mockRejectedValue(falha),
         });
         const uc = CadastrarUsuario.criar(gateway, criarMockEmailGateway());
 

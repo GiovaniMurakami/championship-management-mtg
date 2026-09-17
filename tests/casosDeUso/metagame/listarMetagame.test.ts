@@ -1,4 +1,4 @@
-import { ListarMetagame } from "../../../src/casosDeUso/metagame/listarMetagame";
+import { ListarMetagame, recortarArquetiposMetagame } from "../../../src/casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame, limitarListasDoArquetipo } from "../../../src/casosDeUso/metagame/buscarArquetipoMetagame";
 import {
     criarMockTorneioGateway,
@@ -63,9 +63,44 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
         });
     });
 
+    it("reaproveita o cache e devolve só o restante na busca seguinte", async () => {
+        const completo = {
+            formato: "pauper",
+            dias: 30,
+            totalDecks: 3,
+            totalTorneios: 1,
+            arquetipos: [{ slug: "a" }, { slug: "b" }, { slug: "c" }],
+            recentes: [{ torneioId: "t1" }],
+        };
+        const cache = {
+            obterVersao: vi.fn().mockResolvedValue("v1"),
+            buscar: vi.fn().mockResolvedValue(completo),
+            salvar: vi.fn(),
+        };
+        const torneio = criarMockTorneioGateway({ listar: vi.fn() });
+        const uc = ListarMetagame.criar(
+            torneio,
+            criarMockInscricaoGateway(),
+            criarMockPartidaGateway(),
+            criarMockDeckGateway(),
+            criarMockUsuarioGateway(),
+            cache as any
+        );
+
+        const restante = await uc.executar({ formato: "pauper", dias: 30, offset: 1 });
+
+        expect(torneio.listar).not.toHaveBeenCalled();
+        expect(cache.salvar).not.toHaveBeenCalled();
+        expect(restante.arquetipos).toEqual([{ slug: "b" }, { slug: "c" }]);
+        expect(restante.recentes).toEqual([]);
+        expect(restante.paginacao).toEqual({ total: 3, limite: 2, offset: 1 });
+        expect(recortarArquetiposMetagame(completo as any, 1).arquetipos).toEqual([{ slug: "a" }]);
+        expect(completo.recentes).toEqual([{ torneioId: "t1" }]);
+    });
+
     it("lista vazia quando não há torneios finalizados", async () => {
         const uc = ListarMetagame.criar(
-            criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue([]) }),
+            criarMockTorneioGateway({ listar: vi.fn().mockResolvedValue([]) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockDeckGateway(),
@@ -93,7 +128,7 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
     it("retorna 404 quando o slug não existe", async () => {
         const uc = BuscarArquetipoMetagame.criar(
             criarMockTorneioGateway({
-                listar: jest.fn().mockResolvedValue([
+                listar: vi.fn().mockResolvedValue([
                     new Torneio({
                         id: "t1",
                         nome: "Evento",
@@ -106,8 +141,8 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
                     }),
                 ]),
             }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue([]) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue([]) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([]) }),
             criarMockDeckGateway(),
             criarMockUsuarioGateway()
         );
@@ -131,7 +166,7 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
 
     it("usa 30 dias quando dias não é informado e carrega agregação", async () => {
         const torneioGateway = criarMockTorneioGateway({
-            listar: jest.fn().mockResolvedValue([
+            listar: vi.fn().mockResolvedValue([
                 new Torneio({
                     id: "t1",
                     nome: "Pauper",
@@ -145,7 +180,7 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
             ]),
         });
         const partidaGateway = criarMockPartidaGateway({
-            listarPorTorneios: jest.fn().mockResolvedValue([
+            listarPorTorneios: vi.fn().mockResolvedValue([
                 new Partida({
                     id: "p1",
                     torneioId: "t1",
@@ -162,7 +197,7 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
         });
         const uc = ListarMetagame.criar(
             torneioGateway,
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue([]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue([]) }),
             partidaGateway,
             criarMockDeckGateway(),
             criarMockUsuarioGateway()
@@ -199,16 +234,16 @@ describe("ListarMetagame / BuscarArquetipoMetagame", () => {
             usuarioId: "u1",
         });
         const uc = BuscarArquetipoMetagame.criar(
-            criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue([torneio]) }),
+            criarMockTorneioGateway({ listar: vi.fn().mockResolvedValue([torneio]) }),
             criarMockInscricaoGateway({
-                listarPorTorneios: jest.fn().mockResolvedValue([
+                listarPorTorneios: vi.fn().mockResolvedValue([
                     new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u1", deckId: "d1" }),
                 ]),
             }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([]) }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck]) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([]) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck]) }),
             criarMockUsuarioGateway({
-                buscarVarios: jest.fn().mockResolvedValue([
+                buscarVarios: vi.fn().mockResolvedValue([
                     new Usuario({
                         id: "u1",
                         nome: "Alice",

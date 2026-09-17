@@ -12,12 +12,12 @@ describe("ListarTorneios", () => {
     it("deve retornar lista de torneios com inscrito=true quando inscrito", async () => {
         const inscricao = new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u2", checkInRodada: -1, dropped: false, criadoEm: new Date() });
         const torneioGateway = criarMockTorneioGateway({
-            listar: jest.fn().mockResolvedValue(torneios),
-            listarTotal: jest.fn().mockResolvedValue(2),
+            listar: vi.fn().mockResolvedValue(torneios),
+            listarTotal: vi.fn().mockResolvedValue(2),
         });
         const inscricaoGateway = criarMockInscricaoGateway({
-            listarPorUsuario: jest.fn().mockResolvedValue([inscricao]),
-            contarPorTorneios: jest.fn().mockResolvedValue({ t1: 3, t2: 5 }),
+            listarPorUsuario: vi.fn().mockResolvedValue([inscricao]),
+            contarPorTorneios: vi.fn().mockResolvedValue({ t1: 3, t2: 5 }),
         });
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
 
@@ -34,7 +34,7 @@ describe("ListarTorneios", () => {
     });
 
     it("deve retornar inscrito=false para todos quando nÃ£o inscrito em nenhum", async () => {
-        const torneioGateway = criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) });
+        const torneioGateway = criarMockTorneioGateway({ listar: vi.fn().mockResolvedValue(torneios) });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
 
@@ -46,12 +46,12 @@ describe("ListarTorneios", () => {
 
     it("deve listar sem usuarioId (visitante) com inscrito=false e sem consultar inscricoes do usuario", async () => {
         const torneioGateway = criarMockTorneioGateway({
-            listar: jest.fn().mockResolvedValue(torneios),
-            listarTotal: jest.fn().mockResolvedValue(2),
+            listar: vi.fn().mockResolvedValue(torneios),
+            listarTotal: vi.fn().mockResolvedValue(2),
         });
         const inscricaoGateway = criarMockInscricaoGateway({
-            listarPorUsuario: jest.fn(),
-            contarPorTorneios: jest.fn().mockResolvedValue({ t1: 1, t2: 2 }),
+            listarPorUsuario: vi.fn(),
+            contarPorTorneios: vi.fn().mockResolvedValue({ t1: 1, t2: 2 }),
         });
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
 
@@ -65,8 +65,8 @@ describe("ListarTorneios", () => {
     it("não considera inscrição dropada ativa e reconhece o retorno ao torneio", async () => {
         const inscricao = new Inscricao({ id: "drop", torneioId: "t2", usuarioId: "u2", dropped: true });
         const uc = ListarTorneios.criar(
-            criarMockTorneioGateway({ listar: jest.fn().mockResolvedValue(torneios) }),
-            criarMockInscricaoGateway({ listarPorUsuario: jest.fn().mockResolvedValue([inscricao]) }),
+            criarMockTorneioGateway({ listar: vi.fn().mockResolvedValue(torneios) }),
+            criarMockInscricaoGateway({ listarPorUsuario: vi.fn().mockResolvedValue([inscricao]) }),
         );
         expect((await uc.executar({ usuarioId: "u2" })).torneios[1].inscrito).toBe(false);
         inscricao.dropped = false;
@@ -84,7 +84,7 @@ describe("ListarTorneios", () => {
     });
 
     it("deve repassar limite e offset ao gateway", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarMock = vi.fn().mockResolvedValue([]);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
@@ -95,7 +95,7 @@ describe("ListarTorneios", () => {
     });
 
     it("deve pedir horarioDesc ao listar finalizados (mais recente primeiro)", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarMock = vi.fn().mockResolvedValue([]);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
@@ -109,7 +109,7 @@ describe("ListarTorneios", () => {
     });
 
     it("nao deve pedir horarioDesc para inscricoes abertas", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarMock = vi.fn().mockResolvedValue([]);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
@@ -123,7 +123,7 @@ describe("ListarTorneios", () => {
     });
 
     it("deve limitar paginação profunda para evitar skip excessivo", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarMock = vi.fn().mockResolvedValue([]);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
@@ -136,8 +136,8 @@ describe("ListarTorneios", () => {
     });
 
     it("deve repassar filtro por data de inicio e fim ao gateway", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
-        const listarTotalMock = jest.fn().mockResolvedValue(0);
+        const listarMock = vi.fn().mockResolvedValue([]);
+        const listarTotalMock = vi.fn().mockResolvedValue(0);
         const torneioGateway = criarMockTorneioGateway({
             listar: listarMock,
             listarTotal: listarTotalMock,
@@ -163,8 +163,8 @@ describe("ListarTorneios", () => {
 
     it("nÃ£o deve incluir torneios secretos na listagem pÃºblica", async () => {
         const torneioSecreto = new Torneio({ id: "ts", nome: "Secreto", horario: new Date(), formato: "modern", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0, secreto: true });
-        const listarMock = jest.fn().mockResolvedValue([torneios[0]]);
-        const listarTotalMock = jest.fn().mockResolvedValue(1);
+        const listarMock = vi.fn().mockResolvedValue([torneios[0]]);
+        const listarTotalMock = vi.fn().mockResolvedValue(1);
         const torneioGateway = criarMockTorneioGateway({ listar: listarMock, listarTotal: listarTotalMock });
         const inscricaoGateway = criarMockInscricaoGateway();
         const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);

@@ -19,7 +19,7 @@ const permitirCacheCompartilhado = process.env.E2E_ALLOW_NONLOCAL_CACHE === "tru
 const describeCloud = executar ? describe : describe.skip;
 
 describeCloud("E2E - cache DynamoDB cloud", () => {
-  jest.setTimeout(60_000);
+  vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
 
   const region = process.env.DYNAMODB_CACHE_REGION || "us-east-1";
   const cliente = new DynamoDBClient({ region });

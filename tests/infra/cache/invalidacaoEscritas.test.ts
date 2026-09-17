@@ -31,7 +31,7 @@ describe("invalidação de caches após persistência", () => {
   let cache: CacheDynamoDbServico;
   let outraLambda: CacheDynamoDbServico;
   let itens: Map<string, Item>;
-  let send: jest.SpyInstance;
+  let send: vi.SpyInstance;
   const env = { ...process.env };
   const key = (table: string | undefined, item: Item) => `${table}/${item.pk.S}/${item.sk.S}`;
 
@@ -40,7 +40,7 @@ describe("invalidação de caches após persistência", () => {
     process.env.DYNAMODB_CACHE_TABLE = "cache-test";
     process.env.DYNAMODB_CACHE_ENABLED = "true";
     itens = new Map();
-    send = jest.spyOn(DynamoDBClient.prototype, "send").mockImplementation((async (command: unknown) => {
+    send = vi.spyOn(DynamoDBClient.prototype, "send").mockImplementation((async (command: unknown) => {
       if (command instanceof GetItemCommand) return { Item: itens.get(key(command.input.TableName, command.input.Key!)) };
       if (command instanceof QueryCommand) {
         const prefix = `${command.input.TableName}/${command.input.ExpressionAttributeValues![":pk"].S}/`;
@@ -111,8 +111,8 @@ describe("invalidação de caches após persistência", () => {
   it("a consulta após check-in recalcula a classificação antes do TTL expirar", async () => {
     const torneio = new Torneio({ id: "t1", nome: "T", horario: new Date(Date.now() + 30 * 60 * 1000), formato: "pauper", donoId: "d", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0 });
     const usuario = new Usuario({ id: "u1", nome: "Ana", email: "ana@example.com", senha: "hash", nickMTGO: "ana" });
-    const torneios = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) });
-    const usuarios = criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario), buscarVarios: jest.fn().mockResolvedValue([usuario]) });
+    const torneios = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) });
+    const usuarios = criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario), buscarVarios: vi.fn().mockResolvedValue([usuario]) });
     const inscricoes = InscricaoDynamoRepositorio.criar();
     await inscricoes.salvar(new Inscricao({ id: "i1", torneioId: "t1", usuarioId: "u1", checkInRodada: -1, dropped: false }));
     const standings = BuscarStandings.criar(torneios, inscricoes, criarMockPartidaGateway(), usuarios, criarMockDeckGateway(), criarMockTimeGateway(), outraLambda);

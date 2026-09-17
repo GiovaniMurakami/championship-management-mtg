@@ -17,7 +17,7 @@ describe("AlterarTorneio", () => {
 
     it("deve alterar o torneio com sucesso", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -36,7 +36,7 @@ describe("AlterarTorneio", () => {
 
     it("deve alterar apenas os campos enviados", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -63,7 +63,7 @@ describe("AlterarTorneio", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -74,7 +74,7 @@ describe("AlterarTorneio", () => {
 
     it("admin pode alterar torneio de outro usuário", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -88,13 +88,37 @@ describe("AlterarTorneio", () => {
         expect(resultado.nome).toBe("Alterado pelo Admin");
     });
 
+    it("admin pode ajustar premiação de torneio finalizado", async () => {
+        const torneioFinalizado = new Torneio({
+            ...torneioExistente,
+            status: "finalizado",
+        });
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "torneio-1",
+            requisitanteId: "admin-id",
+            isAdmin: true,
+            premio: { playerPoints: 12, tix: 3 },
+            descricao: "Premiação corrigida",
+        });
+
+        expect(resultado.premio).toEqual({ playerPoints: 12, tix: 3 });
+        expect(resultado.descricao).toBe("Premiação corrigida");
+        expect(torneioFinalizado.status).toBe("finalizado");
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
+
     it("deve lançar erro se torneio estiver finalizado", async () => {
         const torneioEmAndamento = new Torneio({
             ...torneioExistente,
             status: "finalizado",
         });
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento),
+            buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -105,7 +129,7 @@ describe("AlterarTorneio", () => {
 
     it("permite atualizar e remover live durante o torneio sem alterar as rodadas", async () => {
         const torneio = new Torneio({ ...torneioExistente, status: "em_andamento", rodadaAtual: 2, totalRodadas: 5 });
-        const gateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) });
+        const gateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) });
         const uc = AlterarTorneio.criar(gateway);
         await uc.executar({ id: torneio.id, requisitanteId: "user-1", isAdmin: false, linkLive: "https://youtube.com/watch?v=abc" });
         expect(torneio.linkLive).toBe("https://youtube.com/watch?v=abc");
@@ -118,7 +142,7 @@ describe("AlterarTorneio", () => {
 
     it("deve alterar todos os campos opcionais", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
         const novoHorario = new Date("2025-07-01T14:00:00Z");
@@ -156,7 +180,7 @@ describe("AlterarTorneio", () => {
 
     it("deve alterar o campo secreto", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...torneioExistente }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...torneioExistente }),
         });
         const uc = AlterarTorneio.criar(gateway);
 
@@ -173,7 +197,7 @@ describe("AlterarTorneio", () => {
 
     it("deve limpar campos textuais opcionais quando receber null em runtime", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue({
+            buscarPorId: vi.fn().mockResolvedValue({
                 ...torneioExistente,
                 descricao: "Premio",
                 bannerUrl: "https://example.com/banner.jpg",

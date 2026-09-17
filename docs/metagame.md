@@ -7,13 +7,15 @@ Arquétipo = `nomeConsolidado` do deck. Se estiver vazio, usa o `nome` que o usu
 ## Endpoints
 
 ```
-GET /metagame?formato=pauper&dias=30
+GET /metagame?formato=pauper&dias=30&limite=30&offset=0
 GET /metagame/:formato/:slug?dias=30
 GET /metagame?formato=pauper&dataInicio=2026-08-01&dataFim=2026-08-31
 GET /metagame/pauper/burn?dataInicio=2026-08-01&dataFim=2026-08-31
 ```
 
 Públicos. `dias` ∈ 7, 14, 30, 90, 365 (padrão 30). Rate limit **40 req / 15 min** por IP (`heavy-read`), aplicado antes da validação.
+
+`limite` (1–200) e `offset` (≥ 0) são opcionais e só recortam `arquetipos` depois da agregação. O cache guarda a lista inteira; uma segunda busca com `offset` não reagrega. Sem os dois, a resposta continua completa. Com `offset` > 0, `recentes` vem vazio. A resposta inclui `paginacao: { total, limite, offset }`.
 
 `dataInicio` e `dataFim` são opcionais, mas devem ser enviados juntos em `YYYY-MM-DD`, com início ≤ fim. O intervalo inclui os dias completos em Brasília (UTC−3) e tem prioridade sobre a janela móvel de `dias`. Filtra pelo horário do torneio e vale para cards, matriz, listas, resultados e confrontos do detalhe. As chaves de cache incluem ambas as datas.
 

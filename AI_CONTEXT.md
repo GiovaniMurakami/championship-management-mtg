@@ -38,7 +38,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 | Ably | Pub/Sub realtime |
 | AWS S3 + SSM | Imagens + chaves JWT |
 | Nodemailer | E-mails transacionais |
-| Jest + Supertest | Testes |
+| Vitest + Supertest | Testes |
 | esbuild + Serverless | Build e deploy Lambda |
 | Pino | Logs |
 
@@ -84,7 +84,7 @@ src/
     └── jwt.ts, env.ts, logger.ts
 
 docs/                           # Documentação por entidade (usuario, torneio, etc.)
-tests/                          # Jest (876 unitários + E2E DynamoDB opt-in)
+tests/                          # Vitest (unitários + E2E DynamoDB opt-in)
 ```
 
 **Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
@@ -181,7 +181,7 @@ DELETE /:torneioId
 ### Liga, Time, Site, Imagem
 ```
 Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking (leitura pública), PUT, DELETE
-Metagame: GET /metagame, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
+Metagame: GET /metagame?limite=&offset=, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
 Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
@@ -245,7 +245,7 @@ Usado em iniciar rodada, resultados, pareamentos, drop em nome de jogador, escol
 
 Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 
-**Cobertura mínima (Jest):** statements/lines/functions ≥ 95%, branches ≥ 90%.
+**Cobertura mínima (Vitest):** statements/lines/functions ≥ 95%, branches ≥ 90%.
 
 ---
 
@@ -257,6 +257,8 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ### Swiss
 - Rodadas: `ceil(log₂(n))` com teto opcional `maxRodadas`
 - Critérios de desempate WotC: pontos → OMW% → GW% → OGW%
+- Ranking de liga (jogadores e times) usa os mesmos critérios
+- Admin pode editar torneio `finalizado` (premiação e demais campos). Dono e anfitrião não.
 - Bye para último colocado quando ímpar
 - Pareamento evita rematch com backtracking; rematch só se for impossível evitar
 
@@ -373,11 +375,11 @@ Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEN
 ## 15. Testes
 
 ```bash
-npm test              # 876 unitários + todos os E2E DynamoDB em série (~15 min)
+npm test              # unitários Vitest + todos os E2E DynamoDB em série (~15 min)
 npm run test:unit     # suíte rápida, sem E2E/AWS
 npm run test:e2e      # cache, paginação, coerência e torneio de 150 jogadores
 npm run test:coverage # cobertura; limiar 95/90/95/95 em casosDeUso, entidades, helpers, middlewares (exclui e2e)
-npm run lint          # eslint
+npm run lint          # eslint; pre-commit (Husky + lint-staged) lint nos .ts staged
 npm run dev           # nodemon + ts-node (porta 3000)
 npm run build         # esbuild
 npm run deploy:dev    # serverless deploy stage dev
@@ -406,7 +408,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | Validação API | `helpers/validacao/schemas.ts` |
 | Eventos realtime | emit em use case/rota + `infra/ably/notificacaoAbly.ts` |
 | Auth JWT | `helpers/jwt.ts`, `middlewares/express/autenticarJwt.ts` |
-| Deploy | `serverless.yaml`, `esbuild.config.js`, `handler.ts` |
+| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (OIDC, ambiente `homolog`, stage `dev`), `esbuild.config.js`, `handler.ts` |
 | Docs API | `docs/*.md`, `docs/INDEX.md` |
 
 ---
@@ -468,7 +470,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 
 ---
 
-*Última revisão: agosto/2026 — alinhado com v1.1.27 (migração principal para DynamoDB e banners de ligas)*
+*Última revisão: setembro/2026 — Vitest, paginação do metagame, desempate de liga e edição de torneio finalizado pelo admin*
 # Consistencia e protecao DynamoDB
 
 - Escritas que mantem item principal e indices derivados usam transacoes DynamoDB.

@@ -27,9 +27,9 @@ describe("MeuHistoricoTorneio", () => {
         ];
 
         const uc = MeuHistoricoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorJogadorETorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ listarPorJogadorETorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
@@ -50,8 +50,8 @@ describe("MeuHistoricoTorneio", () => {
         ];
 
         const uc = MeuHistoricoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorJogadorETorneio: jest.fn().mockResolvedValue(partidas) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ listarPorJogadorETorneio: vi.fn().mockResolvedValue(partidas) }),
             criarMockUsuarioGateway(),
         );
 
@@ -69,9 +69,9 @@ describe("MeuHistoricoTorneio", () => {
         ];
 
         const uc = MeuHistoricoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorJogadorETorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" })]) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ listarPorJogadorETorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" })]) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
@@ -87,9 +87,9 @@ describe("MeuHistoricoTorneio", () => {
         ];
 
         const uc = MeuHistoricoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ listarPorJogadorETorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" })]) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ listarPorJogadorETorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([new Usuario({ id: "u-2", nome: "Maria", email: "m@e.com", senha: "s" })]) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });

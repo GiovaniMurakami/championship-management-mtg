@@ -16,15 +16,15 @@ const criarPartida = (props: Partial<PartidaProps> = {}) => new Partida({
 
 describe("PartidaDynamoRepositorio - reconciliarRodada", () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("atribui id deterministico e salva apenas partidas ausentes", async () => {
     const repositorio = PartidaDynamoRepositorio.criar();
     const partida = criarPartida();
-    const salvarVarias = jest.spyOn(repositorio, "salvarVarias").mockResolvedValue();
-    jest.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([]);
-    jest.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
+    const salvarVarias = vi.spyOn(repositorio, "salvarVarias").mockResolvedValue();
+    vi.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([]);
+    vi.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
 
     await repositorio.reconciliarRodada("t-1", 2, [partida]);
 
@@ -34,9 +34,9 @@ describe("PartidaDynamoRepositorio - reconciliarRodada", () => {
 
   it("mantem o UUID para a mesma rodada e mesa e diferencia mesas distintas", async () => {
     const repositorio = PartidaDynamoRepositorio.criar();
-    jest.spyOn(repositorio, "salvarVarias").mockResolvedValue();
-    jest.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([]);
-    jest.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
+    vi.spyOn(repositorio, "salvarVarias").mockResolvedValue();
+    vi.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([]);
+    vi.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
     const primeira = criarPartida({ mesa: 1 });
     const repetida = criarPartida({ mesa: 1 });
     const outraMesa = criarPartida({ mesa: 2 });
@@ -53,9 +53,9 @@ describe("PartidaDynamoRepositorio - reconciliarRodada", () => {
     const repositorio = PartidaDynamoRepositorio.criar();
     const existente = criarPartida({ id: "p-existente", version: 4 });
     const partidaRetry = criarPartida({ id: "outro-uuid" });
-    const salvarVarias = jest.spyOn(repositorio, "salvarVarias").mockResolvedValue();
-    jest.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([existente]);
-    jest.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
+    const salvarVarias = vi.spyOn(repositorio, "salvarVarias").mockResolvedValue();
+    vi.spyOn(repositorio, "listarPorTorneioERodada").mockResolvedValue([existente]);
+    vi.spyOn(repositorio, "buscarPorId").mockResolvedValue(null);
 
     await repositorio.reconciliarRodada("t-1", 2, [partidaRetry]);
 

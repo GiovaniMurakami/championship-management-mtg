@@ -18,17 +18,17 @@ describe("concorrência, falhas e dependências do cache de torneio", () => {
   beforeEach(async () => {
     Object.assign(process.env, { DYNAMODB_DATA_TABLE: "dados-cache-test", DYNAMODB_CACHE_TABLE: "cache-test", DYNAMODB_CACHE_ENABLED: "true", AWS_REGION: "us-east-1", AWS_S3_BUCKET: "cache-test", AWS_S3_REGION: "us-east-1" });
     db = new DynamoMemoria(); db.instalar(); c = new CenarioTorneio(db);
-    jest.spyOn(logger, "warn").mockImplementation(() => undefined);
-    jest.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
     await c.preparar();
   });
-  afterEach(() => { db.restaurar(); jest.restoreAllMocks(); process.env = { ...env }; });
+  afterEach(() => { db.restaurar(); vi.restoreAllMocks(); process.env = { ...env }; });
 
   it("consulta iniciada antes do encerramento não sobrescreve o metagame novo", async () => {
     await c.resultados();
     const ready = deferred(), release = deferred();
     const original = c.repos.torneio.listar.bind(c.repos.torneio);
-    const spy = jest.spyOn(c.repos.torneio, "listar").mockImplementationOnce(async (filtros) => {
+    const spy = vi.spyOn(c.repos.torneio, "listar").mockImplementationOnce(async (filtros) => {
       const old = await original(filtros);
       ready.resolve();
       await release.promise;
@@ -69,7 +69,7 @@ describe("concorrência, falhas e dependências do cache de torneio", () => {
         bloqueou = true; ready.resolve(); await release.promise;
       }
     };
-    const emit = jest.spyOn(eventosTorneio, "emit");
+    const emit = vi.spyOn(eventosTorneio, "emit");
     let terminou = false;
     const mutation = c.casos.alterarTorneio.executar({ ...admin, nome: "Novo nome" }).then(() => { terminou = true; });
     await ready.promise;
@@ -105,7 +105,7 @@ describe("concorrência, falhas e dependências do cache de torneio", () => {
   it("documenta janela residual: falha após persistência deixa metagame antigo até nova invalidação", async () => {
     await c.resultados();
     expect((await c.casos.listarMetagame.executar({ formato: "pauper" })).totalTorneios).toBe(0);
-    const emit = jest.spyOn(eventosTorneio, "emit");
+    const emit = vi.spyOn(eventosTorneio, "emit");
     db.antes = async command => {
       if (command instanceof UpdateItemCommand && command.input.TableName === "cache-test") throw new Error("Invalidação indisponível");
     };

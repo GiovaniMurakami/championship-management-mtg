@@ -19,12 +19,12 @@ function makeReqRes(host = "app.tiagofuguete.com.br") {
   const headersSet: Record<string, string> = {};
   const removed: string[] = [];
   const res = {
-    status: jest.fn().mockReturnThis(),
-    send: jest.fn().mockReturnThis(),
-    set: jest.fn((key: string, value: string) => { headersSet[key] = value; return res; }),
-    removeHeader: jest.fn((key: string) => { removed.push(key); }),
+    status: vi.fn().mockReturnThis(),
+    send: vi.fn().mockReturnThis(),
+    set: vi.fn((key: string, value: string) => { headersSet[key] = value; return res; }),
+    removeHeader: vi.fn((key: string) => { removed.push(key); }),
   } as any;
-  return { req, res, next: jest.fn(), headersSet, removed };
+  return { req, res, next: vi.fn(), headersSet, removed };
 }
 
 describe("RenderizarCompartilhamentoTorneioRota", () => {
@@ -32,7 +32,7 @@ describe("RenderizarCompartilhamentoTorneioRota", () => {
 
   afterEach(() => {
     global.fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("gera Open Graph no HTML inicial sem embutir bundle com hash", () => {
@@ -53,18 +53,18 @@ describe("RenderizarCompartilhamentoTorneioRota", () => {
   });
 
   it("expõe uma rota pública de compartilhamento", () => {
-    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar: jest.fn() } as any);
+    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar: vi.fn() } as any);
     expect(rota.getCaminho()).toBe("/torneio/:torneioId/share");
     expect(rota.getMiddlewares()).toHaveLength(2);
   });
 
   it("responde HTML com bootstrap e sem cache para o browser", async () => {
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => SEO,
     }) as typeof fetch;
 
-    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar: jest.fn() } as any);
+    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar: vi.fn() } as any);
     const { req, res, next, headersSet, removed } = makeReqRes();
 
     await rota.getHandler()(req, res, next);

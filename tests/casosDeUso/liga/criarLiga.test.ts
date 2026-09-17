@@ -35,7 +35,7 @@ describe("CriarLiga", () => {
     it("deve criar uma liga com torneios válidos", async () => {
         const ligaGateway = criarMockLigaGateway();
         const torneioGateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(torneioExistente),
         });
         const uc = CriarLiga.criar(ligaGateway, torneioGateway);
 

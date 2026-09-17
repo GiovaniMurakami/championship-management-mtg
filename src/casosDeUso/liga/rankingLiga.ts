@@ -6,6 +6,14 @@ import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { TimeGateway } from "../../dominio/gateway/timeGateway";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
+import {
+  EstatisticasJogador,
+  calcularEstatisticas,
+  gwp,
+  ogwp,
+  omwp,
+  ordenarPorDesempate,
+} from "../torneio/swiss";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
@@ -95,6 +103,9 @@ export type RankingLigaOutputDto = {
     derrotas: number;
     empates: number;
     pontos: number;
+    omwp: number;
+    gwp: number;
+    ogwp: number;
   }[];
   totalJogadores: number;
   rankingDecks: {
@@ -124,16 +135,26 @@ export type RankingLigaOutputDto = {
     derrotas: number;
     empates: number;
     pontos: number;
+    omwp: number;
+    gwp: number;
+    ogwp: number;
   }[];
   totalTimes?: number;
 };
 
-type StatsJogador = {
-  vitorias: number;
-  derrotas: number;
-  empates: number;
-  pontos: number;
-};
+function statsVazios(id: string): EstatisticasJogador {
+  return {
+    usuarioId: id,
+    pontosMesa: 0,
+    vitoriasPartida: 0,
+    empatesPartida: 0,
+    derrotasPartida: 0,
+    totalPartidasJogadas: 0,
+    vitoriasJogo: 0,
+    totalJogosJogados: 0,
+    oponentesIds: [],
+  };
+}
 
 type StatsDeck = {
   nome: string;
@@ -150,12 +171,7 @@ type StatsCarta = {
   totalDecks: number;
 };
 
-type StatsTime = {
-  vitorias: number;
-  derrotas: number;
-  empates: number;
-  pontos: number;
-};
+type StatsTime = EstatisticasJogador;
 
 export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOutputDto> {
   private constructor(
@@ -188,6 +204,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       limiteTimes: input.limiteTimes ?? null,
       limiteDecks: input.limiteDecks ?? null,
       limiteCartas: input.limiteCartas ?? null,
+      criterioDesempate: "pontos-omw-gw-ogw",
     });
     const versaoCache = await this.cache?.obterVersao(CACHE_PK_LIGAS);
     const cacheado = await this.cache?.buscar<RankingLigaOutputDto>(CACHE_PK_LIGAS, cacheKey, versaoCache);
@@ -202,7 +219,6 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       });
     }
 
-    const statsJogadores = new Map<string, StatsJogador>();
     const statsDecks = new Map<string, StatsDeck>();
     const statsCartas = new Map<string, StatsCarta>();
     const deckIdsUsados = new Set<string>();
@@ -271,61 +287,31 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       const timePorJogador = timePorTorneioEJogador.get(partida.torneioId) ?? new Map<string, string>();
       if (partida.status !== "finalizada") continue;
 
-      // Ignora byes (jogador2Id null)
       const isBye = partida.jogador2Id === null;
 
       const jogador1Id = partida.jogador1Id;
       const jogador2Id = partida.jogador2Id;
-
-      if (!statsJogadores.has(jogador1Id)) {
-        statsJogadores.set(jogador1Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
-      }
-      if (!isBye && jogador2Id && !statsJogadores.has(jogador2Id)) {
-        statsJogadores.set(jogador2Id, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
-      }
-
-      const stats1 = statsJogadores.get(jogador1Id)!;
+      const v1 = partida.vitoriasJogador1;
+      const v2 = partida.vitoriasJogador2;
+      const resultado1 = v1 > v2 ? "vitoria" : v2 > v1 ? "derrota" : v1 === v2 && (isBye ? v1 > 0 : true) ? "empate" : "derrota";
+      const resultado2 = v2 > v1 ? "vitoria" : v1 > v2 ? "derrota" : resultado1 === "empate" ? "empate" : "derrota";
 
       if (isBye) {
-        const v1 = partida.vitoriasJogador1;
-        const v2 = partida.vitoriasJogador2;
-        if (v1 > v2) { stats1.vitorias++; stats1.pontos += 3; }
-        else if (v1 === v2 && v1 > 0) { stats1.empates++; stats1.pontos += 1; }
-        else { stats1.derrotas++; }
         if (liga.tipo === "times") {
           const timeId = timePorJogador.get(jogador1Id);
-          if (timeId) this.registrarResultadoTime(statsTimesMap, timeId, v1 > v2 ? "vitoria" : v1 === v2 && v1 > 0 ? "empate" : "derrota");
+          if (timeId) this.registrarResultadoTime(statsTimesMap, timeId, resultado1, v1, v1 + v2, null);
         }
         continue;
       }
 
-      const stats2 = statsJogadores.get(jogador2Id!)!;
-      const v1 = partida.vitoriasJogador1;
-      const v2 = partida.vitoriasJogador2;
-
-      if (v1 > v2) {
-        stats1.vitorias++;
-        stats1.pontos += 3;
-        stats2.derrotas++;
-      } else if (v2 > v1) {
-        stats2.vitorias++;
-        stats2.pontos += 3;
-        stats1.derrotas++;
-      } else {
-        stats1.empates++;
-        stats1.pontos += 1;
-        stats2.empates++;
-        stats2.pontos += 1;
-      }
-
       if (liga.tipo === "times") {
         const timeId1 = timePorJogador.get(jogador1Id);
-        const timeId2 = timePorJogador.get(jogador2Id!);
+        const timeId2 = jogador2Id ? timePorJogador.get(jogador2Id) : undefined;
         if (timeId1 && timeId2 && timeId1 === timeId2) {
           // Partidas entre membros do mesmo time não alteram o ranking coletivo.
         } else {
-          if (timeId1) this.registrarResultadoTime(statsTimesMap, timeId1, v1 > v2 ? "vitoria" : v2 > v1 ? "derrota" : "empate");
-          if (timeId2) this.registrarResultadoTime(statsTimesMap, timeId2, v2 > v1 ? "vitoria" : v1 > v2 ? "derrota" : "empate");
+          if (timeId1) this.registrarResultadoTime(statsTimesMap, timeId1, resultado1, v1, v1 + v2, timeId2 ?? null);
+          if (timeId2) this.registrarResultadoTime(statsTimesMap, timeId2, resultado2, v2, v1 + v2, timeId1 ?? null);
         }
       }
 
@@ -417,37 +403,43 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       }
     }
 
+    const partidasFinalizadas = todasPartidas.filter((partida) => partida.status === "finalizada");
+    const idsJogadores = [...new Set(partidasFinalizadas.flatMap((partida) => [
+      partida.jogador1Id,
+      ...(partida.jogador2Id ? [partida.jogador2Id] : []),
+    ]))];
+    const statsMapJogadores = calcularEstatisticas(idsJogadores, partidasFinalizadas);
+    const jogadoresOrdenadosStats = ordenarPorDesempate([...statsMapJogadores.values()], statsMapJogadores);
+
     // Busca nomes dos jogadores
-    const jogadorIds = Array.from(statsJogadores.keys());
+    const jogadorIds = jogadoresOrdenadosStats.map((stats) => stats.usuarioId);
     const usuarios = jogadorIds.length > 0 ? await this.usuarioGateway.buscarVarios(jogadorIds) : [];
     const usuarioPorId = new Map(usuarios.map((u) => [u.id, u]));
 
     const limDecks = input.limiteDecks ?? 50;
     const limCartas = input.limiteCartas ?? 50;
 
-    const winrateDe = (stats: { vitorias: number; derrotas: number; empates: number }) => {
-      const total = stats.vitorias + stats.derrotas + stats.empates;
-      return total > 0 ? stats.vitorias / total : 0;
-    };
-
-    // Ranking jogadores — pontos, desempate por % de vitória
-    const jogadoresOrdenados = Array.from(statsJogadores.entries())
-      .sort(([, a], [, b]) => b.pontos - a.pontos || winrateDe(b) - winrateDe(a) || b.vitorias - a.vitorias);
+    const desempateDe = (stats: EstatisticasJogador, mapa: Map<string, EstatisticasJogador>) => ({
+      omwp: omwp(stats, mapa),
+      gwp: gwp(stats),
+      ogwp: ogwp(stats, mapa),
+    });
 
     const rankingJogadores = (
       input.limiteJogadores == null
-        ? jogadoresOrdenados
-        : jogadoresOrdenados.slice(0, input.limiteJogadores)
-    ).map(([jogadorId, stats], idx) => ({
+        ? jogadoresOrdenadosStats
+        : jogadoresOrdenadosStats.slice(0, input.limiteJogadores)
+    ).map((stats, idx) => ({
         posicao: idx + 1,
         jogador: {
-          ...toUsuarioPublico(usuarioPorId.get(jogadorId), jogadorId),
-          fotoUrl: usuarioPorId.get(jogadorId)?.excluido ? undefined : usuarioPorId.get(jogadorId)?.fotoUrl,
+          ...toUsuarioPublico(usuarioPorId.get(stats.usuarioId), stats.usuarioId),
+          fotoUrl: usuarioPorId.get(stats.usuarioId)?.excluido ? undefined : usuarioPorId.get(stats.usuarioId)?.fotoUrl,
         },
-        vitorias: stats.vitorias,
-        derrotas: stats.derrotas,
-        empates: stats.empates,
-        pontos: stats.pontos,
+        vitorias: stats.vitoriasPartida,
+        derrotas: stats.derrotasPartida,
+        empates: stats.empatesPartida,
+        pontos: stats.pontosMesa,
+        ...desempateDe(stats, statsMapJogadores),
       }));
 
     // Ranking decks - ordenado por totalUsos desc, vitorias desc
@@ -493,7 +485,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     if (liga.tipo === "times") {
       for (const timeId of timeIdsInscritos) {
         if (!statsTimesMap.has(timeId)) {
-          statsTimesMap.set(timeId, { vitorias: 0, derrotas: 0, empates: 0, pontos: 0 });
+          statsTimesMap.set(timeId, statsVazios(timeId));
         }
       }
 
@@ -502,21 +494,19 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       const nomesPorTimeId = new Map(times.map((t) => [t.id, t.nome]));
 
       const limTimes = input.limiteTimes ?? input.limiteJogadores ?? 50;
-      const timesOrdenados = Array.from(statsTimesMap.entries())
-        .sort(([timeIdA, a], [timeIdB, b]) =>
-          b.pontos - a.pontos || winrateDe(b) - winrateDe(a) || b.vitorias - a.vitorias || timeIdA.localeCompare(timeIdB)
-        );
+      const timesOrdenados = ordenarPorDesempate([...statsTimesMap.values()], statsTimesMap);
 
       totalTimes = timesOrdenados.length;
       rankingTimes = timesOrdenados
         .slice(0, limTimes)
-        .map(([timeId, stats], idx) => ({
+        .map((stats, idx) => ({
           posicao: idx + 1,
-          time: { id: timeId, nome: nomesPorTimeId.get(timeId) ?? "Desconhecido" },
-          vitorias: stats.vitorias,
-          derrotas: stats.derrotas,
-          empates: stats.empates,
-          pontos: stats.pontos,
+          time: { id: stats.usuarioId, nome: nomesPorTimeId.get(stats.usuarioId) ?? "Desconhecido" },
+          vitorias: stats.vitoriasPartida,
+          derrotas: stats.derrotasPartida,
+          empates: stats.empatesPartida,
+          pontos: stats.pontosMesa,
+          ...desempateDe(stats, statsTimesMap),
         }));
     }
 
@@ -525,7 +515,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
       ligaNome: liga.nome,
       tipo: liga.tipo,
       rankingJogadores,
-      totalJogadores: jogadoresOrdenados.length,
+      totalJogadores: jogadoresOrdenadosStats.length,
       rankingDecks,
       totalDecks: decksOrdenados.length,
       rankingCartas,
@@ -563,21 +553,25 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
   private registrarResultadoTime(
     statsTimes: Map<string, StatsTime>,
     timeId: string,
-    resultado: "vitoria" | "derrota" | "empate"
+    resultado: "vitoria" | "derrota" | "empate",
+    vitoriasJogo: number,
+    totalJogos: number,
+    oponenteTimeId: string | null
   ): void {
-    const existing = statsTimes.get(timeId);
-    if (existing) {
-      if (resultado === "vitoria") { existing.vitorias++; existing.pontos += 3; }
-      else if (resultado === "derrota") existing.derrotas++;
-      else { existing.empates++; existing.pontos += 1; }
-      return;
+    const stats = statsTimes.get(timeId) ?? statsVazios(timeId);
+    stats.totalPartidasJogadas += 1;
+    stats.vitoriasJogo += vitoriasJogo;
+    stats.totalJogosJogados += totalJogos;
+    if (oponenteTimeId) stats.oponentesIds.push(oponenteTimeId);
+    if (resultado === "vitoria") {
+      stats.vitoriasPartida += 1;
+      stats.pontosMesa += 3;
+    } else if (resultado === "empate") {
+      stats.empatesPartida += 1;
+      stats.pontosMesa += 1;
+    } else {
+      stats.derrotasPartida += 1;
     }
-
-    statsTimes.set(timeId, {
-      vitorias: resultado === "vitoria" ? 1 : 0,
-      derrotas: resultado === "derrota" ? 1 : 0,
-      empates: resultado === "empate" ? 1 : 0,
-      pontos: resultado === "vitoria" ? 3 : resultado === "empate" ? 1 : 0,
-    });
+    statsTimes.set(timeId, stats);
   }
 }

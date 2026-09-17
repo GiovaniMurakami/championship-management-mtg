@@ -15,12 +15,12 @@ describe("DroparJogadoresSemCheckin", () => {
   it("relê o check-in e preserva quem confirmou após a listagem", async () => {
     const pendente = new Inscricao({ id: "i-1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1 });
     const confirmouDepois = new Inscricao({ id: "i-2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 1 });
-    const executarDrop = jest.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
+    const executarDrop = vi.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
     const caso = DroparJogadoresSemCheckin.criar(
-      criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(criarTorneio()) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(criarTorneio()) }),
       criarMockInscricaoGateway({
-        listarPorTorneio: jest.fn().mockResolvedValue([pendente, confirmouDepois]),
-        buscarPorTorneioEUsuario: jest.fn()
+        listarPorTorneio: vi.fn().mockResolvedValue([pendente, confirmouDepois]),
+        buscarPorTorneioEUsuario: vi.fn()
           .mockResolvedValueOnce(pendente)
           .mockResolvedValueOnce(new Inscricao({ ...confirmouDepois, checkInRodada: 2 })),
       }),
@@ -37,12 +37,12 @@ describe("DroparJogadoresSemCheckin", () => {
   it("no check-in inicial considera pendente apenas valor menor que zero", async () => {
     const semCheckin = new Inscricao({ id: "i-1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: -1 });
     const comCheckin = new Inscricao({ id: "i-2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 0 });
-    const executarDrop = jest.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
+    const executarDrop = vi.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
     const caso = DroparJogadoresSemCheckin.criar(
-      criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(criarTorneio("inscricoes_abertas")) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(criarTorneio("inscricoes_abertas")) }),
       criarMockInscricaoGateway({
-        listarPorTorneio: jest.fn().mockResolvedValue([semCheckin, comCheckin]),
-        buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(semCheckin),
+        listarPorTorneio: vi.fn().mockResolvedValue([semCheckin, comCheckin]),
+        buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(semCheckin),
       }),
       { executar: executarDrop } as unknown as DroparJogador,
     );

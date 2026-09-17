@@ -5,8 +5,8 @@ import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
-jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn() },
+vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: vi.fn() },
 }));
 
 const usuarioPadrao = new Usuario({
@@ -20,19 +20,19 @@ function criarUc(
     usuario: Usuario | null = usuarioPadrao,
 ) {
     return CheckInTorneio.criar(
-        criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+        criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
         criarMockInscricaoGateway(
             inscricao === undefined
                 ? {}
-                : { buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao) },
+                : { buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricao) },
         ),
-        criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) }),
+        criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }),
     );
 }
 
 describe("CheckInTorneio", () => {
     beforeEach(() => {
-        (eventosTorneio.emit as jest.Mock).mockClear();
+        (eventosTorneio.emit as Mock).mockClear();
     });
 
     it("deve realizar check-in inicial quando dentro da janela de 1h", async () => {
@@ -46,12 +46,12 @@ describe("CheckInTorneio", () => {
             checkInRodada: -1, dropped: false, byeCount: 0,
         });
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricao),
         });
         const uc = CheckInTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioPadrao) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuarioPadrao) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
@@ -163,12 +163,12 @@ describe("CheckInTorneio", () => {
             checkInRodada: 0, dropped: false, byeCount: 0,
         });
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricao),
         });
         const uc = CheckInTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioPadrao) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuarioPadrao) }),
         );
 
         await expect(uc.executar({ torneioId: "t-1", usuarioId: "u-1" }))
@@ -187,12 +187,12 @@ describe("CheckInTorneio", () => {
             checkInRodada: 2, dropped: false, byeCount: 0,
         });
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricao),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricao),
         });
         const uc = CheckInTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuarioPadrao) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuarioPadrao) }),
         );
 
         await expect(uc.executar({ torneioId: "t-1", usuarioId: "u-1" }))
@@ -245,7 +245,7 @@ describe("CheckInTorneio", () => {
 
     it("retorna 404 se torneio não existe", async () => {
         const uc = CheckInTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
         );

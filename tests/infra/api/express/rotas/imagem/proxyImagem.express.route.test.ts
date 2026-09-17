@@ -3,12 +3,12 @@ import { ProxyImagemRota } from "../../../../../../src/infra/api/express/rotas/i
 function makeReqRes(query: Record<string, unknown> = {}) {
   const req = { query } as any;
   const res = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn().mockReturnThis(),
-    send: jest.fn().mockReturnThis(),
-    setHeader: jest.fn(),
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
+    send: vi.fn().mockReturnThis(),
+    setHeader: vi.fn(),
   } as any;
-  const next = jest.fn();
+  const next = vi.fn();
   return { req, res, next };
 }
 
@@ -17,7 +17,7 @@ describe("ProxyImagemRota", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.AWS_S3_BUCKET = "meu-bucket";
     process.env.AWS_S3_REGION = "us-east-1";
   });
@@ -44,7 +44,7 @@ describe("ProxyImagemRota", () => {
 
   it("proxy de imagem do bucket autorizado", async () => {
     const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       headers: { get: (h: string) => (h === "content-type" ? "image/jpeg" : null) },
       arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),

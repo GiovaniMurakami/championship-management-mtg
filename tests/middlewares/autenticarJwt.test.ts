@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { autenticarJwt } from "../../src/middlewares/express/autenticarJwt";
+import { autenticarJwt, inicializarAutenticarJwt } from "../../src/middlewares/express/autenticarJwt";
 import { resetJwtKeyCache } from "../../src/helpers/jwt";
 
-jest.mock("jsonwebtoken");
-jest.mock("../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio", () => ({
+const { verify } = vi.hoisted(() => ({ verify: vi.fn() }));
+
+vi.mock("jsonwebtoken", () => ({
+    default: { verify, sign: vi.fn() },
+    verify,
+    sign: vi.fn(),
+}));
+vi.mock("../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio", () => ({
     TokenBlacklistDynamoRepositorio: {
-        criar: jest.fn().mockReturnValue({
-            existe: jest.fn().mockResolvedValue(false),
+        criar: vi.fn().mockReturnValue({
+            existe: vi.fn().mockResolvedValue(false),
         }),
     },
 }));
@@ -21,11 +26,12 @@ describe("autenticarJwt middleware", () => {
         resetJwtKeyCache();
         req = { headers: {} };
         res = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis(),
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn().mockReturnThis(),
         };
-        next = jest.fn();
+        next = vi.fn();
         process.env.JWT_SECRET = "test-secret";
+        inicializarAutenticarJwt({ existe: vi.fn().mockResolvedValue(false), adicionar: vi.fn() });
     });
 
     afterEach(() => {
@@ -34,7 +40,7 @@ describe("autenticarJwt middleware", () => {
 
     it("deve chamar next com payload no req.usuario quando token válido", async () => {
         const payload = { id: "u-1", email: "j@e.com", nome: "João", role: "user" };
-        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        verify.mockReturnValue(payload);
         req.headers = { authorization: "Bearer valid-token" };
 
         await autenticarJwt(req as Request, res as Response, next);
@@ -45,7 +51,7 @@ describe("autenticarJwt middleware", () => {
 
     it("deve definir role como 'user' quando não presente no payload", async () => {
         const payload = { id: "u-1", email: "j@e.com", nome: "João" };
-        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        verify.mockReturnValue(payload);
         req.headers = { authorization: "Bearer valid-token" };
 
         await autenticarJwt(req as Request, res as Response, next);
@@ -55,7 +61,7 @@ describe("autenticarJwt middleware", () => {
 
     it("deve propagar role 'admin' do payload", async () => {
         const payload = { id: "u-1", email: "admin@e.com", nome: "Admin", role: "admin" };
-        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        verify.mockReturnValue(payload);
         req.headers = { authorization: "Bearer admin-token" };
 
         await autenticarJwt(req as Request, res as Response, next);
@@ -84,7 +90,7 @@ describe("autenticarJwt middleware", () => {
     });
 
     it("deve retornar 401 quando token inválido", async () => {
-        (jwt.verify as jest.Mock).mockImplementation(() => {
+        verify.mockImplementation(() => {
             throw new Error("invalid");
         });
         req.headers = { authorization: "Bearer bad-token" };
@@ -97,37 +103,14 @@ describe("autenticarJwt middleware", () => {
     });
 
     it("deve retornar 401 quando token está na blacklist", async () => {
-        const { TokenBlacklistDynamoRepositorio } = jest.requireMock(
-            "../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio"
-        );
-        TokenBlacklistDynamoRepositorio.criar.mockReturnValue({
-            existe: jest.fn().mockResolvedValue(true),
-        });
-
         const payload = { id: "u-1", email: "j@e.com", nome: "João", role: "user" };
-        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        verify.mockReturnValue(payload);
         req.headers = { authorization: "Bearer revoked-token" };
+        inicializarAutenticarJwt({ existe: vi.fn().mockResolvedValue(true), adicionar: vi.fn() });
 
-        // Re-import to get the mock instance — call directly on new instance
-        const blacklistMock = { existe: jest.fn().mockResolvedValue(true) };
-        TokenBlacklistDynamoRepositorio.criar.mockReturnValue(blacklistMock);
+        await autenticarJwt(req as Request, res as Response, next);
 
-        // The module-level instance is already created; test via a fresh mock approach:
-        // Simply verify the middleware returns 401 for blacklisted tokens
-        // by re-testing with fresh module mock via jest.isolateModules
-        await jest.isolateModulesAsync(async () => {
-            jest.mock("../../src/infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio", () => ({
-                TokenBlacklistDynamoRepositorio: {
-                    criar: jest.fn().mockReturnValue({ existe: jest.fn().mockResolvedValue(true) }),
-                },
-            }));
-            const { autenticarJwt: autJwt } = await import("../../src/middlewares/express/autenticarJwt");
-            const req2: any = { headers: { authorization: "Bearer revoked-token" } };
-            const res2: any = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-            const next2 = jest.fn();
-            await autJwt(req2, res2, next2);
-            expect(res2.status).toHaveBeenCalledWith(401);
-            expect(next2).not.toHaveBeenCalled();
-        });
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(next).not.toHaveBeenCalled();
     });
 });

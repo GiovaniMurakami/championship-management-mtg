@@ -12,11 +12,11 @@ describe("EncerrarTorneioRota", () => {
         };
 
         const servico = {
-            executar: jest.fn().mockResolvedValue(resultado),
+            executar: vi.fn().mockResolvedValue(resultado),
         } as any;
 
         const rota = EncerrarTorneioRota.criar(servico);
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
+        const emitSpy = vi.spyOn(eventosTorneio, "emit");
 
         const request = {
             usuario: { id: "admin-1", role: "admin" },
@@ -25,11 +25,11 @@ describe("EncerrarTorneioRota", () => {
         } as any;
 
         const response = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn(),
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn(),
         } as any;
 
-        await rota.getHandler()(request, response, jest.fn());
+        await rota.getHandler()(request, response, vi.fn());
 
         expect(servico.executar).toHaveBeenCalledWith({
             torneioId: resultado.torneioId,

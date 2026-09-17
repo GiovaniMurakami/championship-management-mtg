@@ -1,4 +1,4 @@
-jest.mock("../../src/middlewares/express/rateLimiter", () => {
+vi.mock("../../src/middlewares/express/rateLimiter", () => {
   const passthrough = (_req: unknown, _res: unknown, next: () => void) => next();
   return {
     authRateLimiter: passthrough,
@@ -17,8 +17,8 @@ jest.mock("../../src/middlewares/express/rateLimiter", () => {
   };
 });
 
-jest.mock("../../src/infra/ably/notificacaoAbly", () => ({
-  NotificacaoAbly: { iniciar: jest.fn() },
+vi.mock("../../src/infra/ably/notificacaoAbly", () => ({
+  NotificacaoAbly: { iniciar: vi.fn() },
 }));
 
 import dotenv from "dotenv";
@@ -76,7 +76,7 @@ type StandingView = {
 const describeCloud = executar ? describe : describe.skip;
 
 describeCloud("E2E - visao do cliente com cache durante o torneio", () => {
-  jest.setTimeout(240_000);
+  vi.setConfig({ testTimeout: 240_000, hookTimeout: 240_000 });
 
   const prefix = `e2e_cache_flow_${Date.now()}_`;
   const senha = "Senha@12345";

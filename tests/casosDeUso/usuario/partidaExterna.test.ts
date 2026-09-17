@@ -6,14 +6,14 @@ import { criarMockUsuarioGateway, criarMockDeckGateway, criarMockPartidaGateway,
 
 describe("Partidas externas do perfil", () => {
   const usuario = new Usuario({ id: "u1", nome: "Jogador", email: "j@example.com", senha: "hash" });
-  const usuarios = criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(usuario) });
+  const usuarios = criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) });
   let registros: PartidaExterna[];
   let externas: PartidaExternaGateway;
   beforeEach(() => {
     registros = [];
     externas = {
-      salvar: jest.fn(async (partida) => { registros.push(partida); }),
-      listarPorUsuario: jest.fn(async (id) => registros.filter((p) => p.usuarioId === id)),
+      salvar: vi.fn(async (partida) => { registros.push(partida); }),
+      listarPorUsuario: vi.fn(async (id) => registros.filter((p) => p.usuarioId === id)),
     };
   });
   it("registra vitória, derrota e empate apenas para o perfil autenticado", async () => {
@@ -79,7 +79,7 @@ describe("Partidas externas do perfil", () => {
     expect(externas.salvar).not.toHaveBeenCalled();
   });
   it("não permite registrar para usuário excluído", async () => {
-    const gateway = criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) });
+    const gateway = criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) });
     await expect(RegistrarPartidaExterna.criar(externas, gateway).executar("u1", { resultado: "vitoria", data: "2026-01-01" })).rejects.toMatchObject({ status: 404 });
     expect(externas.salvar).not.toHaveBeenCalled();
   });

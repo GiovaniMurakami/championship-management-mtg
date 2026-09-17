@@ -4,13 +4,13 @@ import { Partida } from "../../../src/dominio/entidade/partida";
 import { criarMockTorneioGateway, criarMockPartidaGateway } from "../../mocks/gateways";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
-jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn() },
+vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: vi.fn() },
 }));
 
 describe("RefazerRodada", () => {
     beforeEach(() => {
-        (eventosTorneio.emit as jest.Mock).mockClear();
+        (eventosTorneio.emit as Mock).mockClear();
     });
 
     const torneioSwiss = (overrides: Partial<TorneioProps> = {}) =>
@@ -38,15 +38,15 @@ describe("RefazerRodada", () => {
 
     it("remove a rodada atual e volta para a anterior (Swiss)", async () => {
         const torneio = torneioSwiss();
-        const atualizar = jest.fn().mockResolvedValue(undefined);
-        const excluir = jest.fn().mockResolvedValue(2);
+        const atualizar = vi.fn().mockResolvedValue(undefined);
+        const excluir = vi.fn().mockResolvedValue(2);
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
                 atualizar,
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([partidaFake(), partidaFake()]),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([partidaFake(), partidaFake()]),
                 excluirPorTorneioERodada: excluir,
             }),
         );
@@ -86,12 +86,12 @@ describe("RefazerRodada", () => {
         });
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([partidaFake()]),
-                excluirPorTorneioERodada: jest.fn().mockResolvedValue(1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([partidaFake()]),
+                excluirPorTorneioERodada: vi.fn().mockResolvedValue(1),
             }),
         );
 
@@ -118,12 +118,12 @@ describe("RefazerRodada", () => {
         });
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([partidaFake()]),
-                excluirPorTorneioERodada: jest.fn().mockResolvedValue(1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([partidaFake()]),
+                excluirPorTorneioERodada: vi.fn().mockResolvedValue(1),
             }),
         );
 
@@ -147,12 +147,12 @@ describe("RefazerRodada", () => {
         });
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([partidaFake()]),
-                excluirPorTorneioERodada: jest.fn().mockResolvedValue(1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([partidaFake()]),
+                excluirPorTorneioERodada: vi.fn().mockResolvedValue(1),
             }),
         );
 
@@ -168,7 +168,7 @@ describe("RefazerRodada", () => {
 
     it("retorna 404 se torneio não existe", async () => {
         const uc = RefazerRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) }),
             criarMockPartidaGateway(),
         );
         await expect(
@@ -179,7 +179,7 @@ describe("RefazerRodada", () => {
     it("retorna 403 se não pode gerenciar", async () => {
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioSwiss()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioSwiss()),
             }),
             criarMockPartidaGateway(),
         );
@@ -191,7 +191,7 @@ describe("RefazerRodada", () => {
     it("rejeita se torneio não está em andamento", async () => {
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(
+                buscarPorId: vi.fn().mockResolvedValue(
                     torneioSwiss({ status: "finalizado" }),
                 ),
             }),
@@ -208,7 +208,7 @@ describe("RefazerRodada", () => {
     it("rejeita refazer na rodada 1", async () => {
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioSwiss({ rodadaAtual: 1 })),
+                buscarPorId: vi.fn().mockResolvedValue(torneioSwiss({ rodadaAtual: 1 })),
             }),
             criarMockPartidaGateway(),
         );
@@ -223,10 +223,10 @@ describe("RefazerRodada", () => {
     it("rejeita se não há partidas na rodada atual", async () => {
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioSwiss()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioSwiss()),
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([]),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([]),
             }),
         );
         await expect(
@@ -246,12 +246,12 @@ describe("RefazerRodada", () => {
         });
         const uc = RefazerRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue([partidaFake()]),
-                excluirPorTorneioERodada: jest.fn().mockResolvedValue(1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue([partidaFake()]),
+                excluirPorTorneioERodada: vi.fn().mockResolvedValue(1),
             }),
         );
 

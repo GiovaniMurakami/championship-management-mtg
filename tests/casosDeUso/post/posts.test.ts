@@ -15,13 +15,13 @@ const post = (indice = 0, quantidadeImagens = 1) => new Post({
   criadoEm: new Date(Date.UTC(2026, 7, 28, 12, 0, indice)),
 });
 
-function criarGateway(overrides: Partial<PostGateway> = {}): jest.Mocked<PostGateway> {
+function criarGateway(overrides: Partial<PostGateway> = {}): Mocked<PostGateway> {
   return {
-    salvar: jest.fn(), buscarPorId: jest.fn().mockResolvedValue(null), listar: jest.fn().mockResolvedValue([]),
-    excluir: jest.fn().mockResolvedValue(false), salvarComentario: jest.fn(), listarComentarios: jest.fn().mockResolvedValue([]),
-    excluirComentario: jest.fn().mockResolvedValue(false), curtir: jest.fn().mockResolvedValue(true),
-    descurtir: jest.fn().mockResolvedValue(true), listarCurtidas: jest.fn().mockResolvedValue([]), ...overrides,
-  } as jest.Mocked<PostGateway>;
+    salvar: vi.fn(), buscarPorId: vi.fn().mockResolvedValue(null), listar: vi.fn().mockResolvedValue([]),
+    excluir: vi.fn().mockResolvedValue(false), salvarComentario: vi.fn(), listarComentarios: vi.fn().mockResolvedValue([]),
+    excluirComentario: vi.fn().mockResolvedValue(false), curtir: vi.fn().mockResolvedValue(true),
+    descurtir: vi.fn().mockResolvedValue(true), listarCurtidas: vi.fn().mockResolvedValue([]), ...overrides,
+  } as Mocked<PostGateway>;
 }
 
 const usuario = new Usuario({ id: "user-1", nome: "Giovani", email: "g@example.com", senha: "hash", fotoUrl: "https://bucket/avatar.jpg" });
@@ -29,8 +29,8 @@ const usuario = new Usuario({ id: "user-1", nome: "Giovani", email: "g@example.c
 describe("casos de uso de posts", () => {
   it("pagina em 20 itens, expõe o total e limita a prévia a 10 imagens", async () => {
     const posts = Array.from({ length: 25 }, (_, i) => post(i, 12));
-    const gateway = criarGateway({ listar: jest.fn().mockResolvedValue(posts) });
-    const useCase = ListarPosts.criar(gateway, criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario]) }));
+    const gateway = criarGateway({ listar: vi.fn().mockResolvedValue(posts) });
+    const useCase = ListarPosts.criar(gateway, criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario]) }));
     const resultado = await useCase.executar({ usuarioId: "user-1", limite: 20, offset: 0 }) as any;
     expect(resultado.posts).toHaveLength(20);
     expect(resultado.total).toBe(25);
@@ -42,8 +42,8 @@ describe("casos de uso de posts", () => {
   it("busca o detalhe com todas as imagens, curtidas e comentários", async () => {
     const item = post(1, 12);
     const comentario = new ComentarioPost({ id: "comment-1", postId: item.id, autorId: usuario.id, texto: "Muito bom" });
-    const gateway = criarGateway({ buscarPorId: jest.fn().mockResolvedValue(item), listarComentarios: jest.fn().mockResolvedValue([comentario]), listarCurtidas: jest.fn().mockResolvedValue([usuario.id]) });
-    const resultado = await BuscarPost.criar(gateway, criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario]) })).executar({ postId: item.id, usuarioId: usuario.id }) as any;
+    const gateway = criarGateway({ buscarPorId: vi.fn().mockResolvedValue(item), listarComentarios: vi.fn().mockResolvedValue([comentario]), listarCurtidas: vi.fn().mockResolvedValue([usuario.id]) });
+    const resultado = await BuscarPost.criar(gateway, criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario]) })).executar({ postId: item.id, usuarioId: usuario.id }) as any;
     expect(resultado.imagens).toHaveLength(12);
     expect(resultado.curtidoPorMim).toBe(true);
     expect(resultado.comentarios[0]).toMatchObject({ texto: "Muito bom", autor: { fotoUrl: usuario.fotoUrl } });
@@ -54,7 +54,7 @@ describe("casos de uso de posts", () => {
   });
 
   it("edita, elimina duplicadas e remove do S3 somente as imagens retiradas", async () => {
-    const item = post(1, 3); const gateway = criarGateway({ buscarPorId: jest.fn().mockResolvedValue(item) });
+    const item = post(1, 3); const gateway = criarGateway({ buscarPorId: vi.fn().mockResolvedValue(item) });
     const imagens = criarMockImagemGateway();
     const finais = [item.imagens[0], item.imagens[2], item.imagens[2], "https://bucket/nova.jpg"];
     const resultado = await EditarPost.criar(gateway, imagens).executar({ postId: item.id, legenda: " nova ", imagens: finais }) as any;
@@ -65,14 +65,14 @@ describe("casos de uso de posts", () => {
   });
 
   it("exclui post e todas as imagens no S3", async () => {
-    const item = post(2, 3); const gateway = criarGateway({ buscarPorId: jest.fn().mockResolvedValue(item), excluir: jest.fn().mockResolvedValue(true) });
+    const item = post(2, 3); const gateway = criarGateway({ buscarPorId: vi.fn().mockResolvedValue(item), excluir: vi.fn().mockResolvedValue(true) });
     const imagens = criarMockImagemGateway();
     await expect(ExcluirPost.criar(gateway, imagens).executar({ postId: item.id })).resolves.toEqual({ excluido: true });
     expect(imagens.excluirPorUrl).toHaveBeenCalledTimes(3);
   });
 
   it("cria comentário apenas quando o post existe", async () => {
-    const item = post(); const gateway = criarGateway({ buscarPorId: jest.fn().mockResolvedValue(item) });
+    const item = post(); const gateway = criarGateway({ buscarPorId: vi.fn().mockResolvedValue(item) });
     const comentario = await ComentarPost.criar(gateway).executar({ postId: item.id, autorId: usuario.id, texto: "  Legal  " });
     expect(comentario.texto).toBe("Legal");
     expect(gateway.salvarComentario).toHaveBeenCalledWith(comentario);
@@ -80,7 +80,7 @@ describe("casos de uso de posts", () => {
   });
 
   it("curte e descurte retornando o total atualizado", async () => {
-    const item = post(); const gateway = criarGateway({ buscarPorId: jest.fn().mockResolvedValue(item), listarCurtidas: jest.fn().mockResolvedValue(["user-1", "user-2"]) });
+    const item = post(); const gateway = criarGateway({ buscarPorId: vi.fn().mockResolvedValue(item), listarCurtidas: vi.fn().mockResolvedValue(["user-1", "user-2"]) });
     await expect(CurtirPost.criar(gateway).executar({ postId: item.id, usuarioId: usuario.id, curtir: true })).resolves.toEqual({ curtido: true, totalCurtidas: 2 });
     await CurtirPost.criar(gateway).executar({ postId: item.id, usuarioId: usuario.id, curtir: false });
     expect(gateway.curtir).toHaveBeenCalledWith(item.id, usuario.id);

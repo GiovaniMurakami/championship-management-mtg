@@ -16,15 +16,15 @@ describe("DroparJogadoresSemDeck", () => {
     const semDeck = new Inscricao({ id: "i-1", torneioId: "t-1", usuarioId: "u-1" });
     const ganhouDeckDepoisDaLista = new Inscricao({ id: "i-2", torneioId: "t-1", usuarioId: "u-2" });
     const comDeck = new Inscricao({ id: "i-3", torneioId: "t-1", usuarioId: "u-3", deckId: "d-3" });
-    const executarDrop = jest.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
+    const executarDrop = vi.fn().mockResolvedValue({ jogador: { id: "u-1", nome: "Ana" } });
     const inscricaoGateway = criarMockInscricaoGateway({
-      listarPorTorneio: jest.fn().mockResolvedValue([semDeck, ganhouDeckDepoisDaLista, comDeck]),
-      buscarPorTorneioEUsuario: jest.fn()
+      listarPorTorneio: vi.fn().mockResolvedValue([semDeck, ganhouDeckDepoisDaLista, comDeck]),
+      buscarPorTorneioEUsuario: vi.fn()
         .mockResolvedValueOnce(semDeck)
         .mockResolvedValueOnce(new Inscricao({ ...ganhouDeckDepoisDaLista, deckId: "d-2" })),
     });
     const caso = DroparJogadoresSemDeck.criar(
-      criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(criarTorneio()) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(criarTorneio()) }),
       inscricaoGateway,
       { executar: executarDrop } as unknown as DroparJogador,
     );
@@ -38,9 +38,9 @@ describe("DroparJogadoresSemDeck", () => {
 
   it("recusa requisitante sem permissão", async () => {
     const caso = DroparJogadoresSemDeck.criar(
-      criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(criarTorneio()) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(criarTorneio()) }),
       criarMockInscricaoGateway(),
-      { executar: jest.fn() } as unknown as DroparJogador,
+      { executar: vi.fn() } as unknown as DroparJogador,
     );
 
     await expect(caso.executar({ torneioId: "t-1", requisitanteId: "outro", isAdmin: false }))

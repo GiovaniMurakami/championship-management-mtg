@@ -14,7 +14,7 @@ function criarUc(deckGatewayOverrides = {}, partidaOverrides = {}) {
     return BuscarDeck.criar(
         criarMockDeckGateway(deckGatewayOverrides),
         criarMockUsuarioGateway({
-            buscarVarios: jest.fn().mockResolvedValue([
+            buscarVarios: vi.fn().mockResolvedValue([
                 new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" }),
             ]),
         }),
@@ -35,8 +35,8 @@ describe("BuscarDeck", () => {
         });
 
         const uc = criarUc({
-            buscarPorId: jest.fn().mockResolvedValue(deck),
-            listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
+            buscarPorId: vi.fn().mockResolvedValue(deck),
+            listarPorDeckOriginalId: vi.fn().mockResolvedValue([]),
         });
 
         const resultado = await uc.executar({ id: "d1" });
@@ -56,7 +56,7 @@ describe("BuscarDeck", () => {
     });
 
     it("deve retornar o deck mesmo se o incremento de visualizacoes falhar", async () => {
-        const warnSpy = jest.spyOn(logger, "warn").mockImplementation();
+        const warnSpy = vi.spyOn(logger, "warn").mockImplementation();
         const deck = new Deck({
             id: "d1",
             nome: "Burn",
@@ -67,9 +67,9 @@ describe("BuscarDeck", () => {
         });
 
         const uc = criarUc({
-            buscarPorId: jest.fn().mockResolvedValue(deck),
-            incrementarVisualizacoes: jest.fn().mockRejectedValue(new Error("TransactionConflict")),
-            listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
+            buscarPorId: vi.fn().mockResolvedValue(deck),
+            incrementarVisualizacoes: vi.fn().mockRejectedValue(new Error("TransactionConflict")),
+            listarPorDeckOriginalId: vi.fn().mockResolvedValue([]),
         });
 
         const resultado = await uc.executar({ id: "d1" });
@@ -158,10 +158,10 @@ describe("BuscarDeck", () => {
 
         const uc = criarUc(
             {
-                buscarPorId: jest.fn().mockResolvedValue(original),
-                listarPorDeckOriginalId: jest.fn().mockResolvedValue([copia]),
+                buscarPorId: vi.fn().mockResolvedValue(original),
+                listarPorDeckOriginalId: vi.fn().mockResolvedValue([copia]),
             },
-            { listarPorDeckIds: jest.fn().mockResolvedValue(partidas) }
+            { listarPorDeckIds: vi.fn().mockResolvedValue(partidas) }
         );
 
         const resultado = await uc.executar({ id: "d-orig" });
@@ -179,7 +179,7 @@ describe("BuscarDeck", () => {
         const original = new Deck({ id: "original", nome: "Burn", formato: "pauper", maindeck: [], sideboard: [], usuarioId: "u1" });
         const copia = new Deck({ id: "copia", nome: "Burn", formato: "pauper", maindeck: [], sideboard: [], usuarioId: "u1", travado: true, deckOriginalId: original.id });
         const base = { torneioId: "t1", rodada: 1, jogador1Id: "u1", jogador2Id: "u2", status: "finalizada" as const };
-        const listarPorDeckIds = jest.fn().mockResolvedValue([
+        const listarPorDeckIds = vi.fn().mockResolvedValue([
             new Partida({ ...base, id: "p1", deckJogador1Id: original.id, vitoriasJogador1: 2, vitoriasJogador2: 0 }),
             new Partida({ ...base, id: "p2", deckJogador2Id: copia.id, vitoriasJogador1: 2, vitoriasJogador2: 0 }),
             new Partida({ ...base, id: "p3", deckJogador2Id: copia.id, vitoriasJogador1: 1, vitoriasJogador2: 1 }),
@@ -187,7 +187,7 @@ describe("BuscarDeck", () => {
             new Partida({ ...base, id: "p5", deckJogador1Id: copia.id, jogador2Id: null, vitoriasJogador1: 2 }),
         ]);
         for (const deck of [original, copia]) {
-            const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck), listarPorDeckOriginalId: jest.fn().mockResolvedValue([copia]) }, { listarPorDeckIds });
+            const uc = criarUc({ buscarPorId: vi.fn().mockResolvedValue(deck), listarPorDeckOriginalId: vi.fn().mockResolvedValue([copia]) }, { listarPorDeckIds });
             const resultado = await uc.executar({ id: deck.id });
             expect(listarPorDeckIds).toHaveBeenLastCalledWith([original.id, copia.id]);
             expect(resultado.estatisticas).toEqual({ vitorias: 1, derrotas: 1, empates: 1, totalPartidas: 3, winrate: 33.3 });
@@ -211,7 +211,7 @@ describe("BuscarDeck", () => {
         const deck = new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-desconhecido" });
 
         const uc = BuscarDeck.criar(
-            criarMockDeckGateway({ buscarPorId: jest.fn().mockResolvedValue(deck) }),
+            criarMockDeckGateway({ buscarPorId: vi.fn().mockResolvedValue(deck) }),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway()
         );
@@ -232,7 +232,7 @@ describe("BuscarDeck", () => {
             oculto: true,
         });
 
-        const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck) });
+        const uc = criarUc({ buscarPorId: vi.fn().mockResolvedValue(deck) });
 
         await expect(uc.executar({ id: "d1" })).rejects.toBeInstanceOf(ErroPersonalizado);
         await expect(uc.executar({ id: "d1", usuarioId: "u2" })).rejects.toMatchObject({ status: 404 });
@@ -249,7 +249,7 @@ describe("BuscarDeck", () => {
             oculto: true,
         });
 
-        const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck) });
+        const uc = criarUc({ buscarPorId: vi.fn().mockResolvedValue(deck) });
 
         const resultado = await uc.executar({ id: "d1", usuarioId: "admin", isAdmin: true });
         expect(resultado.id).toBe("d1");
@@ -269,7 +269,7 @@ describe("BuscarDeck", () => {
             deckOriginalId: "d-orig",
         });
 
-        const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck) });
+        const uc = criarUc({ buscarPorId: vi.fn().mockResolvedValue(deck) });
 
         const resultado = await uc.executar({ id: "d-clone", usuarioId: "outro" });
         expect(resultado.id).toBe("d-clone");
@@ -286,7 +286,7 @@ describe("BuscarDeck", () => {
             oculto: true,
         });
 
-        const uc = criarUc({ buscarPorId: jest.fn().mockResolvedValue(deck) });
+        const uc = criarUc({ buscarPorId: vi.fn().mockResolvedValue(deck) });
 
         const resultado = await uc.executar({ id: "d1", usuarioId: "u1" });
 
@@ -378,10 +378,10 @@ describe("BuscarDeck", () => {
 
         const uc = criarUc(
             {
-                buscarPorId: jest.fn().mockResolvedValue(original),
-                listarPorDeckOriginalId: jest.fn().mockResolvedValue([c1, c2]),
+                buscarPorId: vi.fn().mockResolvedValue(original),
+                listarPorDeckOriginalId: vi.fn().mockResolvedValue([c1, c2]),
             },
-            { listarPorDeckIds: jest.fn().mockResolvedValue(partidas) },
+            { listarPorDeckIds: vi.fn().mockResolvedValue(partidas) },
         );
 
         const resultado = await uc.executar({ id: "d-orig" });

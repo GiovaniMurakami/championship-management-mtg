@@ -8,21 +8,23 @@ import {
 } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
-jest.mock("bcryptjs", () => ({
-    compare: jest.fn(),
+vi.mock("bcryptjs", () => {
+    const compare = vi.fn();
+    return { default: { compare }, compare };
+});
+
+vi.mock("../../../src/helpers/jwt", () => ({
+    signToken: vi.fn().mockReturnValue("token_gerado"),
 }));
 
-jest.mock("../../../src/helpers/jwt", () => ({
-    signToken: jest.fn().mockReturnValue("token_gerado"),
-}));
-
-jest.mock("../../../src/helpers/env", () => ({
-    buildFrontendAppLink: jest.fn((path: string) => `http://localhost:5173${path}`),
-    isExecucaoLocal: jest.fn().mockReturnValue(true),
-    getCorsOrigin: jest.fn().mockReturnValue("http://localhost:5173"),
+vi.mock("../../../src/helpers/env", () => ({
+    buildFrontendAppLink: vi.fn((path: string) => `http://localhost:5173${path}`),
+    isExecucaoLocal: vi.fn().mockReturnValue(true),
+    getCorsOrigin: vi.fn().mockReturnValue("http://localhost:5173"),
 }));
 
 import bcrypt from "bcryptjs";
+import { signToken } from "../../../src/helpers/jwt";
 
 describe("LoginUsuario", () => {
     const usuarioExistente = new Usuario({
@@ -53,10 +55,10 @@ describe("LoginUsuario", () => {
     }
 
     it("deve retornar token e dados do usuário no login com sucesso", async () => {
-        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+        (bcrypt.compare as Mock).mockResolvedValue(true);
         const loginAttempt = criarMockLoginAttemptGateway();
         const uc = criarUC({
-            usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }),
+            usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }),
             loginAttempt,
         });
 
@@ -74,8 +76,8 @@ describe("LoginUsuario", () => {
 
     it("deve incluir role 'admin' no token e resposta quando usuário é admin", async () => {
         const admin = new Usuario({ id: "admin-1", nome: "Admin", email: "admin@email.com", senha: "hashed", role: "admin" });
-        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-        const uc = criarUC({ usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(admin) }) });
+        (bcrypt.compare as Mock).mockResolvedValue(true);
+        const uc = criarUC({ usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(admin) }) });
 
         const resultado = await uc.executar({ email: "admin@email.com", senha: "s" });
 
@@ -92,10 +94,10 @@ describe("LoginUsuario", () => {
     });
 
     it("deve lançar erro se a senha for inválida", async () => {
-        (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+        (bcrypt.compare as Mock).mockResolvedValue(false);
         const loginAttempt = criarMockLoginAttemptGateway();
         const uc = criarUC({
-            usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }),
+            usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }),
             loginAttempt,
         });
 
@@ -105,16 +107,15 @@ describe("LoginUsuario", () => {
     });
 
     it("deve lançar erro se JWT não estiver configurado (signToken retorna null)", async () => {
-        const { signToken } = require("../../../src/helpers/jwt");
-        (signToken as jest.Mock).mockReturnValueOnce(null);
-        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-        const uc = criarUC({ usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }) });
+        (signToken as Mock).mockReturnValueOnce(null);
+        (bcrypt.compare as Mock).mockResolvedValue(true);
+        const uc = criarUC({ usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }) });
 
         await expect(uc.executar({ email: "joao@email.com", senha: "s" })).rejects.toMatchObject({ status: 500 });
     });
 
     it("deve bloquear login após 5 tentativas falhas", async () => {
-        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: jest.fn().mockResolvedValue(5) });
+        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: vi.fn().mockResolvedValue(5) });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = criarUC({ usuario: usuarioGateway, loginAttempt });
 
@@ -124,10 +125,10 @@ describe("LoginUsuario", () => {
     });
 
     it("deve permitir login com 4 falhas anteriores", async () => {
-        (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: jest.fn().mockResolvedValue(4) });
+        (bcrypt.compare as Mock).mockResolvedValue(true);
+        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: vi.fn().mockResolvedValue(4) });
         const uc = criarUC({
-            usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }),
+            usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }),
             loginAttempt,
         });
 
@@ -138,12 +139,12 @@ describe("LoginUsuario", () => {
     });
 
     it("deve enviar e-mail de bloqueio na 5ª senha incorreta", async () => {
-        (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+        (bcrypt.compare as Mock).mockResolvedValue(false);
         const emailGateway = criarMockEmailGateway();
         const resetSenhaGateway = criarMockResetSenhaGateway();
-        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: jest.fn().mockResolvedValue(4) });
+        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: vi.fn().mockResolvedValue(4) });
         const uc = criarUC({
-            usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }),
+            usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }),
             loginAttempt,
             email: emailGateway,
             resetSenha: resetSenhaGateway,
@@ -161,11 +162,11 @@ describe("LoginUsuario", () => {
     });
 
     it("não deve enviar e-mail de bloqueio em falhas anteriores à 5ª", async () => {
-        (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+        (bcrypt.compare as Mock).mockResolvedValue(false);
         const emailGateway = criarMockEmailGateway();
-        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: jest.fn().mockResolvedValue(2) });
+        const loginAttempt = criarMockLoginAttemptGateway({ obterFalhas: vi.fn().mockResolvedValue(2) });
         const uc = criarUC({
-            usuario: criarMockUsuarioGateway({ buscarPorEmail: jest.fn().mockResolvedValue(usuarioExistente) }),
+            usuario: criarMockUsuarioGateway({ buscarPorEmail: vi.fn().mockResolvedValue(usuarioExistente) }),
             loginAttempt,
             email: emailGateway,
         });

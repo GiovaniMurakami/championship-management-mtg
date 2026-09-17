@@ -18,15 +18,15 @@ const criarTorneio = (version = 2) => new Torneio({
 
 describe("TorneioDynamoRepositorio - consistencia", () => {
   const tabelaOriginal = process.env.DYNAMODB_DATA_TABLE;
-  let sendSpy: jest.SpiedFunction<DynamoDBClient["send"]>;
+  let sendSpy: vi.SpiedFunction<DynamoDBClient["send"]>;
 
   beforeEach(() => {
     process.env.DYNAMODB_DATA_TABLE = "dados-test";
-    sendSpy = jest.spyOn(DynamoDBClient.prototype, "send");
+    sendSpy = vi.spyOn(DynamoDBClient.prototype, "send");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     process.env.DYNAMODB_DATA_TABLE = tabelaOriginal;
   });
 
@@ -59,10 +59,10 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
       jogador1Id: "u-1",
       jogador2Id: "u-2",
     });
-    const reconciliar = jest.spyOn(PartidaDynamoRepositorio.prototype, "reconciliarRodada").mockResolvedValue();
-    const excluir = jest.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
+    const reconciliar = vi.spyOn(PartidaDynamoRepositorio.prototype, "reconciliarRodada").mockResolvedValue();
+    const excluir = vi.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
     const repositorio = TorneioDynamoRepositorio.criar();
-    jest.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
+    vi.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
 
     await expect(repositorio.atualizarECriarPartidas(torneio, [partida])).rejects.toThrow("conflito");
 

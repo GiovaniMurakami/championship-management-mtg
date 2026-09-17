@@ -36,7 +36,7 @@ A documentação completa está organizada por entidade:
 
 ### Metagame (Público)
 
-- `GET /metagame?formato=&dias=30` - Lista de arquétipos (torneios finalizados, não secretos)
+- `GET /metagame?formato=&dias=30&limite=30&offset=0` - Lista de arquétipos (torneios finalizados, não secretos; `limite`/`offset` só recortam a resposta)
 - `GET /metagame/:formato/:slug?dias=30` - Detalhe do arquétipo (listas, matchups, resultados)
 
 `usuario.nome` nestes payloads é o nick MOL (`nickMTGO`).
