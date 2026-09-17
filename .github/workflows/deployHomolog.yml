@@ -1,37 +1,52 @@
-name: Deploy API
+name: Deploy homolog
 
 on:
   push:
     branches:
       - homolog
   workflow_dispatch:
-    inputs:
-      stage:
-        description: "Stage para deploy"
-        required: true
-        default: "dev"
-        type: choice
-        options:
-          - dev
-          - prod
 
 permissions:
   id-token: write
   contents: read
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'push' && 'production' || (inputs.stage == 'prod' && 'production' || 'development') }}
+concurrency:
+  group: deploy-homolog
+  cancel-in-progress: false
 
+jobs:
+  test:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  deploy:
+    name: Deploy stage dev
+    needs: test
+    runs-on: ubuntu-latest
+    environment: homolog
     env:
       AWS_REGION: us-east-1
-      MONGODB_URI: ${{ secrets.MONGODB_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       ABLY_API_KEY: ${{ secrets.ABLY_API_KEY }}
       FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
       CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
-
+      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
+      SES_REGION: ${{ secrets.SES_REGION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,11 +64,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-championship-homolog
 
-      - name: Deploy homolog on push
-        if: github.event_name == 'push'
+      - name: Deploy homolog
         run: npm run deploy:dev
-
-      - name: Deploy selected stage on manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: npm run deploy:${{ inputs.stage }}
