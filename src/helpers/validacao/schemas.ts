@@ -391,6 +391,8 @@ const diasMetagameSchema = z.preprocess(
 export const listarMetagameQuerySchema = intervaloDatasSchema.and(z.object({
   formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
   dias: diasMetagameSchema,
+  limite: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
 }));
 
 export const metagameDiasQuerySchema = intervaloDatasSchema.and(z.object({

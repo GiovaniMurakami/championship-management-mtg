@@ -15,7 +15,7 @@ describe("sanitizarEntrada middleware", () => {
 
     beforeEach(() => {
         res = {};
-        next = jest.fn();
+        next = vi.fn();
     });
 
     describe("sanitização de body", () => {

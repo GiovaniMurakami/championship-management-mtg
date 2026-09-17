@@ -9,8 +9,8 @@ import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
-jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
-  eventosTorneio: { emit: jest.fn() },
+vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+  eventosTorneio: { emit: vi.fn() },
 }));
 
 describe("AlterarBloqueioTorneios", () => {
@@ -28,11 +28,11 @@ describe("AlterarBloqueioTorneios", () => {
       new Inscricao({ id: "i-2", torneioId: "t-andamento", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
     ];
     const inscricaoGateway = criarMockInscricaoGateway({
-      listarPorUsuario: jest.fn().mockResolvedValue(inscricoes),
-      excluir: jest.fn(),
+      listarPorUsuario: vi.fn().mockResolvedValue(inscricoes),
+      excluir: vi.fn(),
     });
     const torneioGateway = criarMockTorneioGateway({
-      buscarPorId: jest.fn().mockImplementation(async (id: string) => {
+      buscarPorId: vi.fn().mockImplementation(async (id: string) => {
         if (id === "t-aberto") {
           return new Torneio({
             id: "t-aberto",
@@ -58,8 +58,8 @@ describe("AlterarBloqueioTorneios", () => {
       }),
     });
     const usuarioGateway = criarMockUsuarioGateway({
-      buscarPorId: jest.fn().mockResolvedValue(usuario),
-      atualizar: jest.fn(),
+      buscarPorId: vi.fn().mockResolvedValue(usuario),
+      atualizar: vi.fn(),
     });
 
     const uc = AlterarBloqueioTorneios.criar(usuarioGateway, inscricaoGateway, torneioGateway);
@@ -88,8 +88,8 @@ describe("AlterarBloqueioTorneios", () => {
     const inscricaoGateway = criarMockInscricaoGateway();
     const torneioGateway = criarMockTorneioGateway();
     const usuarioGateway = criarMockUsuarioGateway({
-      buscarPorId: jest.fn().mockResolvedValue(usuarioBloqueado),
-      atualizar: jest.fn(),
+      buscarPorId: vi.fn().mockResolvedValue(usuarioBloqueado),
+      atualizar: vi.fn(),
     });
 
     const uc = AlterarBloqueioTorneios.criar(usuarioGateway, inscricaoGateway, torneioGateway);
@@ -109,7 +109,7 @@ describe("AlterarBloqueioTorneios", () => {
       role: "admin",
     });
     const uc = AlterarBloqueioTorneios.criar(
-      criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(admin) }),
+      criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(admin) }),
       criarMockInscricaoGateway(),
       criarMockTorneioGateway(),
     );

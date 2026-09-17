@@ -14,7 +14,7 @@ describe("ExcluirDeck", () => {
 
     it("deve excluir o deck com sucesso", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckExistente),
+            buscarPorId: vi.fn().mockResolvedValue(deckExistente),
         });
         const uc = ExcluirDeck.criar(gateway);
 
@@ -35,7 +35,7 @@ describe("ExcluirDeck", () => {
 
     it("deve lançar erro se o usuário não for dono do deck e não for admin", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckExistente),
+            buscarPorId: vi.fn().mockResolvedValue(deckExistente),
         });
         const uc = ExcluirDeck.criar(gateway);
 
@@ -46,7 +46,7 @@ describe("ExcluirDeck", () => {
 
     it("admin pode excluir deck de outro usuário", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckExistente),
+            buscarPorId: vi.fn().mockResolvedValue(deckExistente),
         });
         const uc = ExcluirDeck.criar(gateway);
 
@@ -64,7 +64,7 @@ describe("ExcluirDeck", () => {
             torneioId: "t-1",
         });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(travado),
+            buscarPorId: vi.fn().mockResolvedValue(travado),
         });
         const uc = ExcluirDeck.criar(gateway);
 

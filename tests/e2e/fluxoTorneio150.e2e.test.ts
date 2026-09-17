@@ -5,7 +5,7 @@
  * Rate limiters são neutralizados para permitir o volume de requisições do teste.
  * Ably e EventEmitter de eventos são silenciados (sem efeitos colaterais externos).
  *
- * Execução: npx jest tests/e2e/fluxoTorneio150.e2e.test.ts --testTimeout=300000
+ * Execução: npm run test:e2e:torneio150
  *
  * Suites auxiliares no mesmo arquivo:
  * - Ajuste de rodadas + encerramento antecipado
@@ -14,7 +14,7 @@
 
 // ─── Mocks devem vir antes de qualquer import ───────────────────────────────
 
-jest.mock("../../src/middlewares/express/rateLimiter", () => {
+vi.mock("../../src/middlewares/express/rateLimiter", () => {
     const passthrough = (_req: unknown, _res: unknown, next: () => void) => next();
     return {
         authRateLimiter: passthrough,
@@ -33,13 +33,13 @@ jest.mock("../../src/middlewares/express/rateLimiter", () => {
     };
 });
 
-jest.mock("../../src/infra/ably/notificacaoAbly", () => ({
-    NotificacaoAbly: { iniciar: jest.fn() },
+vi.mock("../../src/infra/ably/notificacaoAbly", () => ({
+    NotificacaoAbly: { iniciar: vi.fn() },
 }));
 
-jest.mock("../../src/infra/services/emailServico", () => ({
+vi.mock("../../src/infra/services/emailServico", () => ({
     EmailServico: {
-        criar: () => ({ enviar: jest.fn().mockResolvedValue(undefined) }),
+        criar: () => ({ enviar: vi.fn().mockResolvedValue(undefined) }),
     },
 }));
 import supertest from "supertest";
@@ -221,7 +221,7 @@ const MAINDECK_VALIDO = [{ nome: "Island", quantidade: 60 }];
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
-    jest.setTimeout(600_000);
+    vi.setConfig({ testTimeout: 600_000, hookTimeout: 600_000 });
 
     const PREFIX = `e2e_${Date.now()}_`;
     const SENHA = "Senha@12345";
@@ -1363,7 +1363,7 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
  * Separado do fluxo 150 para não interferir nas expectativas de Top 8.
  */
 describeDynamo("E2E – Ajuste de rodadas e encerramento antecipado", () => {
-    jest.setTimeout(120_000);
+    vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
     const PREFIX = `e2e_end_${Date.now()}_`;
     const SENHA = "Senha@12345";
@@ -1546,7 +1546,7 @@ describeDynamo("E2E – Ajuste de rodadas e encerramento antecipado", () => {
  * 4 jogadores → Swiss natural = 2; maxRodadas=3 força a 3ª; PUT sobe para 4 e joga até o fim.
  */
 describeDynamo("E2E – Contestação com observação e rodadas acima do Swiss", () => {
-    jest.setTimeout(180_000);
+    vi.setConfig({ testTimeout: 180_000, hookTimeout: 180_000 });
 
     const PREFIX = `e2e_extra_${Date.now()}_`;
     const SENHA = "Senha@12345";

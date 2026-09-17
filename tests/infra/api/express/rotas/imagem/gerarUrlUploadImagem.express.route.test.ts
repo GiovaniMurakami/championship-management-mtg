@@ -7,16 +7,16 @@ function makeReqRes(body: Record<string, unknown> = {}) {
         body,
         usuario: { id: "user-1", email: "a@a.com", nome: "User", role: "user" },
     } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("GerarUrlUploadImagemRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = GerarUrlUploadImagemRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("retorna 200 com uploadUrl e urlPublica em sucesso", async () => {
         const saida = {

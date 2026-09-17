@@ -46,7 +46,7 @@ npm run test:e2e:torneio150
 
 ## Coverage
 
-O Jest usa o provider V8 e falha automaticamente se o coverage global ficar abaixo destes limites:
+O Vitest usa o provider V8 e falha automaticamente se o coverage global ficar abaixo destes limites:
 
 - statements: 95%
 - functions: 95%

@@ -8,10 +8,10 @@ describe("autorizarAdmin middleware", () => {
 
     beforeEach(() => {
         res = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis(),
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn().mockReturnThis(),
         };
-        next = jest.fn();
+        next = vi.fn();
     });
 
     it("deve chamar next quando role é 'admin'", () => {

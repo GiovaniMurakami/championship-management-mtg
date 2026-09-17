@@ -5,10 +5,10 @@ describe("BuscarEstatisticasSite", () => {
   it("deve retornar totais de torneios finalizados e jogadores distintos", async () => {
     const uc = BuscarEstatisticasSite.criar(
       criarMockTorneioGateway({
-        listarTotal: jest.fn().mockResolvedValue(12),
+        listarTotal: vi.fn().mockResolvedValue(12),
       }),
       criarMockInscricaoGateway({
-        contarJogadoresDistintos: jest.fn().mockResolvedValue(87),
+        contarJogadoresDistintos: vi.fn().mockResolvedValue(87),
       })
     );
 

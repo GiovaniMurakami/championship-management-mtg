@@ -38,10 +38,10 @@ describe("BuscarLiga", () => {
             tipo: "times",
         });
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(liga),
+            buscarPorId: vi.fn().mockResolvedValue(liga),
         });
         const torneioGateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn()
+            buscarPorId: vi.fn()
                 .mockResolvedValueOnce(torneio1)
                 .mockResolvedValueOnce(torneio2),
         });
@@ -61,7 +61,7 @@ describe("BuscarLiga", () => {
     it("deve retornar liga com lista de torneios vazia", async () => {
         const liga = new Liga({ id: "liga-1", nome: "Liga Vazia", donoId: "user-1", torneioIds: [] });
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(liga),
+            buscarPorId: vi.fn().mockResolvedValue(liga),
         });
         const torneioGateway = criarMockTorneioGateway();
         const uc = BuscarLiga.criar(ligaGateway, torneioGateway);

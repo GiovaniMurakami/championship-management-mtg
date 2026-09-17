@@ -13,7 +13,7 @@ const timeBase = new Time({
 describe("RejeitarSolicitacaoTime", () => {
     it("deve rejeitar solicitação e remover da lista pendente", async () => {
         const time = new Time({ ...timeBase, solicitacoesPendentes: ["user-2"] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time) });
         const uc = RejeitarSolicitacaoTime.criar(timeGateway);
 
         const resultado = await uc.executar({ timeId: "time-1", requisitanteId: "dono-1", usuarioId: "user-2" });
@@ -34,7 +34,7 @@ describe("RejeitarSolicitacaoTime", () => {
     });
 
     it("deve lançar 403 se o requisitante não for o dono", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeBase) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeBase) });
         const uc = RejeitarSolicitacaoTime.criar(timeGateway);
 
         await expect(
@@ -44,7 +44,7 @@ describe("RejeitarSolicitacaoTime", () => {
 
     it("deve lançar 404 se a solicitação não existir", async () => {
         const timeSemSolicitacao = new Time({ ...timeBase, solicitacoesPendentes: [] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeSemSolicitacao) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeSemSolicitacao) });
         const uc = RejeitarSolicitacaoTime.criar(timeGateway);
 
         await expect(

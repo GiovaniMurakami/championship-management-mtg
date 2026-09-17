@@ -391,16 +391,16 @@ describe("schemas de validacao", () => {
 
     describe("s3ImagemUrl sem base configurada", () => {
         afterEach(() => {
-            jest.dontMock("../../../src/helpers/env");
-            jest.resetModules();
+            vi.doUnmock("../../../src/helpers/env");
+            vi.resetModules();
         });
 
-        it("aceita qualquer URL quando getS3BaseUrl retorna vazio", () => {
-            jest.resetModules();
-            jest.doMock("../../../src/helpers/env", () => ({
+        it("aceita qualquer URL quando getS3BaseUrl retorna vazio", async () => {
+            vi.resetModules();
+            vi.doMock("../../../src/helpers/env", () => ({
                 getS3BaseUrl: () => "",
             }));
-            const schemas = require("../../../src/helpers/validacao/schemas") as typeof import("../../../src/helpers/validacao/schemas");
+            const schemas = await import("../../../src/helpers/validacao/schemas");
 
             expect(() => schemas.criarTorneioSchema.parse({
                 nome: "T",

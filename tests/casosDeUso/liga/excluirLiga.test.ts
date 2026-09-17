@@ -12,7 +12,7 @@ describe("ExcluirLiga", () => {
 
     it("deve excluir a liga com sucesso", async () => {
         const gateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(ligaExistente),
+            buscarPorId: vi.fn().mockResolvedValue(ligaExistente),
         });
         const uc = ExcluirLiga.criar(gateway);
 
@@ -37,7 +37,7 @@ describe("ExcluirLiga", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const gateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(ligaExistente),
+            buscarPorId: vi.fn().mockResolvedValue(ligaExistente),
         });
         const uc = ExcluirLiga.criar(gateway);
 
@@ -50,7 +50,7 @@ describe("ExcluirLiga", () => {
 
     it("admin pode excluir liga de outro usuário", async () => {
         const gateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(ligaExistente),
+            buscarPorId: vi.fn().mockResolvedValue(ligaExistente),
         });
         const uc = ExcluirLiga.criar(gateway);
 

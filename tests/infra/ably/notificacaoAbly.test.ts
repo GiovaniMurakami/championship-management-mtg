@@ -1,8 +1,8 @@
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 import { NotificacaoAbly } from "../../../src/infra/ably/notificacaoAbly";
-const publish = jest.fn().mockResolvedValue(undefined);
-const get = jest.fn(() => ({ publish }));
-jest.mock("ably", () => ({ __esModule: true, default: { Rest: jest.fn(() => ({ channels: { get } })) } }));
+const publish = vi.fn().mockResolvedValue(undefined);
+const get = vi.fn(() => ({ publish }));
+vi.mock("ably", () => ({ __esModule: true, default: { Rest: vi.fn(() => ({ channels: { get } })) } }));
 describe("encaminhamento dos eventos do torneio", () => {
   beforeEach(() => { eventosTorneio.removeAllListeners(); NotificacaoAbly.iniciar(); });
   afterEach(() => eventosTorneio.removeAllListeners());

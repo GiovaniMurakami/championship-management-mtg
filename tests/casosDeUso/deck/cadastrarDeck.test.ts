@@ -242,7 +242,7 @@ describe("CadastrarDeck", () => {
             deckOriginalId: "deck-original-1",
         });
         const gateway = criarMockDeckGateway({
-            listar: jest.fn().mockResolvedValue([referencia]),
+            listar: vi.fn().mockResolvedValue([referencia]),
         });
         const uc = CadastrarDeck.criar(gateway);
 
@@ -309,7 +309,7 @@ describe("CadastrarDeck", () => {
             deckOriginalId: "deck-original-2",
         });
         const gateway = criarMockDeckGateway({
-            listar: jest.fn().mockResolvedValue([referencia]),
+            listar: vi.fn().mockResolvedValue([referencia]),
         });
         const uc = CadastrarDeck.criar(gateway);
 
@@ -327,7 +327,7 @@ describe("CadastrarDeck", () => {
 
     it("deve lancar 400 quando usuario ja atingiu o limite de 50 decks", async () => {
         const gateway = criarMockDeckGateway({
-            listarTotal: jest.fn().mockResolvedValue(50),
+            listarTotal: vi.fn().mockResolvedValue(50),
         });
         const uc = CadastrarDeck.criar(gateway);
 
@@ -345,7 +345,7 @@ describe("CadastrarDeck", () => {
 
     it("deve permitir cadastro quando usuario tem exatamente 49 decks", async () => {
         const gateway = criarMockDeckGateway({
-            listarTotal: jest.fn().mockResolvedValue(49),
+            listarTotal: vi.fn().mockResolvedValue(49),
         });
         const uc = CadastrarDeck.criar(gateway);
 

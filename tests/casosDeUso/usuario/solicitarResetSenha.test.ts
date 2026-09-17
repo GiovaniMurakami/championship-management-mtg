@@ -28,7 +28,7 @@ describe("SolicitarResetSenha", () => {
             senha: "hashed",
         });
         const usuarioGateway = criarMockUsuarioGateway({
-            buscarPorEmail: jest.fn().mockResolvedValue(usuario),
+            buscarPorEmail: vi.fn().mockResolvedValue(usuario),
         });
         const resetSenhaGateway = criarMockResetSenhaGateway();
         const emailGateway = criarMockEmailGateway();
@@ -39,7 +39,7 @@ describe("SolicitarResetSenha", () => {
         expect(resultado.mensagem).toBeDefined();
         expect(resetSenhaGateway.excluirPorUsuario).toHaveBeenCalledWith("user-1");
         expect(resetSenhaGateway.salvar).toHaveBeenCalledTimes(1);
-        const dadosSalvos = (resetSenhaGateway.salvar as jest.Mock).mock.calls[0][0];
+        const dadosSalvos = (resetSenhaGateway.salvar as Mock).mock.calls[0][0];
         expect(dadosSalvos.token).toHaveLength(64); // 32 bytes hex = 64 chars
         expect(dadosSalvos.usuarioId).toBe("user-1");
         expect(dadosSalvos.expiresAt).toBeInstanceOf(Date);
@@ -56,7 +56,7 @@ describe("SolicitarResetSenha", () => {
             senha: "hashed",
         });
         const gatewayComUsuario = criarMockUsuarioGateway({
-            buscarPorEmail: jest.fn().mockResolvedValue(usuario),
+            buscarPorEmail: vi.fn().mockResolvedValue(usuario),
         });
         const gatewaySemUsuario = criarMockUsuarioGateway();
         const resetGateway = criarMockResetSenhaGateway();
@@ -79,7 +79,7 @@ describe("SolicitarResetSenha", () => {
             senha: "hashed",
         });
         const usuarioGateway = criarMockUsuarioGateway({
-            buscarPorEmail: jest.fn().mockResolvedValue(usuario),
+            buscarPorEmail: vi.fn().mockResolvedValue(usuario),
         });
         const resetSenhaGateway = criarMockResetSenhaGateway();
         const emailGateway = criarMockEmailGateway();
@@ -89,7 +89,7 @@ describe("SolicitarResetSenha", () => {
         await uc.executar({ email: "joao@email.com" });
         const depois = Date.now();
 
-        const dadosSalvos = (resetSenhaGateway.salvar as jest.Mock).mock.calls[0][0];
+        const dadosSalvos = (resetSenhaGateway.salvar as Mock).mock.calls[0][0];
         const expiracaoMs = dadosSalvos.expiresAt.getTime();
         expect(expiracaoMs).toBeGreaterThanOrEqual(antes + 60 * 60 * 1000 - 100);
         expect(expiracaoMs).toBeLessThanOrEqual(depois + 60 * 60 * 1000 + 100);

@@ -29,10 +29,10 @@ const partidaBase = new Partida({
 describe("AtualizarMesaPartida", () => {
     it("deve atualizar a mesa da partida (dono do torneio)", async () => {
         const partidaAtualizada = new Partida({ ...partidaBase, mesa: 3 });
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
         const partidaGateway = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(partidaBase),
-            atualizarMesa: jest.fn().mockResolvedValue(partidaAtualizada),
+            buscarPorId: vi.fn().mockResolvedValue(partidaBase),
+            atualizarMesa: vi.fn().mockResolvedValue(partidaAtualizada),
         });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
@@ -45,10 +45,10 @@ describe("AtualizarMesaPartida", () => {
 
     it("deve atualizar mesa como null (remover mesa)", async () => {
         const partidaAtualizada = new Partida({ ...partidaBase, mesa: null });
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
         const partidaGateway = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(partidaBase),
-            atualizarMesa: jest.fn().mockResolvedValue(partidaAtualizada),
+            buscarPorId: vi.fn().mockResolvedValue(partidaBase),
+            atualizarMesa: vi.fn().mockResolvedValue(partidaAtualizada),
         });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
@@ -59,10 +59,10 @@ describe("AtualizarMesaPartida", () => {
 
     it("deve permitir admin de outro torneio alterar mesa", async () => {
         const partidaAtualizada = new Partida({ ...partidaBase, mesa: 5 });
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
         const partidaGateway = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(partidaBase),
-            atualizarMesa: jest.fn().mockResolvedValue(partidaAtualizada),
+            buscarPorId: vi.fn().mockResolvedValue(partidaBase),
+            atualizarMesa: vi.fn().mockResolvedValue(partidaAtualizada),
         });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
@@ -83,7 +83,7 @@ describe("AtualizarMesaPartida", () => {
 
     it("deve lançar 404 se o torneio não existir", async () => {
         const torneioGateway = criarMockTorneioGateway();
-        const partidaGateway = criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBase) });
+        const partidaGateway = criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaBase) });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
         await expect(
@@ -93,8 +93,8 @@ describe("AtualizarMesaPartida", () => {
 
     it("deve lançar 400 se o torneio não estiver em andamento", async () => {
         const torneioInscricoes = new Torneio({ ...torneioEmAndamento, status: "inscricoes_abertas" });
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioInscricoes) });
-        const partidaGateway = criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBase) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioInscricoes) });
+        const partidaGateway = criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaBase) });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
         await expect(
@@ -103,8 +103,8 @@ describe("AtualizarMesaPartida", () => {
     });
 
     it("deve lançar 403 se não for dono nem admin", async () => {
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
-        const partidaGateway = criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBase) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
+        const partidaGateway = criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaBase) });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
         await expect(
@@ -113,8 +113,8 @@ describe("AtualizarMesaPartida", () => {
     });
 
     it("deve lançar 400 se a mesa for menor que 1", async () => {
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
-        const partidaGateway = criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBase) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
+        const partidaGateway = criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaBase) });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 
         await expect(
@@ -123,10 +123,10 @@ describe("AtualizarMesaPartida", () => {
     });
 
     it("deve lançar 400 se atualizarMesa retornar null", async () => {
-        const torneioGateway = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) });
+        const torneioGateway = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) });
         const partidaGateway = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(partidaBase),
-            atualizarMesa: jest.fn().mockResolvedValue(null),
+            buscarPorId: vi.fn().mockResolvedValue(partidaBase),
+            atualizarMesa: vi.fn().mockResolvedValue(null),
         });
         const uc = AtualizarMesaPartida.criar(torneioGateway, partidaGateway);
 

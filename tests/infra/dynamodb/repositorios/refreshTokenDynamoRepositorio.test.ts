@@ -3,15 +3,15 @@ import { RefreshTokenDynamoRepositorio } from "../../../../src/infra/dynamodb/re
 
 describe("RefreshTokenDynamoRepositorio - consumo atomico", () => {
   const tabelaOriginal = process.env.DYNAMODB_DATA_TABLE;
-  let sendSpy: jest.SpiedFunction<DynamoDBClient["send"]>;
+  let sendSpy: vi.SpiedFunction<DynamoDBClient["send"]>;
 
   beforeEach(() => {
     process.env.DYNAMODB_DATA_TABLE = "dados-test";
-    sendSpy = jest.spyOn(DynamoDBClient.prototype, "send");
+    sendSpy = vi.spyOn(DynamoDBClient.prototype, "send");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     process.env.DYNAMODB_DATA_TABLE = tabelaOriginal;
   });
 

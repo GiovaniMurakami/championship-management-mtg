@@ -28,24 +28,24 @@ function criarUc(overrides: {
       : overrides.usuario;
 
   const usuarioGateway = criarMockUsuarioGateway({
-    buscarPorId: jest.fn().mockResolvedValue(usuario),
-    atualizar: jest.fn().mockImplementation(async (u: Usuario) => u),
+    buscarPorId: vi.fn().mockResolvedValue(usuario),
+    atualizar: vi.fn().mockImplementation(async (u: Usuario) => u),
   });
   const torneioGateway = criarMockTorneioGateway({
-    contarPorDono: jest.fn().mockResolvedValue(overrides.torneiosComoDono ?? 0),
-    removerAnfitriaoDoUsuario: jest.fn().mockResolvedValue(0),
+    contarPorDono: vi.fn().mockResolvedValue(overrides.torneiosComoDono ?? 0),
+    removerAnfitriaoDoUsuario: vi.fn().mockResolvedValue(0),
   });
   const timeGateway = criarMockTimeGateway({
-    buscarPorMembros: jest.fn().mockResolvedValue(overrides.times ?? []),
+    buscarPorMembros: vi.fn().mockResolvedValue(overrides.times ?? []),
   });
   const refreshTokenGateway = criarMockRefreshTokenGateway({
-    excluirPorUsuario: jest.fn(),
+    excluirPorUsuario: vi.fn(),
   });
   const resetSenhaGateway = criarMockResetSenhaGateway({
-    excluirPorUsuario: jest.fn(),
+    excluirPorUsuario: vi.fn(),
   });
   const loginAttemptGateway = criarMockLoginAttemptGateway({
-    resetar: jest.fn(),
+    resetar: vi.fn(),
   });
 
   const uc = ExcluirConta.criar(

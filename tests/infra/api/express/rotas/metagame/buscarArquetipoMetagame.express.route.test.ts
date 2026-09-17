@@ -8,16 +8,16 @@ function makeReqRes() {
         paramsValidados: { formato: "pauper", slug: "blue-terror" },
         queryValidados: { dias: 30, limiteListas: 10, offsetListas: 20 },
     } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("BuscarArquetipoMetagameRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = BuscarArquetipoMetagameRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("deve ser rota publica sem autenticarJwt", () => {
         expect(rota.getCaminho()).toBe("/metagame/:formato/:slug");

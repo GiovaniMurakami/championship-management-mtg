@@ -12,7 +12,7 @@ const timeExistente = new Time({
 
 describe("ExcluirTime", () => {
     it("deve excluir pelo dono", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = ExcluirTime.criar(timeGateway);
 
         const resultado = await uc.executar({ id: "time-1", requisitanteId: "user-1", isAdmin: false });
@@ -22,7 +22,7 @@ describe("ExcluirTime", () => {
     });
 
     it("deve excluir pelo admin", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = ExcluirTime.criar(timeGateway);
 
         await expect(
@@ -31,7 +31,7 @@ describe("ExcluirTime", () => {
     });
 
     it("deve lançar 403 se não for dono nem admin", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = ExcluirTime.criar(timeGateway);
 
         await expect(

@@ -17,10 +17,10 @@ describe("AjustarTotalRodadas", () => {
 
     it("aumenta o total de rodadas Swiss", async () => {
         const torneio = torneioBase();
-        const atualizar = jest.fn().mockResolvedValue(undefined);
+        const atualizar = vi.fn().mockResolvedValue(undefined);
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
                 atualizar,
             }),
         );
@@ -47,8 +47,8 @@ describe("AjustarTotalRodadas", () => {
         const torneio = torneioBase();
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
         );
 
@@ -64,10 +64,10 @@ describe("AjustarTotalRodadas", () => {
     });
 
     it("não chama atualizar se o total for igual ao atual", async () => {
-        const atualizar = jest.fn();
+        const atualizar = vi.fn();
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
                 atualizar,
             }),
         );
@@ -86,7 +86,7 @@ describe("AjustarTotalRodadas", () => {
     it("rejeita total menor que a rodada atual", async () => {
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
             }),
         );
 
@@ -107,7 +107,7 @@ describe("AjustarTotalRodadas", () => {
         });
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
             }),
         );
 
@@ -130,7 +130,7 @@ describe("AjustarTotalRodadas", () => {
         });
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
             }),
         );
 
@@ -147,7 +147,7 @@ describe("AjustarTotalRodadas", () => {
     it("exige permissão de gestão", async () => {
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
             }),
         );
 
@@ -177,7 +177,7 @@ describe("AjustarTotalRodadas", () => {
     it("rejeita total fora do intervalo 1–30", async () => {
         const uc = AjustarTotalRodadas.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
             }),
         );
 

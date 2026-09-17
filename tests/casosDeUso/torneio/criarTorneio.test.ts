@@ -202,7 +202,7 @@ describe("CriarTorneio", () => {
         const ligaId = "550e8400-e29b-41d4-a716-446655440010";
         const liga = { id: ligaId, nome: "Liga", donoId: "user-1", torneioIds: [] as string[], atualizar: undefined };
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue(liga),
+            buscarPorId: vi.fn().mockResolvedValue(liga),
         });
         const uc = CriarTorneio.criar(criarMockTorneioGateway(), ligaGateway);
 

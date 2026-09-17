@@ -5,16 +5,16 @@ import { heavyReadRateLimiter } from "../../../../../../src/middlewares/express/
 
 function makeReqRes(query = { formato: "pauper", dias: 30 }) {
     const req = { queryValidados: query } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("ListarMetagameRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = ListarMetagameRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("deve ser rota publica sem autenticarJwt", () => {
         expect(rota.getCaminho()).toBe("/metagame");
@@ -30,7 +30,14 @@ describe("ListarMetagameRota", () => {
 
         await rota.getHandler()(req, res, next);
 
-        expect(servico.executar).toHaveBeenCalledWith({ formato: "pauper", dias: 30 });
+        expect(servico.executar).toHaveBeenCalledWith({
+            formato: "pauper",
+            dias: 30,
+            dataInicio: undefined,
+            dataFim: undefined,
+            limite: undefined,
+            offset: undefined,
+        });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);
         expect(next).not.toHaveBeenCalled();

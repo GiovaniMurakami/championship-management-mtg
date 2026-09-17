@@ -18,7 +18,7 @@ describe("BuscarSeoTorneio", () => {
             linkBanner: " https://site.example.com/torneio ",
         });
         const uc = BuscarSeoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) })
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) })
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -48,7 +48,7 @@ describe("BuscarSeoTorneio", () => {
             descricao: descricaoLonga,
         });
         const uc = BuscarSeoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) })
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) })
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -70,7 +70,7 @@ describe("BuscarSeoTorneio", () => {
             totalRodadas: 0,
         });
         const uc = BuscarSeoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) })
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) })
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });

@@ -8,6 +8,8 @@ import { CACHE_PK_METAGAME, cacheSkMetagameLista } from "../../helpers/cache/cha
 export type ListarMetagameInputDto = IntervaloDatas & {
   formato: string;
   dias?: number;
+  limite?: number;
+  offset?: number;
 };
 
 export type ListarMetagameOutputDto = {
@@ -17,7 +19,34 @@ export type ListarMetagameOutputDto = {
   totalTorneios: number;
   arquetipos: (ArquetipoResumo & Pick<ArquetipoDetalhe, "matchups">)[];
   recentes: RecenteTorneio[];
+  paginacao?: {
+    total: number;
+    limite: number;
+    offset: number;
+  };
 };
+
+/** Recorte da resposta já agregada. O cache guarda a lista inteira; a busca seguinte só devolve o restante. */
+export function recortarArquetiposMetagame(
+  saida: ListarMetagameOutputDto,
+  limite?: number,
+  offset = 0,
+): ListarMetagameOutputDto {
+  if (limite == null && offset === 0) return saida;
+  const offsetSeguro = Math.max(0, offset);
+  const total = saida.arquetipos.length;
+  const fim = limite == null ? total : offsetSeguro + limite;
+  return {
+    ...saida,
+    arquetipos: saida.arquetipos.slice(offsetSeguro, fim),
+    recentes: offsetSeguro > 0 ? [] : saida.recentes,
+    paginacao: {
+      total,
+      limite: Math.max(0, (limite == null ? total : fim) - offsetSeguro),
+      offset: offsetSeguro,
+    },
+  };
+}
 
 export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarMetagameOutputDto> {
   private constructor(
@@ -42,7 +71,7 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
     const cacheKey = cacheSkMetagameLista(input.formato, dias) + (intervalo ? `#de=${input.dataInicio}#ate=${input.dataFim}` : "");
     const versaoCache = await this.cache?.obterVersao(CACHE_PK_METAGAME);
     const cacheado = await this.cache?.buscar<ListarMetagameOutputDto>(CACHE_PK_METAGAME, cacheKey, versaoCache);
-    if (cacheado) return cacheado;
+    if (cacheado) return recortarArquetiposMetagame(cacheado, input.limite, input.offset);
 
     const agregado = await carregarEAgregarMetagame(this.gateways, input.formato, dias, intervalo);
     const saida = {
@@ -57,6 +86,6 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
       recentes: agregado.recentes,
     };
     await this.cache?.salvar(CACHE_PK_METAGAME, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_METAGAME_SECONDS", 900), versaoCache);
-    return saida;
+    return recortarArquetiposMetagame(saida, input.limite, input.offset);
   }
 }

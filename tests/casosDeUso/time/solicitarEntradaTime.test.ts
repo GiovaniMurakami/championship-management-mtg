@@ -13,7 +13,7 @@ const timeBase = new Time({
 describe("SolicitarEntradaTime", () => {
     it("deve adicionar solicitação na lista pendente", async () => {
         const time = new Time({ ...timeBase, solicitacoesPendentes: [] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time) });
         const uc = SolicitarEntradaTime.criar(timeGateway);
 
         const resultado = await uc.executar({ timeId: "time-1", usuarioId: "user-2" });
@@ -35,7 +35,7 @@ describe("SolicitarEntradaTime", () => {
 
     it("deve lançar 400 se o usuário já for membro do time", async () => {
         const timeComMembro = new Time({ ...timeBase, membroIds: ["dono-1", "user-2"] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComMembro) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComMembro) });
         const uc = SolicitarEntradaTime.criar(timeGateway);
 
         await expect(
@@ -46,8 +46,8 @@ describe("SolicitarEntradaTime", () => {
     it("deve lançar 400 se o usuário já fizer parte de outro time", async () => {
         const outroTime = new Time({ id: "time-99", nome: "Outro", donoId: "user-2", membroIds: ["user-2"] });
         const timeGateway = criarMockTimeGateway({
-            buscarPorId: jest.fn().mockResolvedValue(timeBase),
-            buscarPorMembros: jest.fn().mockResolvedValue([outroTime]),
+            buscarPorId: vi.fn().mockResolvedValue(timeBase),
+            buscarPorMembros: vi.fn().mockResolvedValue([outroTime]),
         });
         const uc = SolicitarEntradaTime.criar(timeGateway);
 
@@ -58,7 +58,7 @@ describe("SolicitarEntradaTime", () => {
 
     it("deve lançar 400 se já houver solicitação pendente do usuário", async () => {
         const timeComPendente = new Time({ ...timeBase, solicitacoesPendentes: ["user-2"] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComPendente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComPendente) });
         const uc = SolicitarEntradaTime.criar(timeGateway);
 
         await expect(

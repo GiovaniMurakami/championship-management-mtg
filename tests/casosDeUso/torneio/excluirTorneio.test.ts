@@ -17,7 +17,7 @@ describe("ExcluirTorneio", () => {
 
     it("deve excluir o torneio com sucesso", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(torneioExistente),
         });
         const uc = ExcluirTorneio.criar(gateway);
 
@@ -42,7 +42,7 @@ describe("ExcluirTorneio", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(torneioExistente),
         });
         const uc = ExcluirTorneio.criar(gateway);
 
@@ -53,7 +53,7 @@ describe("ExcluirTorneio", () => {
 
     it("admin pode excluir torneio de outro usuário", async () => {
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(torneioExistente),
         });
         const uc = ExcluirTorneio.criar(gateway);
 
@@ -73,7 +73,7 @@ describe("ExcluirTorneio", () => {
             status: "em_andamento",
         });
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento),
+            buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento),
         });
         const uc = ExcluirTorneio.criar(gateway);
 
@@ -90,7 +90,7 @@ describe("ExcluirTorneio", () => {
             status: "finalizado",
         });
         const gateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado),
+            buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado),
         });
         const uc = ExcluirTorneio.criar(gateway);
 

@@ -4,7 +4,7 @@
  * Execução: npm run test:e2e:publicar-rodada
  */
 
-jest.mock("../../src/middlewares/express/rateLimiter", () => {
+vi.mock("../../src/middlewares/express/rateLimiter", () => {
   const passthrough = (_req: unknown, _res: unknown, next: () => void) => next();
   return {
     authRateLimiter: passthrough,
@@ -23,13 +23,13 @@ jest.mock("../../src/middlewares/express/rateLimiter", () => {
   };
 });
 
-jest.mock("../../src/infra/ably/notificacaoAbly", () => ({
-  NotificacaoAbly: { iniciar: jest.fn() },
+vi.mock("../../src/infra/ably/notificacaoAbly", () => ({
+  NotificacaoAbly: { iniciar: vi.fn() },
 }));
 
-jest.mock("../../src/infra/services/emailServico", () => ({
+vi.mock("../../src/infra/services/emailServico", () => ({
   EmailServico: {
-    criar: () => ({ enviar: jest.fn().mockResolvedValue(undefined) }),
+    criar: () => ({ enviar: vi.fn().mockResolvedValue(undefined) }),
   },
 }));
 
@@ -60,7 +60,7 @@ type PartidaView = {
 };
 
 describeCloud("E2E - publicar rodada com e sem atraso", () => {
-  jest.setTimeout(180_000);
+  vi.setConfig({ testTimeout: 180_000, hookTimeout: 180_000 });
 
   const prefix = `e2e_pub_${Date.now()}_`;
   let req: ReturnType<typeof supertest>;

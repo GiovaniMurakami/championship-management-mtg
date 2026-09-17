@@ -8,11 +8,11 @@ import { DynamoRateLimitStore } from "../../../src/infra/dynamodb/dynamoRateLimi
 
 describe("DynamoRateLimitStore", () => {
   const tabelaOriginal = process.env.DYNAMODB_CACHE_TABLE;
-  let sendSpy: jest.SpiedFunction<DynamoDBClient["send"]>;
+  let sendSpy: vi.SpiedFunction<DynamoDBClient["send"]>;
 
   beforeEach(() => {
     process.env.DYNAMODB_CACHE_TABLE = "cache-test";
-    sendSpy = jest.spyOn(DynamoDBClient.prototype, "send");
+    sendSpy = vi.spyOn(DynamoDBClient.prototype, "send");
   });
 
   afterEach(() => {

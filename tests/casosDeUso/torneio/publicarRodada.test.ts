@@ -16,13 +16,13 @@ describe("PublicarRodada", () => {
         vitoriasJogador1: 0, vitoriasJogador2: 0, status: "pendente",
       }),
     ];
-    const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) });
+    const torneioGw = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) });
     const uc = PublicarRodada.criar(
       torneioGw,
-      criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidas) }),
-      criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([{ id: "u-1", nome: "A" }, { id: "u-2", nome: "B" }]) }),
+      criarMockPartidaGateway({ listarPorTorneioERodada: vi.fn().mockResolvedValue(partidas) }),
+      criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([{ id: "u-1", nome: "A" }, { id: "u-2", nome: "B" }]) }),
     );
-    const emitSpy = jest.spyOn(eventosTorneio, "emit");
+    const emitSpy = vi.spyOn(eventosTorneio, "emit");
 
     const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
 
@@ -38,7 +38,7 @@ describe("PublicarRodada", () => {
       status: "em_andamento", rodadaAtual: 1, totalRodadas: 3,
     });
     const uc = PublicarRodada.criar(
-      criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
       criarMockPartidaGateway(),
       criarMockUsuarioGateway(),
     );

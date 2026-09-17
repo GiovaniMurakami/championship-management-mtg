@@ -5,7 +5,7 @@ import { Liga } from "../../../src/dominio/entidade/liga";
 describe("ListarLigas", () => {
     it("deve retornar lista vazia quando não há ligas", async () => {
         const gateway = criarMockLigaGateway();
-        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: jest.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
+        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
 
         const resultado = await uc.executar({});
 
@@ -18,9 +18,9 @@ describe("ListarLigas", () => {
             new Liga({ id: "liga-2", nome: "Liga B", donoId: "user-2", torneioIds: [] }),
         ];
         const gateway = criarMockLigaGateway({
-            listar: jest.fn().mockResolvedValue(ligas),
+            listar: vi.fn().mockResolvedValue(ligas),
         });
-        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: jest.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
+        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
 
         const resultado = await uc.executar({});
 
@@ -41,9 +41,9 @@ describe("ListarLigas", () => {
             tipo: "times",
         });
         const gateway = criarMockLigaGateway({
-            listar: jest.fn().mockResolvedValue([liga]),
+            listar: vi.fn().mockResolvedValue([liga]),
         });
-        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: jest.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
+        const uc = ListarLigas.criar(gateway, criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => ({ id, status: id === "t2" ? "em_andamento" : "finalizado" })) }));
 
         const resultado = await uc.executar({});
 

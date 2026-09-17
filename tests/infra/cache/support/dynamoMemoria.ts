@@ -13,7 +13,7 @@ export class DynamoMemoria {
   readonly itens = new Map<string, Item>();
   readonly comandos: unknown[] = [];
   antes?: (command: unknown) => Promise<void>;
-  private spy?: jest.SpyInstance;
+  private spy?: vi.SpyInstance;
   private chave(op: Operacao) { const item = op.Key ?? op.Item!; return `${op.TableName}/${item.pk.S}/${item.sk.S}`; }
   private clone<T>(value: T): T { return value === undefined ? value : JSON.parse(JSON.stringify(value)); }
   private condicao(op: Operacao) {
@@ -50,7 +50,7 @@ export class DynamoMemoria {
     this.itens.set(this.chave(op), this.clone(item));
   }
   instalar() {
-    this.spy = jest.spyOn(DynamoDBClient.prototype, "send").mockImplementation((async (command: unknown) => {
+    this.spy = vi.spyOn(DynamoDBClient.prototype, "send").mockImplementation((async (command: unknown) => {
       this.comandos.push(command);
       await this.antes?.(command);
       if (command instanceof GetItemCommand) return { Item: this.clone(this.itens.get(this.chave(command.input))) };

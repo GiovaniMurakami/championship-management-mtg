@@ -12,7 +12,7 @@ Versão atual: **1.1.29**
 - Serverless Framework e esbuild;
 - Zod para validação;
 - JWT, S3, SSM, SES e Ably;
-- Jest e Supertest.
+- Vitest e Supertest. Husky roda o ESLint nos arquivos staged antes do commit.
 
 ## Desenvolvimento local
 

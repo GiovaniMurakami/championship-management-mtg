@@ -12,7 +12,7 @@ const timeComDoisMembros = new Time({
 
 describe("SairTime", () => {
     it("deve remover um membro não-dono do time", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComDoisMembros) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComDoisMembros) });
         const uc = SairTime.criar(timeGateway);
 
         const resultado = await uc.executar({ timeId: "time-1", usuarioId: "user-2" });
@@ -22,7 +22,7 @@ describe("SairTime", () => {
     });
 
     it("deve lançar 400 se o dono tentar sair", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComDoisMembros) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComDoisMembros) });
         const uc = SairTime.criar(timeGateway);
 
         await expect(
@@ -31,7 +31,7 @@ describe("SairTime", () => {
     });
 
     it("deve lançar 400 se o usuário não for membro", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComDoisMembros) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComDoisMembros) });
         const uc = SairTime.criar(timeGateway);
 
         await expect(

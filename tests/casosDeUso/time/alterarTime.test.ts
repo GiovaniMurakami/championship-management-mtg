@@ -12,7 +12,7 @@ const timeExistente = new Time({
 
 describe("AlterarTime", () => {
     it("deve alterar nome pelo dono", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = AlterarTime.criar(timeGateway);
 
         const resultado = await uc.executar({ id: "time-1", requisitanteId: "user-1", isAdmin: false, nome: "  Novo Nome  " });
@@ -22,7 +22,7 @@ describe("AlterarTime", () => {
     });
 
     it("deve alterar pelo admin mesmo nao sendo dono", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = AlterarTime.criar(timeGateway);
 
         await expect(
@@ -31,7 +31,7 @@ describe("AlterarTime", () => {
     });
 
     it("deve lancar 403 se nao for dono nem admin", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const uc = AlterarTime.criar(timeGateway);
 
         await expect(
@@ -58,7 +58,7 @@ describe("AlterarTime", () => {
             membroIds: ["user-1"],
             criadoEm: new Date(),
         });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time) });
         const uc = AlterarTime.criar(timeGateway);
 
         const resultado = await uc.executar({
@@ -83,7 +83,7 @@ describe("AlterarTime", () => {
             membroIds: ["user-1"],
             criadoEm: new Date(),
         });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time) });
         const uc = AlterarTime.criar(timeGateway);
 
         const resultado = await uc.executar({

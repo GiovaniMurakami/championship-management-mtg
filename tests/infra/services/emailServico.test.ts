@@ -1,18 +1,18 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { EmailServico } from "../../../src/infra/services/emailServico";
 
-const sendMock = jest.fn().mockResolvedValue({ MessageId: "1" });
+const sendMock = vi.fn().mockResolvedValue({ MessageId: "1" });
 
-jest.mock("@aws-sdk/client-ses", () => ({
-    SESClient: jest.fn().mockImplementation(() => ({ send: sendMock })),
-    SendEmailCommand: jest.fn().mockImplementation((input) => ({ input })),
+vi.mock("@aws-sdk/client-ses", () => ({
+    SESClient: vi.fn().mockImplementation(() => ({ send: sendMock })),
+    SendEmailCommand: vi.fn().mockImplementation((input) => ({ input })),
 }));
 
 describe("EmailServico", () => {
     const originalEnv = process.env;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         sendMock.mockResolvedValue({ MessageId: "1" });
         process.env = { ...originalEnv };
     });

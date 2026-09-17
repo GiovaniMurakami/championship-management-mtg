@@ -33,7 +33,7 @@ describe("CriarTime", () => {
 
     it("rejeita criação se o usuário já pertence a um time", async () => {
         const timeGateway = criarMockTimeGateway({
-            buscarPorMembros: jest.fn().mockResolvedValue([{ id: "t-1" }]),
+            buscarPorMembros: vi.fn().mockResolvedValue([{ id: "t-1" }]),
         });
         const uc = CriarTime.criar(timeGateway);
 

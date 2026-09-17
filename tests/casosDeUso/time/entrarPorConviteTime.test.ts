@@ -15,8 +15,8 @@ const user2 = new Usuario({ id: "user-2", nome: "Bob", email: "b@b.com", senha: 
 
 describe("EntrarPorConviteTime", () => {
     it("deve adicionar membro ao time e invalidar o token de convite", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: jest.fn().mockResolvedValue(timeComConvite) });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(user2) });
+        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: vi.fn().mockResolvedValue(timeComConvite) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(user2) });
         const uc = EntrarPorConviteTime.criar(timeGateway, usuarioGateway);
 
         const resultado = await uc.executar({ conviteToken: "token-valido", usuarioId: "user-2" });
@@ -40,7 +40,7 @@ describe("EntrarPorConviteTime", () => {
 
     it("deve lançar 400 se o usuário já for membro do time", async () => {
         const timeComMembro = new Time({ ...timeComConvite, membroIds: ["dono-1", "user-2"], conviteToken: "token-valido" });
-        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: jest.fn().mockResolvedValue(timeComMembro) });
+        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: vi.fn().mockResolvedValue(timeComMembro) });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = EntrarPorConviteTime.criar(timeGateway, usuarioGateway);
 
@@ -52,8 +52,8 @@ describe("EntrarPorConviteTime", () => {
     it("deve lançar 400 se o usuário já fizer parte de outro time", async () => {
         const outroTime = new Time({ id: "time-99", nome: "Outro", donoId: "user-2", membroIds: ["user-2"] });
         const timeGateway = criarMockTimeGateway({
-            buscarPorConviteToken: jest.fn().mockResolvedValue(timeComConvite),
-            buscarPorMembros: jest.fn().mockResolvedValue([outroTime]),
+            buscarPorConviteToken: vi.fn().mockResolvedValue(timeComConvite),
+            buscarPorMembros: vi.fn().mockResolvedValue([outroTime]),
         });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = EntrarPorConviteTime.criar(timeGateway, usuarioGateway);
@@ -64,7 +64,7 @@ describe("EntrarPorConviteTime", () => {
     });
 
     it("deve lançar 404 se o usuário não existir", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: jest.fn().mockResolvedValue(timeComConvite) });
+        const timeGateway = criarMockTimeGateway({ buscarPorConviteToken: vi.fn().mockResolvedValue(timeComConvite) });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = EntrarPorConviteTime.criar(timeGateway, usuarioGateway);
 

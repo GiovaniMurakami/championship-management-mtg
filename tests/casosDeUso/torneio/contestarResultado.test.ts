@@ -20,10 +20,10 @@ describe("ContestarResultado", () => {
         const partidaContestada = new Partida({ ...partida, contestado: true });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                contestarPartida: vi.fn().mockResolvedValue(partidaContestada),
             }),
         );
 
@@ -42,12 +42,12 @@ describe("ContestarResultado", () => {
             contestado: true,
             observacaoContestacao: "Marcador invertido",
         });
-        const contestarPartida = jest.fn().mockResolvedValue(partidaContestada);
+        const contestarPartida = vi.fn().mockResolvedValue(partidaContestada);
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
                 contestarPartida,
             }),
         );
@@ -78,8 +78,8 @@ describe("ContestarResultado", () => {
         const partidaPendente = new Partida({ ...partida, status: "pendente" });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaPendente) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaPendente) }),
         );
 
         await expect(
@@ -91,8 +91,8 @@ describe("ContestarResultado", () => {
         const torneioFinalizado = new Torneio({ ...torneio, status: "finalizado" });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partida) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partida) }),
         );
 
         await expect(
@@ -102,8 +102,8 @@ describe("ContestarResultado", () => {
 
     it("deve lançar 403 se o usuário não for jogador, dono nem admin", async () => {
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partida) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partida) }),
         );
 
         await expect(
@@ -115,10 +115,10 @@ describe("ContestarResultado", () => {
         const partidaContestada = new Partida({ ...partida, contestado: true });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                contestarPartida: vi.fn().mockResolvedValue(partidaContestada),
             }),
         );
 
@@ -131,10 +131,10 @@ describe("ContestarResultado", () => {
         const partidaContestada = new Partida({ ...partida, contestado: true });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                contestarPartida: vi.fn().mockResolvedValue(partidaContestada),
             }),
         );
 
@@ -147,10 +147,10 @@ describe("ContestarResultado", () => {
         const partidaContestada = new Partida({ ...partida, contestado: true });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                contestarPartida: vi.fn().mockResolvedValue(partidaContestada),
             }),
         );
 
@@ -168,8 +168,8 @@ describe("ContestarResultado", () => {
         });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaBye) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaBye) }),
         );
 
         await expect(
@@ -179,10 +179,10 @@ describe("ContestarResultado", () => {
 
     it("deve lançar 400 se já existem rodadas posteriores geradas", async () => {
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(true),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                existePartidaRodadaPosterior: vi.fn().mockResolvedValue(true),
             }),
         );
 
@@ -193,11 +193,11 @@ describe("ContestarResultado", () => {
 
     it("deve lançar 400 se a partida já estiver contestada e contestarPartida retorna null", async () => {
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partida),
-                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
-                contestarPartida: jest.fn().mockResolvedValue(null),
+                buscarPorId: vi.fn().mockResolvedValue(partida),
+                existePartidaRodadaPosterior: vi.fn().mockResolvedValue(false),
+                contestarPartida: vi.fn().mockResolvedValue(null),
             }),
         );
 
@@ -213,11 +213,11 @@ describe("ContestarResultado", () => {
         const partidaContestada = new Partida({ ...partidaRodada2, contestado: true });
 
         const uc = ContestarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockPartidaGateway({
-                buscarPorId: jest.fn().mockResolvedValue(partidaRodada2),
-                existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
-                contestarPartida: jest.fn().mockResolvedValue(partidaContestada),
+                buscarPorId: vi.fn().mockResolvedValue(partidaRodada2),
+                existePartidaRodadaPosterior: vi.fn().mockResolvedValue(false),
+                contestarPartida: vi.fn().mockResolvedValue(partidaContestada),
             }),
         );
 
