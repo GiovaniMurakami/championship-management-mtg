@@ -47,6 +47,8 @@ jobs:
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
       SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
       SES_REGION: ${{ secrets.SES_REGION }}
+      SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
+      SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
