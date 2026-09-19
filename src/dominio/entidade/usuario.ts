@@ -14,6 +14,8 @@ export interface UsuarioProps {
   fotoUrl?: string;
   resultadosExpressivos?: number;
   bloqueadoTorneios?: boolean;
+  /** null = ainda não respondeu o convite da newsletter */
+  newsletterMetagame?: boolean | null;
   excluido?: boolean;
   excluidoEm?: Date | null;
   criadoEm?: Date;
@@ -31,11 +33,12 @@ export class Usuario {
   public fotoUrl?: string;
   public resultadosExpressivos: number;
   public bloqueadoTorneios: boolean;
+  public newsletterMetagame: boolean | null;
   public excluido: boolean;
   public excluidoEm?: Date | null;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, fotoUrl, resultadosExpressivos, bloqueadoTorneios, excluido, excluidoEm, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, fotoUrl, resultadosExpressivos, bloqueadoTorneios, newsletterMetagame, excluido, excluidoEm, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -47,6 +50,7 @@ export class Usuario {
     this.fotoUrl = fotoUrl;
     this.resultadosExpressivos = resultadosExpressivos ?? 0;
     this.bloqueadoTorneios = bloqueadoTorneios ?? false;
+    this.newsletterMetagame = newsletterMetagame === true ? true : newsletterMetagame === false ? false : null;
     this.excluido = excluido ?? false;
     this.excluidoEm = excluidoEm ?? null;
     this.criadoEm = criadoEm || new Date();
@@ -56,7 +60,7 @@ export class Usuario {
     nome,
     email,
     senha,
-  }: Omit<UsuarioProps, "id" | "criadoEm" | "role" | "telefone" | "nickMTGO" | "nickArena" | "bloqueadoTorneios" | "excluido" | "excluidoEm">) {
+  }: Omit<UsuarioProps, "id" | "criadoEm" | "role" | "telefone" | "nickMTGO" | "nickArena" | "bloqueadoTorneios" | "newsletterMetagame" | "excluido" | "excluidoEm">) {
     return new Usuario({
       id: uuidv4(),
       nome,
@@ -64,6 +68,7 @@ export class Usuario {
       senha,
       role: "user",
       bloqueadoTorneios: false,
+      newsletterMetagame: null,
       excluido: false,
       criadoEm: new Date(),
     });

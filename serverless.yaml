@@ -475,6 +475,17 @@ functions:
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
 
+  # Newsletter semanal de metagame — segunda 09:00 BRT (12:00 UTC)
+  newsletterSemanal:
+    handler: build/newsletter.handler
+    memorySize: 512
+    timeout: 300
+    events:
+      - schedule:
+          rate: cron(0 12 ? * MON *)
+          enabled: true
+          description: Envia newsletter semanal de metagame
+
 outputs:
   usuarioCadastrar:
     Description: "Rota de cadastro de usuários"

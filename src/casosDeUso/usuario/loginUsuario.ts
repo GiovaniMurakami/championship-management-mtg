@@ -33,6 +33,7 @@ export type LoginUsuarioOutputDto = {
     nickMTGO?: string;
     nickArena?: string;
     fotoUrl?: string;
+    newsletterMetagame?: boolean | null;
   };
 };
 
@@ -158,6 +159,7 @@ export class LoginUsuario
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
         fotoUrl: usuario.fotoUrl,
+        newsletterMetagame: usuario.newsletterMetagame,
       },
     };
   }

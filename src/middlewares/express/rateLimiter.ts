@@ -1,12 +1,13 @@
 import rateLimit, { type Options } from "express-rate-limit";
 import { DynamoRateLimitStore } from "../../infra/dynamodb/dynamoRateLimitStore";
+import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 const MSG_TENTATIVAS = { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." };
 const MSG_REQUISICOES = { mensagem: "Muitas requisições. Tente novamente em 15 minutos." };
 
 function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
-  const store = process.env.DYNAMODB_CACHE_TABLE
+  const store = resolverTabelaCacheDynamo()
     ? new DynamoRateLimitStore(prefix)
     : undefined;
   const opcoes: Partial<Options> = {

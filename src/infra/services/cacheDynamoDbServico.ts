@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
 import { dependenciasCache, dominioParticao } from "../../helpers/cache/dependenciasCache";
+import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
 import { logger } from "../../helpers/logger";
 import { comRetry } from "../../helpers/retry";
 
@@ -29,7 +30,7 @@ export class CacheDynamoDbServico {
   }
 
   public static criar(): CacheDynamoDbServico {
-    const tabela = process.env.DYNAMODB_CACHE_TABLE || "";
+    const tabela = resolverTabelaCacheDynamo();
     const habilitado = process.env.DYNAMODB_CACHE_ENABLED !== "false" && Boolean(tabela);
     const region = process.env.DYNAMODB_CACHE_REGION || process.env.AWS_REGION || process.env.AWS_S3_REGION;
     return new CacheDynamoDbServico(tabela, habilitado, region);

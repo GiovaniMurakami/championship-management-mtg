@@ -20,6 +20,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Upload de imagens via presigned URL (S3)
 - **Blog/artigos** — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; comentários/curtidas/visualizações (`docs/artigos.md`)
 - Anúncios do site + estatísticas
+- Newsletter semanal de metagame (opt-in; Lambda agendada; descadastro one-click; admin lista assinantes)
 - Notificações em tempo real via **Ably**
 
 **Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS configuradas no `.env`.
@@ -302,7 +303,7 @@ Inicialização: `ABLY_API_KEY` em `app.ts` → `NotificacaoAbly.iniciar()`. Sem
 
 Amazon DynamoDB é a persistência exclusiva do runtime. `DYNAMODB_DATA_TABLE` guarda entidades e índices de acesso com chaves `pk`/`sk`; os repositórios estão em `src/infra/dynamodb/repositorios/`. Queries paginam até `LastEvaluatedKey` e operações em lote reenviam `UnprocessedItems`.
 
-O cache compartilhado usa `DYNAMODB_CACHE_TABLE`. Standings, partidas, detalhe/listagem de torneios, metagame, ligas e site possuem chaves próprias. Eventos de mutação invalidam a partição do torneio e partições agregadas por `infra/cache/invalidadorCacheTorneio.ts`.
+O cache compartilhado usa `DYNAMODB_CACHE_TABLE`, sempre no mesmo stage da DATA (`local-cache` com `local-data`, `dev-cache` com `dev-data`). Se as envs misturarem stages, o runtime alinha o cache à DATA via `helpers/dynamodbTabelas.ts`. Standings, partidas, detalhe/listagem de torneios, metagame, ligas e site possuem chaves próprias. Eventos de mutação invalidam a partição do torneio e partições agregadas por `infra/cache/invalidadorCacheTorneio.ts`.
 
 MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `devDependencies` para `migrarMongoParaDynamo.ts`. O migrador valida a origem antes de `--truncate`, só limpa tabelas com `local` ou `test`, ignora partidas/inscrições de torneios inexistentes e filtra referências órfãs das ligas.
 
@@ -364,7 +365,7 @@ IS_LOCAL=true
 DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
 DYNAMODB_DATA_REGION=us-east-1
 DYNAMODB_CACHE_ENABLED=true
-DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_TABLE=championship-management-mtg-local-cache
 DYNAMODB_CACHE_REGION=us-east-1
 ```
 

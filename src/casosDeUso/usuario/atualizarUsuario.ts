@@ -10,6 +10,7 @@ export type AtualizarUsuarioInputDto = {
   nickMTGO?: string;
   nickArena?: string;
   fotoUrl?: string;
+  newsletterMetagame?: boolean;
 };
 
 export type AtualizarUsuarioOutputDto = {
@@ -20,6 +21,7 @@ export type AtualizarUsuarioOutputDto = {
   nickMTGO?: string;
   nickArena?: string;
   fotoUrl?: string;
+  newsletterMetagame: boolean | null;
   criadoEm: Date;
 };
 
@@ -69,6 +71,10 @@ export class AtualizarUsuario
 
     if (input.fotoUrl !== undefined) usuario.fotoUrl = input.fotoUrl.trim() || undefined;
 
+    if (input.newsletterMetagame !== undefined) {
+      usuario.newsletterMetagame = Boolean(input.newsletterMetagame);
+    }
+
     await this.usuarioGateway.atualizar(usuario);
 
     return {
@@ -79,6 +85,7 @@ export class AtualizarUsuario
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
       fotoUrl: usuario.fotoUrl,
+      newsletterMetagame: usuario.newsletterMetagame,
       criadoEm: usuario.criadoEm,
     };
   }

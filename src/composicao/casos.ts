@@ -2,6 +2,7 @@ import { RegistrarPartidaExterna } from "../casosDeUso/usuario/registrarPartidaE
 import { CadastrarUsuario } from "../casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "../casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "../casosDeUso/usuario/atualizarUsuario";
+import { BuscarMeuUsuario } from "../casosDeUso/usuario/buscarMeuUsuario";
 import { RefreshToken } from "../casosDeUso/usuario/refreshToken";
 import { LogoutUsuario } from "../casosDeUso/usuario/logoutUsuario";
 import { SolicitarResetSenha } from "../casosDeUso/usuario/solicitarResetSenha";
@@ -32,6 +33,8 @@ import { ComentarArtigo } from "../casosDeUso/artigo/comentarArtigo";
 import { CurtirArtigo } from "../casosDeUso/artigo/curtirArtigo";
 import { ExcluirArtigo } from "../casosDeUso/artigo/excluirArtigo";
 import { DefinirEditor } from "../casosDeUso/usuario/definirEditor";
+import { ListarAssinantesNewsletter } from "../casosDeUso/usuario/listarAssinantesNewsletter";
+import { DescadastrarNewsletter } from "../casosDeUso/usuario/descadastrarNewsletter";
 import { CriarTorneio } from "../casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "../casosDeUso/torneio/inscreverTorneio";
 import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
@@ -104,6 +107,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const cadastrarUsuario = CadastrarUsuario.criar(repos.usuario, servicos.email);
     const loginUsuario = LoginUsuario.criar(repos.usuario, repos.loginAttempt, repos.refreshToken, servicos.email, repos.resetSenha);
     const atualizarUsuario = AtualizarUsuario.criar(repos.usuario);
+    const buscarMeuUsuario = BuscarMeuUsuario.criar(repos.usuario);
     const refreshToken = RefreshToken.criar(repos.usuario, repos.refreshToken);
     const logoutUsuario = LogoutUsuario.criar(repos.tokenBlacklist, repos.refreshToken);
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
@@ -151,6 +155,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const curtirArtigo = CurtirArtigo.criar(repos.artigo);
     const excluirArtigo = ExcluirArtigo.criar(repos.artigo, servicos.s3);
     const definirEditor = DefinirEditor.criar(repos.usuario);
+    const listarAssinantesNewsletter = ListarAssinantesNewsletter.criar(repos.usuario);
+    const descadastrarNewsletter = DescadastrarNewsletter.criar(repos.usuario);
 
     // --- Torneio ---
     const criarTorneio = CriarTorneio.criar(repos.torneio, repos.liga);
@@ -229,8 +235,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     );
 
     return {
-        cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
+        cadastrarUsuario, loginUsuario, atualizarUsuario, buscarMeuUsuario, refreshToken, logoutUsuario,
         solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, registrarPartidaExterna, alterarBloqueioTorneios, excluirConta, definirEditor,
+        listarAssinantesNewsletter, descadastrarNewsletter,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,

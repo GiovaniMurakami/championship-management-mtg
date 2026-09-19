@@ -2,6 +2,7 @@ import { RegistrarPartidaExternaRota } from "../infra/api/express/rotas/usuario/
 import { CadastrarUsuarioRota } from "../infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "../infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "../infra/api/express/rotas/usuario/atualizarUsuario.express.route";
+import { BuscarMeuUsuarioRota } from "../infra/api/express/rotas/usuario/buscarMeuUsuario.express.route";
 import { RefreshTokenRota } from "../infra/api/express/rotas/usuario/refreshToken.express.route";
 import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
@@ -10,6 +11,10 @@ import { ListarUsuariosRota } from "../infra/api/express/rotas/usuario/listarUsu
 import { BuscarPerfilPublicoRota } from "../infra/api/express/rotas/usuario/buscarPerfilPublico.express.route";
 import { AlterarBloqueioTorneiosRota } from "../infra/api/express/rotas/usuario/alterarBloqueioTorneios.express.route";
 import { DefinirEditorRota } from "../infra/api/express/rotas/usuario/definirEditor.express.route";
+import {
+  ListarAssinantesNewsletterRota,
+  DescadastrarNewsletterRota,
+} from "../infra/api/express/rotas/usuario/newsletter.express.route";
 import { ExcluirContaRota } from "../infra/api/express/rotas/usuario/excluirConta.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "../infra/api/express/rotas/deck/atualizarDeck.express.route";
@@ -104,6 +109,7 @@ export function criarRotas(casos: CasosDeUso) {
         CadastrarUsuarioRota.criar(casos.cadastrarUsuario),
         LoginUsuarioRota.criar(casos.loginUsuario),
         AtualizarUsuarioRota.criar(casos.atualizarUsuario),
+        BuscarMeuUsuarioRota.criar(casos.buscarMeuUsuario),
         ExcluirContaRota.criar(casos.excluirConta),
         RefreshTokenRota.criar(casos.refreshToken),
         LogoutUsuarioRota.criar(casos.logoutUsuario),
@@ -114,6 +120,8 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarPerfilPublicoRota.criar(casos.buscarPerfilPublico),
         AlterarBloqueioTorneiosRota.criar(casos.alterarBloqueioTorneios),
         DefinirEditorRota.criar(casos.definirEditor),
+        ListarAssinantesNewsletterRota.criar(casos.listarAssinantesNewsletter),
+        DescadastrarNewsletterRota.criar(casos.descadastrarNewsletter),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),
         ExcluirDeckRota.criar(casos.excluirDeck),

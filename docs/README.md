@@ -132,7 +132,7 @@ PORT=3000
 DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
 DYNAMODB_DATA_REGION=us-east-1
 DYNAMODB_CACHE_ENABLED=true
-DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_TABLE=championship-management-mtg-local-cache
 DYNAMODB_CACHE_REGION=us-east-1
 ```
 

@@ -81,4 +81,24 @@ describe("AtualizarUsuario", () => {
         expect(resultado.nickMTGO).toBeUndefined();
         expect(resultado.nickArena).toBeUndefined();
     });
+
+    it("deve atualizar preferência de newsletterMetagame", async () => {
+        const gateway = criarMockUsuarioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(
+                new Usuario({
+                    id: "user-1",
+                    nome: "João",
+                    email: "joao@email.com",
+                    senha: "hash",
+                    newsletterMetagame: null,
+                }),
+            ),
+        });
+        const uc = AtualizarUsuario.criar(gateway);
+
+        const resultado = await uc.executar({ id: "user-1", newsletterMetagame: true });
+
+        expect(resultado.newsletterMetagame).toBe(true);
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
 });

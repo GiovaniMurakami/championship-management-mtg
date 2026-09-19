@@ -61,6 +61,11 @@ export const atualizarUsuarioSchema = z.object({
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
   fotoUrl: z.string().url("fotoUrl deve ser uma URL válida.").max(2048).optional(),
+  newsletterMetagame: z.boolean().optional(),
+});
+
+export const descadastrarNewsletterSchema = z.object({
+  token: z.string().trim().min(10, "Token inválido.").max(500),
 });
 
 export const excluirContaSchema = z.object({
