@@ -1,4 +1,5 @@
 import {
+  AnuncioDiarioSite,
   AnuncioSite,
   AnunciosSiteConfig,
   SiteConfigGateway,
@@ -8,9 +9,19 @@ import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 
 const ANUNCIOS_PK = "SITE_CONFIG";
 const ANUNCIOS_SK = "ANUNCIOS";
+const ANUNCIO_DIARIO_SK = "ANUNCIO_DIARIO";
 
 type SiteConfigItem = {
   anuncios: AnuncioSite[];
+  atualizadoEm?: string;
+};
+
+type AnuncioDiarioItem = {
+  ativo: boolean;
+  imagemUrl: string;
+  link: string;
+  visualizacoes: number;
+  cliques: number;
   atualizadoEm?: string;
 };
 
@@ -60,6 +71,49 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
     return this.itemParaConfig(atualizado);
   }
 
+  public async buscarAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
+    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    if (!item) return null;
+    return this.itemParaAnuncioDiario(item);
+  }
+
+  public async salvarAnuncioDiario(config: AnuncioDiarioSite): Promise<AnuncioDiarioSite> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const existente = await this.buscarAnuncioDiario();
+    const item: AnuncioDiarioItem = {
+      ativo: Boolean(config.ativo),
+      imagemUrl: config.imagemUrl || "",
+      link: config.link || "",
+      visualizacoes: existente?.visualizacoes ?? config.visualizacoes ?? 0,
+      cliques: existente?.cliques ?? config.cliques ?? 0,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaAnuncioDiario(item);
+  }
+
+  public async registrarVisualizacaoAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
+    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    if (!item || !item.ativo || !item.imagemUrl) return null;
+    const atualizado: AnuncioDiarioItem = {
+      ...item,
+      visualizacoes: (item.visualizacoes ?? 0) + 1,
+    };
+    await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, atualizado, { entity: "SITE_CONFIG" });
+    return this.itemParaAnuncioDiario(atualizado);
+  }
+
+  public async registrarCliqueAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
+    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    if (!item || !item.ativo || !item.imagemUrl) return null;
+    const atualizado: AnuncioDiarioItem = {
+      ...item,
+      cliques: (item.cliques ?? 0) + 1,
+    };
+    await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, atualizado, { entity: "SITE_CONFIG" });
+    return this.itemParaAnuncioDiario(atualizado);
+  }
+
   private itemParaConfig(item: SiteConfigItem): AnunciosSiteConfig {
     return {
       anuncios: (item.anuncios ?? []).map((anuncio) => ({
@@ -75,6 +129,17 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
         ordem: anuncio.ordem ?? 0,
         cliques: Number.isFinite(anuncio.cliques) ? Number(anuncio.cliques) : 0,
       })),
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
+  }
+
+  private itemParaAnuncioDiario(item: AnuncioDiarioItem): AnuncioDiarioSite {
+    return {
+      ativo: Boolean(item.ativo),
+      imagemUrl: item.imagemUrl ?? "",
+      link: item.link ?? "",
+      visualizacoes: Number.isFinite(item.visualizacoes) ? Number(item.visualizacoes) : 0,
+      cliques: Number.isFinite(item.cliques) ? Number(item.cliques) : 0,
       atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
     };
   }

@@ -14,6 +14,7 @@ import { DeckDynamoRepositorio } from "../infra/dynamodb/repositorios/deckDynamo
 import { LigaDynamoRepositorio } from "../infra/dynamodb/repositorios/ligaDynamoRepositorio";
 import { TimeDynamoRepositorio } from "../infra/dynamodb/repositorios/timeDynamoRepositorio";
 import { PostDynamoRepositorio } from "../infra/dynamodb/repositorios/postDynamoRepositorio";
+import { ArtigoDynamoRepositorio } from "../infra/dynamodb/repositorios/artigoDynamoRepositorio";
 
 export function criarRepositorios() {
     return {
@@ -33,6 +34,7 @@ export function criarRepositorios() {
         siteConfig: SiteConfigDynamoRepositorio.criar(),
         storyFundo: StoryFundoDynamoRepositorio.criar(),
         post: PostDynamoRepositorio.criar(),
+        artigo: ArtigoDynamoRepositorio.criar(),
     };
 }
 

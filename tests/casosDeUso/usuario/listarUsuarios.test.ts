@@ -28,6 +28,7 @@ describe("ListarUsuarios", () => {
                     id: "u-1",
                     nome: "Alice",
                     email: "a@test.com",
+                    role: "user",
                     nickMTGO: "alice_mtgo",
                     nickArena: "alice#123",
                     bloqueadoTorneios: false,

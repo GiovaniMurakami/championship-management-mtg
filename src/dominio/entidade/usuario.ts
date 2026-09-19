@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
-export type RoleUsuario = "user" | "admin";
+export type RoleUsuario = "user" | "admin" | "editor";
 
 export interface UsuarioProps {
   id: string;

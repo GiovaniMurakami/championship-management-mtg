@@ -17,6 +17,7 @@ export type ListarUsuariosOutputDto = {
     id: string;
     nome: string;
     email: string;
+    role: string;
     nickMTGO?: string;
     nickArena?: string;
     bloqueadoTorneios: boolean;
@@ -62,6 +63,7 @@ export class ListarUsuarios
         id: u.id,
         nome: u.nome,
         email: u.email,
+        role: u.role,
         nickMTGO: u.nickMTGO,
         nickArena: u.nickArena,
         bloqueadoTorneios: u.bloqueadoTorneios,

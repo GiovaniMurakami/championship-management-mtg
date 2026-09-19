@@ -18,6 +18,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Ligas (rankings consolidados) e times (convites/solicitações)
 - Metagame público por formato (torneios finalizados)
 - Upload de imagens via presigned URL (S3)
+- **Blog/artigos** — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; comentários/curtidas/visualizações (`docs/artigos.md`)
 - Anúncios do site + estatísticas
 - Notificações em tempo real via **Ably**
 
@@ -185,6 +186,7 @@ Metagame: GET /metagame?limite=&offset=, GET /metagame/:formato/:slug (leitura p
 Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
+       GET /site/anuncio-diario, /anuncio-diario/admin; PUT /anuncio-diario (admin); POST visualizacao/clique
 Img:   POST /imagem/upload-url
 Health: GET /health
 ```

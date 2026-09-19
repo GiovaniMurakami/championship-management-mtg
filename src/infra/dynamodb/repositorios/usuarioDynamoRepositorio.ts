@@ -7,7 +7,7 @@ type UsuarioItem = {
   nome: string;
   email: string;
   senha: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "editor";
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
