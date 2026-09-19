@@ -23,7 +23,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Newsletter semanal de metagame (opt-in; Lambda agendada; descadastro one-click; admin lista assinantes)
 - Notificações em tempo real via **Ably**
 
-**Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS configuradas no `.env`.
+**Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS de `.env.local` (ou `APP_ENV=homolog|production`).
 
 ---
 
@@ -354,10 +354,14 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 
 ## 14. Variáveis de ambiente
 
+Arquivos locais (gitignored): `.env.local`, `.env.homolog`, `.env.production`.
+Default: `APP_ENV=local` → carrega `.env.local`. Deploy: `scripts/deploy.mjs` mapeia homolog→stage `dev`, production→stage `prod`.
+
 Ver `.env.example`. Obrigatórias para rodar:
 
 ```bash
-JWT_PRIVATE_KEY_BASE64=...   # ou JWT_SECRET em dev
+APP_ENV=local
+JWT_PRIVATE_KEY_BASE64=...   # ou JWT_SECRET em local
 JWT_PUBLIC_KEY_BASE64=...
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
@@ -369,9 +373,15 @@ DYNAMODB_CACHE_TABLE=championship-management-mtg-local-cache
 DYNAMODB_CACHE_REGION=us-east-1
 ```
 
-Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `LOG_LEVEL` e TTLs `DYNAMODB_CACHE_TTL_*`. `MONGODB_MIGRATION_URI` e `MONGODB_MIGRATION_DB_NAME` são usados somente pelo migrador.
+| APP_ENV / arquivo | Dynamo DATA / CACHE | Stage AWS (imutável) |
+|---|---|---|
+| `local` → `.env.local` | `…-local-data` / `…-local-cache` | — |
+| `homolog` → `.env.homolog` | `…-dev-data` / `…-dev-cache` | `dev` |
+| `production` → `.env.production` | `…-prod-data` / `…-prod-cache` | `prod` |
 
-**Nunca commitar `.env`.**
+Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `FRONTEND_URL`, `LOG_LEVEL`, TTLs `DYNAMODB_CACHE_TTL_*`, SES, Serverless keys. `MONGODB_MIGRATION_*` só no migrador.
+
+**Nunca commitar `.env*` com segredos.** GitHub Environments: `homolog` e `production` (OIDC + secrets/vars).
 
 ---
 
@@ -385,7 +395,8 @@ npm run test:coverage # cobertura; limiar 95/90/95/95 em casosDeUso, entidades, 
 npm run lint          # eslint; pre-commit (Husky + lint-staged) lint nos .ts staged
 npm run dev           # nodemon + ts-node (porta 3000)
 npm run build         # esbuild
-npm run deploy:dev    # serverless deploy stage dev
+npm run deploy:homolog # serverless deploy stage AWS=dev
+npm run deploy:prod    # serverless deploy stage AWS=prod
 ```
 
 Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `middlewares/`. E2E validam cache compartilhado, paginação acima de 1 MB, falhas parciais de batch e o fluxo completo de 150 jogadores. Consulte `docs/testes.md`.
@@ -411,7 +422,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | Validação API | `helpers/validacao/schemas.ts` |
 | Eventos realtime | emit em use case/rota + `infra/ably/notificacaoAbly.ts` |
 | Auth JWT | `helpers/jwt.ts`, `middlewares/express/autenticarJwt.ts` |
-| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (OIDC, ambiente `homolog`, stage `dev`), `esbuild.config.js`, `handler.ts` |
+| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (OIDC `homolog`→stage `dev`), `deployProd.yml` (OIDC `production`→stage `prod`), `esbuild.config.js`, `handler.ts` |
 | Docs API | `docs/*.md`, `docs/INDEX.md` |
 
 ---
@@ -444,7 +455,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 6. Side effect realtime → `eventosTorneio.emit` após persistência bem-sucedida
 
 ### Ao debugar
-1. Verificar `.env` (`DYNAMODB_DATA_TABLE`, regiões, credenciais AWS e JWT)
+1. Verificar `APP_ENV` / `.env.local|homolog|production` (`DYNAMODB_DATA_TABLE`, regiões, credenciais AWS e JWT)
 2. Erro 403 em torneio → checar dono/admin/anfitrião
 3. 400 validação → `schemas.ts` + mensagens Zod
 4. Realtime não chega → `ABLY_API_KEY` + `NotificacaoAbly`
@@ -468,7 +479,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | `docs/INDEX.md` | Índice da documentação da API |
 | `docs/torneio.md` | Fluxo completo de torneio |
 | `docs/usuario.md` | Auth e usuários |
-| `.env.example` | Variáveis de ambiente |
+| `.env.example` | Template; arquivos reais: `.env.local`, `.env.homolog`, `.env.production` |
 | `championship-management-mtg-front/AI_CONTEXT.md` | Contexto do SPA React |
 
 ---

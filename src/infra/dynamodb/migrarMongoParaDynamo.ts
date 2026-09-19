@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import dotenv from "dotenv";
 import { CacheDynamoDbServico } from "../services/cacheDynamoDbServico";
 import { BatchWriteItemCommand, DynamoDBClient, ScanCommand, type WriteRequest } from "@aws-sdk/client-dynamodb";
 import { MongoClient, type Db } from "mongodb";
@@ -11,6 +10,7 @@ import { StoryFundo } from "../../dominio/entidade/storyFundo";
 import { Time } from "../../dominio/entidade/time";
 import { Torneio } from "../../dominio/entidade/torneio";
 import { Usuario } from "../../dominio/entidade/usuario";
+import { carregarEnv } from "../../helpers/carregarEnv";
 import { DeckDynamoRepositorio } from "./repositorios/deckDynamoRepositorio";
 import { InscricaoDynamoRepositorio } from "./repositorios/inscricaoDynamoRepositorio";
 import { LigaDynamoRepositorio } from "./repositorios/ligaDynamoRepositorio";
@@ -21,7 +21,7 @@ import { TimeDynamoRepositorio } from "./repositorios/timeDynamoRepositorio";
 import { TorneioDynamoRepositorio } from "./repositorios/torneioDynamoRepositorio";
 import { UsuarioDynamoRepositorio } from "./repositorios/usuarioDynamoRepositorio";
 
-dotenv.config();
+carregarEnv();
 
 type Colecao = "usuarios" | "decks" | "torneios" | "inscricoes" | "partidas" | "ligas" | "times" | "siteconfigs" | "storyfundos";
 type Resultado = { colecao: Colecao; lidos: number; gravados: number; pulados: number };

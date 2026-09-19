@@ -1,5 +1,7 @@
 service: championship-management-mtg
-useDotenv: true
+# Env local: scripts/deploy.mjs carrega .env.homolog|.env.production.
+# No CI as variáveis vêm do GitHub Environment.
+useDotenv: false
 
 provider:
   name: aws

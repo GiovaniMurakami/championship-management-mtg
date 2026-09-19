@@ -40,6 +40,7 @@ jobs:
     environment: homolog
     env:
       AWS_REGION: us-east-1
+      APP_ENV: homolog
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       ABLY_API_KEY: ${{ secrets.ABLY_API_KEY }}
       FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
@@ -47,6 +48,7 @@ jobs:
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
       SES_FROM_EMAIL: ${{ secrets.SES_FROM_EMAIL }}
       SES_REGION: ${{ secrets.SES_REGION }}
+      ALARM_NOTIFICATION_EMAIL: ${{ vars.ALARM_NOTIFICATION_EMAIL }}
       SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
       SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
     steps:
