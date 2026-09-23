@@ -125,7 +125,13 @@ export type AgregarMetagameInput = {
   partidas: Partida[];
   decks: Deck[];
   usuarios: Usuario[];
+  /** Overrides de carta representativa por arquétipo (`formato#slug` → carta). */
+  overridesCartasRepresentativas?: Record<string, string>;
 };
+
+export function chaveCartaRepresentativaMetagame(formato: string, slug: string): string {
+  return `${formato}#${slug}`;
+}
 
 type StatsWL = { vitorias: number; derrotas: number; empates: number };
 
@@ -207,7 +213,14 @@ function contarCartasChave(decks: Deck[], formato: string): Array<[string, numbe
   return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
 
-function cartaRepresentativa(decks: Deck[], formato: string): string | null {
+function cartaRepresentativa(
+  decks: Deck[],
+  formato: string,
+  override?: string | null
+): string | null {
+  const overrideTrim = override?.trim();
+  if (overrideTrim) return overrideTrim;
+
   const votos = new Map<string, number>();
   for (const deck of decks) {
     const escolhida = deck.cartaRepresentativa?.trim();
@@ -376,7 +389,11 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
       derrotas: stats.derrotas,
       empates: stats.empates,
       winrate: winrateDe(stats),
-      cartaRepresentativa: cartaRepresentativa(decksUnicos, formato),
+      cartaRepresentativa: cartaRepresentativa(
+        decksUnicos,
+        formato,
+        input.overridesCartasRepresentativas?.[chaveCartaRepresentativaMetagame(formato, slug)]
+      ),
       cartasChave: cartasChave(decksUnicos, formato),
       cartasCores,
       cores: coresDoArquetipo(decksUnicos, cartasCores),

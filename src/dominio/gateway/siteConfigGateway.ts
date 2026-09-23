@@ -34,6 +34,12 @@ export type AnuncioDiarioSite = {
   atualizadoEm?: Date;
 };
 
+/** Chave: `${formato}#${slug}` → nome/id Scryfall da carta. */
+export type MetagameOverridesConfig = {
+  cartasRepresentativas: Record<string, string>;
+  atualizadoEm?: Date;
+};
+
 export interface SiteConfigGateway {
   buscarAnuncios(): Promise<AnunciosSiteConfig | null>;
   salvarAnuncios(config: AnunciosSiteConfig): Promise<AnunciosSiteConfig>;
@@ -42,4 +48,6 @@ export interface SiteConfigGateway {
   salvarAnuncioDiario(config: AnuncioDiarioSite): Promise<AnuncioDiarioSite>;
   registrarVisualizacaoAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null>;
   registrarCliqueAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null>;
+  buscarMetagameOverrides(): Promise<MetagameOverridesConfig | null>;
+  salvarMetagameOverrides(config: MetagameOverridesConfig): Promise<MetagameOverridesConfig>;
 }

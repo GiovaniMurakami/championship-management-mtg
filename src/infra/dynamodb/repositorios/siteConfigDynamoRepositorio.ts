@@ -4,6 +4,7 @@ import {
   AnuncioDiarioSite,
   AnuncioSite,
   AnunciosSiteConfig,
+  MetagameOverridesConfig,
   SiteConfigGateway,
   TipoAnuncioSite,
 } from "../../../dominio/gateway/siteConfigGateway";
@@ -12,6 +13,7 @@ import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 const ANUNCIOS_PK = "SITE_CONFIG";
 const ANUNCIOS_SK = "ANUNCIOS";
 const ANUNCIO_DIARIO_SK = "ANUNCIO_DIARIO";
+const METAGAME_OVERRIDES_SK = "METAGAME_OVERRIDES";
 
 /** UUID estável para migrar o anúncio diário legado (formato single-slot). */
 const LEGACY_ANUNCIO_DIARIO_ID = "00000000-0000-4000-8000-000000000001";
@@ -162,6 +164,47 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
     };
     await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, atualizado, { entity: "SITE_CONFIG" });
     return this.itemParaAnuncioDiario(atualizado);
+  }
+
+  public async buscarMetagameOverrides(): Promise<MetagameOverridesConfig | null> {
+    const item = await this.getJson<{ cartasRepresentativas?: Record<string, string>; atualizadoEm?: string }>(
+      ANUNCIOS_PK,
+      METAGAME_OVERRIDES_SK
+    );
+    if (!item) return null;
+    return this.itemParaMetagameOverrides(item);
+  }
+
+  public async salvarMetagameOverrides(config: MetagameOverridesConfig): Promise<MetagameOverridesConfig> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const cartasRepresentativas: Record<string, string> = {};
+    for (const [chave, valor] of Object.entries(config.cartasRepresentativas ?? {})) {
+      const carta = String(valor ?? "").trim();
+      if (!chave.trim() || !carta) continue;
+      cartasRepresentativas[chave.trim()] = carta;
+    }
+    const item = {
+      cartasRepresentativas,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, METAGAME_OVERRIDES_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaMetagameOverrides(item);
+  }
+
+  private itemParaMetagameOverrides(item: {
+    cartasRepresentativas?: Record<string, string>;
+    atualizadoEm?: string;
+  }): MetagameOverridesConfig {
+    const cartasRepresentativas: Record<string, string> = {};
+    for (const [chave, valor] of Object.entries(item.cartasRepresentativas ?? {})) {
+      const carta = String(valor ?? "").trim();
+      if (!chave.trim() || !carta) continue;
+      cartasRepresentativas[chave.trim()] = carta;
+    }
+    return {
+      cartasRepresentativas,
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
   }
 
   private itemParaConfig(item: SiteConfigItem): AnunciosSiteConfig {

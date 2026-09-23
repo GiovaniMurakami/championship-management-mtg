@@ -15,6 +15,8 @@ function criarGateway(overrides: Partial<SiteConfigGateway> = {}): SiteConfigGat
     salvarAnuncioDiario: vi.fn(async (config) => config),
     registrarVisualizacaoAnuncioDiario: vi.fn().mockResolvedValue(null),
     registrarCliqueAnuncioDiario: vi.fn().mockResolvedValue(null),
+    buscarMetagameOverrides: vi.fn().mockResolvedValue(null),
+    salvarMetagameOverrides: vi.fn(async (config) => config),
     ...overrides,
   };
 }

@@ -99,6 +99,7 @@ import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
 import { ExcluirStoryFundo } from "../casosDeUso/storyFundo/excluirStoryFundo";
 import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
+import { SalvarCartaRepresentativaArquetipo } from "../casosDeUso/metagame/salvarCartaRepresentativaArquetipo";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
 
@@ -228,10 +229,13 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const excluirStoryFundo = ExcluirStoryFundo.criar(repos.storyFundo);
 
     const listarMetagame = ListarMetagame.criar(
-        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache
+        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache, repos.siteConfig
     );
     const buscarArquetipoMetagame = BuscarArquetipoMetagame.criar(
-        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache
+        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache, repos.siteConfig
+    );
+    const salvarCartaRepresentativaArquetipo = SalvarCartaRepresentativaArquetipo.criar(
+        repos.siteConfig, servicos.cache
     );
 
     return {
@@ -253,7 +257,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
-        listarMetagame, buscarArquetipoMetagame,
+        listarMetagame, buscarArquetipoMetagame, salvarCartaRepresentativaArquetipo,
     };
 }
 
