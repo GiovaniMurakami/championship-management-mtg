@@ -33,6 +33,7 @@ module.exports = tseslint.config(
       globals: {
         ...globals.node,
         ...globals.jest,
+        vi: "readonly",
       },
     },
     rules: {

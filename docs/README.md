@@ -36,7 +36,7 @@ A documentação completa está organizada por entidade:
 
 ### Metagame (Público)
 
-- `GET /metagame?formato=&dias=30` - Lista de arquétipos (torneios finalizados, não secretos)
+- `GET /metagame?formato=&dias=30&limite=30&offset=0` - Lista de arquétipos (torneios finalizados, não secretos; `limite`/`offset` só recortam a resposta)
 - `GET /metagame/:formato/:slug?dias=30` - Detalhe do arquétipo (listas, matchups, resultados)
 
 `usuario.nome` nestes payloads é o nick MOL (`nickMTGO`).
@@ -132,7 +132,7 @@ PORT=3000
 DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
 DYNAMODB_DATA_REGION=us-east-1
 DYNAMODB_CACHE_ENABLED=true
-DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_TABLE=championship-management-mtg-local-cache
 DYNAMODB_CACHE_REGION=us-east-1
 ```
 

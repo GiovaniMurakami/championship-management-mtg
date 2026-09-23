@@ -27,13 +27,13 @@ describe("IniciarTorneio", () => {
 
     it("deve iniciar o torneio e criar as partidas da rodada 1", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const inscricaoGw = criarMockInscricaoGateway({
-            listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn),
+            listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn),
         });
         const partidaGw = criarMockPartidaGateway();
-        const usuarioGw = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) });
+        const usuarioGw = criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) });
 
         const uc = IniciarTorneio.criar(torneioGw, inscricaoGw, partidaGw, usuarioGw);
 
@@ -45,6 +45,45 @@ describe("IniciarTorneio", () => {
         expect(resultado.partidas).toHaveLength(2);
         expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalledTimes(1);
+        expect(resultado.rodadaPublicada).toBe(true);
+    });
+
+    it("gera pareamentos sem publicar quando publicar=false", async () => {
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+        });
+        const uc = IniciarTorneio.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockPartidaGateway(),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({
+            torneioId: "t-1", donoId: "dono-1", isAdmin: false, publicar: false,
+        });
+
+        expect(resultado.rodadaPublicada).toBe(false);
+        expect(resultado.rodadaIniciadaEm).toBeUndefined();
+        expect(resultado.partidas).toHaveLength(2);
+    });
+
+    it("deve gerar os mesmos pareamentos iniciais em retries", async () => {
+        const executarComInscricoes = async (inscricoes: Inscricao[]) => {
+            const uc = IniciarTorneio.criar(
+                criarMockTorneioGateway({
+                    buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+                }),
+                criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+                criarMockPartidaGateway(),
+                criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+            );
+            const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
+            return resultado.partidas.map((partida) => [partida.jogador1Id, partida.jogador2Id]);
+        };
+
+        await expect(executarComInscricoes([...inscricoesComCheckIn].reverse()))
+            .resolves.toEqual(await executarComInscricoes(inscricoesComCheckIn));
     });
 
     it("deve lançar erro se o torneio não for encontrado", async () => {
@@ -62,7 +101,7 @@ describe("IniciarTorneio", () => {
 
     it("deve lançar erro se não for o dono do torneio e não for admin", async () => {
         const uc = IniciarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...torneioAberto }) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -75,13 +114,13 @@ describe("IniciarTorneio", () => {
 
     it("admin pode iniciar torneio de outro usuário", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "admin-id", isAdmin: true });
@@ -93,7 +132,7 @@ describe("IniciarTorneio", () => {
     it("deve lançar erro se o torneio já foi iniciado", async () => {
         const torneioEmAndamento = { ...torneioAberto, status: "em_andamento" as const };
         const uc = IniciarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -107,8 +146,8 @@ describe("IniciarTorneio", () => {
     it("deve lançar erro se houver menos de 2 jogadores com check-in", async () => {
         const apenasUm = [inscricoesComCheckIn[0]];
         const uc = IniciarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneioAberto }) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(apenasUm) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...torneioAberto }) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(apenasUm) }),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
         );
@@ -125,13 +164,13 @@ describe("IniciarTorneio", () => {
             maxRodadas: 1,
         });
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioComMaxRodadas),
+            buscarPorId: vi.fn().mockResolvedValue(torneioComMaxRodadas),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
@@ -147,13 +186,13 @@ describe("IniciarTorneio", () => {
             maxRodadas: 5,
         });
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioComMaxRodadas),
+            buscarPorId: vi.fn().mockResolvedValue(torneioComMaxRodadas),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
@@ -164,14 +203,14 @@ describe("IniciarTorneio", () => {
     it("deve gerar bye quando número ímpar de jogadores", async () => {
         const tresJogadores = inscricoesComCheckIn.slice(0, 3);
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(tresJogadores) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(tresJogadores) }),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
-                buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 3)),
+                buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios.slice(0, 3)),
             }),
         );
 
@@ -189,14 +228,14 @@ describe("IniciarTorneio", () => {
             new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 0, dropped: false }),
         ];
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComDrop) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComDrop) }),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
-                buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
+                buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
             }),
         );
 
@@ -211,13 +250,13 @@ describe("IniciarTorneio", () => {
     it("deve calcular totalRodadas = 1 quando há exatamente 2 jogadores", async () => {
         const doisJogadores = inscricoesComCheckIn.slice(0, 2);
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(doisJogadores) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(doisJogadores) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.slice(0, 2)) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios.slice(0, 2)) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });
@@ -233,14 +272,14 @@ describe("IniciarTorneio", () => {
             new Inscricao({ id: "i3", torneioId: "t-1", usuarioId: "u-3", checkInRodada: 0, dropped: false }),
         ];
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesMistura) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesMistura) }),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway({
-                buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
+                buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")),
             }),
         );
 
@@ -252,7 +291,7 @@ describe("IniciarTorneio", () => {
     it("deve lançar 400 quando torneio está finalizado", async () => {
         const torneioFinalizado = { ...torneioAberto, status: "finalizado" as const };
         const uc = IniciarTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -265,13 +304,13 @@ describe("IniciarTorneio", () => {
 
     it("deve mapear nomes dos jogadores corretamente nas partidas de saída", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneioAberto })),
         });
         const uc = IniciarTorneio.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComCheckIn) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComCheckIn) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono-1", isAdmin: false });

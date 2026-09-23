@@ -214,10 +214,10 @@ Retorna o ranking consolidado da liga. Leitura pública. Rate limit **40 req / 1
 
 #### Cálculo do ranking
 
-- **Jogadores**: ordenados por pontos (desc), depois vitórias (desc). `jogador.nome` é o nick MOL (`nickMTGO`), com fallback para o nome cadastrado.
+- **Jogadores**: mesmos critérios do torneio — pontos, depois OMW%, GW% e OGW%. A resposta inclui `omwp`, `gwp` e `ogwp` (0–1). `jogador.nome` é o nick MOL (`nickMTGO`), com fallback para o nome cadastrado.
 - **Decks**: agrupados por `nomeConsolidado` (ou `nome`), ordenados por `totalUsos` (desc), depois vitórias (desc). `winrate` e `loserate` em porcentagem com 1 casa decimal.
 - **Cartas**: contagem de cópias no maindeck de todos os decks usados na liga, ordenadas por `totalCopias` (desc).
-- **Times**: calculados diretamente por partida finalizada, usando o `timeId` da inscrição do jogador naquele torneio. Vitória soma 3 pontos, empate soma 1 e derrota soma 0. Partidas entre membros do mesmo time não alteram o ranking coletivo. Apenas para `tipo: "times"`.
+- **Times**: calculados diretamente por partida finalizada, usando o `timeId` da inscrição do jogador naquele torneio. Vitória soma 3 pontos, empate soma 1 e derrota soma 0. Partidas entre membros do mesmo time não alteram o ranking coletivo. O desempate é o mesmo do torneio (OMW%, GW%, OGW%). Apenas para `tipo: "times"`.
 
 ---
 

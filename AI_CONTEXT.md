@@ -1,9 +1,9 @@
 # AI Context — championship-management-mtg
 
 > Documento de contexto para assistentes de IA. Leia antes de modificar o projeto.
-> Versão da API: **1.1.27** | Idioma da API e mensagens: **português (BR)**
+> Versão da API: **1.1.32** | Idioma da API e mensagens: **português (BR)**
 
-**Frontend pareado:** repositório `championship-management-mtg-front` (SPA React). Contratos REST documentados em `docs/`.
+**Frontend pareado:** repositório `championship-management-mtg-front`, atualmente em React 19 + Vite 7 + Tailwind CSS 4, com TanStack Query, Radix UI e Ably. Contratos REST documentados em `docs/`.
 
 ---
 
@@ -18,10 +18,12 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Ligas (rankings consolidados) e times (convites/solicitações)
 - Metagame público por formato (torneios finalizados)
 - Upload de imagens via presigned URL (S3)
-- Anúncios do site + estatísticas
+- **Blog/artigos** (`/artigos`) — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; assinatura do autor (foto, nome, `descricaoAssinatura`); comentários/curtidas/visualizações (`docs/artigos.md`)
+- Anúncios do site + anúncio diário em carrossel + estatísticas
+- Newsletter semanal de metagame (opt-in; Lambda agendada; descadastro one-click; admin lista assinantes)
 - Notificações em tempo real via **Ably**
 
-**Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS configuradas no `.env`.
+**Deploy:** AWS Lambda (Serverless Framework) + DynamoDB. Dev local: Express em `PORT` (default 3000), usando as tabelas AWS de `.env.local` (ou `APP_ENV=homolog|production`).
 
 ---
 
@@ -38,7 +40,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 | Ably | Pub/Sub realtime |
 | AWS S3 + SSM | Imagens + chaves JWT |
 | Nodemailer | E-mails transacionais |
-| Jest + Supertest | Testes |
+| Vitest + Supertest | Testes |
 | esbuild + Serverless | Build e deploy Lambda |
 | Pino | Logs |
 
@@ -84,7 +86,7 @@ src/
     └── jwt.ts, env.ts, logger.ts
 
 docs/                           # Documentação por entidade (usuario, torneio, etc.)
-tests/                          # Jest (876 unitários + E2E DynamoDB opt-in)
+tests/                          # Vitest (unitários + E2E DynamoDB opt-in)
 ```
 
 **Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
@@ -181,10 +183,11 @@ DELETE /:torneioId
 ### Liga, Time, Site, Imagem
 ```
 Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking (leitura pública), PUT, DELETE
-Metagame: GET /metagame, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
+Metagame: GET /metagame?limite=&offset=, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
 Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
+       GET /site/anuncio-diario, /anuncio-diario/admin; PUT /anuncio-diario (admin); POST visualizacao/clique
 Img:   POST /imagem/upload-url
 Health: GET /health
 ```
@@ -245,7 +248,7 @@ Usado em iniciar rodada, resultados, pareamentos, drop em nome de jogador, escol
 
 Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 
-**Cobertura mínima (Jest):** statements/lines/functions ≥ 95%, branches ≥ 90%.
+**Cobertura mínima (Vitest):** statements/lines/functions ≥ 95%, branches ≥ 90%.
 
 ---
 
@@ -257,6 +260,8 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ### Swiss
 - Rodadas: `ceil(log₂(n))` com teto opcional `maxRodadas`
 - Critérios de desempate WotC: pontos → OMW% → GW% → OGW%
+- Ranking de liga (jogadores e times) usa os mesmos critérios
+- Admin pode editar torneio `finalizado` (premiação e demais campos). Dono e anfitrião não.
 - Bye para último colocado quando ímpar
 - Pareamento evita rematch com backtracking; rematch só se for impossível evitar
 
@@ -298,7 +303,7 @@ Inicialização: `ABLY_API_KEY` em `app.ts` → `NotificacaoAbly.iniciar()`. Sem
 
 Amazon DynamoDB é a persistência exclusiva do runtime. `DYNAMODB_DATA_TABLE` guarda entidades e índices de acesso com chaves `pk`/`sk`; os repositórios estão em `src/infra/dynamodb/repositorios/`. Queries paginam até `LastEvaluatedKey` e operações em lote reenviam `UnprocessedItems`.
 
-O cache compartilhado usa `DYNAMODB_CACHE_TABLE`. Standings, partidas, detalhe/listagem de torneios, metagame, ligas e site possuem chaves próprias. Eventos de mutação invalidam a partição do torneio e partições agregadas por `infra/cache/invalidadorCacheTorneio.ts`.
+O cache compartilhado usa `DYNAMODB_CACHE_TABLE`, sempre no mesmo stage da DATA (`local-cache` com `local-data`, `dev-cache` com `dev-data`). Se as envs misturarem stages, o runtime alinha o cache à DATA via `helpers/dynamodbTabelas.ts`. Standings, partidas, detalhe/listagem de torneios, metagame, ligas e site possuem chaves próprias. Eventos de mutação invalidam a partição do torneio e partições agregadas por `infra/cache/invalidadorCacheTorneio.ts`.
 
 MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `devDependencies` para `migrarMongoParaDynamo.ts`. O migrador valida a origem antes de `--truncate`, só limpa tabelas com `local` ou `test`, ignora partidas/inscrições de torneios inexistentes e filtra referências órfãs das ligas.
 
@@ -349,10 +354,14 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 
 ## 14. Variáveis de ambiente
 
+Arquivos locais (gitignored): `.env.local`, `.env.homolog`, `.env.production`.
+Default: `APP_ENV=local` → carrega `.env.local`. Deploy: `scripts/deploy.mjs` mapeia homolog→stage `dev`, production→stage `prod`.
+
 Ver `.env.example`. Obrigatórias para rodar:
 
 ```bash
-JWT_PRIVATE_KEY_BASE64=...   # ou JWT_SECRET em dev
+APP_ENV=local
+JWT_PRIVATE_KEY_BASE64=...   # ou JWT_SECRET em local
 JWT_PUBLIC_KEY_BASE64=...
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
@@ -360,27 +369,34 @@ IS_LOCAL=true
 DYNAMODB_DATA_TABLE=championship-management-mtg-local-data
 DYNAMODB_DATA_REGION=us-east-1
 DYNAMODB_CACHE_ENABLED=true
-DYNAMODB_CACHE_TABLE=championship-management-mtg-dev-cache
+DYNAMODB_CACHE_TABLE=championship-management-mtg-local-cache
 DYNAMODB_CACHE_REGION=us-east-1
 ```
 
-Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `EMAIL_USER`, `EMAIL_PASS`, `FRONTEND_URL`, `LOG_LEVEL` e TTLs `DYNAMODB_CACHE_TTL_*`. `MONGODB_MIGRATION_URI` e `MONGODB_MIGRATION_DB_NAME` são usados somente pelo migrador.
+| APP_ENV / arquivo | Dynamo DATA / CACHE | Stage AWS (imutável) |
+|---|---|---|
+| `local` → `.env.local` | `…-local-data` / `…-local-cache` | — |
+| `homolog` → `.env.homolog` | `…-dev-data` / `…-dev-cache` | `dev` |
+| `production` → `.env.production` | `…-prod-data` / `…-prod-cache` | `prod` |
 
-**Nunca commitar `.env`.**
+Opcionais: `ABLY_API_KEY`, `AWS_S3_BUCKET`, `FRONTEND_URL`, `LOG_LEVEL`, TTLs `DYNAMODB_CACHE_TTL_*`, SES, Serverless keys. `MONGODB_MIGRATION_*` só no migrador.
+
+**Nunca commitar `.env*` com segredos.** GitHub Environments: `homolog` e `production` (OIDC + secrets/vars).
 
 ---
 
 ## 15. Testes
 
 ```bash
-npm test              # 876 unitários + todos os E2E DynamoDB em série (~15 min)
+npm test              # unitários Vitest + todos os E2E DynamoDB em série (~15 min)
 npm run test:unit     # suíte rápida, sem E2E/AWS
 npm run test:e2e      # cache, paginação, coerência e torneio de 150 jogadores
 npm run test:coverage # cobertura; limiar 95/90/95/95 em casosDeUso, entidades, helpers, middlewares (exclui e2e)
-npm run lint          # eslint
+npm run lint          # eslint; pre-commit (Husky + lint-staged) lint nos .ts staged
 npm run dev           # nodemon + ts-node (porta 3000)
 npm run build         # esbuild
-npm run deploy:dev    # serverless deploy stage dev
+npm run deploy:homolog # serverless deploy stage AWS=dev
+npm run deploy:prod    # serverless deploy stage AWS=prod
 ```
 
 Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `middlewares/`. E2E validam cache compartilhado, paginação acima de 1 MB, falhas parciais de batch e o fluxo completo de 150 jogadores. Consulte `docs/testes.md`.
@@ -406,7 +422,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | Validação API | `helpers/validacao/schemas.ts` |
 | Eventos realtime | emit em use case/rota + `infra/ably/notificacaoAbly.ts` |
 | Auth JWT | `helpers/jwt.ts`, `middlewares/express/autenticarJwt.ts` |
-| Deploy | `serverless.yaml`, `esbuild.config.js`, `handler.ts` |
+| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (OIDC `homolog`→stage `dev`), `deployProd.yml` (OIDC `production`→stage `prod`), `esbuild.config.js`, `handler.ts` |
 | Docs API | `docs/*.md`, `docs/INDEX.md` |
 
 ---
@@ -439,7 +455,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 6. Side effect realtime → `eventosTorneio.emit` após persistência bem-sucedida
 
 ### Ao debugar
-1. Verificar `.env` (`DYNAMODB_DATA_TABLE`, regiões, credenciais AWS e JWT)
+1. Verificar `APP_ENV` / `.env.local|homolog|production` (`DYNAMODB_DATA_TABLE`, regiões, credenciais AWS e JWT)
 2. Erro 403 em torneio → checar dono/admin/anfitrião
 3. 400 validação → `schemas.ts` + mensagens Zod
 4. Realtime não chega → `ABLY_API_KEY` + `NotificacaoAbly`
@@ -463,12 +479,12 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | `docs/INDEX.md` | Índice da documentação da API |
 | `docs/torneio.md` | Fluxo completo de torneio |
 | `docs/usuario.md` | Auth e usuários |
-| `.env.example` | Variáveis de ambiente |
+| `.env.example` | Template; arquivos reais: `.env.local`, `.env.homolog`, `.env.production` |
 | `championship-management-mtg-front/AI_CONTEXT.md` | Contexto do SPA React |
 
 ---
 
-*Última revisão: agosto/2026 — alinhado com v1.1.27 (migração principal para DynamoDB e banners de ligas)*
+*Última revisão: setembro/2026 — Vitest, paginação do metagame, desempate de liga e edição de torneio finalizado pelo admin*
 # Consistencia e protecao DynamoDB
 
 - Escritas que mantem item principal e indices derivados usam transacoes DynamoDB.

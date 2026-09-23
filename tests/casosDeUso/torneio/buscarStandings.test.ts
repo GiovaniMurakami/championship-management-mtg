@@ -4,6 +4,7 @@ import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
+import { Time as TimeEntidade } from "../../../src/dominio/entidade/time";
 import { Deck } from "../../../src/dominio/entidade/deck";
 
 describe("BuscarStandings", () => {
@@ -35,10 +36,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRodada1) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioRodada1) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -66,10 +67,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -94,10 +95,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -124,11 +125,11 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue(decks) }),
             criarMockTimeGateway(),
         );
 
@@ -173,10 +174,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -217,10 +218,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizadoComCorte) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizadoComCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -250,10 +251,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizadoUmaRodada) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizadoUmaRodada) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -283,10 +284,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -316,10 +317,10 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -354,10 +355,10 @@ describe("BuscarStandings", () => {
         });
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioR2) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioR2) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -380,16 +381,15 @@ describe("BuscarStandings", () => {
             new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
         ];
         const usuarios = [new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })];
-        const { Time: TimeEntidade } = require("../../../src/dominio/entidade/time");
         const timeComMembro = new TimeEntidade({ id: "time-1", nome: "Team", donoId: "u-1", membroIds: ["u-1"] });
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioComData) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioComData) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
             criarMockDeckGateway(),
-            criarMockTimeGateway({ buscarPorMembros: jest.fn().mockResolvedValue([timeComMembro]) }),
+            criarMockTimeGateway({ buscarPorMembros: vi.fn().mockResolvedValue([timeComMembro]) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1" });
@@ -401,10 +401,10 @@ describe("BuscarStandings", () => {
 
     it("deve retornar standings vazios quando nÃ£o hÃ¡ inscriÃ§Ãµes", async () => {
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue([]) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
             criarMockDeckGateway(),
             criarMockTimeGateway(),
         );
@@ -433,11 +433,11 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNickMtgo) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioNickMtgo) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue(decks) }),
             criarMockTimeGateway(),
         );
 
@@ -470,11 +470,11 @@ describe("BuscarStandings", () => {
         ];
 
         const uc = BuscarStandings.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNickArena) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneio: jest.fn().mockResolvedValue(partidas) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue(decks) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioNickArena) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue(decks) }),
             criarMockTimeGateway(),
         );
 

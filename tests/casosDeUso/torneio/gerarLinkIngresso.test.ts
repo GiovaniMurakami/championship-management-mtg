@@ -9,9 +9,9 @@ describe("GerarLinkIngresso", () => {
     });
 
     it("deve gerar um link de ingresso com token e expiração", async () => {
-        const linkGw = criarMockLinkIngressoGateway({ salvar: jest.fn() });
+        const linkGw = criarMockLinkIngressoGateway({ salvar: vi.fn() });
         const uc = GerarLinkIngresso.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             linkGw,
         );
 
@@ -27,7 +27,7 @@ describe("GerarLinkIngresso", () => {
     it("deve respeitar a validade customizada em horas", async () => {
         const agora = Date.now();
         const uc = GerarLinkIngresso.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockLinkIngressoGateway(),
         );
 
@@ -52,7 +52,7 @@ describe("GerarLinkIngresso", () => {
         const torneioAberto = new Torneio({ ...torneio, status: "inscricoes_abertas" });
 
         const uc = GerarLinkIngresso.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             criarMockLinkIngressoGateway(),
         );
 
@@ -63,7 +63,7 @@ describe("GerarLinkIngresso", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const uc = GerarLinkIngresso.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockLinkIngressoGateway(),
         );
 
@@ -74,7 +74,7 @@ describe("GerarLinkIngresso", () => {
 
     it("admin pode gerar link para qualquer torneio", async () => {
         const uc = GerarLinkIngresso.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockLinkIngressoGateway(),
         );
 

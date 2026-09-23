@@ -7,12 +7,15 @@ type UsuarioItem = {
   nome: string;
   email: string;
   senha: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "editor";
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
+  descricaoAssinatura?: string;
   resultadosExpressivos: number;
   bloqueadoTorneios: boolean;
+  newsletterMetagame?: boolean | null;
   excluido: boolean;
   excluidoEm?: string | null;
   criadoEm: string;
@@ -27,7 +30,7 @@ const USUARIOS_PK = "USUARIOS";
 
 export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements UsuarioGateway {
   private constructor() {
-    super();
+    super("usuarios");
   }
 
   public static criar() {
@@ -85,9 +88,9 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       .map((item) => this.itemParaUsuario(item));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "newsletterMetagame"> = {}): Promise<number> {
     const itens = await this.queryJson<UsuarioItem>(USUARIOS_PK);
-    return this.filtrar(itens, filtros).length;
+    return this.filtrar(itens, { ...filtros, excluido: false }).length;
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {
@@ -99,13 +102,14 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       await this.transactWrite([
         { Put: { TableName: this.tabela, Item: this.itemJson(`USER#${usuario.id}`, "DATA", item, { entity: "USER", resultadosExpressivos: item.resultadosExpressivos }) } },
         { Put: { TableName: this.tabela, Item: this.itemJson(USUARIOS_PK, `USER#${usuario.id}`, item, { entity: "USER_INDEX", resultadosExpressivos: item.resultadosExpressivos }) } },
-        {
+        // Só mexe no índice de e-mail quando o e-mail muda.
+        ...(emailAnterior !== emailAtual ? [{
           Put: {
             TableName: this.tabela,
             Item: this.itemJson(`USER_EMAIL#${emailAtual}`, "DATA", { id: usuario.id, email: usuario.email }, { entity: "USER_EMAIL_INDEX" }),
-            ...(emailAnterior !== emailAtual ? { ConditionExpression: "attribute_not_exists(pk)" } : {}),
+            ConditionExpression: "attribute_not_exists(pk)",
           },
-        },
+        }] : []),
         ...(emailAnterior && emailAnterior !== emailAtual ? [{
           Delete: {
             TableName: this.tabela,
@@ -154,13 +158,17 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
     ])));
   }
 
-  private filtrar(itens: UsuarioItem[], filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "excluido">): UsuarioItem[] {
+  private filtrar(itens: UsuarioItem[], filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "excluido" | "newsletterMetagame">): UsuarioItem[] {
     const termo = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       const excluidoDesejado = filtros.excluido === true;
       if (excluidoDesejado !== Boolean(item.excluido)) return false;
 
       if (filtros.bloqueadoTorneios !== undefined && Boolean(item.bloqueadoTorneios) !== filtros.bloqueadoTorneios) {
+        return false;
+      }
+
+      if (filtros.newsletterMetagame !== undefined && item.newsletterMetagame !== filtros.newsletterMetagame) {
         return false;
       }
 
@@ -184,8 +192,11 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      fotoUrl: usuario.fotoUrl,
+      descricaoAssinatura: usuario.descricaoAssinatura,
       resultadosExpressivos: usuario.resultadosExpressivos,
       bloqueadoTorneios: usuario.bloqueadoTorneios,
+      newsletterMetagame: usuario.newsletterMetagame,
       excluido: usuario.excluido,
       excluidoEm: usuario.excluidoEm?.toISOString() ?? null,
       criadoEm: usuario.criadoEm.toISOString(),
@@ -202,8 +213,11 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       telefone: item.telefone,
       nickMTGO: item.nickMTGO,
       nickArena: item.nickArena,
+      fotoUrl: item.fotoUrl,
+      descricaoAssinatura: item.descricaoAssinatura,
       resultadosExpressivos: item.resultadosExpressivos,
       bloqueadoTorneios: item.bloqueadoTorneios,
+      newsletterMetagame: item.newsletterMetagame === true ? true : item.newsletterMetagame === false ? false : null,
       excluido: item.excluido,
       excluidoEm: item.excluidoEm ? new Date(item.excluidoEm) : null,
       criadoEm: new Date(item.criadoEm),

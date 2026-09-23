@@ -33,18 +33,18 @@ describe("IniciarProximaRodada", () => {
 
     it("deve avanÃ§ar para a prÃ³xima rodada criando novas partidas", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const partidaGw = criarMockPartidaGateway({
-            listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-            listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+            listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+            listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
         });
 
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             partidaGw,
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -60,7 +60,7 @@ describe("IniciarProximaRodada", () => {
 
     it("deve lanÃ§ar erro se nÃ£o for o dono e nÃ£o for admin", async () => {
         const uc = IniciarProximaRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -73,16 +73,16 @@ describe("IniciarProximaRodada", () => {
 
     it("admin pode avanÃ§ar rodada de torneio de outro usuÃ¡rio", async () => {
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "admin-id", isAdmin: true });
@@ -108,15 +108,15 @@ describe("IniciarProximaRodada", () => {
         const partidasRodadaAtual = todasPartidas.filter((p) => p.rodada === 3);
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioUltimaRodada),
+            buscarPorId: vi.fn().mockResolvedValue(torneioUltimaRodada),
         });
 
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesRodada3) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesRodada3) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodadaAtual),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodadaAtual),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
             criarMockUsuarioGateway(),
         );
@@ -148,15 +148,15 @@ describe("IniciarProximaRodada", () => {
         const partidasRodadaAtual = todasPartidas.filter((p) => p.rodada === 3);
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioUltimaRodada),
+            buscarPorId: vi.fn().mockResolvedValue(torneioUltimaRodada),
         });
 
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesSemNovoCheckIn) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesSemNovoCheckIn) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodadaAtual),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodadaAtual),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
             criarMockUsuarioGateway(),
         );
@@ -172,9 +172,9 @@ describe("IniciarProximaRodada", () => {
         ];
 
         const uc = IniciarProximaRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...torneio }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...torneio }) }),
             criarMockInscricaoGateway(),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasPendentes) }),
+            criarMockPartidaGateway({ listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasPendentes) }),
             criarMockUsuarioGateway(),
         );
 
@@ -195,16 +195,16 @@ describe("IniciarProximaRodada", () => {
         ];
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesSemCheckInAtual) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesSemCheckInAtual) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -239,16 +239,16 @@ describe("IniciarProximaRodada", () => {
         const partidasRodada2 = partidasFinais.filter((p) => p.rodada === 2);
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioComCorte),
+            buscarPorId: vi.fn().mockResolvedValue(torneioComCorte),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesRodada2) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesRodada2) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada2),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasFinais),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada2),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasFinais),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -286,16 +286,16 @@ describe("IniciarProximaRodada", () => {
         const partidasSemis = todasPartidas.filter((p) => p.rodada === 3);
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte),
+            buscarPorId: vi.fn().mockResolvedValue(torneioEmCorte),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasSemis),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasSemis),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -314,7 +314,7 @@ describe("IniciarProximaRodada", () => {
     it("deve lanÃ§ar erro se o torneio nÃ£o estiver em andamento", async () => {
         const torneioAberto = { ...torneio, status: "inscricoes_abertas" as const };
         const uc = IniciarProximaRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -346,11 +346,11 @@ describe("IniciarProximaRodada", () => {
             new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 1, dropped: false }),
         ];
         const uc = IniciarProximaRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRodada1) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(apenasUm) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioRodada1) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(apenasUm) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
             }),
             criarMockUsuarioGateway(),
         );
@@ -369,16 +369,16 @@ describe("IniciarProximaRodada", () => {
         ];
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })),
+            buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComDrop) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComDrop) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios.filter(u => u.id !== "u-2")) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -410,14 +410,14 @@ describe("IniciarProximaRodada", () => {
         ];
 
         const torneioGw = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioFinal),
+            buscarPorId: vi.fn().mockResolvedValue(torneioFinal),
         });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidaFinal),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidaFinal),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
             criarMockUsuarioGateway(),
         );
@@ -439,13 +439,13 @@ describe("IniciarProximaRodada", () => {
             corteTop: 8,
         });
         const uc = IniciarProximaRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioCorte) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada1),
-                listarPorTorneio: jest.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         // 4 jogadores mas corteTop=8 â†’ nÃ£o hÃ¡ jogadores suficientes
@@ -475,15 +475,15 @@ describe("IniciarProximaRodada", () => {
         ];
         const partidasSemis = todasPartidas.filter(p => p.rodada === 3);
 
-        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) });
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmCorte) });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesCorte) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasSemis),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasSemis),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -519,15 +519,15 @@ describe("IniciarProximaRodada", () => {
         ];
         const partidasSemis = todasPartidas.filter(p => p.rodada === 3);
 
-        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) });
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmCorte) });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesCorte) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesCorte) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasSemis),
-                listarPorTorneio: jest.fn().mockResolvedValue(todasPartidas),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasSemis),
+                listarPorTorneio: vi.fn().mockResolvedValue(todasPartidas),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
@@ -559,15 +559,15 @@ describe("IniciarProximaRodada", () => {
         ];
         const partidasRodada2Atual = historicoComBye.filter(p => p.rodada === 2);
 
-        const torneioGw = criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioRodada2) });
+        const torneioGw = criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioRodada2) });
         const uc = IniciarProximaRodada.criar(
             torneioGw,
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesRodada2) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesRodada2) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada2Atual),
-                listarPorTorneio: jest.fn().mockResolvedValue(historicoComBye),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada2Atual),
+                listarPorTorneio: vi.fn().mockResolvedValue(historicoComBye),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(quatroUsuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });

@@ -14,8 +14,8 @@ describe("ListarUsuarios", () => {
     });
 
     it("lista com paginação padrão e mapeia campos públicos", async () => {
-        const listar = jest.fn().mockResolvedValue([usuario]);
-        const listarTotal = jest.fn().mockResolvedValue(1);
+        const listar = vi.fn().mockResolvedValue([usuario]);
+        const listarTotal = vi.fn().mockResolvedValue(1);
         const uc = ListarUsuarios.criar(
             criarMockUsuarioGateway({ listar, listarTotal }),
         );
@@ -28,6 +28,7 @@ describe("ListarUsuarios", () => {
                     id: "u-1",
                     nome: "Alice",
                     email: "a@test.com",
+                    role: "user",
                     nickMTGO: "alice_mtgo",
                     nickArena: "alice#123",
                     bloqueadoTorneios: false,
@@ -50,8 +51,8 @@ describe("ListarUsuarios", () => {
     });
 
     it("aplica filtros de nome (trim) e bloqueadoTorneios", async () => {
-        const listar = jest.fn().mockResolvedValue([]);
-        const listarTotal = jest.fn().mockResolvedValue(0);
+        const listar = vi.fn().mockResolvedValue([]);
+        const listarTotal = vi.fn().mockResolvedValue(0);
         const uc = ListarUsuarios.criar(
             criarMockUsuarioGateway({ listar, listarTotal }),
         );
@@ -76,8 +77,8 @@ describe("ListarUsuarios", () => {
     });
 
     it("ignora nome só com espaços e limita máximo em 100", async () => {
-        const listar = jest.fn().mockResolvedValue([]);
-        const listarTotal = jest.fn().mockResolvedValue(0);
+        const listar = vi.fn().mockResolvedValue([]);
+        const listarTotal = vi.fn().mockResolvedValue(0);
         const uc = ListarUsuarios.criar(
             criarMockUsuarioGateway({ listar, listarTotal }),
         );

@@ -9,6 +9,9 @@ export type AtualizarUsuarioInputDto = {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
+  descricaoAssinatura?: string;
+  newsletterMetagame?: boolean;
 };
 
 export type AtualizarUsuarioOutputDto = {
@@ -18,6 +21,9 @@ export type AtualizarUsuarioOutputDto = {
   telefone?: string;
   nickMTGO?: string;
   nickArena?: string;
+  fotoUrl?: string;
+  descricaoAssinatura?: string;
+  newsletterMetagame: boolean | null;
   criadoEm: Date;
 };
 
@@ -65,6 +71,17 @@ export class AtualizarUsuario
       usuario.nickArena = input.nickArena.trim() || undefined;
     }
 
+    if (input.fotoUrl !== undefined) usuario.fotoUrl = input.fotoUrl.trim() || undefined;
+
+    if (input.descricaoAssinatura !== undefined) {
+      const texto = input.descricaoAssinatura.trim();
+      usuario.descricaoAssinatura = texto || undefined;
+    }
+
+    if (input.newsletterMetagame !== undefined) {
+      usuario.newsletterMetagame = Boolean(input.newsletterMetagame);
+    }
+
     await this.usuarioGateway.atualizar(usuario);
 
     return {
@@ -74,6 +91,9 @@ export class AtualizarUsuario
       telefone: usuario.telefone,
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
+      fotoUrl: usuario.fotoUrl,
+      descricaoAssinatura: usuario.descricaoAssinatura,
+      newsletterMetagame: usuario.newsletterMetagame,
       criadoEm: usuario.criadoEm,
     };
   }

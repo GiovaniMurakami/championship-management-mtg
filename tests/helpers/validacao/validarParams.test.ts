@@ -3,8 +3,8 @@ import { idParamSchema } from "../../../src/helpers/validacao/schemas";
 
 function makeMockResponse() {
     return {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
     } as any;
 }
 
@@ -32,7 +32,7 @@ describe("validarParamsMiddleware", () => {
         const id = "550e8400-e29b-41d4-a716-446655440000";
         const req = { params: { id } } as any;
         const res = makeMockResponse();
-        const next = jest.fn();
+        const next = vi.fn();
 
         validarParamsMiddleware(idParamSchema)(req, res, next);
 

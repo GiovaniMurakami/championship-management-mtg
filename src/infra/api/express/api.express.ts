@@ -49,6 +49,21 @@ export class ApiExpress implements Api {
     this.app.use(sanitizarEntrada);
     this.app.use(requestIdMiddleware);
     this.app.use((req: Request, res: Response, next: NextFunction) => {
+      const iniciadoEm = Date.now();
+      res.on("finish", () => {
+        const log = req.log ?? logger;
+        log.info({
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          durationMs: Date.now() - iniciadoEm,
+          contentLength: res.getHeader("content-length"),
+          hasAuthorization: Boolean(req.headers.authorization),
+        }, "response");
+      });
+      next();
+    });
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
       if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
         next();
         return;

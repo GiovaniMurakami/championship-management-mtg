@@ -7,7 +7,7 @@ describe("ListarDecks", () => {
     it("deve filtrar decks pelos usuarios encontrados pelo nome do jogador", async () => {
         const deckGateway = criarMockDeckGateway();
         const usuarioGateway = criarMockUsuarioGateway({
-            listar: jest.fn().mockResolvedValue([
+            listar: vi.fn().mockResolvedValue([
                 new Usuario({ id: "u2", nome: "Maria", email: "m@e.com", senha: "s", nickMTGO: "maria_mtgo" }),
             ]),
         });
@@ -29,11 +29,11 @@ describe("ListarDecks", () => {
             new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" }),
         ];
         const deckGateway = criarMockDeckGateway({
-            listar: jest.fn().mockResolvedValue(decks),
-            listarTotal: jest.fn().mockResolvedValue(2),
+            listar: vi.fn().mockResolvedValue(decks),
+            listarTotal: vi.fn().mockResolvedValue(2),
         });
         const usuarioGateway = criarMockUsuarioGateway({
-            buscarVarios: jest.fn().mockResolvedValue(usuarios),
+            buscarVarios: vi.fn().mockResolvedValue(usuarios),
         });
         const uc = ListarDecks.criar(deckGateway, usuarioGateway);
 
@@ -46,6 +46,24 @@ describe("ListarDecks", () => {
         expect(resultado.decks[0].usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
         expect(resultado.decks[1].nome).toBe("Storm");
         expect(resultado.decks[1].usuario).toEqual({ id: "u1", nome: "joao_mtgo", excluido: false });
+    });
+
+    it("inclui secretos do dono e exclui copias automaticas de torneio", async () => {
+        const deckGateway = criarMockDeckGateway();
+        const uc = ListarDecks.criar(deckGateway, criarMockUsuarioGateway());
+
+        await uc.executar({ usuarioId: "u1", solicitanteId: "u1" });
+
+        expect(deckGateway.listar).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "u1",
+            incluirOcultos: true,
+            excluirCopiasTorneio: true,
+        }));
+        expect(deckGateway.listarTotal).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "u1",
+            incluirOcultos: true,
+            excluirCopiasTorneio: true,
+        }));
     });
 
     it("deve retornar lista vazia quando nao ha decks", async () => {
@@ -62,7 +80,7 @@ describe("ListarDecks", () => {
 
         await uc.executar({});
 
-        const chamada = (deckGateway.listar as jest.Mock).mock.calls[0][0];
+        const chamada = (deckGateway.listar as Mock).mock.calls[0][0];
         expect(chamada.limite).toBeGreaterThan(0);
         expect(chamada.offset).toBe(0);
     });
@@ -72,10 +90,10 @@ describe("ListarDecks", () => {
             new Deck({ id: "d1", nome: "Burn", formato: "legacy", maindeck: [], sideboard: [], usuarioId: "u-desconhecido" }),
         ];
         const deckGateway = criarMockDeckGateway({
-            listar: jest.fn().mockResolvedValue(decks),
-            listarTotal: jest.fn().mockResolvedValue(1),
+            listar: vi.fn().mockResolvedValue(decks),
+            listarTotal: vi.fn().mockResolvedValue(1),
         });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([]) });
         const uc = ListarDecks.criar(deckGateway, usuarioGateway);
 
         const resultado = await uc.executar({ usuarioId: "u-desconhecido" });
@@ -93,7 +111,7 @@ describe("ListarDecks", () => {
             criadoAntes: "2025-12-31T23:59:59Z",
         });
 
-        const chamada = (deckGateway.listar as jest.Mock).mock.calls[0][0];
+        const chamada = (deckGateway.listar as Mock).mock.calls[0][0];
         expect(chamada.formato).toBe("legacy");
         expect(chamada.criadoApos).toBeInstanceOf(Date);
         expect(chamada.criadoAntes).toBeInstanceOf(Date);
@@ -113,11 +131,11 @@ describe("ListarDecks", () => {
             }),
         ];
         const deckGateway = criarMockDeckGateway({
-            listar: jest.fn().mockResolvedValue(decks),
-            listarTotal: jest.fn().mockResolvedValue(1),
+            listar: vi.fn().mockResolvedValue(decks),
+            listarTotal: vi.fn().mockResolvedValue(1),
         });
         const usuarioGateway = criarMockUsuarioGateway({
-            buscarVarios: jest.fn().mockResolvedValue([
+            buscarVarios: vi.fn().mockResolvedValue([
                 new Usuario({ id: "u1", nome: "Joao", email: "j@e.com", senha: "s" }),
             ]),
         });

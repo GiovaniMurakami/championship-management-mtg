@@ -1,4 +1,7 @@
 service: championship-management-mtg
+# Env local: scripts/deploy.mjs carrega .env.homolog|.env.production.
+# No CI as variáveis vêm do GitHub Environment.
+useDotenv: false
 
 provider:
   name: aws
@@ -26,14 +29,11 @@ provider:
     DYNAMODB_DATA_TABLE: ${self:custom.dataTableName.${sls:stage}}
     DYNAMODB_DATA_REGION: ${env:DYNAMODB_DATA_REGION, 'us-east-1'}
     DYNAMODB_CACHE_TTL_METAGAME_SECONDS: ${env:DYNAMODB_CACHE_TTL_METAGAME_SECONDS, '900'}
-    DYNAMODB_CACHE_TTL_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_TORNEIO_SECONDS, '60'}
-    DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS: ${env:DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS, '30'}
-    DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS: ${env:DYNAMODB_CACHE_TTL_SEO_TORNEIO_SECONDS, '1800'}
-    DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS: ${env:DYNAMODB_CACHE_TTL_RANKING_LIGA_SECONDS, '300'}
-    DYNAMODB_CACHE_TTL_SITE_SECONDS: ${env:DYNAMODB_CACHE_TTL_SITE_SECONDS, '300'}
-    EMAIL_USER: ${env:EMAIL_USER, ''}
-    EMAIL_PASS: ${env:EMAIL_PASS, ''}
+    SES_FROM_EMAIL: ${env:SES_FROM_EMAIL, 'Fuguete <noreply@tiagofuguete.com.br>'}
+    SES_REGION: ${env:SES_REGION, 'us-east-1'}
     FRONTEND_URL: ${env:FRONTEND_URL, self:custom.frontendUrl.${sls:stage}}
+    AMPLIFY_APP_ID: ${env:AMPLIFY_APP_ID, 'd32mjk9mbam2cb'}
+    SEO_HOMOLOG_API_URL: ${env:SEO_HOMOLOG_API_URL, 'https://ol5gj7iduc.execute-api.us-east-1.amazonaws.com/dev'}
   iam:
     role:
       statements:
@@ -45,7 +45,15 @@ provider:
             - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/championship-mtg/${sls:stage}/jwt-public-key"
         - Effect: Allow
           Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource:
+            - !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/tiagofuguete.com.br"
+        - Effect: Allow
+          Action:
             - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
           Resource:
             - !Sub "arn:aws:s3:::${env:AWS_S3_BUCKET, 'placeholder'}/*"
         - Effect: Allow
@@ -250,7 +258,7 @@ resources:
       Type: AWS::Logs::MetricFilter
       Properties:
         LogGroupName: !Ref ApiLogGroup
-        FilterPattern: '{ ($.msg = "falha ao ler cache DynamoDB") || ($.msg = "falha ao gravar cache DynamoDB") || ($.msg = "falha ao remover item do cache DynamoDB") }'
+        FilterPattern: '{ ($.msg = "falha ao ler cache DynamoDB") || ($.msg = "falha ao gravar cache DynamoDB") || ($.msg = "falha ao remover item do cache DynamoDB") || ($.msg = "falha ao ler versao do cache DynamoDB") || ($.msg = "falha ao invalidar cache DynamoDB apos escrita") }'
         MetricTransformations:
           - MetricNamespace: ChampionshipManagementMtg/Cache
             MetricName: OperacoesComFalha
@@ -436,6 +444,49 @@ functions:
             methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
+      - http:
+          path: /post
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /post/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /artigo
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /artigo/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+
+  # Newsletter semanal de metagame — segunda 09:00 BRT (12:00 UTC)
+  newsletterSemanal:
+    handler: build/newsletter.handler
+    memorySize: 512
+    timeout: 300
+    events:
+      - schedule:
+          rate: cron(0 12 ? * MON *)
+          enabled: true
+          description: Envia newsletter semanal de metagame
 
 outputs:
   usuarioCadastrar:

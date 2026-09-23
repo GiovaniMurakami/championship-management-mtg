@@ -17,12 +17,12 @@ describe("RegistrarResultadoRota", () => {
         };
 
         const registrarResultadoServico = {
-            executar: jest.fn().mockResolvedValue(resultado),
+            executar: vi.fn().mockResolvedValue(resultado),
         } as any;
 
         const rota = RegistrarResultadoRota.criar(registrarResultadoServico);
 
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
+        const emitSpy = vi.spyOn(eventosTorneio, "emit");
 
         const request = {
             usuario: { id: "u-1" },
@@ -31,11 +31,11 @@ describe("RegistrarResultadoRota", () => {
         } as any;
 
         const response = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn(),
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn(),
         } as any;
 
-        const next = jest.fn();
+        const next = vi.fn();
 
         await rota.getHandler()(request, response, next);
         await new Promise((resolve) => setImmediate(resolve));

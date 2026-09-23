@@ -24,7 +24,6 @@ import {
     gerarLinkIngressoSchema,
     inscreverTorneioSchema,
     definirAnfitriaoTorneioSchema,
-    listarUsuariosQuerySchema,
     listarMetagameQuerySchema,
     metagameDiasQuerySchema,
     metagameArquetipoParamsSchema,
@@ -117,6 +116,22 @@ describe("schemas de validacao", () => {
                 commander: [{ nome: "Atraxa", quantidade: 1 }],
             }).commander).toHaveLength(1);
         });
+        it("aceita cores de mana persistidas", () => {
+            expect(cadastrarDeckSchema.parse({
+                nome: "Burn",
+                formato: "Modern",
+                maindeck: [carta],
+                cores: ["r", "G"],
+            }).cores).toEqual(["r", "G"]);
+        });
+        it("rejeita cor de mana inválida", () => {
+            expect(cadastrarDeckSchema.safeParse({
+                nome: "Burn",
+                formato: "Modern",
+                maindeck: [carta],
+                cores: ["X"],
+            }).success).toBe(false);
+        });
     });
 
     describe("atualizarDeckSchema", () => {
@@ -173,6 +188,12 @@ describe("schemas de validacao", () => {
         });
         it("rejeita exibirNomeJogador invalido", () => {
             expect(criarTorneioSchema.safeParse({ nome: "T", horario: "h", formato: "f", exibirNomeJogador: "invalido" }).success).toBe(false);
+        });
+        it("aceita ligaIds com UUID", () => {
+            expect(criarTorneioSchema.parse({
+                nome: "T", horario: "h", formato: "f",
+                ligaIds: ["550e8400-e29b-41d4-a716-446655440010"],
+            }).ligaIds).toEqual(["550e8400-e29b-41d4-a716-446655440010"]);
         });
     });
 
@@ -370,16 +391,16 @@ describe("schemas de validacao", () => {
 
     describe("s3ImagemUrl sem base configurada", () => {
         afterEach(() => {
-            jest.dontMock("../../../src/helpers/env");
-            jest.resetModules();
+            vi.doUnmock("../../../src/helpers/env");
+            vi.resetModules();
         });
 
-        it("aceita qualquer URL quando getS3BaseUrl retorna vazio", () => {
-            jest.resetModules();
-            jest.doMock("../../../src/helpers/env", () => ({
+        it("aceita qualquer URL quando getS3BaseUrl retorna vazio", async () => {
+            vi.resetModules();
+            vi.doMock("../../../src/helpers/env", () => ({
                 getS3BaseUrl: () => "",
             }));
-            const schemas = require("../../../src/helpers/validacao/schemas") as typeof import("../../../src/helpers/validacao/schemas");
+            const schemas = await import("../../../src/helpers/validacao/schemas");
 
             expect(() => schemas.criarTorneioSchema.parse({
                 nome: "T",
@@ -401,6 +422,8 @@ describe("schemas de validacao", () => {
         it("rejeita dias fora da janela e slug inválido", () => {
             expect(listarMetagameQuerySchema.safeParse({ formato: "pauper", dias: 15 }).success).toBe(false);
             expect(metagameDiasQuerySchema.safeParse({ dias: 8 }).success).toBe(false);
+            expect(metagameDiasQuerySchema.parse({ dias: 30, limiteListas: "10" })).toEqual({ dias: 30, limiteListas: 10 });
+            expect(metagameDiasQuerySchema.safeParse({ dias: 30, limiteListas: 101 }).success).toBe(false);
             expect(metagameArquetipoParamsSchema.safeParse({ formato: "pauper", slug: "Blue Terror" }).success).toBe(false);
             expect(metagameArquetipoParamsSchema.parse({ formato: "pauper", slug: "blue-terror" })).toEqual({
                 formato: "pauper",

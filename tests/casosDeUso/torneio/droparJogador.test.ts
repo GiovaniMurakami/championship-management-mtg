@@ -6,8 +6,8 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
-jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn() },
+vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: vi.fn() },
 }));
 
 describe("DroparJogador", () => {
@@ -28,12 +28,12 @@ describe("DroparJogador", () => {
 
     it("deve dropar o prÃ³prio jogador com sucesso", async () => {
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             criarMockPartidaGateway(),
         );
 
@@ -56,11 +56,11 @@ describe("DroparJogador", () => {
             exibirNomeJogador: "nickMOL",
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNick) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioNick) }),
             criarMockInscricaoGateway({
-                buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+                buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }),
             }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             criarMockPartidaGateway(),
         );
 
@@ -77,9 +77,9 @@ describe("DroparJogador", () => {
 
     it("deve permitir que o dono do torneio drope um jogador", async () => {
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             criarMockPartidaGateway(),
         );
 
@@ -93,7 +93,7 @@ describe("DroparJogador", () => {
 
     it("deve lanÃ§ar erro se nÃ£o for o prÃ³prio jogador, nem dono, nem admin", async () => {
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway(),
@@ -106,12 +106,12 @@ describe("DroparJogador", () => {
 
     it("admin pode dropar qualquer jogador de qualquer torneio", async () => {
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             criarMockPartidaGateway(),
         );
 
@@ -126,7 +126,7 @@ describe("DroparJogador", () => {
     it("deve lanÃ§ar erro se torneio finalizado", async () => {
         const torneioFinalizado = { ...torneio, status: "finalizado" as const };
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway(),
@@ -139,7 +139,7 @@ describe("DroparJogador", () => {
 
     it("deve lanÃ§ar erro se jogador nÃ£o estiver inscrito", async () => {
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway(),
@@ -153,8 +153,8 @@ describe("DroparJogador", () => {
     it("deve lanÃ§ar erro se jogador jÃ¡ foi dropado", async () => {
         const inscricaoJaDropada = { ...inscricao, dropped: true };
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricaoJaDropada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricaoJaDropada) }),
             criarMockUsuarioGateway(),
             criarMockPartidaGateway(),
         );
@@ -195,15 +195,15 @@ describe("DroparJogador", () => {
         });
 
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }),
         });
         const partidaGw = criarMockPartidaGateway({
-            listarPorTorneio: jest.fn().mockResolvedValue([partidaBye, partidaComoJogador1, partidaComoJogador2]),
+            listarPorTorneio: vi.fn().mockResolvedValue([partidaBye, partidaComoJogador1, partidaComoJogador2]),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             partidaGw,
         );
 
@@ -224,16 +224,16 @@ describe("DroparJogador", () => {
 
         const partidasAtualizadas: Partida[] = [];
         const partidaGw = criarMockPartidaGateway({
-            listarPorTorneio: jest.fn().mockResolvedValue([partidaPendente]),
-            atualizar: jest.fn().mockImplementation((p: Partida) => {
+            listarPorTorneio: vi.fn().mockResolvedValue([partidaPendente]),
+            atualizar: vi.fn().mockImplementation((p: Partida) => {
                 partidasAtualizadas.push({ ...p } as Partida);
                 return Promise.resolve();
             }),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             partidaGw,
         );
 
@@ -259,16 +259,16 @@ describe("DroparJogador", () => {
 
         const partidasAtualizadas: Partida[] = [];
         const partidaGw = criarMockPartidaGateway({
-            listarPorTorneio: jest.fn().mockResolvedValue([partidaPendente]),
-            atualizar: jest.fn().mockImplementation((p: Partida) => {
+            listarPorTorneio: vi.fn().mockResolvedValue([partidaPendente]),
+            atualizar: vi.fn().mockImplementation((p: Partida) => {
                 partidasAtualizadas.push({ ...p } as Partida);
                 return Promise.resolve();
             }),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricaoJ2 }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador2) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricaoJ2 }) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador2) }),
             partidaGw,
         );
 
@@ -286,13 +286,13 @@ describe("DroparJogador", () => {
             donoId: "dono", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0,
         });
         const inscricaoGw = criarMockInscricaoGateway({
-            buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }),
+            buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }),
         });
         const partidaGw = criarMockPartidaGateway();
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             inscricaoGw,
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             partidaGw,
         );
 
@@ -321,12 +321,12 @@ describe("DroparJogador", () => {
         });
 
         const partidaGw = criarMockPartidaGateway({
-            listarPorTorneio: jest.fn().mockResolvedValue([partidaFinalizada, partidaPendente]),
+            listarPorTorneio: vi.fn().mockResolvedValue([partidaFinalizada, partidaPendente]),
         });
         const uc = DroparJogador.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue({ ...inscricao }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(jogador) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue({ ...inscricao }) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(jogador) }),
             partidaGw,
         );
 

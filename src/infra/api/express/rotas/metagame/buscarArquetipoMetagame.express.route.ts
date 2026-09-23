@@ -1,5 +1,5 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { BuscarArquetipoMetagame } from "../../../../../casosDeUso/metagame/buscarArquetipoMetagame";
+import { BuscarArquetipoMetagame, resumirArquetipoMetagame } from "../../../../../casosDeUso/metagame/buscarArquetipoMetagame";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
 import { heavyReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
@@ -39,9 +39,9 @@ export class BuscarArquetipoMetagameRota implements Rotas {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
         const { formato, slug } = request.paramsValidados as Params;
-        const { dias } = request.queryValidados as Query;
-        const resultado = await this.servico.executar({ formato, slug, dias });
-        response.status(200).json(resultado);
+        const { dias, limiteListas, offsetListas, resumo, dataInicio, dataFim } = request.queryValidados as Query;
+        const resultado = await this.servico.executar({ formato, slug, dias, limiteListas, offsetListas, dataInicio, dataFim });
+        response.status(200).json(resumo === "true" ? resumirArquetipoMetagame(resultado) : resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
           response.status(error.status).json({ mensagem: error.message, erros: error.erros });

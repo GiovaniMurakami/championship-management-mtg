@@ -50,6 +50,19 @@ describe("Usuario", () => {
         expect(usuario.role).toBe("admin");
     });
 
+    it("normaliza newsletterMetagame para true, false ou null", () => {
+        expect(new Usuario({
+            id: "1", nome: "A", email: "a@e.com", senha: "s", newsletterMetagame: true,
+        }).newsletterMetagame).toBe(true);
+        expect(new Usuario({
+            id: "1", nome: "A", email: "a@e.com", senha: "s", newsletterMetagame: false,
+        }).newsletterMetagame).toBe(false);
+        expect(new Usuario({
+            id: "1", nome: "A", email: "a@e.com", senha: "s",
+        }).newsletterMetagame).toBeNull();
+        expect(Usuario.criar({ nome: "B", email: "b@e.com", senha: "s" }).newsletterMetagame).toBeNull();
+    });
+
     it("deve definir criadoEm automaticamente quando não informado", () => {
         const antes = new Date();
         const usuario = new Usuario({

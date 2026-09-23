@@ -8,6 +8,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { aplicarPublicacaoRodada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
 
@@ -15,13 +16,15 @@ export type IniciarTorneioInputDto = {
   torneioId: string;
   donoId: string;
   isAdmin: boolean;
+  publicar?: boolean;
 };
 
 export type IniciarTorneioOutputDto = {
   torneioId: string;
   rodadaAtual: number;
   totalRodadas: number;
-  rodadaIniciadaEm: string;
+  rodadaPublicada: boolean;
+  rodadaIniciadaEm?: string;
   partidas: Array<{
     id: string;
     jogador1Id: string;
@@ -96,17 +99,20 @@ export class IniciarTorneio
       : rodadasCalculadas;
 
     torneio.avancarParaEmAndamento(1, totalRodadas);
+    const publicar = input.publicar !== false;
+    aplicarPublicacaoRodada(torneio, publicar);
 
     const deckMap = new Map(comCheckIn.map((i) => [i.usuarioId, i.deckId]));
-    const jogadores = comCheckIn.map((i) => i.usuarioId);
+    const jogadores = comCheckIn
+      .map((i) => i.usuarioId)
+      .sort((a, b) =>
+        chavePareamentoInicial(input.torneioId, a) - chavePareamentoInicial(input.torneioId, b) ||
+        a.localeCompare(b)
+      );
     const usuarios = await this.usuarioGateway.buscarVarios(jogadores);
     const usuarioNomeMap = new Map(
       usuarios.map((u) => [u.id, resolverNomeJogador(u, torneio.exibirNomeJogador)])
     );
-    for (let i = jogadores.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
-    }
 
     const partidas: Partida[] = [];
     for (let i = 0; i < jogadores.length; i += 2) {
@@ -135,7 +141,8 @@ export class IniciarTorneio
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,
-      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+      rodadaPublicada: publicar,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       partidas: partidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,
@@ -147,4 +154,14 @@ export class IniciarTorneio
       })),
     };
   }
+}
+
+function chavePareamentoInicial(torneioId: string, usuarioId: string): number {
+  const valor = `${torneioId}:${usuarioId}`;
+  let hash = 2166136261;
+  for (let i = 0; i < valor.length; i += 1) {
+    hash ^= valor.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }

@@ -6,18 +6,18 @@ import { heavyReadRateLimiter } from "../../../../../../src/middlewares/express/
 function makeReqRes() {
     const req = {
         paramsValidados: { formato: "pauper", slug: "blue-terror" },
-        queryValidados: { dias: 30 },
+        queryValidados: { dias: 30, limiteListas: 10, offsetListas: 20 },
     } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("BuscarArquetipoMetagameRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = BuscarArquetipoMetagameRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("deve ser rota publica sem autenticarJwt", () => {
         expect(rota.getCaminho()).toBe("/metagame/:formato/:slug");
@@ -37,9 +37,31 @@ describe("BuscarArquetipoMetagameRota", () => {
             formato: "pauper",
             slug: "blue-terror",
             dias: 30,
+            limiteListas: 10,
+            offsetListas: 20,
         });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it("resumo omite cartas sem alterar o detalhe completo em cache", async () => {
+        const cartas = [{ nome: "Island", quantidade: 60 }];
+        const lista = { deckId: "d1", nome: "Terror", usuario: { id: "u1", nome: "Ana" }, torneioId: "t1", torneioNome: "Torneio", maindeck: cartas, sideboard: [], commander: [] };
+        const saida = { nome: "Blue Terror", listaTipica: { maindeck: cartas }, listas: [lista], deckIds: ["d1"] };
+        servico.executar.mockResolvedValue(saida);
+        const { req, res, next } = makeReqRes();
+        req.queryValidados.resumo = "true";
+        await rota.getHandler()(req, res, next);
+        const payload = JSON.parse(JSON.stringify(res.json.mock.calls[0][0]));
+        expect(payload.listaTipica).toBeUndefined();
+        expect(payload.listas[0].maindeck).toBeUndefined();
+        expect(payload.listas[0].sideboard).toBeUndefined();
+        expect(payload.listas[0].commander).toBeUndefined();
+        expect(payload.listas[0].deckId).toBe("d1");
+        expect(payload.deckIds).toEqual(["d1"]);
+        expect(saida.listas[0].maindeck).toEqual(cartas);
+        expect(saida.listaTipica.maindeck).toEqual(cartas);
         expect(next).not.toHaveBeenCalled();
     });
 

@@ -4,6 +4,7 @@ import { ResetSenhaGateway } from "../../dominio/gateway/resetSenhaGateway";
 import { EmailGateway } from "../../dominio/gateway/emailGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { buildFrontendAppLink } from "../../helpers/env";
+import { criarEmailResetSenha } from "../../infra/services/templatesEmail";
 
 const EXPIRACAO_MS = 60 * 60 * 1000; // 1 hora
 
@@ -52,16 +53,11 @@ export class SolicitarResetSenha
 
         const link = buildFrontendAppLink(`/reset-senha?token=${token}`);
 
+        const emailReset = criarEmailResetSenha(usuario.nome, link);
         await this.emailGateway.enviar({
             para: usuario.email,
-            assunto: "Redefinição de senha - Fuguete",
-            html: `
-        <h2>Olá, ${usuario.nome}!</h2>
-        <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
-        <p>Clique no link abaixo para criar uma nova senha. O link expira em <strong>1 hora</strong>.</p>
-        <p><a href="${link}" style="background:#6d28d9;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">Redefinir senha</a></p>
-        <p>Se você não solicitou isso, ignore este e-mail.</p>
-      `,
+            assunto: "Redefinição de senha — Fuguete",
+            ...emailReset,
         });
 
         return respostaGenerica;

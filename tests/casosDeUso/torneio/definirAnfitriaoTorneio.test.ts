@@ -25,14 +25,14 @@ describe("DefinirAnfitriaoTorneio", () => {
 
     it("define anfitrião quando o usuário existe", async () => {
         const torneio = torneioBase();
-        const atualizar = jest.fn().mockResolvedValue(undefined);
+        const atualizar = vi.fn().mockResolvedValue(undefined);
         const uc = DefinirAnfitriaoTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
                 atualizar,
             }),
             criarMockUsuarioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(anfitriao),
+                buscarPorId: vi.fn().mockResolvedValue(anfitriao),
             }),
         );
 
@@ -50,11 +50,11 @@ describe("DefinirAnfitriaoTorneio", () => {
     it("remove anfitrião quando anfitriaoId é null", async () => {
         const torneio = torneioBase();
         torneio.anfitriaoId = "anf-1";
-        const atualizar = jest.fn().mockResolvedValue(undefined);
+        const atualizar = vi.fn().mockResolvedValue(undefined);
         const usuarioGw = criarMockUsuarioGateway();
         const uc = DefinirAnfitriaoTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
                 atualizar,
             }),
             usuarioGw,
@@ -70,7 +70,7 @@ describe("DefinirAnfitriaoTorneio", () => {
 
     it("retorna 404 quando torneio não existe", async () => {
         const uc = DefinirAnfitriaoTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) }),
             criarMockUsuarioGateway(),
         );
 
@@ -83,9 +83,9 @@ describe("DefinirAnfitriaoTorneio", () => {
     it("retorna 404 quando usuário anfitrião não existe", async () => {
         const uc = DefinirAnfitriaoTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
             }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) }),
         );
 
         await expect(uc.executar({ torneioId: "t-1", anfitriaoId: "missing" })).rejects.toMatchObject({

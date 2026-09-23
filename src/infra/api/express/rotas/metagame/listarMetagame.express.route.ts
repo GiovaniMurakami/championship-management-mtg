@@ -29,8 +29,8 @@ export class ListarMetagameRota implements Rotas {
   public getHandler() {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
       try {
-        const { formato, dias } = request.queryValidados as Query;
-        const resultado = await this.servico.executar({ formato, dias });
+        const { formato, dias, dataInicio, dataFim, limite, offset } = request.queryValidados as Query;
+        const resultado = await this.servico.executar({ formato, dias, dataInicio, dataFim, limite, offset });
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

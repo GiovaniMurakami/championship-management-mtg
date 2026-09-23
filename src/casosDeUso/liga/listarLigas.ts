@@ -1,3 +1,4 @@
+import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { TipoLiga } from "../../dominio/entidade/liga";
 import { CasoDeUso } from "../casoDeUso";
@@ -30,10 +31,10 @@ export type ListarLigasOutputDto = {
 };
 
 export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOutputDto> {
-  private constructor(private readonly ligaGateway: LigaGateway) {}
+  private constructor(private readonly ligaGateway: LigaGateway, private readonly torneioGateway: TorneioGateway) {}
 
-  public static criar(ligaGateway: LigaGateway) {
-    return new ListarLigas(ligaGateway);
+  public static criar(ligaGateway: LigaGateway, torneioGateway: TorneioGateway) {
+    return new ListarLigas(ligaGateway, torneioGateway);
   }
 
   public async executar(input: ListarLigasInputDto): Promise<ListarLigasOutputDto> {
@@ -50,6 +51,8 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
       this.ligaGateway.listarTotal({ tipo, nome }),
     ]);
 
+    const torneios = await Promise.all([...new Set(ligas.flatMap((liga) => liga.torneioIds))].map((id) => this.torneioGateway.buscarPorId(id)));
+    const finalizados = new Set(torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id));
     return {
       ligas: ligas.map((liga) => ({
         id: liga.id,
@@ -58,7 +61,7 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
         bannerUrl: liga.bannerUrl,
         donoId: liga.donoId,
         tipo: liga.tipo,
-        totalTorneios: liga.torneioIds.length,
+        totalTorneios: liga.torneioIds.filter((id) => finalizados.has(id)).length,
         criadoEm: liga.criadoEm,
       })),
       total,

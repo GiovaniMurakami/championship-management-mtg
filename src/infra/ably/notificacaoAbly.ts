@@ -38,6 +38,14 @@ export class NotificacaoAbly {
   }
 
   private escutarEventos() {
+    for (const evento of ["rodada_refeita", "jogador_voltou", "torneio_atualizado"]) {
+      eventosTorneio.on(evento, (payload: Record<string, unknown> & { torneioId: string }) => {
+        this.publicar(payload.torneioId, evento, payload);
+      });
+    }
+    eventosTorneio.on("torneio_alterado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "torneio_atualizado", payload);
+    });
     eventosTorneio.on("rodada_iniciada", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "rodada_iniciada", payload);
     });

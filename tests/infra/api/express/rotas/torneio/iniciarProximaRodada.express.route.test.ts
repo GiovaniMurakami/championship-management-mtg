@@ -6,7 +6,7 @@ describe("IniciarProximaRodadaRota", () => {
 
     function criarHandler(resultado: Record<string, unknown>) {
         const servico = {
-            executar: jest.fn().mockResolvedValue(resultado),
+            executar: vi.fn().mockResolvedValue(resultado),
         } as any;
         const rota = IniciarProximaRodadaRota.criar(servico);
         return { servico, handler: rota.getHandler() };
@@ -19,10 +19,10 @@ describe("IniciarProximaRodadaRota", () => {
             body: {},
         } as any;
         const response = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn(),
+            status: vi.fn().mockReturnThis(),
+            json: vi.fn(),
         } as any;
-        await handler(request, response, jest.fn());
+        await handler(request, response, vi.fn());
         return response;
     }
 
@@ -36,7 +36,7 @@ describe("IniciarProximaRodadaRota", () => {
             partidas: [{ jogador1Id: "u-1", jogador2Id: "u-2" }],
         };
         const { handler } = criarHandler(resultado);
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
+        const emitSpy = vi.spyOn(eventosTorneio, "emit");
 
         await executar(handler);
 
@@ -67,7 +67,7 @@ describe("IniciarProximaRodadaRota", () => {
             }],
         };
         const { handler } = criarHandler(resultado);
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
+        const emitSpy = vi.spyOn(eventosTorneio, "emit");
 
         await executar(handler);
 

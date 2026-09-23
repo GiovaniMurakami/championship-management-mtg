@@ -32,6 +32,9 @@ export type LoginUsuarioOutputDto = {
     telefone?: string;
     nickMTGO?: string;
     nickArena?: string;
+    fotoUrl?: string;
+    descricaoAssinatura?: string;
+    newsletterMetagame?: boolean | null;
   };
 };
 
@@ -156,6 +159,9 @@ export class LoginUsuario
         telefone: usuario.telefone,
         nickMTGO: usuario.nickMTGO,
         nickArena: usuario.nickArena,
+        fotoUrl: usuario.fotoUrl,
+        descricaoAssinatura: usuario.descricaoAssinatura,
+        newsletterMetagame: usuario.newsletterMetagame,
       },
     };
   }

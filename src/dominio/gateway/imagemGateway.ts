@@ -17,4 +17,5 @@ export interface GerarUrlUploadOutput {
 
 export interface ImagemGateway {
     gerarUrlUpload(input: GerarUrlUploadInput): Promise<GerarUrlUploadOutput>;
+    excluirPorUrl(urlPublica: string): Promise<void>;
 }

@@ -5,8 +5,9 @@ import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizad
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { torneioMutationRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { eventosTorneio } from "../../../../socketio/eventosTorneio";
-import { torneioIdParamSchema } from "../../../../../helpers/validacao/schemas";
+import { torneioIdParamSchema, publicarRodadaBodySchema } from "../../../../../helpers/validacao/schemas";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
+import { validarBody } from "../../../../../helpers/validacao/validarBody";
 
 export class IniciarTorneioRota implements Rotas {
   private constructor(
@@ -36,6 +37,8 @@ export class IniciarTorneioRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
+        const dados = validarBody(publicarRodadaBodySchema, request.body ?? {}, response);
+        if (!dados) return;
         const donoId = request.usuario!.id;
         const torneioId = request.params.torneioId as string;
 
@@ -43,6 +46,7 @@ export class IniciarTorneioRota implements Rotas {
           torneioId,
           donoId,
           isAdmin: request.usuario!.role === "admin",
+          publicar: dados.publicar,
         });
 
         eventosTorneio.emit("torneio_iniciado", {
@@ -52,13 +56,15 @@ export class IniciarTorneioRota implements Rotas {
           totalPartidas: resultado.partidas.length,
         });
 
-        eventosTorneio.emit("rodada_iniciada", {
-          torneioId: resultado.torneioId,
-          rodadaAtual: resultado.rodadaAtual,
-          totalRodadas: resultado.totalRodadas,
-          rodadaIniciadaEm: resultado.rodadaIniciadaEm,
-          partidas: resultado.partidas,
-        });
+        if (resultado.rodadaPublicada !== false) {
+          eventosTorneio.emit("rodada_iniciada", {
+            torneioId: resultado.torneioId,
+            rodadaAtual: resultado.rodadaAtual,
+            totalRodadas: resultado.totalRodadas,
+            rodadaIniciadaEm: resultado.rodadaIniciadaEm,
+            partidas: resultado.partidas,
+          });
+        }
 
         response.status(200).json(resultado);
       } catch (error) {

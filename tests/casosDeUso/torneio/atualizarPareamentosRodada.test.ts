@@ -75,15 +75,15 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve permitir reordenar mesas e trocar os pareamentos pendentes", async () => {
         const partidasRodada = criarPartidasRodadaBase();
-        const atualizarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
+        const atualizarMock = vi.fn().mockImplementation(async (partida: Partida) => partida);
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada),
                 atualizar: atualizarMock,
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({
@@ -123,18 +123,18 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve permitir criar mesa BYE nova e incluir jogador que não estava na rodada", async () => {
         const partidasRodada = [criarPartidasRodadaBase()[0]];
-        const salvarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
-        const excluirMock = jest.fn().mockResolvedValue(0);
+        const salvarMock = vi.fn().mockImplementation(async (partida: Partida) => partida);
+        const excluirMock = vi.fn().mockResolvedValue(0);
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
-                atualizar: jest.fn().mockImplementation(async (partida: Partida) => partida),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada),
+                atualizar: vi.fn().mockImplementation(async (partida: Partida) => partida),
                 salvar: salvarMock,
                 excluirPorIds: excluirMock,
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({
@@ -182,17 +182,17 @@ describe("AtualizarPareamentosRodada", () => {
                 mesa: 2,
             }),
         ];
-        const excluirMock = jest.fn().mockResolvedValue(1);
+        const excluirMock = vi.fn().mockResolvedValue(1);
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
-                atualizar: jest.fn().mockImplementation(async (partida: Partida) => partida),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada),
+                atualizar: vi.fn().mockImplementation(async (partida: Partida) => partida),
                 excluirPorIds: excluirMock,
-                salvar: jest.fn(),
+                salvar: vi.fn(),
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({
@@ -226,10 +226,10 @@ describe("AtualizarPareamentosRodada", () => {
             }),
         ];
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada),
             }),
             criarMockUsuarioGateway(),
         );
@@ -250,17 +250,17 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve converter a partida editada em BYE normal quando jogador2 for removido", async () => {
         const partidasRodada = criarPartidasRodadaBase();
-        const atualizarMock = jest.fn().mockImplementation(async (partida: Partida) => partida);
-        const excluirMock = jest.fn().mockResolvedValue(1);
+        const atualizarMock = vi.fn().mockImplementation(async (partida: Partida) => partida);
+        const excluirMock = vi.fn().mockResolvedValue(1);
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockPartidaGateway({
-                listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada),
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada),
                 atualizar: atualizarMock,
                 excluirPorIds: excluirMock,
             }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue(usuarios) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
         );
 
         const resultado = await uc.executar({
@@ -301,7 +301,7 @@ describe("AtualizarPareamentosRodada", () => {
     it("deve lançar erro se o torneio não estiver em andamento", async () => {
         const uc = AtualizarPareamentosRodada.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio, status: "finalizado" })),
+                buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio, status: "finalizado" })),
             }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
@@ -315,7 +315,7 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve lançar erro se a rodada informada não for a rodada atual", async () => {
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -328,7 +328,7 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve lançar 403 para usuário sem permissão", async () => {
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
             criarMockInscricaoGateway(),
             criarMockPartidaGateway(),
             criarMockUsuarioGateway(),
@@ -341,9 +341,9 @@ describe("AtualizarPareamentosRodada", () => {
 
     it("deve lançar erro se não existirem partidas para a rodada", async () => {
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue([]) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneioERodada: vi.fn().mockResolvedValue([]) }),
             criarMockUsuarioGateway(),
         );
 
@@ -361,9 +361,9 @@ describe("AtualizarPareamentosRodada", () => {
             new Inscricao({ id: "i-4", torneioId: "t-1", usuarioId: "u-4", checkInRodada: 2, dropped: false, deckId: "deck-4" }),
         ];
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoesComDrop) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoesComDrop) }),
+            criarMockPartidaGateway({ listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada) }),
             criarMockUsuarioGateway(),
         );
 
@@ -411,9 +411,9 @@ describe("AtualizarPareamentosRodada", () => {
             }),
         ];
         const uc = AtualizarPareamentosRodada.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
-            criarMockInscricaoGateway({ listarPorTorneio: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockPartidaGateway({ listarPorTorneioERodada: jest.fn().mockResolvedValue(partidasRodada) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Torneio({ ...torneio })) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada) }),
             criarMockUsuarioGateway(),
         );
 

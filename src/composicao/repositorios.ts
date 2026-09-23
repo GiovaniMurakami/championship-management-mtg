@@ -1,3 +1,4 @@
+import { PartidaExternaDynamoRepositorio } from "../infra/dynamodb/repositorios/partidaExternaDynamoRepositorio";
 import { TokenBlacklistDynamoRepositorio } from "../infra/dynamodb/repositorios/tokenBlacklistDynamoRepositorio";
 import { RefreshTokenDynamoRepositorio } from "../infra/dynamodb/repositorios/refreshTokenDynamoRepositorio";
 import { LoginAttemptDynamoRepositorio } from "../infra/dynamodb/repositorios/loginAttemptDynamoRepositorio";
@@ -12,9 +13,12 @@ import { PartidaDynamoRepositorio } from "../infra/dynamodb/repositorios/partida
 import { DeckDynamoRepositorio } from "../infra/dynamodb/repositorios/deckDynamoRepositorio";
 import { LigaDynamoRepositorio } from "../infra/dynamodb/repositorios/ligaDynamoRepositorio";
 import { TimeDynamoRepositorio } from "../infra/dynamodb/repositorios/timeDynamoRepositorio";
+import { PostDynamoRepositorio } from "../infra/dynamodb/repositorios/postDynamoRepositorio";
+import { ArtigoDynamoRepositorio } from "../infra/dynamodb/repositorios/artigoDynamoRepositorio";
 
 export function criarRepositorios() {
     return {
+        partidaExterna: PartidaExternaDynamoRepositorio.criar(),
         usuario: UsuarioDynamoRepositorio.criar(),
         deck: DeckDynamoRepositorio.criar(),
         torneio: TorneioDynamoRepositorio.criar(),
@@ -29,6 +33,8 @@ export function criarRepositorios() {
         time: TimeDynamoRepositorio.criar(),
         siteConfig: SiteConfigDynamoRepositorio.criar(),
         storyFundo: StoryFundoDynamoRepositorio.criar(),
+        post: PostDynamoRepositorio.criar(),
+        artigo: ArtigoDynamoRepositorio.criar(),
     };
 }
 

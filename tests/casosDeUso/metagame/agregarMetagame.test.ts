@@ -7,6 +7,19 @@ import { agregarMetagame, slugificarArquetipo } from "../../../src/casosDeUso/me
 
 const agora = new Date("2026-08-14T12:00:00.000Z");
 
+it("usa datas históricas explícitas em vez da janela móvel, incluindo ambos os limites", () => {
+  const inicio = new Date("2025-01-01T03:00:00.000Z");
+  const fim = new Date("2025-01-02T02:59:59.999Z");
+  const torneios = [
+    torneio({ id: "antes", horario: new Date(inicio.getTime() - 1) }),
+    torneio({ id: "inicio", horario: inicio }),
+    torneio({ id: "fim", horario: fim }),
+    torneio({ id: "depois", horario: new Date(fim.getTime() + 1) }),
+  ];
+  const result = agregarMetagame({ formato: "pauper", dias: 30, agora, intervalo: { dataInicio: inicio, dataFim: fim }, torneios, inscricoes: [], partidas: [], decks: [], usuarios: [] });
+  expect(result.totalTorneios).toBe(2);
+});
+
 function torneio(overrides: Partial<ConstructorParameters<typeof Torneio>[0]> = {}) {
     return new Torneio({
         id: "torneio-1",
@@ -137,7 +150,9 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("brainstorm");
         expect(resultado.arquetipos[0].cartasChave).toEqual(["brainstorm", "tolarian terror"]);
         expect(resultado.arquetipos[0].cartasCores).toEqual(["tolarian terror", "island", "brainstorm"]);
+        expect(resultado.arquetipos[0].cores).toEqual(["U"]);
         expect(resultado.arquetipos[1].cartasCores).toEqual(["frogmite", "mountain"]);
+        expect(resultado.arquetipos[1].cores).toEqual(["R"]);
         expect(resultado.recentes).toHaveLength(1);
         expect(resultado.recentes[0].torneioNome).toBe("Pauper Semanal");
         expect(resultado.recentes[0].decks.map((d) => d.nome)).toEqual(["Blue Terror", "Affinity"]);
@@ -406,6 +421,34 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("edric, spymaster of trest");
         expect(resultado.arquetipos[0].cartasChave).toEqual(["edric, spymaster of trest"]);
         expect(resultado.arquetipos[0].cartasCores).toEqual(["edric, spymaster of trest"]);
+        expect(resultado.arquetipos[0].cores).toEqual([]);
+    });
+
+    it("usa cores persistidas no deck sem consultar a lista de cartas", () => {
+        const t = torneio();
+        const affinity = deck({
+            id: "deck-grixis",
+            nome: "Grixis Affinity",
+            nomeConsolidado: "Grixis Affinity",
+            usuarioId: "user-2",
+            maindeck: [
+                { nome: "thoughtcast", quantidade: 4 },
+                { nome: "darkslick shores", quantidade: 4 },
+            ],
+            cores: ["U", "B", "R"],
+        });
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            torneios: [t],
+            inscricoes: [inscricao("torneio-1", "user-2", "deck-grixis")],
+            partidas: [],
+            decks: [affinity],
+            usuarios: [bob],
+        });
+
+        expect(resultado.arquetipos[0].cores).toEqual(["U", "B", "R"]);
     });
 
     it("ignora partida não finalizada e usa a primeira lista encontrada", () => {

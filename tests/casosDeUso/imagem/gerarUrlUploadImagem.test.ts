@@ -7,7 +7,7 @@ describe("GerarUrlUploadImagem", () => {
 
     it("deve gerar URL de upload para image/jpeg com sucesso", async () => {
         const gateway = criarMockImagemGateway({
-            gerarUrlUpload: jest.fn().mockResolvedValue({
+            gerarUrlUpload: vi.fn().mockResolvedValue({
                 uploadUrl,
                 urlPublica: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg",
             }),
@@ -31,7 +31,7 @@ describe("GerarUrlUploadImagem", () => {
         async (contentType) => {
             const ext = contentType.split("/")[1];
             const gateway = criarMockImagemGateway({
-                gerarUrlUpload: jest.fn().mockResolvedValue({
+                gerarUrlUpload: vi.fn().mockResolvedValue({
                     uploadUrl: "https://bucket.s3.amazonaws.com/imagens/user-1/file." + ext,
                     urlPublica: "https://bucket.s3.amazonaws.com/imagens/user-1/file." + ext,
                 }),
@@ -101,7 +101,7 @@ describe("GerarUrlUploadImagem", () => {
 
     it("deve aceitar tamanhoBytes exatamente no limite de 5 MB", async () => {
         const gateway = criarMockImagemGateway({
-            gerarUrlUpload: jest.fn().mockResolvedValue({
+            gerarUrlUpload: vi.fn().mockResolvedValue({
                 uploadUrl: "https://bucket.s3.amazonaws.com/imagens/user-1/file.png",
                 urlPublica: "https://bucket.s3.amazonaws.com/imagens/user-1/file.png",
             }),
@@ -115,7 +115,7 @@ describe("GerarUrlUploadImagem", () => {
 
     it("deve gerar chave única por chamada", async () => {
         const gateway = criarMockImagemGateway({
-            gerarUrlUpload: jest.fn().mockResolvedValue({
+            gerarUrlUpload: vi.fn().mockResolvedValue({
                 uploadUrl: "https://bucket.s3.amazonaws.com/key",
                 urlPublica: "https://bucket.s3.amazonaws.com/key",
             }),
@@ -132,7 +132,7 @@ describe("GerarUrlUploadImagem", () => {
 
     it("deve incluir o usuarioId na chave gerada", async () => {
         const gateway = criarMockImagemGateway({
-            gerarUrlUpload: jest.fn().mockResolvedValue({
+            gerarUrlUpload: vi.fn().mockResolvedValue({
                 uploadUrl: "https://bucket.s3.amazonaws.com/key",
                 urlPublica: "https://bucket.s3.amazonaws.com/key",
             }),

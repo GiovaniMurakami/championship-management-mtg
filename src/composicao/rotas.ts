@@ -1,12 +1,20 @@
+import { RegistrarPartidaExternaRota } from "../infra/api/express/rotas/usuario/registrarPartidaExterna.express.route";
 import { CadastrarUsuarioRota } from "../infra/api/express/rotas/usuario/cadastrarUsuario.express.route";
 import { LoginUsuarioRota } from "../infra/api/express/rotas/usuario/loginUsuario.express.route";
 import { AtualizarUsuarioRota } from "../infra/api/express/rotas/usuario/atualizarUsuario.express.route";
+import { BuscarMeuUsuarioRota } from "../infra/api/express/rotas/usuario/buscarMeuUsuario.express.route";
 import { RefreshTokenRota } from "../infra/api/express/rotas/usuario/refreshToken.express.route";
 import { LogoutUsuarioRota } from "../infra/api/express/rotas/usuario/logoutUsuario.express.route";
 import { SolicitarResetSenhaRota } from "../infra/api/express/rotas/usuario/solicitarResetSenha.express.route";
 import { ConfirmarResetSenhaRota } from "../infra/api/express/rotas/usuario/confirmarResetSenha.express.route";
 import { ListarUsuariosRota } from "../infra/api/express/rotas/usuario/listarUsuarios.express.route";
+import { BuscarPerfilPublicoRota } from "../infra/api/express/rotas/usuario/buscarPerfilPublico.express.route";
 import { AlterarBloqueioTorneiosRota } from "../infra/api/express/rotas/usuario/alterarBloqueioTorneios.express.route";
+import { DefinirEditorRota } from "../infra/api/express/rotas/usuario/definirEditor.express.route";
+import {
+  ListarAssinantesNewsletterRota,
+  DescadastrarNewsletterRota,
+} from "../infra/api/express/rotas/usuario/newsletter.express.route";
 import { ExcluirContaRota } from "../infra/api/express/rotas/usuario/excluirConta.express.route";
 import { CadastrarDeckRota } from "../infra/api/express/rotas/deck/cadastrarDeck.express.route";
 import { AtualizarDeckRota } from "../infra/api/express/rotas/deck/atualizarDeck.express.route";
@@ -19,6 +27,7 @@ import { CheckInTorneioRota } from "../infra/api/express/rotas/torneio/checkInTo
 import { EscolherDeckTorneioRota } from "../infra/api/express/rotas/torneio/escolherDeckTorneio.express.route";
 import { IniciarTorneioRota } from "../infra/api/express/rotas/torneio/iniciarTorneio.express.route";
 import { IniciarProximaRodadaRota } from "../infra/api/express/rotas/torneio/iniciarProximaRodada.express.route";
+import { PublicarRodadaRota } from "../infra/api/express/rotas/torneio/publicarRodada.express.route";
 import { RefazerRodadaRota } from "../infra/api/express/rotas/torneio/refazerRodada.express.route";
 import { AjustarTotalRodadasRota } from "../infra/api/express/rotas/torneio/ajustarTotalRodadas.express.route";
 import { EncerrarTorneioRota } from "../infra/api/express/rotas/torneio/encerrarTorneio.express.route";
@@ -28,10 +37,13 @@ import { ConfirmarResultadoRota } from "../infra/api/express/rotas/torneio/confi
 import { AtualizarMesaPartidaRota } from "../infra/api/express/rotas/torneio/atualizarMesaPartida.express.route";
 import { AtualizarPareamentosRodadaRota } from "../infra/api/express/rotas/torneio/atualizarPareamentosRodada.express.route";
 import { DroparJogadorRota } from "../infra/api/express/rotas/torneio/droparJogador.express.route";
+import { DroparJogadoresSemDeckRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemDeck.express.route";
+import { DroparJogadoresSemCheckinRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemCheckin.express.route";
 import { DesdroparJogadorRota } from "../infra/api/express/rotas/torneio/desdroparJogador.express.route";
 import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTorneios.express.route";
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarSeoTorneioRota } from "../infra/api/express/rotas/torneio/buscarSeoTorneio.express.route";
+import { RenderizarCompartilhamentoTorneioRota } from "../infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
 import { BuscarStandingsRota } from "../infra/api/express/rotas/torneio/buscarStandings.express.route";
 import { MeuHistoricoTorneioRota } from "../infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
 import { ListarPartidasTorneioRota } from "../infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
@@ -66,6 +78,13 @@ import { BuscarAnunciosAdminRota } from "../infra/api/express/rotas/site/buscarA
 import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/buscarEstatisticasSite.express.route";
 import { RegistrarCliqueAnuncioRota } from "../infra/api/express/rotas/site/registrarCliqueAnuncio.express.route";
 import { SalvarAnunciosRota } from "../infra/api/express/rotas/site/salvarAnuncios.express.route";
+import {
+  BuscarAnuncioDiarioRota,
+  BuscarAnuncioDiarioAdminRota,
+  SalvarAnuncioDiarioRota,
+  RegistrarVisualizacaoAnuncioDiarioRota,
+  RegistrarCliqueAnuncioDiarioRota,
+} from "../infra/api/express/rotas/site/anuncioDiario.express.route";
 import { CadastrarStoryFundoRota } from "../infra/api/express/rotas/storyFundo/cadastrarStoryFundo.express.route";
 import { ListarStoryFundosRota } from "../infra/api/express/rotas/storyFundo/listarStoryFundos.express.route";
 import { ExcluirStoryFundoRota } from "../infra/api/express/rotas/storyFundo/excluirStoryFundo.express.route";
@@ -73,19 +92,36 @@ import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
 import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
 import { type CasosDeUso } from "./casos";
+import { CriarPostRota, ListarPostsRota, BuscarPostRota, EditarPostRota, ComentarPostRota, CurtirPostRota, ExcluirPostRota } from "../infra/api/express/rotas/post/postRotas.express.route";
+import {
+  CriarArtigoRota,
+  ListarArtigosRota,
+  BuscarArtigoRota,
+  EditarArtigoRota,
+  AprovarArtigoRota,
+  ComentarArtigoRota,
+  CurtirArtigoRota,
+  ExcluirArtigoRota,
+} from "../infra/api/express/rotas/artigo/artigoRotas.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
         CadastrarUsuarioRota.criar(casos.cadastrarUsuario),
         LoginUsuarioRota.criar(casos.loginUsuario),
         AtualizarUsuarioRota.criar(casos.atualizarUsuario),
+        BuscarMeuUsuarioRota.criar(casos.buscarMeuUsuario),
         ExcluirContaRota.criar(casos.excluirConta),
         RefreshTokenRota.criar(casos.refreshToken),
         LogoutUsuarioRota.criar(casos.logoutUsuario),
         SolicitarResetSenhaRota.criar(casos.solicitarResetSenha),
         ConfirmarResetSenhaRota.criar(casos.confirmarResetSenha),
         ListarUsuariosRota.criar(casos.listarUsuarios),
+        RegistrarPartidaExternaRota.criar(casos.registrarPartidaExterna),
+        BuscarPerfilPublicoRota.criar(casos.buscarPerfilPublico),
         AlterarBloqueioTorneiosRota.criar(casos.alterarBloqueioTorneios),
+        DefinirEditorRota.criar(casos.definirEditor),
+        ListarAssinantesNewsletterRota.criar(casos.listarAssinantesNewsletter),
+        DescadastrarNewsletterRota.criar(casos.descadastrarNewsletter),
         CadastrarDeckRota.criar(casos.cadastrarDeck),
         AtualizarDeckRota.criar(casos.atualizarDeck),
         ExcluirDeckRota.criar(casos.excluirDeck),
@@ -96,9 +132,12 @@ export function criarRotas(casos: CasosDeUso) {
         CheckInTorneioRota.criar(casos.checkInTorneio),
         EscolherDeckTorneioRota.criar(casos.escolherDeckTorneio),
         DroparJogadorRota.criar(casos.droparJogador),
+        DroparJogadoresSemDeckRota.criar(casos.droparJogadoresSemDeck),
+        DroparJogadoresSemCheckinRota.criar(casos.droparJogadoresSemCheckin),
         DesdroparJogadorRota.criar(casos.desdroparJogador),
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
+        PublicarRodadaRota.criar(casos.publicarRodada),
         RefazerRodadaRota.criar(casos.refazerRodada),
         AjustarTotalRodadasRota.criar(casos.ajustarTotalRodadas),
         EncerrarTorneioRota.criar(casos.encerrarTorneio),
@@ -109,6 +148,8 @@ export function criarRotas(casos: CasosDeUso) {
         AtualizarPareamentosRodadaRota.criar(casos.atualizarPareamentosRodada),
         ListarTorneiosRota.criar(casos.listarTorneios),
         BuscarSeoTorneioRota.criar(casos.buscarSeoTorneio),
+        RenderizarCompartilhamentoTorneioRota.criar(casos.buscarSeoTorneio),
+        RenderizarCompartilhamentoTorneioRota.criar(casos.buscarSeoTorneio, "/torneio/share/:torneioId"),
         BuscarTorneioRota.criar(casos.buscarTorneio),
         BuscarStandingsRota.criar(casos.buscarStandings),
         MeuHistoricoTorneioRota.criar(casos.meuHistoricoTorneio),
@@ -142,7 +183,29 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarEstatisticasSiteRota.criar(casos.buscarEstatisticasSite),
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
+        BuscarAnuncioDiarioRota.criar(casos.buscarAnuncioDiario),
+        BuscarAnuncioDiarioAdminRota.criar(casos.buscarAnuncioDiario),
+        SalvarAnuncioDiarioRota.criar(casos.salvarAnuncioDiario),
+        RegistrarVisualizacaoAnuncioDiarioRota.criar(casos.registrarVisualizacaoAnuncioDiario),
+        RegistrarCliqueAnuncioDiarioRota.criar(casos.registrarCliqueAnuncioDiario),
         GerarUrlUploadImagemRota.criar(casos.gerarUrlUploadImagem),
+        CriarPostRota.criar(casos.criarPost),
+        ListarPostsRota.criar(casos.listarPosts),
+        BuscarPostRota.criar(casos.buscarPost),
+        EditarPostRota.criar(casos.editarPost),
+        ComentarPostRota.criar(casos.comentarPost),
+        CurtirPostRota.criar(casos.curtirPost, true),
+        CurtirPostRota.criar(casos.curtirPost, false),
+        ExcluirPostRota.criar(casos.excluirPost),
+        CriarArtigoRota.criar(casos.criarArtigo),
+        ListarArtigosRota.criar(casos.listarArtigos),
+        BuscarArtigoRota.criar(casos.buscarArtigo),
+        EditarArtigoRota.criar(casos.editarArtigo),
+        AprovarArtigoRota.criar(casos.aprovarArtigo),
+        ComentarArtigoRota.criar(casos.comentarArtigo),
+        CurtirArtigoRota.criar(casos.curtirArtigo, true),
+        CurtirArtigoRota.criar(casos.curtirArtigo, false),
+        ExcluirArtigoRota.criar(casos.excluirArtigo),
         ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),

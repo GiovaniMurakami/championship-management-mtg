@@ -1,3 +1,4 @@
+import { intervaloDatasSchema } from "../data/intervaloDatas";
 import { z } from "zod";
 import { getS3BaseUrl } from "../env";
 import { paginacaoQueryCampos, uuidCampo } from "./campos";
@@ -36,6 +37,10 @@ const cartaSchema = z.object({
 });
 
 const commanderSchema = z.array(cartaSchema).nullable().optional();
+const coresDeckSchema = z
+  .array(z.string().trim().regex(/^[WUBRGwubrg]$/, "Cor de mana inválida."))
+  .max(5)
+  .optional();
 const linkLigaMagicSchema = z.string().url("linkLigaMagic deve ser uma URL válida.").nullable().optional();
 const ehFormatoCommander500 = (formato: string) => formato.toLowerCase().trim().replace(/\s+/g, "") === "commander500";
 
@@ -55,6 +60,13 @@ export const atualizarUsuarioSchema = z.object({
   telefone: z.string().optional(),
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
+  fotoUrl: z.string().url("fotoUrl deve ser uma URL válida.").max(2048).optional(),
+  descricaoAssinatura: z.string().max(500, "A descrição da assinatura pode ter no máximo 500 caracteres.").optional(),
+  newsletterMetagame: z.boolean().optional(),
+});
+
+export const descadastrarNewsletterSchema = z.object({
+  token: z.string().trim().min(10, "Token inválido.").max(500),
 });
 
 export const excluirContaSchema = z.object({
@@ -72,6 +84,8 @@ export const cadastrarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1, "Maindeck deve ter ao menos uma carta."),
   sideboard: z.array(cartaSchema).optional().default([]),
   commander: commanderSchema,
+  cores: coresDeckSchema,
+  oculto: z.boolean().optional().default(false),
 }).superRefine((dados, ctx) => {
   if (ehFormatoCommander500(dados.formato) && !dados.linkLigaMagic) {
     ctx.addIssue({
@@ -91,6 +105,8 @@ export const atualizarDeckSchema = z.object({
   maindeck: z.array(cartaSchema).min(1).optional(),
   sideboard: z.array(cartaSchema).optional(),
   commander: commanderSchema,
+  cores: coresDeckSchema,
+  oculto: z.boolean().optional(),
 });
 
 export const criarTorneioSchema = z.object({
@@ -107,9 +123,11 @@ export const criarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional(),
   maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
+  premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
+  ligaIds: z.array(uuidCampo("ligaId")).max(50).optional(),
 });
 
 export const alterarTorneioSchema = z.object({
@@ -126,6 +144,7 @@ export const alterarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
+  premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
@@ -160,6 +179,10 @@ export const contestarResultadoSchema = z.object({
 
 export const ajustarTotalRodadasSchema = z.object({
   totalRodadas: z.number().int().min(1, "totalRodadas deve ser >= 1.").max(30, "totalRodadas deve ser <= 30."),
+});
+
+export const publicarRodadaBodySchema = z.object({
+  publicar: z.boolean().optional().default(true),
 });
 
 export const droparJogadorSchema = z.object({
@@ -209,6 +232,61 @@ export const gerarUrlUploadImagemSchema = z.object({
     .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
 });
 
+export const criarPostSchema = z.object({
+  legenda: z.string().trim().max(2200, "A legenda pode ter no máximo 2200 caracteres.").optional(),
+  imagens: z.array(s3ImagemUrl()).min(1, "Informe ao menos uma imagem."),
+});
+
+export const editarPostSchema = criarPostSchema;
+
+export const comentarPostSchema = z.object({
+  texto: z.string().trim().min(1, "Comentário é obrigatório.").max(1000, "O comentário pode ter no máximo 1000 caracteres."),
+});
+
+export const listarPostsQuerySchema = z.object({
+  limite: z.coerce.number().int().min(1).max(100).optional().default(20),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
+export const artigoIdParamSchema = z.object({
+  artigoId: uuidCampo("artigoId"),
+});
+
+export const criarArtigoSchema = z.object({
+  titulo: z.string().trim().min(1, "Título é obrigatório.").max(200),
+  chamada: z.string().trim().max(300).optional(),
+  descricao: z.string().trim().max(1000).optional(),
+  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  capaUrl: s3ImagemUrlOuVazio().optional(),
+  conteudo: z.string().trim().min(1, "Conteúdo é obrigatório.").max(200_000),
+  publicarAgora: z.boolean().optional(),
+});
+
+export const editarArtigoSchema = z.object({
+  titulo: z.string().trim().min(1).max(200).optional(),
+  chamada: z.string().trim().max(300).optional(),
+  descricao: z.string().trim().max(1000).optional(),
+  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  capaUrl: s3ImagemUrlOuVazio().optional().nullable(),
+  conteudo: z.string().trim().min(1).max(200_000).optional(),
+  publicarAgora: z.boolean().optional(),
+});
+
+export const aprovarArtigoSchema = z.object({
+  aprovar: z.boolean(),
+});
+
+export const comentarArtigoSchema = comentarPostSchema;
+
+export const listarArtigosQuerySchema = z.object({
+  pendentes: z.enum(["true", "false"]).optional(),
+  status: z.enum(["rascunho", "pendente", "pendente_edicao", "publicado", "rejeitado"]).optional(),
+});
+
+export const definirEditorSchema = z.object({
+  editor: z.boolean(),
+});
+
 export const solicitarResetSenhaSchema = z.object({
   email: z.email("E-mail inválido."),
 });
@@ -221,7 +299,10 @@ export const confirmarResetSenhaSchema = z.object({
 // --- Params ---
 
 export const idParamSchema = z.object({ id: uuidCampo("id") });
+export const idOuSlugParamSchema = z.object({ id: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "id inválido") });
+export const postIdParamSchema = z.object({ postId: uuidCampo("postId") });
 export const torneioIdParamSchema = z.object({ torneioId: uuidCampo("torneioId") });
+export const torneioIdOuSlugParamSchema = z.object({ torneioId: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "torneioId inválido") });
 export const partidaIdParamSchema = z.object({ partidaId: uuidCampo("partidaId") });
 export const anuncioIdParamSchema = z.object({ anuncioId: uuidCampo("anuncioId") });
 export const tokenIngressoParamSchema = z.object({ token: uuidCampo("token") });
@@ -342,6 +423,30 @@ export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
 });
 
+export const anuncioDiarioItemSchema = z.object({
+  id: z.string().max(180).optional(),
+  imagemUrl: s3ImagemUrlOuVazio().optional().default(""),
+  link: z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine(
+      (valor) => !valor || /^https?:\/\//i.test(valor),
+      { message: "O link deve começar com http:// ou https://." }
+    ),
+  ativo: z.boolean().optional().default(true),
+  ordem: z.number().int().optional(),
+});
+
+export const salvarAnuncioDiarioSchema = z.object({
+  anuncios: z.array(anuncioDiarioItemSchema).max(20, "Informe no máximo 20 anúncios diários."),
+});
+
+export const metricaAnuncioDiarioSchema = z.object({
+  anuncioId: uuidCampo("anuncioId"),
+});
+
 const diasMetagameSchema = z.preprocess(
   (valor) => (valor === undefined || valor === null || valor === "" ? 30 : valor),
   z.coerce
@@ -352,14 +457,19 @@ const diasMetagameSchema = z.preprocess(
     })
 );
 
-export const listarMetagameQuerySchema = z.object({
+export const listarMetagameQuerySchema = intervaloDatasSchema.and(z.object({
   formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
   dias: diasMetagameSchema,
-});
+  limite: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+}));
 
-export const metagameDiasQuerySchema = z.object({
+export const metagameDiasQuerySchema = intervaloDatasSchema.and(z.object({
+  resumo: z.enum(["true", "false"]).optional(),
   dias: diasMetagameSchema,
-});
+  limiteListas: z.coerce.number().int().min(1).max(100).optional(),
+  offsetListas: z.coerce.number().int().min(0).optional(),
+}));
 
 export const metagameArquetipoParamsSchema = z.object({
   formato: z.string().trim().min(1, "Formato é obrigatório.").max(50),
@@ -370,3 +480,5 @@ export const metagameArquetipoParamsSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9-]+$/, "slug inválido."),
 });
+
+export const perfilPublicoQuerySchema = intervaloDatasSchema.and(z.object({ paginaPartidasExternas: z.coerce.number().int().min(1).default(1) }));

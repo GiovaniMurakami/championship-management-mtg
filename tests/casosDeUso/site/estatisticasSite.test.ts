@@ -2,22 +2,27 @@ import { BuscarEstatisticasSite } from "../../../src/casosDeUso/site/buscarEstat
 import { criarMockInscricaoGateway, criarMockTorneioGateway } from "../../mocks/gateways";
 
 describe("BuscarEstatisticasSite", () => {
-  it("deve retornar totais de torneios finalizados e jogadores distintos", async () => {
+  it("deve retornar totais de torneios finalizados, jogadores e premiacao", async () => {
     const uc = BuscarEstatisticasSite.criar(
       criarMockTorneioGateway({
-        listarTotal: jest.fn().mockResolvedValue(12),
+        listar: vi.fn().mockResolvedValue([
+          { premio: { tix: 10, playerPoints: 100 } },
+          { premio: { tix: 5.5, playerPoints: 50 } },
+          { premio: undefined },
+        ]),
       }),
       criarMockInscricaoGateway({
-        contarJogadoresDistintos: jest.fn().mockResolvedValue(87),
+        contarJogadoresDistintos: vi.fn().mockResolvedValue(87),
       })
     );
 
     const resultado = await uc.executar();
 
     expect(resultado).toEqual({
-      torneiosRealizados: 12,
+      torneiosRealizados: 3,
       jogadoresAtivos: 87,
-      formatosSuportados: 6,
+      premiacaoTix: 15.5,
+      premiacaoPlayerPoints: 150,
     });
   });
 });

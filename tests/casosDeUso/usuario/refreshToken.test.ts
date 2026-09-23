@@ -2,8 +2,8 @@ import { RefreshToken } from "../../../src/casosDeUso/usuario/refreshToken";
 import { criarMockUsuarioGateway, criarMockRefreshTokenGateway } from "../../mocks/gateways";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 
-jest.mock("../../../src/helpers/jwt", () => ({
-    signToken: jest.fn().mockReturnValue("novo_token"),
+vi.mock("../../../src/helpers/jwt", () => ({
+    signToken: vi.fn().mockReturnValue("novo_token"),
 }));
 
 import { signToken } from "../../../src/helpers/jwt";
@@ -19,10 +19,10 @@ describe("RefreshToken", () => {
 
     it("deve retornar novo token quando refresh token é válido", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(usuarioExistente),
         });
         const refreshTokenGw = criarMockRefreshTokenGateway({
-            consumir: jest.fn().mockResolvedValue({
+            consumir: vi.fn().mockResolvedValue({
                 token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
             }),
         });
@@ -40,10 +40,10 @@ describe("RefreshToken", () => {
 
     it("deve incluir role no payload do novo token", async () => {
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(usuarioExistente),
         });
         const refreshTokenGw = criarMockRefreshTokenGateway({
-            consumir: jest.fn().mockResolvedValue({
+            consumir: vi.fn().mockResolvedValue({
                 token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
             }),
         });
@@ -58,11 +58,11 @@ describe("RefreshToken", () => {
     });
 
     it("deve consumir atomicamente o refresh token antigo", async () => {
-        const consumir = jest.fn().mockResolvedValue({
+        const consumir = vi.fn().mockResolvedValue({
             token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
         });
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(usuarioExistente),
         });
         const refreshTokenGw = criarMockRefreshTokenGateway({ consumir });
         const uc = RefreshToken.criar(gateway, refreshTokenGw);
@@ -85,7 +85,7 @@ describe("RefreshToken", () => {
     it("deve lançar erro 401 se usuário não existir", async () => {
         const gateway = criarMockUsuarioGateway();
         const refreshTokenGw = criarMockRefreshTokenGateway({
-            consumir: jest.fn().mockResolvedValue({
+            consumir: vi.fn().mockResolvedValue({
                 token: "old-refresh", usuarioId: "inexistente", expiresAt: new Date(Date.now() + 86400000),
             }),
         });
@@ -97,12 +97,12 @@ describe("RefreshToken", () => {
     });
 
     it("deve lançar erro 500 se signToken retornar null", async () => {
-        (signToken as jest.Mock).mockReturnValueOnce(null);
+        (signToken as Mock).mockReturnValueOnce(null);
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(usuarioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(usuarioExistente),
         });
         const refreshTokenGw = criarMockRefreshTokenGateway({
-            consumir: jest.fn().mockResolvedValue({
+            consumir: vi.fn().mockResolvedValue({
                 token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
             }),
         });
@@ -120,10 +120,10 @@ describe("RefreshToken", () => {
             excluidoEm: new Date(),
         });
         const gateway = criarMockUsuarioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(excluido),
+            buscarPorId: vi.fn().mockResolvedValue(excluido),
         });
         const refreshTokenGw = criarMockRefreshTokenGateway({
-            consumir: jest.fn().mockResolvedValue({
+            consumir: vi.fn().mockResolvedValue({
                 token: "old-refresh", usuarioId: "user-1", expiresAt: new Date(Date.now() + 86400000),
             }),
         });

@@ -15,8 +15,8 @@ const user2 = new Usuario({ id: "user-2", nome: "Bob", email: "b@b.com", senha: 
 
 describe("EntrarTime", () => {
     it("deve adicionar um novo membro ao time", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
-        const usuarioGateway = criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(user2) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
+        const usuarioGateway = criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(user2) });
         const uc = EntrarTime.criar(timeGateway, usuarioGateway);
 
         const resultado = await uc.executar({ timeId: "time-1", usuarioId: "user-2" });
@@ -28,7 +28,7 @@ describe("EntrarTime", () => {
 
     it("deve lançar 400 se o usuário já for membro", async () => {
         const timeComUser1 = new Time({ ...timeExistente, membroIds: ["user-1"] });
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeComUser1) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeComUser1) });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = EntrarTime.criar(timeGateway, usuarioGateway);
 
@@ -48,7 +48,7 @@ describe("EntrarTime", () => {
     });
 
     it("deve lançar 404 se o usuário não existir", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeExistente) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeExistente) });
         const usuarioGateway = criarMockUsuarioGateway();
         const uc = EntrarTime.criar(timeGateway, usuarioGateway);
 

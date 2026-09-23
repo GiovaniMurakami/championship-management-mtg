@@ -40,16 +40,18 @@ export function validarConsultaMetagame(formato: string, dias: number): { format
 export async function carregarEAgregarMetagame(
   gateways: MetagameGateways,
   formato: string,
-  dias: number
+  dias: number,
+  intervalo?: { dataInicio: Date; dataFim: Date }
 ): Promise<MetagameAgregado> {
   const consulta = validarConsultaMetagame(formato, dias);
   const agora = new Date();
-  const dataInicio = new Date(agora.getTime() - consulta.dias * 24 * 60 * 60 * 1000);
+  const dataInicio = intervalo?.dataInicio ?? new Date(agora.getTime() - consulta.dias * 24 * 60 * 60 * 1000);
 
   const torneios = await gateways.torneio.listar({
     status: "finalizado",
     incluirSecretos: false,
     dataInicio,
+    ...(intervalo ? { dataFim: intervalo.dataFim } : {}),
   });
 
   const ids = torneios.map((t) => t.id);
@@ -72,6 +74,7 @@ export async function carregarEAgregarMetagame(
     formato: consulta.formato,
     dias: consulta.dias,
     agora,
+    intervalo,
     torneios,
     inscricoes,
     partidas,

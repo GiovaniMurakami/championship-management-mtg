@@ -24,6 +24,7 @@ export interface TorneioProps {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte?: boolean;
   secreto?: boolean;
@@ -31,6 +32,7 @@ export interface TorneioProps {
   visualizacoes?: number;
   criadoEm?: Date;
   rodadaIniciadaEm?: Date;
+  rodadaPublicada?: boolean;
   version?: number;
 }
 
@@ -54,6 +56,7 @@ export class Torneio {
   public maxJogadores?: number;
   public maxRodadas?: number;
   public corteTop?: number;
+  public premio?: { playerPoints: number; tix: number };
   public linkLive?: string;
   public emCorte: boolean = false;
   public secreto: boolean = false;
@@ -61,6 +64,7 @@ export class Torneio {
   public visualizacoes: number;
   public criadoEm: Date;
   public rodadaIniciadaEm?: Date;
+  public rodadaPublicada: boolean;
   public version: number;
 
   constructor(props: TorneioProps) {
@@ -83,6 +87,7 @@ export class Torneio {
     this.maxJogadores = props.maxJogadores;
     this.maxRodadas = props.maxRodadas;
     this.corteTop = props.corteTop;
+    this.premio = props.premio;
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
@@ -90,6 +95,7 @@ export class Torneio {
     this.visualizacoes = props.visualizacoes ?? 0;
     this.criadoEm = props.criadoEm || new Date();
     this.rodadaIniciadaEm = props.rodadaIniciadaEm;
+    this.rodadaPublicada = props.rodadaPublicada !== false;
     this.version = props.version ?? 0;
   }
 
@@ -144,6 +150,7 @@ export class Torneio {
     if (totalRodadas !== undefined) this.totalRodadas = totalRodadas;
     if (emCorte !== undefined) this.emCorte = emCorte;
     this.rodadaIniciadaEm = undefined;
+    this.rodadaPublicada = true;
   }
 
   public finalizar(): void {

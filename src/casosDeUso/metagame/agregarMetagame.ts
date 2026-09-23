@@ -6,6 +6,7 @@ import { Usuario } from "../../dominio/entidade/usuario";
 import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
 import { calcularEstatisticas, ordenarPorDesempate } from "../torneio/swiss";
+import { coresDoArquetipo } from "../../helpers/deck/coresDeck";
 
 export const DIAS_METAGAME = [7, 14, 30, 90] as const;
 export type DiasMetagame = (typeof DIAS_METAGAME)[number];
@@ -41,6 +42,7 @@ export type ArquetipoResumo = {
   cartaRepresentativa: string | null;
   cartasChave: string[];
   cartasCores: string[];
+  cores: string[];
 };
 
 export type RecenteDeck = {
@@ -117,6 +119,7 @@ export type AgregarMetagameInput = {
   formato: string;
   dias: number;
   agora: Date;
+  intervalo?: { dataInicio: Date; dataFim: Date };
   torneios: Torneio[];
   inscricoes: Inscricao[];
   partidas: Partida[];
@@ -243,13 +246,13 @@ function inverter(resultado: "vitoria" | "derrota" | "empate"): "vitoria" | "der
 
 export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
   const formato = normalizarFormatoDeck(input.formato);
-  const inicio = new Date(input.agora.getTime() - input.dias * 24 * 60 * 60 * 1000);
+  const inicio = input.intervalo?.dataInicio ?? new Date(input.agora.getTime() - input.dias * 24 * 60 * 60 * 1000);
 
   const torneios = input.torneios.filter((t) => {
     if (t.status !== "finalizado") return false;
     if (t.secreto) return false;
     if (normalizarFormatoDeck(t.formato) !== formato) return false;
-    return t.horario.getTime() >= inicio.getTime();
+    return t.horario.getTime() >= inicio.getTime() && (!input.intervalo || t.horario.getTime() <= input.intervalo.dataFim.getTime());
   });
   const torneioIds = new Set(torneios.map((t) => t.id));
   const torneioPorId = new Map(torneios.map((t) => [t.id, t]));
@@ -363,6 +366,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     const tipicaSide = cartasDoCampo(primeiroDeck, "sideboard");
     const tipicaCmd = cartasDoCampo(primeiroDeck, "commander");
     const ehCommander = formato === "commander" || formato === "commander500";
+    const cartasCores = (ehCommander ? tipicaCmd : tipicaMain).map((c) => c.nome);
     const resumo: ArquetipoResumo = {
       nome,
       slug,
@@ -374,7 +378,8 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
       winrate: winrateDe(stats),
       cartaRepresentativa: cartaRepresentativa(decksUnicos, formato),
       cartasChave: cartasChave(decksUnicos, formato),
-      cartasCores: (ehCommander ? tipicaCmd : tipicaMain).map((c) => c.nome),
+      cartasCores,
+      cores: coresDoArquetipo(decksUnicos, cartasCores),
     };
     arquetipos.push(resumo);
 

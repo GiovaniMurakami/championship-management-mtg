@@ -25,7 +25,8 @@ export class BuscarAnuncios {
   public async executar(input: BuscarAnunciosInput = {}): Promise<BuscarAnunciosOutput> {
     const incluirCliques = input.incluirCliques === true;
     const cacheKey = cacheSkAnunciosSite(incluirCliques);
-    const cacheado = await this.cache?.buscar<{ anuncios: ReturnType<typeof mapearAnunciosSite>; atualizadoEm: string | Date | null }>(CACHE_PK_SITE, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_SITE);
+    const cacheado = await this.cache?.buscar<{ anuncios: ReturnType<typeof mapearAnunciosSite>; atualizadoEm: string | Date | null }>(CACHE_PK_SITE, cacheKey, versaoCache);
     if (cacheado) {
       return {
         anuncios: cacheado.anuncios,
@@ -43,7 +44,7 @@ export class BuscarAnuncios {
       anuncios,
       atualizadoEm: config?.atualizadoEm ?? null,
     };
-    await this.cache?.salvar(CACHE_PK_SITE, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_SITE_SECONDS", 300));
+    await this.cache?.salvar(CACHE_PK_SITE, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_SITE_SECONDS", 300), versaoCache);
     return saida;
   }
 }

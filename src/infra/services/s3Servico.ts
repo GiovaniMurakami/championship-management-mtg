@@ -1,15 +1,16 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
     GerarUrlUploadInput,
     GerarUrlUploadOutput,
     ImagemGateway,
 } from "../../dominio/gateway/imagemGateway";
+import { ConteudoArtigoGateway } from "../../dominio/gateway/artigoGateway";
 import { getS3Bucket, getS3BaseUrl, getS3Region } from "../../helpers/env";
 
 const URL_EXPIRACAO_SEGUNDOS = 300; // 5 minutos
 
-export class S3Servico implements ImagemGateway {
+export class S3Servico implements ImagemGateway, ConteudoArtigoGateway {
     private readonly client: S3Client;
     private readonly bucket: string;
 
@@ -42,5 +43,42 @@ export class S3Servico implements ImagemGateway {
         const urlPublica = `${getS3BaseUrl()}/${input.chave}`;
 
         return { uploadUrl, urlPublica };
+    }
+
+    public async excluirPorUrl(urlPublica: string): Promise<void> {
+        const base = `${getS3BaseUrl()}/`;
+        if (!urlPublica.startsWith(base)) {
+            throw new Error("URL de imagem fora do bucket S3 autorizado.");
+        }
+        const chave = decodeURIComponent(urlPublica.slice(base.length).split("?")[0]);
+        if (!chave) throw new Error("Chave da imagem S3 inválida.");
+        await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: chave }));
+    }
+
+    public async gravar(chave: string, texto: string): Promise<void> {
+        await this.client.send(new PutObjectCommand({
+            Bucket: this.bucket,
+            Key: chave,
+            Body: texto,
+            ContentType: "text/plain; charset=utf-8",
+        }));
+    }
+
+    public async ler(chave: string): Promise<string | null> {
+        try {
+            const resposta = await this.client.send(new GetObjectCommand({
+                Bucket: this.bucket,
+                Key: chave,
+            }));
+            return (await resposta.Body?.transformToString("utf-8")) ?? null;
+        } catch (erro: unknown) {
+            const nome = (erro as { name?: string })?.name;
+            if (nome === "NoSuchKey" || nome === "NotFound") return null;
+            throw erro;
+        }
+    }
+
+    public async excluir(chave: string): Promise<void> {
+        await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: chave }));
     }
 }

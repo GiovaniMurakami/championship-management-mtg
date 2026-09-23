@@ -11,6 +11,8 @@ import {
   type TransactWriteItem,
   type WriteRequest,
 } from "@aws-sdk/client-dynamodb";
+import { CacheDynamoDbServico } from "../../services/cacheDynamoDbServico";
+import { DominioCache } from "../../../helpers/cache/dependenciasCache";
 import { logger } from "../../../helpers/logger";
 
 type DynamoItem = Record<string, AttributeValue>;
@@ -22,10 +24,16 @@ export abstract class BaseDynamoRepositorio {
   protected readonly cliente: DynamoDBClient;
   protected readonly tabela: string;
 
-  protected constructor() {
+  private readonly cache = CacheDynamoDbServico.criar();
+
+  protected constructor(private readonly dominioCache?: DominioCache) {
     this.tabela = process.env.DYNAMODB_DATA_TABLE || "";
     const region = process.env.DYNAMODB_DATA_REGION || process.env.AWS_REGION || process.env.AWS_S3_REGION;
     this.cliente = new DynamoDBClient(region ? { region } : {});
+  }
+
+  private async invalidarCacheAposEscrita(dominio: DominioCache | null | undefined): Promise<void> {
+    if (dominio) await this.cache.invalidarDependencias([dominio]);
   }
 
   protected assertTabelaConfigurada(): void {
@@ -50,6 +58,7 @@ export abstract class BaseDynamoRepositorio {
         ...this.extrasParaItem(extras),
       },
     }));
+    await this.invalidarCacheAposEscrita(this.dominioCache);
   }
 
   protected toPutRequest<T>(
@@ -91,6 +100,7 @@ export abstract class BaseDynamoRepositorio {
             [this.tabela]: pendentes,
           },
         }));
+        await this.invalidarCacheAposEscrita(this.dominioCache);
         pendentes = resposta.UnprocessedItems?.[this.tabela] ?? [];
         if (pendentes.length > 0) {
           if (tentativa + 1 >= MAX_TENTATIVAS_BATCH_WRITE) {
@@ -120,16 +130,18 @@ export abstract class BaseDynamoRepositorio {
     });
     if (itens.length > 0) {
       await this.cliente.send(new TransactWriteItemsCommand({ TransactItems: itens }));
+      await this.invalidarCacheAposEscrita(this.dominioCache);
     }
   }
 
-  protected async transactWrite(itens: TransactWriteItem[]): Promise<void> {
+  protected async transactWrite(itens: TransactWriteItem[], dominioCache: DominioCache | null | undefined = this.dominioCache): Promise<void> {
     this.assertTabelaConfigurada();
     if (itens.length > 100) {
       throw new Error(`Transacao DynamoDB excede o limite de 100 operacoes: ${itens.length}`);
     }
     if (itens.length > 0) {
       await this.cliente.send(new TransactWriteItemsCommand({ TransactItems: itens }));
+      await this.invalidarCacheAposEscrita(dominioCache);
     }
   }
 
@@ -166,6 +178,7 @@ export abstract class BaseDynamoRepositorio {
           },
         })),
       }));
+      await this.invalidarCacheAposEscrita(this.dominioCache);
     }
   }
 
@@ -219,6 +232,7 @@ export abstract class BaseDynamoRepositorio {
         sk: { S: sk },
       },
     }));
+    await this.invalidarCacheAposEscrita(this.dominioCache);
   }
 
   protected async updatePayloadIf(
@@ -260,6 +274,7 @@ export abstract class BaseDynamoRepositorio {
           ...(expressionAttributeValues ?? {}),
         },
       }));
+      await this.invalidarCacheAposEscrita(this.dominioCache);
       return true;
     } catch (error) {
       const nome = (error as { name?: string }).name;

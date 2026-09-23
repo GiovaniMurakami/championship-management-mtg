@@ -25,7 +25,7 @@ describe("AlterarLiga", () => {
 
     it("deve alterar nome e descrição da liga", async () => {
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
         });
         const torneioGateway = criarMockTorneioGateway();
         const uc = AlterarLiga.criar(ligaGateway, torneioGateway);
@@ -45,10 +45,10 @@ describe("AlterarLiga", () => {
 
     it("deve adicionar torneios válidos à liga", async () => {
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
         });
         const torneioGateway = criarMockTorneioGateway({
-            buscarPorId: jest.fn().mockResolvedValue(torneioExistente),
+            buscarPorId: vi.fn().mockResolvedValue(torneioExistente),
         });
         const uc = AlterarLiga.criar(ligaGateway, torneioGateway);
 
@@ -74,7 +74,7 @@ describe("AlterarLiga", () => {
 
     it("deve lançar 403 se não for dono nem admin", async () => {
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
         });
         const torneioGateway = criarMockTorneioGateway();
         const uc = AlterarLiga.criar(ligaGateway, torneioGateway);
@@ -86,7 +86,7 @@ describe("AlterarLiga", () => {
 
     it("admin pode alterar liga de outro usuário", async () => {
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
         });
         const torneioGateway = criarMockTorneioGateway();
         const uc = AlterarLiga.criar(ligaGateway, torneioGateway);
@@ -103,7 +103,7 @@ describe("AlterarLiga", () => {
 
     it("deve lançar 404 se um torneio da nova lista não existir", async () => {
         const ligaGateway = criarMockLigaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
+            buscarPorId: vi.fn().mockResolvedValue({ ...ligaExistente, torneioIds: [] }),
         });
         const torneioGateway = criarMockTorneioGateway();
         const uc = AlterarLiga.criar(ligaGateway, torneioGateway);
@@ -117,7 +117,7 @@ describe("AlterarLiga", () => {
 
     it("deve atualizar e remover o banner da liga", async () => {
         const liga = new Liga({ id: "liga-1", nome: "Liga", donoId: "user-1", bannerUrl: "https://bucket/antigo.jpg" });
-        const ligaGateway = criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) });
+        const ligaGateway = criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) });
         const uc = AlterarLiga.criar(ligaGateway, criarMockTorneioGateway());
         const atualizado = await uc.executar({ id: "liga-1", requisitanteId: "user-1", isAdmin: false, bannerUrl: " https://bucket/novo.jpg " });
         expect(atualizado.bannerUrl).toBe("https://bucket/novo.jpg");

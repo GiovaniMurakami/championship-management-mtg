@@ -14,8 +14,8 @@ describe("ListarTimes", () => {
             membroIds: ["user-1", "user-2"],
             criadoEm,
         });
-        const listarMock = jest.fn().mockResolvedValue([time]);
-        const listarTotalMock = jest.fn().mockResolvedValue(1);
+        const listarMock = vi.fn().mockResolvedValue([time]);
+        const listarTotalMock = vi.fn().mockResolvedValue(1);
         const gateway = criarMockTimeGateway({
             listar: listarMock,
             listarTotal: listarTotalMock,
@@ -41,8 +41,8 @@ describe("ListarTimes", () => {
     });
 
     it("deve limitar limite máximo, normalizar offset negativo e repassar filtro por nome", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
-        const listarTotalMock = jest.fn().mockResolvedValue(0);
+        const listarMock = vi.fn().mockResolvedValue([]);
+        const listarTotalMock = vi.fn().mockResolvedValue(0);
         const gateway = criarMockTimeGateway({
             listar: listarMock,
             listarTotal: listarTotalMock,
@@ -58,7 +58,7 @@ describe("ListarTimes", () => {
     });
 
     it("deve usar limite e offset informados quando válidos", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
+        const listarMock = vi.fn().mockResolvedValue([]);
         const gateway = criarMockTimeGateway({ listar: listarMock });
         const uc = ListarTimes.criar(gateway);
 
@@ -70,8 +70,8 @@ describe("ListarTimes", () => {
     });
 
     it("deve filtrar os times pelo membro informado", async () => {
-        const listarMock = jest.fn().mockResolvedValue([]);
-        const listarTotalMock = jest.fn().mockResolvedValue(0);
+        const listarMock = vi.fn().mockResolvedValue([]);
+        const listarTotalMock = vi.fn().mockResolvedValue(0);
         const gateway = criarMockTimeGateway({ listar: listarMock, listarTotal: listarTotalMock });
         const uc = ListarTimes.criar(gateway);
 

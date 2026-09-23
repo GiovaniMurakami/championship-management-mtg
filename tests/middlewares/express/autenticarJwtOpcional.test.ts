@@ -7,10 +7,10 @@ import { criarMockTokenBlacklistGateway } from "../../mocks/gateways";
 function makeReqRes(headers: Record<string, string> = {}) {
     const req = { headers } as Request;
     const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
     } as unknown as Response;
-    const next = jest.fn() as NextFunction;
+    const next = vi.fn() as NextFunction;
     return { req, res, next };
 }
 

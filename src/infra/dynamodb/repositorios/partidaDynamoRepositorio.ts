@@ -1,5 +1,6 @@
 import { Partida, StatusPartida, TipoBye } from "../../../dominio/entidade/partida";
 import { PartidaGateway } from "../../../dominio/gateway/partidaGateway";
+import { v5 as uuidv5 } from "uuid";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 
 type PartidaItem = {
@@ -22,9 +23,11 @@ type PartidaItem = {
   version: number;
 };
 
+const PARTIDA_ID_NAMESPACE = "b24bc6ea-85ca-5a25-a22d-72f73d0c4f32";
+
 export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements PartidaGateway {
   private constructor() {
-    super();
+    super("partidas");
   }
 
   public static criar() {
@@ -39,6 +42,43 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
     for (const partida of partidas) {
       await this.salvar(partida);
     }
+  }
+
+  public async reconciliarRodada(torneioId: string, rodada: number, partidas: Partida[]): Promise<void> {
+    const existentes = await this.listarPorTorneioERodada(torneioId, rodada);
+    const existentesPorMesa = new Map(
+      existentes
+        .filter((partida) => partida.mesa !== null)
+        .map((partida) => [partida.mesa, partida])
+    );
+    const existentesPorAssinatura = new Map(
+      existentes.map((partida) => [this.assinaturaPareamento(partida), partida])
+    );
+    const paraSalvar: Partida[] = [];
+
+    for (const [indice, partida] of partidas.entries()) {
+      partida.mesa = partida.mesa ?? indice + 1;
+      const existente =
+        existentesPorMesa.get(partida.mesa) ??
+        existentesPorAssinatura.get(this.assinaturaPareamento(partida));
+
+      if (existente) {
+        this.aplicarPartidaExistente(partida, existente);
+        continue;
+      }
+
+      partida.id = this.idDeterministicoRodada(torneioId, rodada, partida.mesa);
+      const existentePorId = await this.buscarPorId(partida.id);
+      if (existentePorId) {
+        await this.atualizar(existentePorId);
+        this.aplicarPartidaExistente(partida, existentePorId);
+        continue;
+      }
+
+      paraSalvar.push(partida);
+    }
+
+    await this.salvarVarias(paraSalvar);
   }
 
   public async buscarPorId(id: string): Promise<Partida | null> {
@@ -241,6 +281,32 @@ export class PartidaDynamoRepositorio extends BaseDynamoRepositorio implements P
 
   private skTorneio(item: PartidaItem): string {
     return `PARTIDA#${String(item.rodada).padStart(2, "0")}#${String(item.mesa ?? 9999).padStart(4, "0")}#${item.id}`;
+  }
+
+  private idDeterministicoRodada(torneioId: string, rodada: number, mesa: number | null): string {
+    return uuidv5(`${torneioId}:rodada:${rodada}:mesa:${mesa ?? "sem-mesa"}`, PARTIDA_ID_NAMESPACE);
+  }
+
+  private assinaturaPareamento(partida: Partida): string {
+    return [
+      partida.rodada,
+      partida.mesa ?? "sem-mesa",
+      partida.jogador1Id,
+      partida.jogador2Id ?? "bye",
+    ].join("|");
+  }
+
+  private aplicarPartidaExistente(destino: Partida, existente: Partida): void {
+    destino.id = existente.id;
+    destino.vitoriasJogador1 = existente.vitoriasJogador1;
+    destino.vitoriasJogador2 = existente.vitoriasJogador2;
+    destino.status = existente.status;
+    destino.contestado = existente.contestado;
+    destino.observacaoContestacao = existente.observacaoContestacao;
+    destino.tipoBye = existente.tipoBye;
+    destino.confirmadoPor = [...existente.confirmadoPor];
+    destino.criadoEm = existente.criadoEm;
+    destino.version = existente.version;
   }
 
   private partidaParaItem(partida: Partida): PartidaItem {

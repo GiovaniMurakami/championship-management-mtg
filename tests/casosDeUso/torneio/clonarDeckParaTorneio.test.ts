@@ -15,6 +15,7 @@ describe("clonarDeckParaTorneio", () => {
             usuarioId: "u-1",
             oculto: false,
             travado: false,
+            cores: ["R"],
         });
 
         const clone = clonarDeckParaTorneio(original, "torneio-1");
@@ -34,6 +35,7 @@ describe("clonarDeckParaTorneio", () => {
         expect(clone.sideboard).toEqual(original.sideboard);
         expect(clone.maindeck).not.toBe(original.maindeck);
         expect(clone.sideboard).not.toBe(original.sideboard);
+        expect(clone.cores).toEqual(["R"]);
     });
 
     it("preserva commander clonando cartas", () => {

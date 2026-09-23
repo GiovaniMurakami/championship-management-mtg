@@ -8,9 +8,13 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 function criarGateway(overrides: Partial<SiteConfigGateway> = {}): SiteConfigGateway {
   return {
-    buscarAnuncios: jest.fn().mockResolvedValue(null),
-    salvarAnuncios: jest.fn(async (config: AnunciosSiteConfig) => config),
-    registrarCliqueAnuncio: jest.fn().mockResolvedValue(null),
+    buscarAnuncios: vi.fn().mockResolvedValue(null),
+    salvarAnuncios: vi.fn(async (config: AnunciosSiteConfig) => config),
+    registrarCliqueAnuncio: vi.fn().mockResolvedValue(null),
+    buscarAnuncioDiario: vi.fn().mockResolvedValue(null),
+    salvarAnuncioDiario: vi.fn(async (config) => config),
+    registrarVisualizacaoAnuncioDiario: vi.fn().mockResolvedValue(null),
+    registrarCliqueAnuncioDiario: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
 }
@@ -26,7 +30,7 @@ describe("Anuncios do site", () => {
 
   it("deve ocultar cliques no retorno publico de anuncios", async () => {
     const gateway = criarGateway({
-      buscarAnuncios: jest.fn().mockResolvedValue({
+      buscarAnuncios: vi.fn().mockResolvedValue({
         anuncios: [
           {
             id: AD_ID,
@@ -56,7 +60,7 @@ describe("Anuncios do site", () => {
 
   it("deve incluir cliques quando solicitado para admin", async () => {
     const gateway = criarGateway({
-      buscarAnuncios: jest.fn().mockResolvedValue({
+      buscarAnuncios: vi.fn().mockResolvedValue({
         anuncios: [
           {
             id: AD_ID,
@@ -128,7 +132,7 @@ describe("Anuncios do site", () => {
 
   it("deve preservar cliques existentes ao salvar anuncios com uuid valido", async () => {
     const gateway = criarGateway({
-      buscarAnuncios: jest.fn().mockResolvedValue({
+      buscarAnuncios: vi.fn().mockResolvedValue({
         anuncios: [
           {
             id: AD_ID,
@@ -162,7 +166,7 @@ describe("Anuncios do site", () => {
 
   it("deve substituir id invalido por uuid ao salvar e preservar cliques", async () => {
     const gateway = criarGateway({
-      buscarAnuncios: jest.fn().mockResolvedValue({
+      buscarAnuncios: vi.fn().mockResolvedValue({
         anuncios: [
           {
             id: "anuncio-1781395148943-3",
@@ -197,7 +201,7 @@ describe("Anuncios do site", () => {
 
   it("deve registrar clique de anuncio", async () => {
     const gateway = criarGateway({
-      registrarCliqueAnuncio: jest.fn().mockResolvedValue({
+      registrarCliqueAnuncio: vi.fn().mockResolvedValue({
         anuncios: [
           {
             id: AD_ID,
@@ -240,7 +244,7 @@ describe("Anuncios do site", () => {
 
   it("usa cliques 0 quando o anuncio nao tem campo cliques", async () => {
     const gateway = criarGateway({
-      registrarCliqueAnuncio: jest.fn().mockResolvedValue({
+      registrarCliqueAnuncio: vi.fn().mockResolvedValue({
         anuncios: [{ id: AD_ID, tipo: "card", titulo: "Loja", ativo: true, ordem: 0 }],
       }),
     });

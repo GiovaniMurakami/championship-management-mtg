@@ -19,11 +19,11 @@ describe("RegistrarResultado", () => {
     it("deve registrar resultado 2-1 com sucesso pelo jogador 1", async () => {
         const partidaFinalizada = new Partida({ ...partida, vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaFinalizada),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaFinalizada),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -41,11 +41,11 @@ describe("RegistrarResultado", () => {
     it("deve permitir registro pelo dono do torneio", async () => {
         const partidaFinalizada = new Partida({ ...partida, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaFinalizada),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaFinalizada),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -59,8 +59,8 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro se o usuário não for jogador, nem dono, nem admin", async () => {
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -71,11 +71,11 @@ describe("RegistrarResultado", () => {
     it("admin pode registrar resultado de qualquer partida", async () => {
         const partidaFinalizada = new Partida({ ...partida, vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaFinalizada),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaFinalizada),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -103,7 +103,7 @@ describe("RegistrarResultado", () => {
         const partidaFinalizada = { ...partida, status: "finalizada" as const };
         const uc = RegistrarResultado.criar(
             criarMockTorneioGateway(),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue(partidaFinalizada) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue(partidaFinalizada) }),
         );
 
         await expect(
@@ -113,8 +113,8 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro para resultado inválido (v1 > 2)", async () => {
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -124,8 +124,8 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro para resultado inválido (total > 3)", async () => {
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -135,8 +135,8 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro para resultado com valor negativo", async () => {
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -147,11 +147,11 @@ describe("RegistrarResultado", () => {
     it("deve aceitar resultado 0-0 (empate)", async () => {
         const partidaEmpate = new Partida({ ...partida, vitoriasJogador1: 0, vitoriasJogador2: 0, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaEmpate),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaEmpate),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -167,11 +167,11 @@ describe("RegistrarResultado", () => {
     it("deve permitir registro pelo jogador 2", async () => {
         const partidaFinalizada = new Partida({ ...partida, vitoriasJogador1: 1, vitoriasJogador2: 2, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaFinalizada),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaFinalizada),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -192,8 +192,8 @@ describe("RegistrarResultado", () => {
             emCorte: true,
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmCorte) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmCorte) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -203,8 +203,8 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro se torneio não existir ao registrar resultado", async () => {
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(null) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(null) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -218,8 +218,8 @@ describe("RegistrarResultado", () => {
             donoId: "dono", status: "finalizado", rodadaAtual: 3, totalRodadas: 3,
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioFinalizado) }),
-            criarMockPartidaGateway({ buscarPorId: jest.fn().mockResolvedValue({ ...partida }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioFinalizado) }),
+            criarMockPartidaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...partida }) }),
         );
 
         await expect(
@@ -229,11 +229,11 @@ describe("RegistrarResultado", () => {
 
     it("deve lançar erro quando finalizarAtomicamente retorna null (corrida)", async () => {
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(null), // simula race condition
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(null), // simula race condition
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -245,11 +245,11 @@ describe("RegistrarResultado", () => {
     it("deve aceitar resultado 1-0", async () => {
         const partidaFinalizada = new Partida({ ...partida, vitoriasJogador1: 1, vitoriasJogador2: 0, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaFinalizada),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaFinalizada),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -265,11 +265,11 @@ describe("RegistrarResultado", () => {
     it("deve permitir empate 1-1 na fase Swiss (sem corte)", async () => {
         const partidaEmpate = new Partida({ ...partida, vitoriasJogador1: 1, vitoriasJogador2: 1, status: "finalizada" });
         const partidaGw = criarMockPartidaGateway({
-            buscarPorId: jest.fn().mockResolvedValue({ ...partida }),
-            finalizarAtomicamente: jest.fn().mockResolvedValue(partidaEmpate),
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+            finalizarAtomicamente: vi.fn().mockResolvedValue(partidaEmpate),
         });
         const uc = RegistrarResultado.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneio) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio) }),
             partidaGw,
         );
 
@@ -281,5 +281,26 @@ describe("RegistrarResultado", () => {
         expect(resultado.vitoriasJogador1).toBe(1);
         expect(resultado.vitoriasJogador2).toBe(1);
         expect(resultado.status).toBe("finalizada");
+    });
+
+    it("rejeita resultado da rodada atual ainda não publicada", async () => {
+        const torneioNaoPublicado = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "em_andamento", rodadaAtual: 1, totalRodadas: 3,
+            rodadaPublicada: false,
+        });
+        const partidaGw = criarMockPartidaGateway({
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+        });
+        const uc = RegistrarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioNaoPublicado) }),
+            partidaGw,
+        );
+
+        await expect(uc.executar({
+            partidaId: "p-1", usuarioId: "j1", isAdmin: false,
+            vitoriasJogador1: 2, vitoriasJogador2: 0,
+        })).rejects.toMatchObject({ status: 400 });
+        expect(partidaGw.finalizarAtomicamente).not.toHaveBeenCalled();
     });
 });

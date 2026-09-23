@@ -334,7 +334,11 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 
 ### PUT /torneio/:torneioId
 
-**(Somente dono ou admin)** Atualiza os dados de um torneio. Só pode ser feito enquanto o status for `inscricoes_abertas`. Apenas os campos enviados são atualizados.
+**(Dono, anfitrião ou admin)** Atualiza os dados de um torneio. Apenas os campos enviados são atualizados.
+
+- `inscricoes_abertas`: todos os campos.
+- `em_andamento`: `formato`, `maxJogadores`, `maxRodadas` e `corteTop` não mudam.
+- `finalizado`: somente admin. Dono e anfitrião recebem `400`.
 
 **Request Body** _(todos os campos são opcionais)_:
 
@@ -362,8 +366,8 @@ Retorna os dados completos de um torneio: informações gerais, contagem de insc
 **Erros:**
 
 - `404` — Torneio não encontrado
-- `403` — Não é dono nem admin
-- `400` — Torneio não está em `inscricoes_abertas`
+- `403` — Sem permissão para gerenciar o torneio
+- `400` — Torneio finalizado e o requisitante não é admin, ou estrutura alterada com o torneio em andamento
 
 ---
 

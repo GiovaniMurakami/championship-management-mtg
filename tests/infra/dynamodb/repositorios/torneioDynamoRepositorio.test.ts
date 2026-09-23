@@ -18,15 +18,15 @@ const criarTorneio = (version = 2) => new Torneio({
 
 describe("TorneioDynamoRepositorio - consistencia", () => {
   const tabelaOriginal = process.env.DYNAMODB_DATA_TABLE;
-  let sendSpy: jest.SpiedFunction<DynamoDBClient["send"]>;
+  let sendSpy: vi.SpiedFunction<DynamoDBClient["send"]>;
 
   beforeEach(() => {
     process.env.DYNAMODB_DATA_TABLE = "dados-test";
-    sendSpy = jest.spyOn(DynamoDBClient.prototype, "send");
+    sendSpy = vi.spyOn(DynamoDBClient.prototype, "send");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     process.env.DYNAMODB_DATA_TABLE = tabelaOriginal;
   });
 
@@ -50,7 +50,7 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
     expect(torneio.version).toBe(3);
   });
 
-  it("remove as partidas criadas quando a publicacao da rodada falha", async () => {
+  it("reconcilia as partidas e nao remove a rodada quando a publicacao do torneio falha", async () => {
     const torneio = criarTorneio();
     const partida = new Partida({
       id: "p-1",
@@ -59,15 +59,15 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
       jogador1Id: "u-1",
       jogador2Id: "u-2",
     });
-    const salvar = jest.spyOn(PartidaDynamoRepositorio.prototype, "salvarVarias").mockResolvedValue();
-    const excluir = jest.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
+    const reconciliar = vi.spyOn(PartidaDynamoRepositorio.prototype, "reconciliarRodada").mockResolvedValue();
+    const excluir = vi.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
     const repositorio = TorneioDynamoRepositorio.criar();
-    jest.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
+    vi.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
 
     await expect(repositorio.atualizarECriarPartidas(torneio, [partida])).rejects.toThrow("conflito");
 
-    expect(salvar).toHaveBeenCalledWith([partida]);
-    expect(excluir).toHaveBeenCalledWith([partida.id]);
+    expect(reconciliar).toHaveBeenCalledWith(torneio.id, 3, [partida]);
+    expect(excluir).not.toHaveBeenCalled();
   });
 
   it("inicializa o contador atomico a partir do valor legado antes de incrementar", async () => {

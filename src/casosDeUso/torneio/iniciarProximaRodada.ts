@@ -7,6 +7,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { aplicarPublicacaoRodada, rodadaEstaPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
@@ -32,6 +33,7 @@ export type IniciarProximaRodadaInputDto = {
   torneioId: string;
   donoId: string;
   isAdmin: boolean;
+  publicar?: boolean;
 };
 
 export type IniciarProximaRodadaOutputDto =
@@ -40,7 +42,8 @@ export type IniciarProximaRodadaOutputDto =
     rodadaAtual: number;
     totalRodadas: number;
     emCorte: boolean;
-    rodadaIniciadaEm: string;
+    rodadaPublicada: boolean;
+    rodadaIniciadaEm?: string;
     partidas: Array<{
       id: string;
       jogador1Id: string;
@@ -112,6 +115,15 @@ export class IniciarProximaRodada
         status: StatusErro.erroParametro,
       });
     }
+
+    if (!rodadaEstaPublicada(torneio)) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Publique a rodada atual antes de avançar.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
+    const publicar = input.publicar !== false;
 
     const partidasRodadaAtual =
       await this.partidaGateway.listarPorTorneioERodada(
@@ -219,20 +231,24 @@ export class IniciarProximaRodada
       }
 
       torneio.entrarEmCorte(proximaRodada, proximaRodada + rodadasCorte - 1);
+      aplicarPublicacaoRodada(torneio, publicar);
       await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
-      eventosTorneio.emit("rodada_iniciada", {
-        torneioId: torneio.id,
-        rodadaAtual: proximaRodada,
-        totalRodadas: torneio.totalRodadas,
-        emCorte: torneio.emCorte,
-      });
+      if (publicar) {
+        eventosTorneio.emit("rodada_iniciada", {
+          torneioId: torneio.id,
+          rodadaAtual: proximaRodada,
+          totalRodadas: torneio.totalRodadas,
+          emCorte: torneio.emCorte,
+        });
+      }
 
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
         totalRodadas: torneio.totalRodadas,
         emCorte: true,
-        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+        rodadaPublicada: publicar,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -306,20 +322,24 @@ export class IniciarProximaRodada
       }
 
       torneio.avancarRodada(proximaRodada);
+      aplicarPublicacaoRodada(torneio, publicar);
       await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
-      eventosTorneio.emit("rodada_iniciada", {
-        torneioId: torneio.id,
-        rodadaAtual: proximaRodada,
-        totalRodadas: torneio.totalRodadas,
-        emCorte: torneio.emCorte,
-      });
+      if (publicar) {
+        eventosTorneio.emit("rodada_iniciada", {
+          torneioId: torneio.id,
+          rodadaAtual: proximaRodada,
+          totalRodadas: torneio.totalRodadas,
+          emCorte: torneio.emCorte,
+        });
+      }
 
       return {
         finalizado: false,
         rodadaAtual: proximaRodada,
         totalRodadas: torneio.totalRodadas,
         emCorte: true,
-        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+        rodadaPublicada: publicar,
+        rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
         partidas: novasPartidas.map((p) => ({
           id: p.id,
           jogador1Id: p.jogador1Id,
@@ -363,20 +383,24 @@ export class IniciarProximaRodada
     );
 
     torneio.avancarRodada(proximaRodada);
+    aplicarPublicacaoRodada(torneio, publicar);
     await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
-    eventosTorneio.emit("rodada_iniciada", {
-      torneioId: torneio.id,
-      rodadaAtual: proximaRodada,
-      totalRodadas: torneio.totalRodadas,
-      emCorte: torneio.emCorte,
-    });
+    if (publicar) {
+      eventosTorneio.emit("rodada_iniciada", {
+        torneioId: torneio.id,
+        rodadaAtual: proximaRodada,
+        totalRodadas: torneio.totalRodadas,
+        emCorte: torneio.emCorte,
+      });
+    }
 
     return {
       finalizado: false,
       rodadaAtual: proximaRodada,
       totalRodadas: torneio.totalRodadas,
       emCorte: false,
-      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm)!,
+      rodadaPublicada: publicar,
+      rodadaIniciadaEm: toBrasiliaISO(torneio.rodadaIniciadaEm),
       partidas: novasPartidas.map((p) => ({
         id: p.id,
         jogador1Id: p.jogador1Id,

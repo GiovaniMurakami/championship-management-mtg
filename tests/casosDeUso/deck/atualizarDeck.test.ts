@@ -21,7 +21,7 @@ describe("AtualizarDeck", () => {
 
     it("deve atualizar o nome do deck", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -40,9 +40,10 @@ describe("AtualizarDeck", () => {
 
     it("deve atualizar o nomeConsolidado diretamente", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
-        const uc = AtualizarDeck.criar(gateway);
+        const invalidarParticao = vi.fn().mockResolvedValue(undefined);
+        const uc = AtualizarDeck.criar(gateway, { invalidarParticao } as any);
 
         const resultado = await uc.executar({
             id: "deck-1",
@@ -54,12 +55,31 @@ describe("AtualizarDeck", () => {
 
         expect(resultado.nomeConsolidado).toBe("4C Omnath");
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+        expect(invalidarParticao).toHaveBeenCalledWith("metagame");
+    });
+
+    it("nao invalida metagame quando nomeConsolidado permanece igual", async () => {
+        const gateway = criarMockDeckGateway({
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+        });
+        const invalidarParticao = vi.fn().mockResolvedValue(undefined);
+        const uc = AtualizarDeck.criar(gateway, { invalidarParticao } as any);
+
+        await uc.executar({
+            id: "deck-1",
+            usuarioIdRequisitante: "user-1",
+            isAdmin: false,
+            usuarioNome: "Jogador Teste",
+            cartaRepresentativa: "Lightning Bolt",
+        });
+
+        expect(invalidarParticao).not.toHaveBeenCalled();
     });
 
     it("deck travado: permite alterar apenas nomeConsolidado", async () => {
         const deckTravado = new Deck({ ...deckExistente, travado: true });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckTravado),
+            buscarPorId: vi.fn().mockResolvedValue(deckTravado),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -86,7 +106,7 @@ describe("AtualizarDeck", () => {
     it("deck travado: permite alterar cartaRepresentativa", async () => {
         const deckTravado = new Deck({ ...deckExistente, travado: true });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckTravado),
+            buscarPorId: vi.fn().mockResolvedValue(deckTravado),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -105,7 +125,7 @@ describe("AtualizarDeck", () => {
 
     it("deck travado: bloqueia update sem nomeConsolidado", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente, travado: true })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente, travado: true })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -125,7 +145,7 @@ describe("AtualizarDeck", () => {
 
     it("deve permitir limpar o nomeConsolidado enviando null", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -142,7 +162,7 @@ describe("AtualizarDeck", () => {
 
     it("nao deve alterar nomeConsolidado se nao for enviado", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -160,7 +180,7 @@ describe("AtualizarDeck", () => {
     it("ao renomear, atualiza nomeConsolidado quando ele ainda e o nome do usuario", async () => {
         const deck = new Deck({ ...deckExistente, nome: "Burn", nomeConsolidado: "Burn" });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deck),
+            buscarPorId: vi.fn().mockResolvedValue(deck),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -179,7 +199,7 @@ describe("AtualizarDeck", () => {
     it("ao renomear, atualiza nomeConsolidado quando ele e nulo", async () => {
         const deck = new Deck({ ...deckExistente, nome: "Burn", nomeConsolidado: null });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deck),
+            buscarPorId: vi.fn().mockResolvedValue(deck),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -203,7 +223,7 @@ describe("AtualizarDeck", () => {
             commander: [{ nome: "old commander", quantidade: 1 }],
         });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckCommander),
+            buscarPorId: vi.fn().mockResolvedValue(deckCommander),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -227,7 +247,7 @@ describe("AtualizarDeck", () => {
             linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=1",
         });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckCommander500),
+            buscarPorId: vi.fn().mockResolvedValue(deckCommander500),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -244,7 +264,7 @@ describe("AtualizarDeck", () => {
 
     it("deve tratar deck legado sem commander salvo", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({
                 id: "deck-1",
                 nome: "Burn",
                 nomeConsolidado: "Mono Red Burn",
@@ -278,7 +298,7 @@ describe("AtualizarDeck", () => {
 
     it("deve lancar erro se o usuario nao for dono do deck e nao for admin", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -289,7 +309,7 @@ describe("AtualizarDeck", () => {
 
     it("admin pode atualizar deck de outro usuario", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -307,7 +327,7 @@ describe("AtualizarDeck", () => {
 
     it("deve lancar erro se o maindeck atualizado tiver menos de 60 cartas", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -324,7 +344,7 @@ describe("AtualizarDeck", () => {
 
     it("deve lancar erro se o sideboard atualizado tiver mais de 15 cartas", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({ ...deckExistente })),
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({ ...deckExistente })),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -347,7 +367,7 @@ describe("AtualizarDeck", () => {
             commander: [{ nome: "atraxa", quantidade: 1 }],
         });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckCommander),
+            buscarPorId: vi.fn().mockResolvedValue(deckCommander),
         });
         const uc = AtualizarDeck.criar(gateway);
 
@@ -364,7 +384,7 @@ describe("AtualizarDeck", () => {
 
     it("deve exigir linkLigaMagic ao converter deck para commander500", async () => {
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(new Deck({
+            buscarPorId: vi.fn().mockResolvedValue(new Deck({
                 ...deckExistente,
                 maindeck: [{ nome: "sol ring", quantidade: 99 }],
                 commander: [{ nome: "atraxa", quantidade: 1 }],
@@ -392,7 +412,7 @@ describe("AtualizarDeck", () => {
             linkLigaMagic: "https://www.ligamagic.com.br/?view=dks/deck&id=1",
         });
         const gateway = criarMockDeckGateway({
-            buscarPorId: jest.fn().mockResolvedValue(deckCommander500),
+            buscarPorId: vi.fn().mockResolvedValue(deckCommander500),
         });
         const uc = AtualizarDeck.criar(gateway);
 

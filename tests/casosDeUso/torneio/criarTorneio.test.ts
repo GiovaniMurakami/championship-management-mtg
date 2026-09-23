@@ -1,5 +1,5 @@
 import { CriarTorneio } from "../../../src/casosDeUso/torneio/criarTorneio";
-import { criarMockTorneioGateway } from "../../mocks/gateways";
+import { criarMockLigaGateway, criarMockTorneioGateway } from "../../mocks/gateways";
 
 describe("CriarTorneio", () => {
     it("deve criar um torneio com sucesso", async () => {
@@ -196,5 +196,40 @@ describe("CriarTorneio", () => {
         expect(resultado.somRodada).toBeUndefined();
         expect(resultado.linkLive).toBeUndefined();
         expect(resultado.linkBanner).toBeUndefined();
+    });
+
+    it("associa o torneio às ligas informadas", async () => {
+        const ligaId = "550e8400-e29b-41d4-a716-446655440010";
+        const liga = { id: ligaId, nome: "Liga", donoId: "user-1", torneioIds: [] as string[], atualizar: undefined };
+        const ligaGateway = criarMockLigaGateway({
+            buscarPorId: vi.fn().mockResolvedValue(liga),
+        });
+        const uc = CriarTorneio.criar(criarMockTorneioGateway(), ligaGateway);
+
+        const resultado = await uc.executar({
+            nome: "FNM",
+            horario: new Date(),
+            formato: "standard",
+            donoId: "user-1",
+            ligaIds: [ligaId],
+        });
+
+        expect(resultado.ligaIds).toEqual([ligaId]);
+        expect(liga.torneioIds).toHaveLength(1);
+        expect(ligaGateway.atualizar).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejeita liga inexistente antes de salvar o torneio", async () => {
+        const torneioGateway = criarMockTorneioGateway();
+        const uc = CriarTorneio.criar(torneioGateway, criarMockLigaGateway());
+
+        await expect(uc.executar({
+            nome: "FNM",
+            horario: new Date(),
+            formato: "standard",
+            donoId: "user-1",
+            ligaIds: ["550e8400-e29b-41d4-a716-446655440011"],
+        })).rejects.toMatchObject({ status: 404 });
+        expect(torneioGateway.salvar).not.toHaveBeenCalled();
     });
 });

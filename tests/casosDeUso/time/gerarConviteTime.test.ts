@@ -6,7 +6,7 @@ const timeBase = new Time({ id: "time-1", nome: "Team Alpha", donoId: "dono-1", 
 
 describe("GerarConviteTime", () => {
     it("deve gerar um token de convite e salvar no time", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeBase) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeBase) });
         const uc = GerarConviteTime.criar(timeGateway);
 
         const resultado = await uc.executar({ timeId: "time-1", requisitanteId: "dono-1" });
@@ -27,7 +27,7 @@ describe("GerarConviteTime", () => {
     });
 
     it("deve lançar 403 se o requisitante não for o dono", async () => {
-        const timeGateway = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(timeBase) });
+        const timeGateway = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(timeBase) });
         const uc = GerarConviteTime.criar(timeGateway);
 
         await expect(
@@ -38,8 +38,8 @@ describe("GerarConviteTime", () => {
     it("deve gerar tokens únicos a cada chamada", async () => {
         const time1 = new Time({ ...timeBase });
         const time2 = new Time({ ...timeBase });
-        const gw1 = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time1) });
-        const gw2 = criarMockTimeGateway({ buscarPorId: jest.fn().mockResolvedValue(time2) });
+        const gw1 = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time1) });
+        const gw2 = criarMockTimeGateway({ buscarPorId: vi.fn().mockResolvedValue(time2) });
 
         const r1 = await GerarConviteTime.criar(gw1).executar({ timeId: "time-1", requisitanteId: "dono-1" });
         const r2 = await GerarConviteTime.criar(gw2).executar({ timeId: "time-1", requisitanteId: "dono-1" });

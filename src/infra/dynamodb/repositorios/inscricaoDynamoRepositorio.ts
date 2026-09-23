@@ -20,7 +20,7 @@ const INSCRICOES_PK = "INSCRICOES";
 
 export class InscricaoDynamoRepositorio extends BaseDynamoRepositorio implements InscricaoGateway {
   private constructor() {
-    super();
+    super("inscricoes");
   }
 
   public static criar() {

@@ -15,189 +15,192 @@ import { LinkIngressoGateway } from "../../src/dominio/gateway/linkIngressoGatew
 
 export function criarMockUsuarioGateway(overrides: Partial<UsuarioGateway> = {}): UsuarioGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorEmail: jest.fn().mockResolvedValue(null),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        buscarVarios: jest.fn().mockResolvedValue([]),
-        listar: jest.fn().mockResolvedValue([]),
-        listarTotal: jest.fn().mockResolvedValue(0),
-        atualizar: jest.fn(),
-        excluir: jest.fn(),
-        incrementarResultadosExpressivos: jest.fn(),
+        salvar: vi.fn(),
+        buscarPorEmail: vi.fn().mockResolvedValue(null),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarVarios: vi.fn().mockResolvedValue([]),
+        listar: vi.fn().mockResolvedValue([]),
+        listarTotal: vi.fn().mockResolvedValue(0),
+        atualizar: vi.fn(),
+        excluir: vi.fn(),
+        incrementarResultadosExpressivos: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockDeckGateway(overrides: Partial<DeckGateway> = {}): DeckGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        buscarVarios: jest.fn().mockResolvedValue([]),
-        listarPorUsuario: jest.fn().mockResolvedValue([]),
-        listarPorDeckOriginalId: jest.fn().mockResolvedValue([]),
-        listar: jest.fn().mockResolvedValue([]),
-        listarTotal: jest.fn().mockResolvedValue(0),
-        incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
-        atualizar: jest.fn(),
-        excluir: jest.fn(),
-        excluirPorUsuario: jest.fn().mockResolvedValue(0),
+        salvar: vi.fn(),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarPorPrefixo: vi.fn().mockResolvedValue(null),
+        buscarVarios: vi.fn().mockResolvedValue([]),
+        listarPorUsuario: vi.fn().mockResolvedValue([]),
+        listarPorDeckOriginalId: vi.fn().mockResolvedValue([]),
+        listar: vi.fn().mockResolvedValue([]),
+        listarTotal: vi.fn().mockResolvedValue(0),
+        incrementarVisualizacoes: vi.fn().mockResolvedValue(null),
+        atualizar: vi.fn(),
+        excluir: vi.fn(),
+        excluirPorUsuario: vi.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
 
 export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {}): TorneioGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        listar: jest.fn().mockResolvedValue([]),
-        listarTotal: jest.fn().mockResolvedValue(0),
-        incrementarVisualizacoes: jest.fn().mockResolvedValue(null),
-        atualizar: jest.fn(),
-        atualizarECriarPartidas: jest.fn(),
-        excluir: jest.fn(),
-        contarPorDono: jest.fn().mockResolvedValue(0),
-        removerAnfitriaoDoUsuario: jest.fn().mockResolvedValue(0),
+        salvar: vi.fn(),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarPorPrefixo: vi.fn().mockResolvedValue(null),
+        listar: vi.fn().mockResolvedValue([]),
+        listarTotal: vi.fn().mockResolvedValue(0),
+        incrementarVisualizacoes: vi.fn().mockResolvedValue(null),
+        atualizar: vi.fn(),
+        atualizarECriarPartidas: vi.fn(),
+        excluir: vi.fn(),
+        contarPorDono: vi.fn().mockResolvedValue(0),
+        removerAnfitriaoDoUsuario: vi.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
 
 export function criarMockLigaGateway(overrides: Partial<LigaGateway> = {}): LigaGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        buscarPorTorneioIds: jest.fn().mockResolvedValue([]),
-        listar: jest.fn().mockResolvedValue([]),
-        listarTotal: jest.fn().mockResolvedValue(0),
-        atualizar: jest.fn(),
-        excluir: jest.fn(),
+        salvar: vi.fn(),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarPorTorneioIds: vi.fn().mockResolvedValue([]),
+        listar: vi.fn().mockResolvedValue([]),
+        listarTotal: vi.fn().mockResolvedValue(0),
+        atualizar: vi.fn(),
+        excluir: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockInscricaoGateway(overrides: Partial<InscricaoGateway> = {}): InscricaoGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(null),
-        listarPorTorneio: jest.fn().mockResolvedValue([]),
-        listarPorTorneios: jest.fn().mockResolvedValue([]),
-        listarPorUsuario: jest.fn().mockResolvedValue([]),
-        atualizar: jest.fn(),
-        contarPorTorneios: jest.fn().mockResolvedValue({}),
-        contarJogadoresDistintos: jest.fn().mockResolvedValue(0),
-        excluir: jest.fn(),
-        excluirPorUsuario: jest.fn().mockResolvedValue(0),
+        salvar: vi.fn(),
+        buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(null),
+        listarPorTorneio: vi.fn().mockResolvedValue([]),
+        listarPorTorneios: vi.fn().mockResolvedValue([]),
+        listarPorUsuario: vi.fn().mockResolvedValue([]),
+        atualizar: vi.fn(),
+        contarPorTorneios: vi.fn().mockResolvedValue({}),
+        contarJogadoresDistintos: vi.fn().mockResolvedValue(0),
+        excluir: vi.fn(),
+        excluirPorUsuario: vi.fn().mockResolvedValue(0),
         ...overrides,
     };
 }
 
 export function criarMockPartidaGateway(overrides: Partial<PartidaGateway> = {}): PartidaGateway {
     return {
-        salvar: jest.fn(),
-        salvarVarias: jest.fn(),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        listarPorTorneio: jest.fn().mockResolvedValue([]),
-        listarPorTorneios: jest.fn().mockResolvedValue([]),
-        listarPorTorneioERodada: jest.fn().mockResolvedValue([]),
-        listarPorJogadorETorneio: jest.fn().mockResolvedValue([]),
-        listarPorDeckIds: jest.fn().mockResolvedValue([]),
-        atualizar: jest.fn(),
-        finalizarAtomicamente: jest.fn().mockResolvedValue(null),
-        contestarPartida: jest.fn().mockResolvedValue(null),
-        existePartidaRodadaPosterior: jest.fn().mockResolvedValue(false),
-        ajustarResultadoContestado: jest.fn().mockResolvedValue(null),
-        atualizarJogador2Partida: jest.fn().mockResolvedValue(null),
-        excluirPorTorneioERodada: jest.fn().mockResolvedValue(0),
-        excluirPorIds: jest.fn().mockResolvedValue(0),
-        buscarByePartidaRodada: jest.fn().mockResolvedValue(null),
-        confirmarResultado: jest.fn().mockResolvedValue(null),
-        atualizarMesa: jest.fn().mockResolvedValue(null),
+        salvar: vi.fn(),
+        salvarVarias: vi.fn(),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        listarPorTorneio: vi.fn().mockResolvedValue([]),
+        listarPorTorneios: vi.fn().mockResolvedValue([]),
+        listarPorTorneioERodada: vi.fn().mockResolvedValue([]),
+        listarPorJogadorETorneio: vi.fn().mockResolvedValue([]),
+        listarPorDeckIds: vi.fn().mockResolvedValue([]),
+        atualizar: vi.fn(),
+        finalizarAtomicamente: vi.fn().mockResolvedValue(null),
+        contestarPartida: vi.fn().mockResolvedValue(null),
+        existePartidaRodadaPosterior: vi.fn().mockResolvedValue(false),
+        ajustarResultadoContestado: vi.fn().mockResolvedValue(null),
+        atualizarJogador2Partida: vi.fn().mockResolvedValue(null),
+        excluirPorTorneioERodada: vi.fn().mockResolvedValue(0),
+        excluirPorIds: vi.fn().mockResolvedValue(0),
+        buscarByePartidaRodada: vi.fn().mockResolvedValue(null),
+        confirmarResultado: vi.fn().mockResolvedValue(null),
+        atualizarMesa: vi.fn().mockResolvedValue(null),
         ...overrides,
     };
 }
 
 export function criarMockLinkIngressoGateway(overrides: Partial<LinkIngressoGateway> = {}): LinkIngressoGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorToken: jest.fn().mockResolvedValue(null),
-        excluirPorToken: jest.fn(),
+        salvar: vi.fn(),
+        buscarPorToken: vi.fn().mockResolvedValue(null),
+        excluirPorToken: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockTokenBlacklistGateway(overrides: Partial<TokenBlacklistGateway> = {}): TokenBlacklistGateway {
     return {
-        adicionar: jest.fn(),
-        existe: jest.fn().mockResolvedValue(false),
+        adicionar: vi.fn(),
+        existe: vi.fn().mockResolvedValue(false),
         ...overrides,
     };
 }
 
 export function criarMockLoginAttemptGateway(overrides: Partial<LoginAttemptGateway> = {}): LoginAttemptGateway {
     return {
-        registrarFalha: jest.fn(),
-        obterFalhas: jest.fn().mockResolvedValue(0),
-        resetar: jest.fn(),
+        registrarFalha: vi.fn(),
+        obterFalhas: vi.fn().mockResolvedValue(0),
+        resetar: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockRefreshTokenGateway(overrides: Partial<RefreshTokenGateway> = {}): RefreshTokenGateway {
     return {
-        salvar: jest.fn(),
-        consumir: jest.fn().mockResolvedValue(null),
-        excluirPorUsuario: jest.fn(),
+        salvar: vi.fn(),
+        consumir: vi.fn().mockResolvedValue(null),
+        excluirPorUsuario: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockEmailGateway(overrides: Partial<EmailGateway> = {}): EmailGateway {
     return {
-        enviar: jest.fn().mockResolvedValue(undefined),
+        enviar: vi.fn().mockResolvedValue(undefined),
         ...overrides,
     };
 }
 
 export function criarMockResetSenhaGateway(overrides: Partial<ResetSenhaGateway> = {}): ResetSenhaGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorToken: jest.fn().mockResolvedValue(null),
-        excluirPorToken: jest.fn(),
-        excluirPorUsuario: jest.fn(),
+        salvar: vi.fn(),
+        buscarPorToken: vi.fn().mockResolvedValue(null),
+        excluirPorToken: vi.fn(),
+        excluirPorUsuario: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockImagemGateway(overrides: Partial<ImagemGateway> = {}): ImagemGateway {
     return {
-        gerarUrlUpload: jest.fn().mockResolvedValue({
+        gerarUrlUpload: vi.fn().mockResolvedValue({
             uploadUrl: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg?sig=x",
             urlPublica: "https://bucket.s3.us-east-1.amazonaws.com/imagens/user-1/abc.jpeg",
         }),
+        excluirPorUrl: vi.fn().mockResolvedValue(undefined),
         ...overrides,
     };
 }
 
 export function criarMockTimeGateway(overrides: Partial<TimeGateway> = {}): TimeGateway {
     return {
-        salvar: jest.fn(),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        buscarVarios: jest.fn().mockResolvedValue([]),
-        buscarPorMembros: jest.fn().mockResolvedValue([]),
-        buscarPorConviteToken: jest.fn().mockResolvedValue(null),
-        listar: jest.fn().mockResolvedValue([]),
-        listarTotal: jest.fn().mockResolvedValue(0),
-        atualizar: jest.fn(),
-        excluir: jest.fn(),
+        salvar: vi.fn(),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarVarios: vi.fn().mockResolvedValue([]),
+        buscarPorMembros: vi.fn().mockResolvedValue([]),
+        buscarPorConviteToken: vi.fn().mockResolvedValue(null),
+        listar: vi.fn().mockResolvedValue([]),
+        listarTotal: vi.fn().mockResolvedValue(0),
+        atualizar: vi.fn(),
+        excluir: vi.fn(),
         ...overrides,
     };
 }
 
 export function criarMockStoryFundoGateway(overrides: Partial<import("../../src/dominio/gateway/storyFundoGateway").StoryFundoGateway> = {}) {
     return {
-        salvar: jest.fn(),
-        listar: jest.fn().mockResolvedValue([]),
-        buscarPorId: jest.fn().mockResolvedValue(null),
-        excluir: jest.fn().mockResolvedValue(false),
+        salvar: vi.fn(),
+        listar: vi.fn().mockResolvedValue([]),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        excluir: vi.fn().mockResolvedValue(false),
         ...overrides,
     };
 }

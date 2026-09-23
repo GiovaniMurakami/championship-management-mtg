@@ -8,6 +8,7 @@ import { listarDecksQuerySchema } from "../../../../../helpers/validacao/schemas
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { z } from "zod";
+import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
 
 type ListarDecksQuery = z.infer<typeof listarDecksQuerySchema>;
 
@@ -35,7 +36,7 @@ export class ListarDecksRota implements Rotas {
   }
 
   public getMiddlewares(): RequestHandler[] {
-    return [validarQueryMiddleware(listarDecksQuerySchema), publicReadRateLimiter];
+    return [validarQueryMiddleware(listarDecksQuerySchema), autenticarJwtOpcional, publicReadRateLimiter];
   }
 
   public getHandler() {
@@ -57,6 +58,7 @@ export class ListarDecksRota implements Rotas {
           criadoAntes,
           limite,
           offset,
+          solicitanteId: request.usuario?.id,
         });
 
         response.status(200).json(resultado);

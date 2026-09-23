@@ -6,8 +6,8 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
 
 // Mock do eventosTorneio para evitar side effects nos testes
-jest.mock("../../../src/infra/socketio/eventosTorneio", () => ({
-    eventosTorneio: { emit: jest.fn() },
+vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
+    eventosTorneio: { emit: vi.fn() },
 }));
 
 describe("InscreverTorneio", () => {
@@ -23,9 +23,9 @@ describe("InscreverTorneio", () => {
 
     it("deve inscrever um jogador com sucesso", async () => {
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" })) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s", nickMTGO: "joao_mtgo" })) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-1" });
@@ -49,7 +49,7 @@ describe("InscreverTorneio", () => {
 
     it("deve lançar erro se as inscrições estiverem encerradas", async () => {
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioEmAndamento) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioEmAndamento) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway(),
         );
@@ -67,8 +67,8 @@ describe("InscreverTorneio", () => {
         });
 
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioLotado) }),
-            criarMockInscricaoGateway({ contarPorTorneios: jest.fn().mockResolvedValue({ "t-1": 8 }) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioLotado) }),
+            criarMockInscricaoGateway({ contarPorTorneios: vi.fn().mockResolvedValue({ "t-1": 8 }) }),
             criarMockUsuarioGateway(),
         );
 
@@ -85,9 +85,9 @@ describe("InscreverTorneio", () => {
         });
 
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioComVaga) }),
-            criarMockInscricaoGateway({ contarPorTorneios: jest.fn().mockResolvedValue({ "t-1": 7 }) }),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-novo", nome: "Novo", email: "n@e.com", senha: "s", nickMTGO: "novo_mtgo" })) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioComVaga) }),
+            criarMockInscricaoGateway({ contarPorTorneios: vi.fn().mockResolvedValue({ "t-1": 7 }) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Usuario({ id: "u-novo", nome: "Novo", email: "n@e.com", senha: "s", nickMTGO: "novo_mtgo" })) }),
         );
 
         const resultado = await uc.executar({ torneioId: "t-1", usuarioId: "u-novo" });
@@ -96,9 +96,9 @@ describe("InscreverTorneio", () => {
 
     it("deve lançar erro se o nick MTGO não estiver configurado na conta", async () => {
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
-            criarMockUsuarioGateway({ buscarPorId: jest.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })) }),
+            criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(new Usuario({ id: "u-1", nome: "João", email: "j@e.com", senha: "s" })) }),
         );
 
         await expect(
@@ -108,10 +108,10 @@ describe("InscreverTorneio", () => {
 
     it("deve lançar erro se o usuario estiver bloqueado para torneios", async () => {
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(
+                buscarPorId: vi.fn().mockResolvedValue(
                     new Usuario({
                         id: "u-1",
                         nome: "João",
@@ -136,8 +136,8 @@ describe("InscreverTorneio", () => {
         });
 
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioAberto) }),
-            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: jest.fn().mockResolvedValue(inscricaoExistente) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioAberto) }),
+            criarMockInscricaoGateway({ buscarPorTorneioEUsuario: vi.fn().mockResolvedValue(inscricaoExistente) }),
             criarMockUsuarioGateway(),
         );
 
@@ -160,10 +160,10 @@ describe("InscreverTorneio", () => {
         });
 
         const uc = InscreverTorneio.criar(
-            criarMockTorneioGateway({ buscarPorId: jest.fn().mockResolvedValue(torneioNick) }),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioNick) }),
             criarMockInscricaoGateway(),
             criarMockUsuarioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(
+                buscarPorId: vi.fn().mockResolvedValue(
                     new Usuario({
                         id: "u-1",
                         nome: "João",

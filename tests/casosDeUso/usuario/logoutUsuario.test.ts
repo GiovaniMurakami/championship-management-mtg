@@ -5,17 +5,17 @@ import jwt from "jsonwebtoken";
 
 function criarMockBlacklist(overrides: Partial<TokenBlacklistGateway> = {}): TokenBlacklistGateway {
     return {
-        adicionar: jest.fn(),
-        existe: jest.fn().mockResolvedValue(false),
+        adicionar: vi.fn(),
+        existe: vi.fn().mockResolvedValue(false),
         ...overrides,
     };
 }
 
 function criarMockRefreshToken(overrides: Partial<RefreshTokenGateway> = {}): RefreshTokenGateway {
     return {
-        salvar: jest.fn(),
-        consumir: jest.fn().mockResolvedValue(null),
-        excluirPorUsuario: jest.fn(),
+        salvar: vi.fn(),
+        consumir: vi.fn().mockResolvedValue(null),
+        excluirPorUsuario: vi.fn(),
         ...overrides,
     };
 }

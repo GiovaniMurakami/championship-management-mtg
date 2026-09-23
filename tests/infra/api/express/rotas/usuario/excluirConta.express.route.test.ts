@@ -5,9 +5,9 @@ import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
 describe("ExcluirContaRota", () => {
     it("exclui conta autenticada", async () => {
         const resultado = { mensagem: "Conta excluída com sucesso." };
-        const servico = { executar: jest.fn().mockResolvedValue(resultado) } as any;
+        const servico = { executar: vi.fn().mockResolvedValue(resultado) } as any;
         const rota = ExcluirContaRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -15,7 +15,7 @@ describe("ExcluirContaRota", () => {
                 body: { confirmacao: "Nome" },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(servico.executar).toHaveBeenCalledWith({
@@ -27,11 +27,11 @@ describe("ExcluirContaRota", () => {
     });
 
     it("retorna 401 sem usuário autenticado", async () => {
-        const servico = { executar: jest.fn() } as any;
+        const servico = { executar: vi.fn() } as any;
         const rota = ExcluirContaRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
-        await rota.getHandler()({ body: { confirmacao: "X" } } as any, response, jest.fn());
+        await rota.getHandler()({ body: { confirmacao: "X" } } as any, response, vi.fn());
 
         expect(servico.executar).not.toHaveBeenCalled();
         expect(response.status).toHaveBeenCalledWith(401);
@@ -39,7 +39,7 @@ describe("ExcluirContaRota", () => {
 
     it("propaga ErroPersonalizado do caso de uso", async () => {
         const servico = {
-            executar: jest.fn().mockRejectedValue(
+            executar: vi.fn().mockRejectedValue(
                 ErroPersonalizado.criar({
                     mensagem: "Confirmação inválida.",
                     status: StatusErro.erroParametro,
@@ -47,7 +47,7 @@ describe("ExcluirContaRota", () => {
             ),
         } as any;
         const rota = ExcluirContaRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -55,7 +55,7 @@ describe("ExcluirContaRota", () => {
                 body: { confirmacao: "errado" },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(response.status).toHaveBeenCalledWith(400);

@@ -3,7 +3,6 @@ import { RefazerRodadaRota } from "../../../../../../src/infra/api/express/rotas
 import { ListarUsuariosRota } from "../../../../../../src/infra/api/express/rotas/usuario/listarUsuarios.express.route";
 import { ErroPersonalizado } from "../../../../../../src/helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
-import { eventosTorneio } from "../../../../../../src/infra/socketio/eventosTorneio";
 
 describe("DefinirAnfitriaoTorneioRota", () => {
     it("define anfitrião e responde 200", async () => {
@@ -16,9 +15,9 @@ describe("DefinirAnfitriaoTorneioRota", () => {
                 email: "h@test.com",
             },
         };
-        const servico = { executar: jest.fn().mockResolvedValue(resultado) } as any;
+        const servico = { executar: vi.fn().mockResolvedValue(resultado) } as any;
         const rota = DefinirAnfitriaoTorneioRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -26,7 +25,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
                 body: { anfitriaoId: resultado.anfitriaoId },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(servico.executar).toHaveBeenCalledWith({
@@ -39,7 +38,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
 
     it("propaga ErroPersonalizado", async () => {
         const servico = {
-            executar: jest.fn().mockRejectedValue(
+            executar: vi.fn().mockRejectedValue(
                 ErroPersonalizado.criar({
                     mensagem: "Torneio não encontrado.",
                     status: StatusErro.erroNaoEncontrado,
@@ -47,7 +46,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
             ),
         } as any;
         const rota = DefinirAnfitriaoTorneioRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -55,7 +54,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
                 body: { anfitriaoId: null },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(response.status).toHaveBeenCalledWith(404);
@@ -67,7 +66,7 @@ describe("DefinirAnfitriaoTorneioRota", () => {
 });
 
 describe("RefazerRodadaRota", () => {
-    it("emite rodada_refeita ao refazer", async () => {
+    it("responde 200 ao refazer a rodada", async () => {
         const resultado = {
             rodadaAtual: 2,
             rodadaRemovida: 3,
@@ -76,10 +75,9 @@ describe("RefazerRodadaRota", () => {
             totalRodadas: 5,
         };
         const torneioId = "550e8400-e29b-41d4-a716-446655440000";
-        const servico = { executar: jest.fn().mockResolvedValue(resultado) } as any;
+        const servico = { executar: vi.fn().mockResolvedValue(resultado) } as any;
         const rota = RefazerRodadaRota.criar(servico);
-        const emitSpy = jest.spyOn(eventosTorneio, "emit");
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -87,7 +85,7 @@ describe("RefazerRodadaRota", () => {
                 params: { torneioId },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(servico.executar).toHaveBeenCalledWith({
@@ -95,14 +93,13 @@ describe("RefazerRodadaRota", () => {
             donoId: "dono-1",
             isAdmin: false,
         });
-        expect(emitSpy).toHaveBeenCalledWith("rodada_refeita", { torneioId, ...resultado });
         expect(response.status).toHaveBeenCalledWith(200);
-        emitSpy.mockRestore();
+        expect(response.json).toHaveBeenCalledWith(resultado);
     });
 
     it("marca isAdmin quando role=admin", async () => {
         const servico = {
-            executar: jest.fn().mockResolvedValue({
+            executar: vi.fn().mockResolvedValue({
                 rodadaAtual: 1,
                 rodadaRemovida: 2,
                 partidasRemovidas: 1,
@@ -111,7 +108,7 @@ describe("RefazerRodadaRota", () => {
             }),
         } as any;
         const rota = RefazerRodadaRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -119,7 +116,7 @@ describe("RefazerRodadaRota", () => {
                 params: { torneioId: "550e8400-e29b-41d4-a716-446655440000" },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(servico.executar).toHaveBeenCalledWith(
@@ -136,9 +133,9 @@ describe("ListarUsuariosRota", () => {
             limite: 10,
             offset: 0,
         };
-        const servico = { executar: jest.fn().mockResolvedValue(resultado) } as any;
+        const servico = { executar: vi.fn().mockResolvedValue(resultado) } as any;
         const rota = ListarUsuariosRota.criar(servico);
-        const response = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
+        const response = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
 
         await rota.getHandler()(
             {
@@ -150,7 +147,7 @@ describe("ListarUsuariosRota", () => {
                 },
             } as any,
             response,
-            jest.fn(),
+            vi.fn(),
         );
 
         expect(servico.executar).toHaveBeenCalledWith({

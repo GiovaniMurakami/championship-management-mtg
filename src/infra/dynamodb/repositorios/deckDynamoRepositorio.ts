@@ -12,6 +12,7 @@ type DeckItem = {
   maindeck: Carta[];
   sideboard: Carta[];
   commander: Carta[];
+  cores?: string[];
   usuarioId: string;
   visualizacoes: number;
   oculto: boolean;
@@ -25,7 +26,7 @@ const DECKS_PK = "DECKS";
 
 export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements DeckGateway {
   private constructor() {
-    super();
+    super("decks");
   }
 
   public static criar() {
@@ -39,6 +40,12 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
   public async buscarPorId(id: string): Promise<Deck | null> {
     const item = await this.getJson<DeckItem>(`DECK#${id}`, "DATA");
     return item ? this.itemParaDeck(item) : null;
+  }
+
+  public async buscarPorPrefixo(prefixo: string): Promise<Deck | null> {
+    const itens = await this.queryJson<DeckItem>(DECKS_PK);
+    const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
+    return encontrados.length === 1 ? this.itemParaDeck(encontrados[0]) : null;
   }
 
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
@@ -67,7 +74,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
     return filtrados.slice(offset, offset + limite).map((item) => this.itemParaDeck(item));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarDecks, "usuarioId" | "usuarioIds" | "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio" | "apenasCopiasTorneio"> = {}): Promise<number> {
     return this.filtrar(await this.carregarBase(filtros), filtros).length;
   }
 
@@ -107,7 +114,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
         },
         ConditionExpression: "attribute_exists(pk)",
       },
-    })));
+    })), null);
     return this.buscarPorId(id);
   }
 
@@ -136,12 +143,14 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
 
   private filtrar(
     itens: DeckItem[],
-    filtros: Pick<FiltrosListarDecks, "formato" | "nome" | "incluirOcultos" | "criadoApos" | "criadoAntes">
+    filtros: Pick<FiltrosListarDecks, "formato" | "nome" | "incluirOcultos" | "excluirCopiasTorneio" | "apenasCopiasTorneio" | "criadoApos" | "criadoAntes">
   ): DeckItem[] {
     const formato = filtros.formato?.trim().toLowerCase();
     const nome = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       if (!filtros.incluirOcultos && item.oculto) return false;
+      if (filtros.excluirCopiasTorneio && item.travado && item.torneioId && item.deckOriginalId) return false;
+      if (filtros.apenasCopiasTorneio && !(item.travado && item.torneioId)) return false;
       if (formato && !item.formato.toLowerCase().includes(formato)) return false;
       if (nome && !item.nome.toLowerCase().includes(nome)) return false;
       const criadoEm = new Date(item.criadoEm).getTime();
@@ -194,6 +203,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       maindeck: deck.maindeck,
       sideboard: deck.sideboard,
       commander: deck.commander,
+      cores: deck.cores ?? [],
       usuarioId: deck.usuarioId,
       visualizacoes: deck.visualizacoes,
       oculto: deck.oculto,
@@ -215,6 +225,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       maindeck: item.maindeck,
       sideboard: item.sideboard,
       commander: item.commander,
+      cores: item.cores ?? [],
       usuarioId: item.usuarioId,
       visualizacoes: item.visualizacoes,
       oculto: item.oculto,

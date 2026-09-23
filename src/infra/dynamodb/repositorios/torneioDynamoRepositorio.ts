@@ -24,6 +24,7 @@ type TorneioItem = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
@@ -31,6 +32,7 @@ type TorneioItem = {
   visualizacoes: number;
   criadoEm: string;
   rodadaIniciadaEm?: string;
+  rodadaPublicada?: boolean;
   version: number;
 };
 
@@ -38,7 +40,7 @@ const TORNEIOS_PK = "TORNEIOS";
 
 export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements TorneioGateway {
   private constructor() {
-    super();
+    super("torneios");
   }
 
   public static criar() {
@@ -64,6 +66,12 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
   public async buscarPorId(id: string): Promise<Torneio | null> {
     const item = await this.getJson<TorneioItem>(`TORNEIO#${id}`, "METADATA");
     return item ? this.itemParaTorneio(item) : null;
+  }
+
+  public async buscarPorPrefixo(prefixo: string): Promise<Torneio | null> {
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
+    return encontrados.length === 1 ? this.itemParaTorneio(encontrados[0]) : null;
   }
 
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
@@ -139,7 +147,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
         },
         ConditionExpression: "attribute_exists(pk)",
       },
-    })));
+    })), "visualizacoesTorneio");
     return this.buscarPorId(id);
   }
 
@@ -149,13 +157,19 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       await this.atualizar(torneio);
       return;
     }
-    try {
-      await partidaRepositorio.salvarVarias(partidas);
-      await this.atualizar(torneio);
-    } catch (error) {
-      await partidaRepositorio.excluirPorIds(partidas.map((partida) => partida.id)).catch(() => undefined);
-      throw error;
+
+    const partidasPorRodada = new Map<string, Partida[]>();
+    for (const partida of partidas) {
+      const chave = `${partida.torneioId}|${partida.rodada}`;
+      partidasPorRodada.set(chave, [...(partidasPorRodada.get(chave) ?? []), partida]);
     }
+
+    for (const rodadaPartidas of partidasPorRodada.values()) {
+      const primeira = rodadaPartidas[0];
+      await partidaRepositorio.reconciliarRodada(primeira.torneioId, primeira.rodada, rodadaPartidas);
+    }
+
+    await this.atualizar(torneio);
   }
 
   public async excluir(id: string): Promise<void> {
@@ -257,6 +271,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      premio: torneio.premio,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
@@ -264,6 +279,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm.toISOString(),
       rodadaIniciadaEm: torneio.rodadaIniciadaEm?.toISOString(),
+      rodadaPublicada: torneio.rodadaPublicada !== false,
       version: torneio.version,
     };
   }
@@ -289,6 +305,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: item.maxJogadores,
       maxRodadas: item.maxRodadas,
       corteTop: item.corteTop,
+      premio: item.premio,
       linkLive: item.linkLive,
       emCorte: item.emCorte,
       secreto: item.secreto,
@@ -296,6 +313,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       visualizacoes: item.visualizacoes,
       criadoEm: new Date(item.criadoEm),
       rodadaIniciadaEm: item.rodadaIniciadaEm ? new Date(item.rodadaIniciadaEm) : undefined,
+      rodadaPublicada: item.rodadaPublicada !== false,
       version: item.version ?? 0,
     });
   }

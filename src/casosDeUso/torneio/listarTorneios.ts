@@ -1,5 +1,6 @@
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
+import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
@@ -41,7 +42,8 @@ export type ListarTorneiosOutputDto = {
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
-    linkLive?: string;
+    premio?: { playerPoints: number; tix: number };
+  linkLive?: string;
     exibirNomeJogador?: string;
     emCorte: boolean;
     secreto: boolean;
@@ -49,6 +51,7 @@ export type ListarTorneiosOutputDto = {
     criadoEm: string;
     inscrito: boolean;
     totalInscritos: number;
+    ligaIds: string[];
   }>;
   total: number;
   limite: number;
@@ -60,15 +63,17 @@ export class ListarTorneios
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
+    private readonly ligaGateway?: LigaGateway,
     private readonly cache?: CacheDynamoDbServico
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
+    ligaGateway?: LigaGateway,
     cache?: CacheDynamoDbServico
   ) {
-    return new ListarTorneios(torneioGateway, inscricaoGateway, cache);
+    return new ListarTorneios(torneioGateway, inscricaoGateway, ligaGateway, cache);
   }
 
   public async executar({
@@ -95,7 +100,8 @@ export class ListarTorneios
       dataInicio: dataInicio?.toISOString() ?? null,
       dataFim: dataFim?.toISOString() ?? null,
     });
-    const cacheado = await this.cache?.buscar<ListarTorneiosOutputDto>(CACHE_PK_TORNEIOS, cacheKey);
+    const versaoCache = await this.cache?.obterVersao(CACHE_PK_TORNEIOS);
+    const cacheado = await this.cache?.buscar<ListarTorneiosOutputDto>(CACHE_PK_TORNEIOS, cacheKey, versaoCache);
     if (cacheado) return cacheado;
 
     const [torneios, total, inscricoes] = await Promise.all([
@@ -113,11 +119,24 @@ export class ListarTorneios
       usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
     ]);
 
-    const torneiosInscritos = new Set(inscricoes.map((i) => i.torneioId));
+    const torneiosInscritos = new Set(inscricoes.filter((i) => !i.dropped).map((i) => i.torneioId));
     const torneioIds = torneios.map((t) => t.id);
-    const contagemInscritos = torneioIds.length > 0
-      ? await this.inscricaoGateway.contarPorTorneios(torneioIds)
-      : {};
+    const [contagemInscritos, ligas] = await Promise.all([
+      torneioIds.length > 0
+        ? this.inscricaoGateway.contarPorTorneios(torneioIds)
+        : Promise.resolve({} as Record<string, number>),
+      this.ligaGateway && torneioIds.length > 0
+        ? this.ligaGateway.buscarPorTorneioIds(torneioIds)
+        : Promise.resolve([]),
+    ]);
+    const ligaIdsPorTorneio = new Map<string, string[]>();
+    for (const liga of ligas) {
+      for (const torneioId of liga.torneioIds) {
+        const atuais = ligaIdsPorTorneio.get(torneioId) ?? [];
+        atuais.push(liga.id);
+        ligaIdsPorTorneio.set(torneioId, atuais);
+      }
+    }
 
     const saida = {
       torneios: torneios.map((t) => ({
@@ -139,7 +158,8 @@ export class ListarTorneios
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,
-        linkLive: t.linkLive,
+        premio: t.premio,
+      linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
         exibirNomeJogador: t.exibirNomeJogador,
@@ -147,12 +167,13 @@ export class ListarTorneios
         criadoEm: toBrasiliaISO(t.criadoEm)!,
         inscrito: torneiosInscritos.has(t.id),
         totalInscritos: contagemInscritos[t.id] ?? 0,
+        ligaIds: ligaIdsPorTorneio.get(t.id) ?? [],
       })),
       total,
       limite: paginacao.limite,
       offset: paginacao.offset,
     };
-    await this.cache?.salvar(CACHE_PK_TORNEIOS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS", 30));
+    await this.cache?.salvar(CACHE_PK_TORNEIOS, cacheKey, saida, getCacheTtlSegundos("DYNAMODB_CACHE_TTL_LISTAR_TORNEIOS_SECONDS", 30), versaoCache);
     return saida;
   }
 }

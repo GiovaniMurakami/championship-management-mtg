@@ -1,5 +1,6 @@
 import { RankingLiga } from "../../../src/casosDeUso/liga/rankingLiga";
 import {
+    criarMockTorneioGateway,
     criarMockLigaGateway,
     criarMockPartidaGateway,
     criarMockInscricaoGateway,
@@ -15,6 +16,7 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Time } from "../../../src/dominio/entidade/time";
 
 describe("RankingLiga", () => {
+    const torneiosFinalizados = () => criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => ({ id, status: "finalizado" })) });
     const liga = new Liga({
         id: "liga-1",
         nome: "Liga Nacional",
@@ -29,6 +31,7 @@ describe("RankingLiga", () => {
         senha: "hash",
         role: "user",
         nickMTGO: "alice_mtgo",
+        fotoUrl: "https://example.com/alice.jpg",
     });
     const usuario2 = new Usuario({
         id: "user-2",
@@ -65,6 +68,20 @@ describe("RankingLiga", () => {
         usuarioId: "user-2",
     });
 
+    it("consulta resultados e inscrições apenas dos torneios finalizados", async () => {
+        const partidas = criarMockPartidaGateway();
+        const inscricoes = criarMockInscricaoGateway();
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue({ ...liga, torneioIds: ["fim", "aberto", "andamento", "removido"] }) }),
+            partidas, inscricoes, criarMockDeckGateway(), criarMockUsuarioGateway(), criarMockTimeGateway(),
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => id === "removido" ? null : ({ id, status: id === "fim" ? "finalizado" : id === "aberto" ? "inscricoes_abertas" : "em_andamento" })) })
+        );
+        const resultado = await uc.executar({ ligaId: liga.id });
+        expect(partidas.listarPorTorneios).toHaveBeenCalledWith(["fim"]);
+        expect(inscricoes.listarPorTorneios).toHaveBeenCalledWith(["fim"]);
+        expect(resultado.rankingJogadores).toEqual([]);
+    });
+
     it("deve lançar 404 se liga não existir", async () => {
         const uc = RankingLiga.criar(
             criarMockLigaGateway(),
@@ -72,7 +89,8 @@ describe("RankingLiga", () => {
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
             criarMockUsuarioGateway(),
-            criarMockTimeGateway()
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         await expect(uc.executar({ ligaId: "inexistente" })).rejects.toMatchObject({ status: 404 });
@@ -80,12 +98,13 @@ describe("RankingLiga", () => {
 
     it("deve retornar ranking vazio se não houver partidas finalizadas", async () => {
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
             criarMockPartidaGateway(),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
             criarMockUsuarioGateway(),
-            criarMockTimeGateway()
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -114,18 +133,26 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway()
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({
+                listarPorTorneios: vi.fn().mockResolvedValue([
+                    new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", deckId: "deck-1" }),
+                    new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", deckId: "deck-2" }),
+                ]),
+            }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
 
         expect(resultado.rankingJogadores).toHaveLength(2);
         expect(resultado.rankingJogadores[0].jogador.nome).toBe("alice_mtgo");
+        expect(resultado.rankingJogadores[0].jogador.fotoUrl).toBe(usuario1.fotoUrl);
+        expect(resultado.rankingJogadores[1].jogador.fotoUrl).toBeUndefined();
         expect(resultado.rankingJogadores[0].vitorias).toBe(1);
         expect(resultado.rankingJogadores[0].pontos).toBe(3);
         expect(resultado.rankingJogadores[1].jogador.nome).toBe("bob_mtgo");
@@ -148,12 +175,13 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway()
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -179,12 +207,18 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway()
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({
+                listarPorTorneios: vi.fn().mockResolvedValue([
+                    new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", deckId: "deck-1" }),
+                    new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", deckId: "deck-2" }),
+                ]),
+            }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -193,11 +227,13 @@ describe("RankingLiga", () => {
         const burnDeck = resultado.rankingDecks.find((d) => d.nome === "Boros Burn");
         expect(burnDeck).toBeDefined();
         expect(burnDeck!.totalUsos).toBe(1);
+        expect(burnDeck!.totalDecks).toBe(1);
         expect(burnDeck!.vitorias).toBe(1);
         expect(burnDeck!.derrotas).toBe(0);
         expect(burnDeck!.empates).toBe(0);
         expect(burnDeck!.winrate).toBe(100);
         expect(burnDeck!.loserate).toBe(0);
+        expect(burnDeck!.cartaRepresentativa).toBe("goblin guide");
 
         const controlDeck = resultado.rankingDecks.find((d) => d.nome === "UW Control");
         expect(controlDeck).toBeDefined();
@@ -205,6 +241,8 @@ describe("RankingLiga", () => {
         expect(controlDeck!.derrotas).toBe(1);
         expect(controlDeck!.winrate).toBe(0);
         expect(controlDeck!.loserate).toBe(100);
+        expect(controlDeck!.totalDecks).toBe(1);
+        expect(controlDeck!.cartaRepresentativa).toBe("counterspell");
 
         expect(resultado.totalDecks).toBe(2);
     });
@@ -217,14 +255,15 @@ describe("RankingLiga", () => {
         const inscricao2 = new Inscricao({ id: "i-2", torneioId: "torneio-1", usuarioId: "user-2", deckId: "deck-2" });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
             criarMockPartidaGateway(),
             criarMockInscricaoGateway({
-                listarPorTorneios: jest.fn().mockResolvedValue([inscricao1, inscricao2]),
+                listarPorTorneios: vi.fn().mockResolvedValue([inscricao1, inscricao2]),
             }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
             criarMockUsuarioGateway(),
-            criarMockTimeGateway()
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -258,12 +297,13 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway()
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -289,12 +329,13 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
             criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway()
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1", limiteJogadores: 1, limiteDecks: 1, limiteCartas: 1 });
@@ -323,12 +364,13 @@ describe("RankingLiga", () => {
         });
 
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partidaPendente]) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partidaPendente]) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
             criarMockUsuarioGateway(),
-            criarMockTimeGateway()
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -371,12 +413,13 @@ describe("RankingLiga", () => {
         ];
         const usuario3 = new Usuario({ id: "user-3", nome: "Carol", email: "c@c.com", senha: "hash" });
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue(partidas) }),
             criarMockInscricaoGateway(),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
-            criarMockTimeGateway()
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });
@@ -390,6 +433,38 @@ describe("RankingLiga", () => {
         expect(bob.pontos).toBe(1);
         expect(carol.derrotas).toBe(1);
         expect(carol.pontos).toBe(0);
+    });
+
+    it("deve desempatar jogadores pelos critérios do torneio: OMW%, depois GW%, depois OGW%", async () => {
+        const usuario3 = new Usuario({ id: "user-3", nome: "Carol", email: "c@c.com", senha: "hash" });
+        const usuario4 = new Usuario({ id: "user-4", nome: "Dave", email: "d@d.com", senha: "hash" });
+        const usuario5 = new Usuario({ id: "user-5", nome: "Eve", email: "e@e.com", senha: "hash" });
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "torneio-1", rodada: 1, jogador1Id: "user-3", jogador2Id: "user-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "torneio-1", rodada: 1, jogador1Id: "user-3", jogador2Id: "user-5", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p3", torneioId: "torneio-1", rodada: 2, jogador1Id: "user-1", jogador2Id: "user-3", vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" }),
+            new Partida({ id: "p4", torneioId: "torneio-1", rodada: 2, jogador1Id: "user-1", jogador2Id: "user-5", vitoriasJogador1: 0, vitoriasJogador2: 2, status: "finalizada" }),
+            new Partida({ id: "p5", torneioId: "torneio-1", rodada: 2, jogador1Id: "user-2", jogador2Id: "user-4", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+        ];
+        const uc = RankingLiga.criar(
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue(partidas) }),
+            criarMockInscricaoGateway(),
+            criarMockDeckGateway(),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2, usuario3, usuario4, usuario5]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
+        );
+
+        const resultado = await uc.executar({ ligaId: "liga-1" });
+        const alice = resultado.rankingJogadores.find((r) => r.jogador.id === "user-1")!;
+        const bob = resultado.rankingJogadores.find((r) => r.jogador.id === "user-2")!;
+
+        expect(alice.pontos).toBe(3);
+        expect(bob.pontos).toBe(3);
+        expect(alice.omwp).toBeGreaterThan(bob.omwp);
+        expect(resultado.rankingJogadores.findIndex((r) => r.jogador.id === "user-1"))
+            .toBeLessThan(resultado.rankingJogadores.findIndex((r) => r.jogador.id === "user-2"));
     });
 
     it("deve calcular ranking por times agregando estatísticas dos membros", async () => {
@@ -421,12 +496,13 @@ describe("RankingLiga", () => {
             new Time({ id: "time-2", nome: "Beta", donoId: "user-2" }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue(times) })
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway({ buscarVarios: vi.fn().mockResolvedValue(times) }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times", limiteJogadores: 1 });
@@ -441,6 +517,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
+                omwp: 0.33,
+                gwp: 1,
+                ogwp: 0.33,
             },
         ]);
     });
@@ -486,12 +565,13 @@ describe("RankingLiga", () => {
             new Time({ id: "time-2", nome: "Beta", donoId: "user-2" }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue(partidas) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
-            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue(times) })
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockTimeGateway({ buscarVarios: vi.fn().mockResolvedValue(times) }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times" });
@@ -504,6 +584,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 6,
+                omwp: 0.33,
+                gwp: 0.8,
+                ogwp: 0.33,
             },
             {
                 posicao: 2,
@@ -512,6 +595,9 @@ describe("RankingLiga", () => {
                 derrotas: 2,
                 empates: 0,
                 pontos: 0,
+                omwp: 1,
+                gwp: 0.33,
+                ogwp: 0.8,
             },
         ]);
     });
@@ -557,12 +643,13 @@ describe("RankingLiga", () => {
         ];
         const usuario3 = new Usuario({ id: "user-3", nome: "Carol", email: "c@c.com", senha: "hash" });
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue(partidas) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
-            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue(times) })
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway({ buscarVarios: vi.fn().mockResolvedValue(times) }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times", limiteTimes: 1 });
@@ -576,6 +663,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
+                omwp: 0.33,
+                gwp: 1,
+                ogwp: 0.33,
             },
         ]);
     });
@@ -610,12 +700,13 @@ describe("RankingLiga", () => {
             new Time({ id: "time-3", nome: "Gamma", donoId: "user-3" }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
-            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue(times) })
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway({ buscarVarios: vi.fn().mockResolvedValue(times) }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times" });
@@ -629,6 +720,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
+                omwp: 0.33,
+                gwp: 1,
+                ogwp: 0.33,
             },
             {
                 posicao: 2,
@@ -637,6 +731,9 @@ describe("RankingLiga", () => {
                 derrotas: 1,
                 empates: 0,
                 pontos: 0,
+                omwp: 1,
+                gwp: 0.33,
+                ogwp: 1,
             },
             {
                 posicao: 3,
@@ -645,6 +742,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 0,
+                omwp: 0.33,
+                gwp: 0.33,
+                ogwp: 0.33,
             },
         ]);
     });
@@ -676,15 +776,16 @@ describe("RankingLiga", () => {
             new Time({ id: "time-2", nome: "Beta", donoId: "user-2", membroIds: ["user-2"] }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
             criarMockDeckGateway(),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2]) }),
             criarMockTimeGateway({
-                buscarPorMembros: jest.fn().mockResolvedValue(times),
-                buscarVarios: jest.fn().mockResolvedValue(times),
-            })
+                buscarPorMembros: vi.fn().mockResolvedValue(times),
+                buscarVarios: vi.fn().mockResolvedValue(times),
+            }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times" });
@@ -698,6 +799,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
+                omwp: 0.33,
+                gwp: 1,
+                ogwp: 0.33,
             },
             {
                 posicao: 2,
@@ -706,6 +810,9 @@ describe("RankingLiga", () => {
                 derrotas: 1,
                 empates: 0,
                 pontos: 0,
+                omwp: 1,
+                gwp: 0.33,
+                ogwp: 1,
             },
         ]);
     });
@@ -733,12 +840,13 @@ describe("RankingLiga", () => {
             new Inscricao({ id: "i-1", torneioId: "torneio-1", usuarioId: "user-1", timeId: "time-sem-nome" }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(ligaTimes) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue([partida]) }),
-            criarMockInscricaoGateway({ listarPorTorneios: jest.fn().mockResolvedValue(inscricoes) }),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([]) }),
-            criarMockTimeGateway({ buscarVarios: jest.fn().mockResolvedValue([]) })
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(ligaTimes) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue([partida]) }),
+            criarMockInscricaoGateway({ listarPorTorneios: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
+            criarMockTimeGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-times" });
@@ -802,12 +910,13 @@ describe("RankingLiga", () => {
             }),
         ];
         const uc = RankingLiga.criar(
-            criarMockLigaGateway({ buscarPorId: jest.fn().mockResolvedValue(liga) }),
-            criarMockPartidaGateway({ listarPorTorneios: jest.fn().mockResolvedValue(partidas) }),
+            criarMockLigaGateway({ buscarPorId: vi.fn().mockResolvedValue(liga) }),
+            criarMockPartidaGateway({ listarPorTorneios: vi.fn().mockResolvedValue(partidas) }),
             criarMockInscricaoGateway(),
-            criarMockDeckGateway({ buscarVarios: jest.fn().mockResolvedValue([deck1, deck2, deck3]) }),
-            criarMockUsuarioGateway({ buscarVarios: jest.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
-            criarMockTimeGateway()
+            criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([deck1, deck2, deck3]) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([usuario1, usuario2, usuario3]) }),
+            criarMockTimeGateway(),
+            torneiosFinalizados()
         );
 
         const resultado = await uc.executar({ ligaId: "liga-1" });

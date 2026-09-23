@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import dotenv from "dotenv";
+import { CacheDynamoDbServico } from "../services/cacheDynamoDbServico";
 import { BatchWriteItemCommand, DynamoDBClient, ScanCommand, type WriteRequest } from "@aws-sdk/client-dynamodb";
 import { MongoClient, type Db } from "mongodb";
 import { Carta, Deck } from "../../dominio/entidade/deck";
@@ -10,6 +10,7 @@ import { StoryFundo } from "../../dominio/entidade/storyFundo";
 import { Time } from "../../dominio/entidade/time";
 import { Torneio } from "../../dominio/entidade/torneio";
 import { Usuario } from "../../dominio/entidade/usuario";
+import { carregarEnv } from "../../helpers/carregarEnv";
 import { DeckDynamoRepositorio } from "./repositorios/deckDynamoRepositorio";
 import { InscricaoDynamoRepositorio } from "./repositorios/inscricaoDynamoRepositorio";
 import { LigaDynamoRepositorio } from "./repositorios/ligaDynamoRepositorio";
@@ -20,7 +21,7 @@ import { TimeDynamoRepositorio } from "./repositorios/timeDynamoRepositorio";
 import { TorneioDynamoRepositorio } from "./repositorios/torneioDynamoRepositorio";
 import { UsuarioDynamoRepositorio } from "./repositorios/usuarioDynamoRepositorio";
 
-dotenv.config();
+carregarEnv();
 
 type Colecao = "usuarios" | "decks" | "torneios" | "inscricoes" | "partidas" | "ligas" | "times" | "siteconfigs" | "storyfundos";
 type Resultado = { colecao: Colecao; lidos: number; gravados: number; pulados: number };
@@ -50,6 +51,7 @@ async function limparTabela(): Promise<number> {
   }
 
   const cliente = new DynamoDBClient({ region });
+  const cache = CacheDynamoDbServico.criar();
   let removidos = 0;
   let cursor: Record<string, any> | undefined;
   try {
@@ -65,6 +67,7 @@ async function limparTabela(): Promise<number> {
         let pendentes: WriteRequest[] = chaves.slice(indice, indice + 25).map((Key) => ({ DeleteRequest: { Key } }));
         for (let tentativa = 0; pendentes.length > 0 && tentativa < 8; tentativa += 1) {
           const resposta = await cliente.send(new BatchWriteItemCommand({ RequestItems: { [tabela]: pendentes } }));
+          await cache.invalidarDependencias(["torneios", "inscricoes", "partidas", "usuarios", "decks", "times", "ligas", "site"]);
           pendentes = resposta.UnprocessedItems?.[tabela] ?? [];
           if (pendentes.length) await new Promise((resolve) => setTimeout(resolve, Math.min(1000, 50 * 2 ** tentativa)));
         }

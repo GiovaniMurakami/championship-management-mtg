@@ -7,16 +7,16 @@ function makeReqRes(body: Record<string, unknown> = {}) {
         body,
         usuario: { id: "admin-1", email: "a@a.com", nome: "Admin", role: "admin" },
     } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
+    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+    const next = vi.fn();
     return { req, res, next };
 }
 
 describe("CriarTorneioRota", () => {
-    const servico = { executar: jest.fn() } as any;
+    const servico = { executar: vi.fn() } as any;
     const rota = CriarTorneioRota.criar(servico);
 
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks());
 
     it("retorna 400 se campos obrigatorios ausentes", async () => {
         const { req, res, next } = makeReqRes({ nome: "Torneio" });

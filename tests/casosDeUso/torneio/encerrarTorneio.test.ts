@@ -17,10 +17,10 @@ describe("EncerrarTorneio", () => {
 
     it("finaliza o torneio imediatamente com o ranking atual", async () => {
         const torneio = torneioBase();
-        const atualizar = jest.fn().mockResolvedValue(undefined);
+        const atualizar = vi.fn().mockResolvedValue(undefined);
         const uc = EncerrarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
                 atualizar,
             }),
         );
@@ -50,8 +50,8 @@ describe("EncerrarTorneio", () => {
         });
         const uc = EncerrarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
         );
 
@@ -69,8 +69,8 @@ describe("EncerrarTorneio", () => {
         const torneio = torneioBase();
         const uc = EncerrarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
-                atualizar: jest.fn().mockResolvedValue(undefined),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
+                atualizar: vi.fn().mockResolvedValue(undefined),
             }),
         );
 
@@ -86,7 +86,7 @@ describe("EncerrarTorneio", () => {
     it("bloqueia quem não gerencia o torneio", async () => {
         const uc = EncerrarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneioBase()),
+                buscarPorId: vi.fn().mockResolvedValue(torneioBase()),
             }),
         );
 
@@ -106,7 +106,7 @@ describe("EncerrarTorneio", () => {
         });
         const uc = EncerrarTorneio.criar(
             criarMockTorneioGateway({
-                buscarPorId: jest.fn().mockResolvedValue(torneio),
+                buscarPorId: vi.fn().mockResolvedValue(torneio),
             }),
         );
 

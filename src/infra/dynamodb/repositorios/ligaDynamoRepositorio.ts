@@ -17,7 +17,7 @@ const LIGAS_PK = "LIGAS";
 
 export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements LigaGateway {
   private constructor() {
-    super();
+    super("ligas");
   }
 
   public static criar() {
