@@ -1,7 +1,7 @@
 # AI Context — championship-management-mtg
 
 > Documento de contexto para assistentes de IA. Leia antes de modificar o projeto.
-> Versão da API: **1.1.32** | Idioma da API e mensagens: **português (BR)**
+> Versão da API: **1.1.33** | Idioma da API e mensagens: **português (BR)**
 
 **Frontend pareado:** repositório `championship-management-mtg-front`, atualmente em React 19 + Vite 7 + Tailwind CSS 4, com TanStack Query, Radix UI e Ably. Contratos REST documentados em `docs/`.
 
@@ -12,11 +12,11 @@
 API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gathering**:
 
 - Autenticação JWT (RS256 em prod) + refresh token rotacionado
-- CRUD de decks (`nomeConsolidado` = nome dado pelo usuário; admin pode alterar; `cartaRepresentativa` = arte do arquétipo no metagame)
+- CRUD de decks (`nomeConsolidado` = nome dado pelo usuário; admin pode alterar; `cartaRepresentativa` no deck ainda existe como fallback de votos)
 - Torneios Swiss com top cut, pareamentos, resultados, check-in por rodada, link de ingresso tardio
 - **Anfitrião de torneio** — admin designa usuário com permissões de gestão no torneio
 - Ligas (rankings consolidados) e times (convites/solicitações)
-- Metagame público por formato (torneios finalizados)
+- Metagame público por formato; admin define arte do arquétipo via override em `SITE_CONFIG` (`PUT /metagame/:formato/:slug/carta-representativa`)
 - Upload de imagens via presigned URL (S3)
 - **Blog/artigos** (`/artigos`) — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; assinatura do autor (foto, nome, `descricaoAssinatura`); comentários/curtidas/visualizações (`docs/artigos.md`)
 - Anúncios do site + anúncio diário em carrossel + estatísticas
@@ -184,6 +184,7 @@ DELETE /:torneioId
 ```
 Liga:  POST /liga/criar (admin), GET /listar, /:id, /:id/ranking (leitura pública), PUT, DELETE
 Metagame: GET /metagame?limite=&offset=, GET /metagame/:formato/:slug (leitura pública; torneios finalizados)
+          PUT /metagame/:formato/:slug/carta-representativa (admin; override por arquétipo em SITE_CONFIG)
 Time:  CRUD + convites; GET /listar, /:id (leitura pública); mutações com JWT
 Time:  CRUD + entrar, sair, gerar-convite, entrar-por-convite, solicitar, aprovar, rejeitar
 Site:  GET /site/anuncios, /anuncios/admin, /estatisticas; PUT /anuncios (admin); POST clique
@@ -432,7 +433,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 1. **Fonte de verdade** — priorize `AI_CONTEXT.md`, `composicao/rotas.ts`, os gateways e o código adjacente.
 2. **Cache compartilhado** — toda mutação de torneio deve emitir evento com `torneioId`; a resposta HTTP aguarda a invalidação. Não use cache apenas em memória para dados vistos por múltiplas Lambdas.
 3. **Emails** — falhas são logadas, não propagadas ao cliente.
-4. **`nomeConsolidado` / `cartaRepresentativa`** — nome do arquétipo e arte no metagame; admin altera depois. Deck travado de torneio aceita só esses dois campos. `cartaRepresentativa: null` volta à carta mais jogada.
+4. **`nomeConsolidado` / carta representativa do arquétipo** — nome do arquétipo (admin altera nos decks). Arte do metagame: override por `formato#slug` em SITE_CONFIG; sem override, maioria das `cartaRepresentativa` dos decks; depois carta mais jogada. `cartaRepresentativa: null` no PUT do arquétipo remove o override.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
 6. **Alterar torneio** — só em `inscricoes_abertas`; dono ou admin.
 7. **Torneios secretos** — filtrados em `listarTorneios`, acessíveis por UUID direto.

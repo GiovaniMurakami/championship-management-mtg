@@ -1,6 +1,7 @@
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
+import { SiteConfigGateway } from "../../dominio/gateway/siteConfigGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
@@ -18,6 +19,7 @@ export type MetagameGateways = {
   partida: PartidaGateway;
   deck: DeckGateway;
   usuario: UsuarioGateway;
+  siteConfig?: SiteConfigGateway;
 };
 
 export function validarConsultaMetagame(formato: string, dias: number): { formato: string; dias: number } {
@@ -47,12 +49,15 @@ export async function carregarEAgregarMetagame(
   const agora = new Date();
   const dataInicio = intervalo?.dataInicio ?? new Date(agora.getTime() - consulta.dias * 24 * 60 * 60 * 1000);
 
-  const torneios = await gateways.torneio.listar({
-    status: "finalizado",
-    incluirSecretos: false,
-    dataInicio,
-    ...(intervalo ? { dataFim: intervalo.dataFim } : {}),
-  });
+  const [torneios, overridesConfig] = await Promise.all([
+    gateways.torneio.listar({
+      status: "finalizado",
+      incluirSecretos: false,
+      dataInicio,
+      ...(intervalo ? { dataFim: intervalo.dataFim } : {}),
+    }),
+    gateways.siteConfig?.buscarMetagameOverrides() ?? Promise.resolve(null),
+  ]);
 
   const ids = torneios.map((t) => t.id);
   const [inscricoes, partidas] = ids.length
@@ -80,5 +85,6 @@ export async function carregarEAgregarMetagame(
     partidas,
     decks,
     usuarios,
+    overridesCartasRepresentativas: overridesConfig?.cartasRepresentativas,
   });
 }
