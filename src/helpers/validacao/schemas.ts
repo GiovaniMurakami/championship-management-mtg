@@ -61,6 +61,12 @@ export const atualizarUsuarioSchema = z.object({
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
   fotoUrl: z.string().url("fotoUrl deve ser uma URL válida.").max(2048).optional(),
+  descricaoAssinatura: z.string().max(500, "A descrição da assinatura pode ter no máximo 500 caracteres.").optional(),
+  newsletterMetagame: z.boolean().optional(),
+});
+
+export const descadastrarNewsletterSchema = z.object({
+  token: z.string().trim().min(10, "Token inválido.").max(500),
 });
 
 export const excluirContaSchema = z.object({
@@ -242,6 +248,45 @@ export const listarPostsQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
+export const artigoIdParamSchema = z.object({
+  artigoId: uuidCampo("artigoId"),
+});
+
+export const criarArtigoSchema = z.object({
+  titulo: z.string().trim().min(1, "Título é obrigatório.").max(200),
+  chamada: z.string().trim().max(300).optional(),
+  descricao: z.string().trim().max(1000).optional(),
+  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  capaUrl: s3ImagemUrlOuVazio().optional(),
+  conteudo: z.string().trim().min(1, "Conteúdo é obrigatório.").max(200_000),
+  publicarAgora: z.boolean().optional(),
+});
+
+export const editarArtigoSchema = z.object({
+  titulo: z.string().trim().min(1).max(200).optional(),
+  chamada: z.string().trim().max(300).optional(),
+  descricao: z.string().trim().max(1000).optional(),
+  tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  capaUrl: s3ImagemUrlOuVazio().optional().nullable(),
+  conteudo: z.string().trim().min(1).max(200_000).optional(),
+  publicarAgora: z.boolean().optional(),
+});
+
+export const aprovarArtigoSchema = z.object({
+  aprovar: z.boolean(),
+});
+
+export const comentarArtigoSchema = comentarPostSchema;
+
+export const listarArtigosQuerySchema = z.object({
+  pendentes: z.enum(["true", "false"]).optional(),
+  status: z.enum(["rascunho", "pendente", "pendente_edicao", "publicado", "rejeitado"]).optional(),
+});
+
+export const definirEditorSchema = z.object({
+  editor: z.boolean(),
+});
+
 export const solicitarResetSenhaSchema = z.object({
   email: z.email("E-mail inválido."),
 });
@@ -376,6 +421,30 @@ export const entrarPorConviteTimeSchema = z.object({
 
 export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
+});
+
+export const anuncioDiarioItemSchema = z.object({
+  id: z.string().max(180).optional(),
+  imagemUrl: s3ImagemUrlOuVazio().optional().default(""),
+  link: z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine(
+      (valor) => !valor || /^https?:\/\//i.test(valor),
+      { message: "O link deve começar com http:// ou https://." }
+    ),
+  ativo: z.boolean().optional().default(true),
+  ordem: z.number().int().optional(),
+});
+
+export const salvarAnuncioDiarioSchema = z.object({
+  anuncios: z.array(anuncioDiarioItemSchema).max(20, "Informe no máximo 20 anúncios diários."),
+});
+
+export const metricaAnuncioDiarioSchema = z.object({
+  anuncioId: uuidCampo("anuncioId"),
 });
 
 const diasMetagameSchema = z.preprocess(

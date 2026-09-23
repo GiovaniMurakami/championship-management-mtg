@@ -106,6 +106,9 @@ export class ExcluirConta implements CasoDeUso<ExcluirContaInputDto, ExcluirCont
     usuario.telefone = undefined;
     usuario.nickMTGO = undefined;
     usuario.nickArena = undefined;
+    usuario.fotoUrl = undefined;
+    usuario.descricaoAssinatura = undefined;
+    usuario.newsletterMetagame = false;
     usuario.bloqueadoTorneios = true;
     usuario.excluido = true;
     usuario.excluidoEm = new Date();

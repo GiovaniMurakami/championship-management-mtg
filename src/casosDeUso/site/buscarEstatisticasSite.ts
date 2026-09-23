@@ -1,12 +1,11 @@
 import { InscricaoGateway } from "../../dominio/gateway/inscricaoGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 
-const FORMATOS_SUPORTADOS = 6;
-
 export type BuscarEstatisticasSiteOutput = {
   torneiosRealizados: number;
   jogadoresAtivos: number;
-  formatosSuportados: number;
+  premiacaoTix: number;
+  premiacaoPlayerPoints: number;
 };
 
 export class BuscarEstatisticasSite {
@@ -20,15 +19,23 @@ export class BuscarEstatisticasSite {
   }
 
   public async executar(): Promise<BuscarEstatisticasSiteOutput> {
-    const [torneiosRealizados, jogadoresAtivos] = await Promise.all([
-      this.torneioGateway.listarTotal({ status: "finalizado" }),
+    const [torneiosFinalizados, jogadoresAtivos] = await Promise.all([
+      this.torneioGateway.listar({ status: "finalizado", incluirSecretos: true }),
       this.inscricaoGateway.contarJogadoresDistintos(),
     ]);
 
+    let premiacaoTix = 0;
+    let premiacaoPlayerPoints = 0;
+    for (const torneio of torneiosFinalizados) {
+      premiacaoTix += Number(torneio.premio?.tix) || 0;
+      premiacaoPlayerPoints += Number(torneio.premio?.playerPoints) || 0;
+    }
+
     return {
-      torneiosRealizados,
+      torneiosRealizados: torneiosFinalizados.length,
       jogadoresAtivos,
-      formatosSuportados: FORMATOS_SUPORTADOS,
+      premiacaoTix: Number(premiacaoTix.toFixed(2)),
+      premiacaoPlayerPoints: Math.round(premiacaoPlayerPoints),
     };
   }
 }

@@ -11,6 +11,10 @@ function criarGateway(overrides: Partial<SiteConfigGateway> = {}): SiteConfigGat
     buscarAnuncios: vi.fn().mockResolvedValue(null),
     salvarAnuncios: vi.fn(async (config: AnunciosSiteConfig) => config),
     registrarCliqueAnuncio: vi.fn().mockResolvedValue(null),
+    buscarAnuncioDiario: vi.fn().mockResolvedValue(null),
+    salvarAnuncioDiario: vi.fn(async (config) => config),
+    registrarVisualizacaoAnuncioDiario: vi.fn().mockResolvedValue(null),
+    registrarCliqueAnuncioDiario: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
 }

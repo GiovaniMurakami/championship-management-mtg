@@ -7,8 +7,11 @@ async function buildLambda() {
   try {
     await build({
       absWorkingDir: __dirname,
-      entryPoints: [path.join(__dirname, "src", "handler.ts")],
-      outfile: "build/handler.js",
+      entryPoints: {
+        handler: path.join(__dirname, "src", "handler.ts"),
+        newsletter: path.join(__dirname, "src", "handlerNewsletter.ts"),
+      },
+      outdir: "build",
       bundle: true,
       minify: false,
       platform: "node",

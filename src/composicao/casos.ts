@@ -2,6 +2,7 @@ import { RegistrarPartidaExterna } from "../casosDeUso/usuario/registrarPartidaE
 import { CadastrarUsuario } from "../casosDeUso/usuario/cadastrarUsuario";
 import { LoginUsuario } from "../casosDeUso/usuario/loginUsuario";
 import { AtualizarUsuario } from "../casosDeUso/usuario/atualizarUsuario";
+import { BuscarMeuUsuario } from "../casosDeUso/usuario/buscarMeuUsuario";
 import { RefreshToken } from "../casosDeUso/usuario/refreshToken";
 import { LogoutUsuario } from "../casosDeUso/usuario/logoutUsuario";
 import { SolicitarResetSenha } from "../casosDeUso/usuario/solicitarResetSenha";
@@ -23,6 +24,17 @@ import { CurtirPost } from "../casosDeUso/post/curtirPost";
 import { ExcluirPost } from "../casosDeUso/post/excluirPost";
 import { BuscarPost } from "../casosDeUso/post/buscarPost";
 import { EditarPost } from "../casosDeUso/post/editarPost";
+import { CriarArtigo } from "../casosDeUso/artigo/criarArtigo";
+import { ListarArtigos } from "../casosDeUso/artigo/listarArtigos";
+import { BuscarArtigo } from "../casosDeUso/artigo/buscarArtigo";
+import { EditarArtigo } from "../casosDeUso/artigo/editarArtigo";
+import { AprovarArtigo } from "../casosDeUso/artigo/aprovarArtigo";
+import { ComentarArtigo } from "../casosDeUso/artigo/comentarArtigo";
+import { CurtirArtigo } from "../casosDeUso/artigo/curtirArtigo";
+import { ExcluirArtigo } from "../casosDeUso/artigo/excluirArtigo";
+import { DefinirEditor } from "../casosDeUso/usuario/definirEditor";
+import { ListarAssinantesNewsletter } from "../casosDeUso/usuario/listarAssinantesNewsletter";
+import { DescadastrarNewsletter } from "../casosDeUso/usuario/descadastrarNewsletter";
 import { CriarTorneio } from "../casosDeUso/torneio/criarTorneio";
 import { InscreverTorneio } from "../casosDeUso/torneio/inscreverTorneio";
 import { CheckInTorneio } from "../casosDeUso/torneio/checkInTorneio";
@@ -73,9 +85,15 @@ import { SolicitarEntradaTime } from "../casosDeUso/time/solicitarEntradaTime";
 import { AprovarSolicitacaoTime } from "../casosDeUso/time/aprovarSolicitacaoTime";
 import { RejeitarSolicitacaoTime } from "../casosDeUso/time/rejeitarSolicitacaoTime";
 import { BuscarAnuncios } from "../casosDeUso/site/buscarAnuncios";
+import { BuscarAnuncioDiario } from "../casosDeUso/site/buscarAnuncioDiario";
 import { BuscarEstatisticasSite } from "../casosDeUso/site/buscarEstatisticasSite";
 import { RegistrarCliqueAnuncio } from "../casosDeUso/site/registrarCliqueAnuncio";
+import {
+  RegistrarCliqueAnuncioDiario,
+  RegistrarVisualizacaoAnuncioDiario,
+} from "../casosDeUso/site/registrarMetricasAnuncioDiario";
 import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
+import { SalvarAnuncioDiario } from "../casosDeUso/site/salvarAnuncioDiario";
 import { CadastrarStoryFundo } from "../casosDeUso/storyFundo/cadastrarStoryFundo";
 import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
 import { ExcluirStoryFundo } from "../casosDeUso/storyFundo/excluirStoryFundo";
@@ -89,6 +107,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const cadastrarUsuario = CadastrarUsuario.criar(repos.usuario, servicos.email);
     const loginUsuario = LoginUsuario.criar(repos.usuario, repos.loginAttempt, repos.refreshToken, servicos.email, repos.resetSenha);
     const atualizarUsuario = AtualizarUsuario.criar(repos.usuario);
+    const buscarMeuUsuario = BuscarMeuUsuario.criar(repos.usuario);
     const refreshToken = RefreshToken.criar(repos.usuario, repos.refreshToken);
     const logoutUsuario = LogoutUsuario.criar(repos.tokenBlacklist, repos.refreshToken);
     const solicitarResetSenha = SolicitarResetSenha.criar(repos.usuario, repos.resetSenha, servicos.email);
@@ -126,6 +145,18 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const comentarPost = ComentarPost.criar(repos.post);
     const curtirPost = CurtirPost.criar(repos.post);
     const excluirPost = ExcluirPost.criar(repos.post, servicos.s3);
+
+    const criarArtigo = CriarArtigo.criar(repos.artigo, servicos.s3);
+    const listarArtigos = ListarArtigos.criar(repos.artigo, repos.usuario);
+    const buscarArtigo = BuscarArtigo.criar(repos.artigo, servicos.s3, repos.usuario);
+    const editarArtigo = EditarArtigo.criar(repos.artigo, servicos.s3);
+    const aprovarArtigo = AprovarArtigo.criar(repos.artigo);
+    const comentarArtigo = ComentarArtigo.criar(repos.artigo, repos.usuario);
+    const curtirArtigo = CurtirArtigo.criar(repos.artigo);
+    const excluirArtigo = ExcluirArtigo.criar(repos.artigo, servicos.s3);
+    const definirEditor = DefinirEditor.criar(repos.usuario);
+    const listarAssinantesNewsletter = ListarAssinantesNewsletter.criar(repos.usuario);
+    const descadastrarNewsletter = DescadastrarNewsletter.criar(repos.usuario);
 
     // --- Torneio ---
     const criarTorneio = CriarTorneio.criar(repos.torneio, repos.liga);
@@ -187,6 +218,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const buscarEstatisticasSite = BuscarEstatisticasSite.criar(repos.torneio, repos.inscricao);
     const registrarCliqueAnuncio = RegistrarCliqueAnuncio.criar(repos.siteConfig);
     const salvarAnuncios = SalvarAnuncios.criar(repos.siteConfig);
+    const buscarAnuncioDiario = BuscarAnuncioDiario.criar(repos.siteConfig);
+    const salvarAnuncioDiario = SalvarAnuncioDiario.criar(repos.siteConfig);
+    const registrarVisualizacaoAnuncioDiario = RegistrarVisualizacaoAnuncioDiario.criar(repos.siteConfig);
+    const registrarCliqueAnuncioDiario = RegistrarCliqueAnuncioDiario.criar(repos.siteConfig);
 
     const cadastrarStoryFundo = CadastrarStoryFundo.criar(repos.storyFundo);
     const listarStoryFundos = ListarStoryFundos.criar(repos.storyFundo);
@@ -200,11 +235,13 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     );
 
     return {
-        cadastrarUsuario, loginUsuario, atualizarUsuario, refreshToken, logoutUsuario,
-        solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, registrarPartidaExterna, alterarBloqueioTorneios, excluirConta,
+        cadastrarUsuario, loginUsuario, atualizarUsuario, buscarMeuUsuario, refreshToken, logoutUsuario,
+        solicitarResetSenha, confirmarResetSenha, listarUsuarios, buscarPerfilPublico, registrarPartidaExterna, alterarBloqueioTorneios, excluirConta, definirEditor,
+        listarAssinantesNewsletter, descadastrarNewsletter,
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,
+        criarArtigo, listarArtigos, buscarArtigo, editarArtigo, aprovarArtigo, comentarArtigo, curtirArtigo, excluirArtigo,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, publicarRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
@@ -214,6 +251,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
+        buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
         listarMetagame, buscarArquetipoMetagame,
     };

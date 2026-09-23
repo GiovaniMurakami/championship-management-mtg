@@ -1,7 +1,8 @@
 node_modules/
 .serverless/
 build/
-.env
+.env*
+!.env.example
 dist/
 *.js.map
 package-lock.json

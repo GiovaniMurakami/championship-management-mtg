@@ -1,7 +1,19 @@
 import { spawnSync } from "node:child_process";
 import { config } from "dotenv";
+import path from "node:path";
 
-config();
+const aliases = {
+  local: "local",
+  development: "local",
+  dev: "homolog",
+  homolog: "homolog",
+  staging: "homolog",
+  production: "production",
+  prod: "production",
+};
+const appEnv = aliases[String(process.env.APP_ENV || "local").toLowerCase()] || "local";
+config({ path: path.resolve(process.cwd(), `.env.${appEnv}`) });
+process.env.APP_ENV = appEnv;
 
 const [file, ...pairs] = process.argv.slice(2);
 for (const pair of pairs) {
