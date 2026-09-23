@@ -355,7 +355,7 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 ## 14. Variáveis de ambiente
 
 Arquivos locais (gitignored): `.env.local`, `.env.homolog`, `.env.production`.
-Default: `APP_ENV=local` → carrega `.env.local`. Deploy: `scripts/deploy.mjs` mapeia homolog→stage `dev`, production→stage `prod`.
+Default: `APP_ENV=local` → carrega `.env.local`. Deploy: `scripts/deploy.mjs` mapeia homolog→stage `dev`, production→stage `prod` (no CI o `.env.*` é opcional — vars vêm do GitHub Environment).
 
 Ver `.env.example`. Obrigatórias para rodar:
 
