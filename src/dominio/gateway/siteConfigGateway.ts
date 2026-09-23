@@ -19,12 +19,18 @@ export type AnunciosSiteConfig = {
   atualizadoEm?: Date;
 };
 
-export type AnuncioDiarioSite = {
-  ativo: boolean;
+export type AnuncioDiarioItem = {
+  id: string;
   imagemUrl: string;
   link: string;
+  ativo: boolean;
+  ordem: number;
   visualizacoes: number;
   cliques: number;
+};
+
+export type AnuncioDiarioSite = {
+  anuncios: AnuncioDiarioItem[];
   atualizadoEm?: Date;
 };
 
@@ -34,6 +40,6 @@ export interface SiteConfigGateway {
   registrarCliqueAnuncio(anuncioId: string): Promise<AnunciosSiteConfig | null>;
   buscarAnuncioDiario(): Promise<AnuncioDiarioSite | null>;
   salvarAnuncioDiario(config: AnuncioDiarioSite): Promise<AnuncioDiarioSite>;
-  registrarVisualizacaoAnuncioDiario(): Promise<AnuncioDiarioSite | null>;
-  registrarCliqueAnuncioDiario(): Promise<AnuncioDiarioSite | null>;
+  registrarVisualizacaoAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null>;
+  registrarCliqueAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null>;
 }

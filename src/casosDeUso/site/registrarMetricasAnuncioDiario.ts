@@ -8,15 +8,20 @@ export class RegistrarVisualizacaoAnuncioDiario {
     return new RegistrarVisualizacaoAnuncioDiario(siteConfigGateway);
   }
 
-  public async executar() {
-    const config = await this.siteConfigGateway.registrarVisualizacaoAnuncioDiario();
+  public async executar(input: { anuncioId: string }) {
+    const config = await this.siteConfigGateway.registrarVisualizacaoAnuncioDiario(input.anuncioId);
     if (!config) {
       throw ErroPersonalizado.criar({
         mensagem: "Anúncio diário não encontrado ou inativo.",
         status: 404,
       });
     }
-    return { visualizacoes: config.visualizacoes, cliques: config.cliques };
+    const anuncio = config.anuncios.find((a) => a.id === input.anuncioId);
+    return {
+      anuncioId: input.anuncioId,
+      visualizacoes: anuncio?.visualizacoes ?? 0,
+      cliques: anuncio?.cliques ?? 0,
+    };
   }
 }
 
@@ -27,14 +32,19 @@ export class RegistrarCliqueAnuncioDiario {
     return new RegistrarCliqueAnuncioDiario(siteConfigGateway);
   }
 
-  public async executar() {
-    const config = await this.siteConfigGateway.registrarCliqueAnuncioDiario();
+  public async executar(input: { anuncioId: string }) {
+    const config = await this.siteConfigGateway.registrarCliqueAnuncioDiario(input.anuncioId);
     if (!config) {
       throw ErroPersonalizado.criar({
         mensagem: "Anúncio diário não encontrado ou inativo.",
         status: 404,
       });
     }
-    return { visualizacoes: config.visualizacoes, cliques: config.cliques };
+    const anuncio = config.anuncios.find((a) => a.id === input.anuncioId);
+    return {
+      anuncioId: input.anuncioId,
+      visualizacoes: anuncio?.visualizacoes ?? 0,
+      cliques: anuncio?.cliques ?? 0,
+    };
   }
 }

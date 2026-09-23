@@ -24,7 +24,7 @@ export type ArtigoResumoDto = {
   publicadoEm: string | null;
   criadoEm: string;
   atualizadoEm: string;
-  autor: { id: string; nome: string; excluido: boolean; fotoUrl?: string };
+  autor: { id: string; nome: string; excluido: boolean; fotoUrl?: string; descricaoAssinatura?: string };
 };
 
 export class ListarArtigos implements CasoDeUso<ListarArtigosInputDto, { artigos: ArtigoResumoDto[]; total: number }> {
@@ -78,6 +78,7 @@ export class ListarArtigos implements CasoDeUso<ListarArtigosInputDto, { artigos
       autor: {
         ...toUsuarioPublico(porId.get(a.autorId), a.autorId, "nome"),
         fotoUrl: porId.get(a.autorId)?.excluido ? undefined : porId.get(a.autorId)?.fotoUrl,
+        descricaoAssinatura: porId.get(a.autorId)?.excluido ? undefined : porId.get(a.autorId)?.descricaoAssinatura,
       },
     }));
 

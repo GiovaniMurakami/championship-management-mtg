@@ -1,4 +1,6 @@
+import { v4 as uuidv4 } from "uuid";
 import {
+  AnuncioDiarioItem,
   AnuncioDiarioSite,
   AnuncioSite,
   AnunciosSiteConfig,
@@ -11,17 +13,32 @@ const ANUNCIOS_PK = "SITE_CONFIG";
 const ANUNCIOS_SK = "ANUNCIOS";
 const ANUNCIO_DIARIO_SK = "ANUNCIO_DIARIO";
 
+/** UUID estável para migrar o anúncio diário legado (formato single-slot). */
+const LEGACY_ANUNCIO_DIARIO_ID = "00000000-0000-4000-8000-000000000001";
+
 type SiteConfigItem = {
   anuncios: AnuncioSite[];
   atualizadoEm?: string;
 };
 
-type AnuncioDiarioItem = {
-  ativo: boolean;
+type AnuncioDiarioItemPersistido = {
+  id: string;
   imagemUrl: string;
   link: string;
+  ativo: boolean;
+  ordem: number;
   visualizacoes: number;
   cliques: number;
+};
+
+type AnuncioDiarioItemRaw = {
+  anuncios?: AnuncioDiarioItemPersistido[];
+  /** Formato legado (antes do carrossel). */
+  ativo?: boolean;
+  imagemUrl?: string;
+  link?: string;
+  visualizacoes?: number;
+  cliques?: number;
   atualizadoEm?: string;
 };
 
@@ -72,43 +89,76 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
   }
 
   public async buscarAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
-    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    const item = await this.getJson<AnuncioDiarioItemRaw>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
     if (!item) return null;
     return this.itemParaAnuncioDiario(item);
   }
 
   public async salvarAnuncioDiario(config: AnuncioDiarioSite): Promise<AnuncioDiarioSite> {
     const atualizadoEm = config.atualizadoEm ?? new Date();
-    const existente = await this.buscarAnuncioDiario();
-    const item: AnuncioDiarioItem = {
-      ativo: Boolean(config.ativo),
-      imagemUrl: config.imagemUrl || "",
-      link: config.link || "",
-      visualizacoes: existente?.visualizacoes ?? config.visualizacoes ?? 0,
-      cliques: existente?.cliques ?? config.cliques ?? 0,
+    const item: AnuncioDiarioItemRaw = {
+      anuncios: config.anuncios.map((anuncio) => ({
+        id: anuncio.id,
+        imagemUrl: anuncio.imagemUrl || "",
+        link: anuncio.link || "",
+        ativo: Boolean(anuncio.ativo),
+        ordem: anuncio.ordem ?? 0,
+        visualizacoes: anuncio.visualizacoes ?? 0,
+        cliques: anuncio.cliques ?? 0,
+      })),
       atualizadoEm: atualizadoEm.toISOString(),
     };
     await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, item, { entity: "SITE_CONFIG" });
     return this.itemParaAnuncioDiario(item);
   }
 
-  public async registrarVisualizacaoAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
-    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
-    if (!item || !item.ativo || !item.imagemUrl) return null;
-    const atualizado: AnuncioDiarioItem = {
-      ...item,
-      visualizacoes: (item.visualizacoes ?? 0) + 1,
+  public async registrarVisualizacaoAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null> {
+    const item = await this.getJson<AnuncioDiarioItemRaw>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    if (!item) return null;
+    const config = this.itemParaAnuncioDiario(item);
+    const anuncios = config.anuncios.map((anuncio) => {
+      if (anuncio.id !== anuncioId || !anuncio.ativo || !anuncio.imagemUrl) return anuncio;
+      return { ...anuncio, visualizacoes: anuncio.visualizacoes + 1 };
+    });
+    if (!anuncios.some((a) => a.id === anuncioId && a.ativo && a.imagemUrl)) return null;
+
+    const atualizado: AnuncioDiarioItemRaw = {
+      anuncios: anuncios.map((a) => ({
+        id: a.id,
+        imagemUrl: a.imagemUrl,
+        link: a.link,
+        ativo: a.ativo,
+        ordem: a.ordem,
+        visualizacoes: a.visualizacoes,
+        cliques: a.cliques,
+      })),
+      atualizadoEm: item.atualizadoEm,
     };
     await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, atualizado, { entity: "SITE_CONFIG" });
     return this.itemParaAnuncioDiario(atualizado);
   }
 
-  public async registrarCliqueAnuncioDiario(): Promise<AnuncioDiarioSite | null> {
-    const item = await this.getJson<AnuncioDiarioItem>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
-    if (!item || !item.ativo || !item.imagemUrl) return null;
-    const atualizado: AnuncioDiarioItem = {
-      ...item,
-      cliques: (item.cliques ?? 0) + 1,
+  public async registrarCliqueAnuncioDiario(anuncioId: string): Promise<AnuncioDiarioSite | null> {
+    const item = await this.getJson<AnuncioDiarioItemRaw>(ANUNCIOS_PK, ANUNCIO_DIARIO_SK);
+    if (!item) return null;
+    const config = this.itemParaAnuncioDiario(item);
+    const anuncios = config.anuncios.map((anuncio) => {
+      if (anuncio.id !== anuncioId || !anuncio.ativo || !anuncio.imagemUrl) return anuncio;
+      return { ...anuncio, cliques: anuncio.cliques + 1 };
+    });
+    if (!anuncios.some((a) => a.id === anuncioId && a.ativo && a.imagemUrl)) return null;
+
+    const atualizado: AnuncioDiarioItemRaw = {
+      anuncios: anuncios.map((a) => ({
+        id: a.id,
+        imagemUrl: a.imagemUrl,
+        link: a.link,
+        ativo: a.ativo,
+        ordem: a.ordem,
+        visualizacoes: a.visualizacoes,
+        cliques: a.cliques,
+      })),
+      atualizadoEm: item.atualizadoEm,
     };
     await this.putJson(ANUNCIOS_PK, ANUNCIO_DIARIO_SK, atualizado, { entity: "SITE_CONFIG" });
     return this.itemParaAnuncioDiario(atualizado);
@@ -133,14 +183,40 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
     };
   }
 
-  private itemParaAnuncioDiario(item: AnuncioDiarioItem): AnuncioDiarioSite {
+  private itemParaAnuncioDiario(item: AnuncioDiarioItemRaw): AnuncioDiarioSite {
+    const anuncios = this.normalizarAnunciosDiarios(item);
     return {
-      ativo: Boolean(item.ativo),
-      imagemUrl: item.imagemUrl ?? "",
-      link: item.link ?? "",
-      visualizacoes: Number.isFinite(item.visualizacoes) ? Number(item.visualizacoes) : 0,
-      cliques: Number.isFinite(item.cliques) ? Number(item.cliques) : 0,
+      anuncios,
       atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
     };
+  }
+
+  private normalizarAnunciosDiarios(item: AnuncioDiarioItemRaw): AnuncioDiarioItem[] {
+    if (Array.isArray(item.anuncios)) {
+      return item.anuncios.map((anuncio, index) => ({
+        id: anuncio.id || uuidv4(),
+        imagemUrl: anuncio.imagemUrl ?? "",
+        link: anuncio.link ?? "",
+        ativo: anuncio.ativo !== false,
+        ordem: Number.isFinite(anuncio.ordem) ? Number(anuncio.ordem) : index,
+        visualizacoes: Number.isFinite(anuncio.visualizacoes) ? Number(anuncio.visualizacoes) : 0,
+        cliques: Number.isFinite(anuncio.cliques) ? Number(anuncio.cliques) : 0,
+      }));
+    }
+
+    // Migração do formato legado (um único anúncio no root).
+    if (item.imagemUrl || item.ativo) {
+      return [{
+        id: LEGACY_ANUNCIO_DIARIO_ID,
+        imagemUrl: item.imagemUrl ?? "",
+        link: item.link ?? "",
+        ativo: Boolean(item.ativo && item.imagemUrl),
+        ordem: 0,
+        visualizacoes: Number.isFinite(item.visualizacoes) ? Number(item.visualizacoes) : 0,
+        cliques: Number.isFinite(item.cliques) ? Number(item.cliques) : 0,
+      }];
+    }
+
+    return [];
   }
 }

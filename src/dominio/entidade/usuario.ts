@@ -12,6 +12,8 @@ export interface UsuarioProps {
   nickMTGO?: string;
   nickArena?: string;
   fotoUrl?: string;
+  /** Bio usada na assinatura de artigos (editores). */
+  descricaoAssinatura?: string;
   resultadosExpressivos?: number;
   bloqueadoTorneios?: boolean;
   /** null = ainda não respondeu o convite da newsletter */
@@ -31,6 +33,7 @@ export class Usuario {
   public nickMTGO?: string;
   public nickArena?: string;
   public fotoUrl?: string;
+  public descricaoAssinatura?: string;
   public resultadosExpressivos: number;
   public bloqueadoTorneios: boolean;
   public newsletterMetagame: boolean | null;
@@ -38,7 +41,7 @@ export class Usuario {
   public excluidoEm?: Date | null;
   public criadoEm: Date;
 
-  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, fotoUrl, resultadosExpressivos, bloqueadoTorneios, newsletterMetagame, excluido, excluidoEm, criadoEm }: UsuarioProps) {
+  constructor({ id, nome, email, senha, role, telefone, nickMTGO, nickArena, fotoUrl, descricaoAssinatura, resultadosExpressivos, bloqueadoTorneios, newsletterMetagame, excluido, excluidoEm, criadoEm }: UsuarioProps) {
     this.id = id;
     this.nome = nome;
     this.email = email;
@@ -48,6 +51,7 @@ export class Usuario {
     this.nickMTGO = nickMTGO;
     this.nickArena = nickArena;
     this.fotoUrl = fotoUrl;
+    this.descricaoAssinatura = descricaoAssinatura;
     this.resultadosExpressivos = resultadosExpressivos ?? 0;
     this.bloqueadoTorneios = bloqueadoTorneios ?? false;
     this.newsletterMetagame = newsletterMetagame === true ? true : newsletterMetagame === false ? false : null;

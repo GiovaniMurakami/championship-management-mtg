@@ -6,7 +6,10 @@ import {
   RegistrarVisualizacaoAnuncioDiario,
 } from "../../../../../casosDeUso/site/registrarMetricasAnuncioDiario";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
-import { salvarAnuncioDiarioSchema } from "../../../../../helpers/validacao/schemas";
+import {
+  metricaAnuncioDiarioSchema,
+  salvarAnuncioDiarioSchema,
+} from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
@@ -74,8 +77,10 @@ export class RegistrarVisualizacaoAnuncioDiarioRota implements Rotas {
   getMetodo() { return HttpMethod.POST; }
   getMiddlewares(): RequestHandler[] { return [publicActionRateLimiter]; }
   getHandler() {
-    return handlerErro(async (_req, res) => {
-      res.json(await this.caso.executar());
+    return handlerErro(async (req, res) => {
+      const dados = validarBody(metricaAnuncioDiarioSchema, req.body, res);
+      if (!dados) return;
+      res.json(await this.caso.executar(dados));
     });
   }
 }
@@ -89,8 +94,10 @@ export class RegistrarCliqueAnuncioDiarioRota implements Rotas {
   getMetodo() { return HttpMethod.POST; }
   getMiddlewares(): RequestHandler[] { return [publicActionRateLimiter]; }
   getHandler() {
-    return handlerErro(async (_req, res) => {
-      res.json(await this.caso.executar());
+    return handlerErro(async (req, res) => {
+      const dados = validarBody(metricaAnuncioDiarioSchema, req.body, res);
+      if (!dados) return;
+      res.json(await this.caso.executar(dados));
     });
   }
 }

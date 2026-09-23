@@ -2,7 +2,7 @@
 
 API REST do sistema de campeonatos de Magic: The Gathering. Implementa autenticação, decks, torneios Swiss/Top Cut, ligas, times, metagame, anúncios, uploads e notificações em tempo real.
 
-Versão atual: **1.1.31**
+Versão atual: **1.1.32**
 
 ## Stack
 

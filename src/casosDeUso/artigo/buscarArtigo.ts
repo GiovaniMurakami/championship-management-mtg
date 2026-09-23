@@ -88,6 +88,7 @@ export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<stri
       autor: {
         ...toUsuarioPublico(autor, artigo.autorId, "nome"),
         fotoUrl: autor?.excluido ? undefined : autor?.fotoUrl,
+        descricaoAssinatura: autor?.excluido ? undefined : autor?.descricaoAssinatura,
       },
       totalCurtidas: curtidas.length,
       curtidoPorMim: Boolean(input.requisitanteId && curtidas.includes(input.requisitanteId)),

@@ -1,7 +1,7 @@
 # AI Context — championship-management-mtg
 
 > Documento de contexto para assistentes de IA. Leia antes de modificar o projeto.
-> Versão da API: **1.1.31** | Idioma da API e mensagens: **português (BR)**
+> Versão da API: **1.1.32** | Idioma da API e mensagens: **português (BR)**
 
 **Frontend pareado:** repositório `championship-management-mtg-front`, atualmente em React 19 + Vite 7 + Tailwind CSS 4, com TanStack Query, Radix UI e Ably. Contratos REST documentados em `docs/`.
 
@@ -18,8 +18,8 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Ligas (rankings consolidados) e times (convites/solicitações)
 - Metagame público por formato (torneios finalizados)
 - Upload de imagens via presigned URL (S3)
-- **Blog/artigos** — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; comentários/curtidas/visualizações (`docs/artigos.md`)
-- Anúncios do site + estatísticas
+- **Blog/artigos** (`/artigos`) — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; assinatura do autor (foto, nome, `descricaoAssinatura`); comentários/curtidas/visualizações (`docs/artigos.md`)
+- Anúncios do site + anúncio diário em carrossel + estatísticas
 - Newsletter semanal de metagame (opt-in; Lambda agendada; descadastro one-click; admin lista assinantes)
 - Notificações em tempo real via **Ably**
 

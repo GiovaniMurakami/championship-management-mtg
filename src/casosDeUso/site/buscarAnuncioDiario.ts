@@ -11,28 +11,40 @@ export class BuscarAnuncioDiario {
     const config = await this.siteConfigGateway.buscarAnuncioDiario();
     if (!config) {
       return {
-        ativo: false,
-        imagemUrl: "",
-        link: "",
-        ...(input.incluirMetricas ? { visualizacoes: 0, cliques: 0 } : {}),
+        anuncios: [],
         atualizadoEm: null,
       };
     }
 
-    const base = {
-      ativo: Boolean(config.ativo && config.imagemUrl),
-      imagemUrl: config.imagemUrl || "",
-      link: config.link || "",
-      atualizadoEm: config.atualizadoEm ? config.atualizadoEm.toISOString() : null,
-    };
+    const anunciosOrdenados = [...config.anuncios].sort(
+      (a, b) => a.ordem - b.ordem || a.id.localeCompare(b.id)
+    );
 
-    if (!input.incluirMetricas) return base;
+    if (!input.incluirMetricas) {
+      return {
+        anuncios: anunciosOrdenados
+          .filter((a) => a.ativo && a.imagemUrl)
+          .map((a) => ({
+            id: a.id,
+            imagemUrl: a.imagemUrl,
+            link: a.link || "",
+            ordem: a.ordem,
+          })),
+        atualizadoEm: config.atualizadoEm ? config.atualizadoEm.toISOString() : null,
+      };
+    }
 
     return {
-      ...base,
-      ativo: Boolean(config.ativo),
-      visualizacoes: config.visualizacoes ?? 0,
-      cliques: config.cliques ?? 0,
+      anuncios: anunciosOrdenados.map((a) => ({
+        id: a.id,
+        imagemUrl: a.imagemUrl,
+        link: a.link || "",
+        ativo: a.ativo,
+        ordem: a.ordem,
+        visualizacoes: a.visualizacoes ?? 0,
+        cliques: a.cliques ?? 0,
+      })),
+      atualizadoEm: config.atualizadoEm ? config.atualizadoEm.toISOString() : null,
     };
   }
 }

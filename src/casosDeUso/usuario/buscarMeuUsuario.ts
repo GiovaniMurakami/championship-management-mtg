@@ -15,6 +15,7 @@ export type BuscarMeuUsuarioOutputDto = {
   nickMTGO?: string;
   nickArena?: string;
   fotoUrl?: string;
+  descricaoAssinatura?: string;
   role: "user" | "admin" | "editor";
   newsletterMetagame: boolean | null;
   criadoEm: Date;
@@ -46,6 +47,7 @@ export class BuscarMeuUsuario
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
       fotoUrl: usuario.fotoUrl,
+      descricaoAssinatura: usuario.descricaoAssinatura,
       role: usuario.role,
       newsletterMetagame: usuario.newsletterMetagame,
       criadoEm: usuario.criadoEm,

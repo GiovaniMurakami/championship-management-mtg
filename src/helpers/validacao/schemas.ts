@@ -61,6 +61,7 @@ export const atualizarUsuarioSchema = z.object({
   nickMTGO: z.string().optional(),
   nickArena: z.string().optional(),
   fotoUrl: z.string().url("fotoUrl deve ser uma URL válida.").max(2048).optional(),
+  descricaoAssinatura: z.string().max(500, "A descrição da assinatura pode ter no máximo 500 caracteres.").optional(),
   newsletterMetagame: z.boolean().optional(),
 });
 
@@ -422,8 +423,8 @@ export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
 });
 
-export const salvarAnuncioDiarioSchema = z.object({
-  ativo: z.boolean().optional().default(false),
+export const anuncioDiarioItemSchema = z.object({
+  id: z.string().max(180).optional(),
   imagemUrl: s3ImagemUrlOuVazio().optional().default(""),
   link: z
     .string()
@@ -434,6 +435,16 @@ export const salvarAnuncioDiarioSchema = z.object({
       (valor) => !valor || /^https?:\/\//i.test(valor),
       { message: "O link deve começar com http:// ou https://." }
     ),
+  ativo: z.boolean().optional().default(true),
+  ordem: z.number().int().optional(),
+});
+
+export const salvarAnuncioDiarioSchema = z.object({
+  anuncios: z.array(anuncioDiarioItemSchema).max(20, "Informe no máximo 20 anúncios diários."),
+});
+
+export const metricaAnuncioDiarioSchema = z.object({
+  anuncioId: uuidCampo("anuncioId"),
 });
 
 const diasMetagameSchema = z.preprocess(

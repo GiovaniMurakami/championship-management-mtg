@@ -12,6 +12,7 @@ type UsuarioItem = {
   nickMTGO?: string;
   nickArena?: string;
   fotoUrl?: string;
+  descricaoAssinatura?: string;
   resultadosExpressivos: number;
   bloqueadoTorneios: boolean;
   newsletterMetagame?: boolean | null;
@@ -192,6 +193,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       nickMTGO: usuario.nickMTGO,
       nickArena: usuario.nickArena,
       fotoUrl: usuario.fotoUrl,
+      descricaoAssinatura: usuario.descricaoAssinatura,
       resultadosExpressivos: usuario.resultadosExpressivos,
       bloqueadoTorneios: usuario.bloqueadoTorneios,
       newsletterMetagame: usuario.newsletterMetagame,
@@ -212,6 +214,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       nickMTGO: item.nickMTGO,
       nickArena: item.nickArena,
       fotoUrl: item.fotoUrl,
+      descricaoAssinatura: item.descricaoAssinatura,
       resultadosExpressivos: item.resultadosExpressivos,
       bloqueadoTorneios: item.bloqueadoTorneios,
       newsletterMetagame: item.newsletterMetagame === true ? true : item.newsletterMetagame === false ? false : null,
