@@ -14,6 +14,7 @@ export const handler = async () => {
     repos.deck,
     repos.usuario,
     servicos.cache,
+    repos.siteConfig,
   );
   const caso = EnviarNewsletterMetagameSemanal.criar(repos.usuario, listarMetagame, servicos.email);
 

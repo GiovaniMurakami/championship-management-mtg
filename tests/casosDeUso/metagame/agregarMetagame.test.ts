@@ -182,6 +182,31 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos[0].cartaRepresentativa).toBe("Tolarian Terror");
     });
 
+    it("prioriza override de arquétipo sobre cartaRepresentativa dos decks", () => {
+        const t = torneio();
+        const terrorComCarta = deck({
+            id: "deck-terror",
+            usuarioId: "user-1",
+            cartaRepresentativa: "Tolarian Terror",
+        });
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            torneios: [t],
+            inscricoes: [inscricao("torneio-1", "user-1", "deck-terror")],
+            partidas: [],
+            decks: [terrorComCarta],
+            usuarios: [alice],
+            overridesCartasRepresentativas: {
+                "pauper#blue-terror": "Thought Scour",
+            },
+        });
+
+        expect(resultado.arquetipos[0].slug).toBe("blue-terror");
+        expect(resultado.arquetipos[0].cartaRepresentativa).toBe("Thought Scour");
+    });
+
     it("ignora bye no winrate", () => {
         const t = torneio();
         const resultado = agregarMetagame({

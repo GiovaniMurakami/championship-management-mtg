@@ -481,4 +481,8 @@ export const metagameArquetipoParamsSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "slug inválido."),
 });
 
+export const salvarCartaRepresentativaArquetipoSchema = z.object({
+  cartaRepresentativa: z.string().max(200).optional().nullable(),
+});
+
 export const perfilPublicoQuerySchema = intervaloDatasSchema.and(z.object({ paginaPartidasExternas: z.coerce.number().int().min(1).default(1) }));

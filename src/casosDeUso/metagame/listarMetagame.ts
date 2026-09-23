@@ -60,9 +60,10 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
     partida: MetagameGateways["partida"],
     deck: MetagameGateways["deck"],
     usuario: MetagameGateways["usuario"],
-    cache?: CacheDynamoDbServico
+    cache?: CacheDynamoDbServico,
+    siteConfig?: MetagameGateways["siteConfig"]
   ) {
-    return new ListarMetagame({ torneio, inscricao, partida, deck, usuario }, cache);
+    return new ListarMetagame({ torneio, inscricao, partida, deck, usuario, siteConfig }, cache);
   }
 
   public async executar(input: ListarMetagameInputDto): Promise<ListarMetagameOutputDto> {

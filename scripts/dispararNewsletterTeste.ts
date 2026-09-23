@@ -23,6 +23,7 @@ async function main() {
     repos.deck,
     repos.usuario,
     servicos.cache,
+    repos.siteConfig,
   );
 
   if (para) {
