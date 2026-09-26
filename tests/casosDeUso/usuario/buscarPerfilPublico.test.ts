@@ -95,7 +95,46 @@ describe("BuscarPerfilPublico", () => {
   it("não contabiliza BYE", async () => {
     const bye = new Partida({ id: "bye", torneioId: "t1", rodada: 1, jogador1Id: usuario.id, jogador2Id: null, deckJogador1Id: deckPublico.id, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" });
     const uc = BuscarPerfilPublico.criar(criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }), criarMockDeckGateway({ listar: vi.fn().mockResolvedValue([deckPublico]) }), criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue([bye]) }), criarMockTorneioGateway());
-    expect((await uc.executar({ id: usuario.id })).estatisticas.totalPartidas).toBe(0);
+    const resultado = await uc.executar({ id: usuario.id });
+    expect(resultado.estatisticas.totalPartidas).toBe(0);
+    expect(resultado.matrizConfrontos.linhas).toEqual([]);
+  });
+
+  it("monta o winrate de cada deck jogado contra os decks enfrentados", async () => {
+    const burn = new Deck({ id: "burn", nome: "Minha lista Burn", nomeConsolidado: "Burn", formato: "pauper", usuarioId: usuario.id, maindeck: [{ nome: "Mountain", quantidade: 20 }], sideboard: [] });
+    const affinity = new Deck({ id: "affinity", nome: "Affinity do oponente", nomeConsolidado: "Affinity", formato: "pauper", usuarioId: "opponent", maindeck: [{ nome: "Island", quantidade: 20 }], sideboard: [] });
+    const vitoria = new Partida({ id: "p1", torneioId: "t1", rodada: 1, jogador1Id: usuario.id, jogador2Id: "opponent", deckJogador1Id: burn.id, deckJogador2Id: affinity.id, vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" });
+    const derrota = new Partida({ id: "p2", torneioId: "t1", rodada: 2, jogador1Id: "opponent", jogador2Id: usuario.id, deckJogador1Id: affinity.id, deckJogador2Id: burn.id, vitoriasJogador1: 2, vitoriasJogador2: 1, status: "finalizada" });
+    const uc = BuscarPerfilPublico.criar(
+      criarMockUsuarioGateway({ buscarPorId: vi.fn().mockResolvedValue(usuario) }),
+      criarMockDeckGateway({
+        listar: vi.fn().mockResolvedValue([burn]),
+        buscarVarios: vi.fn().mockResolvedValue([affinity]),
+      }),
+      criarMockPartidaGateway({ listarPorDeckIds: vi.fn().mockResolvedValue([vitoria, derrota]) }),
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneio("t1", "2026-08-01")) }),
+      { salvar: vi.fn(), listarPorUsuario: vi.fn().mockResolvedValue([
+        { id: "ext", usuarioId: usuario.id, data: "2026-08-02", resultado: "vitoria", deckNome: " burn ", deckAdversarioNome: "Faeries" },
+      ]) },
+    );
+
+    const resultado = await uc.executar({ id: usuario.id });
+
+    expect(resultado.matrizConfrontos.adversarios).toEqual(["Affinity", "Faeries"]);
+    expect(resultado.matrizConfrontos.linhas).toEqual([
+      expect.objectContaining({
+        nome: "Burn",
+        vitorias: 2,
+        derrotas: 1,
+        empates: 0,
+        partidas: 3,
+        winrate: 66.7,
+      }),
+    ]);
+    expect(resultado.matrizConfrontos.linhas[0].confrontos).toEqual([
+      expect.objectContaining({ nome: "Affinity", vitorias: 1, derrotas: 1, partidas: 2, winrate: 50 }),
+      expect.objectContaining({ nome: "Faeries", vitorias: 1, derrotas: 0, partidas: 1, winrate: 100 }),
+    ]);
   });
 
   it("retorna 404 para usuário inexistente ou excluído", async () => {

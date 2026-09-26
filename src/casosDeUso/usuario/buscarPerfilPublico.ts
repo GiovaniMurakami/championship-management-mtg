@@ -1,3 +1,5 @@
+import { Deck } from "../../dominio/entidade/deck";
+import { Partida } from "../../dominio/entidade/partida";
 import { IntervaloDatas, resolverIntervaloDatas } from "../../helpers/data/intervaloDatas";
 import { PartidaExterna, PartidaExternaGateway } from "../../dominio/gateway/partidaExternaGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
@@ -46,6 +48,7 @@ export type BuscarPerfilPublicoOutputDto = {
     visualizacoes: number;
     criadoEm: Date;
   }>;
+  matrizConfrontos: MatrizConfrontosPerfil;
 };
 
 export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartidasExternas?: number } & IntervaloDatas, BuscarPerfilPublicoOutputDto> {
@@ -131,6 +134,16 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
       const total = wins + losses + draws;
       return { id: torneio!.id, nome: torneio!.nome, formato: torneio!.formato, horario: torneio!.horario, vitorias: wins, derrotas: losses, empates: draws, totalPartidas: total, winrate: total ? Math.round((wins / total) * 1000) / 10 : 0 };
     });
+    const idsFaltando = [...new Set(partidasNoPeriodo.flatMap((partida) => [partida.deckJogador1Id, partida.deckJogador2Id].filter((deckId): deckId is string => Boolean(deckId))))]
+      .filter((deckId) => !decksDoUsuario.some((deck) => deck.id === deckId));
+    const extras = idsFaltando.length > 0 ? await this.deckGateway.buscarVarios(idsFaltando) : [];
+    const matrizConfrontos = montarMatrizConfrontos({
+      usuarioId: id,
+      partidas: partidasNoPeriodo,
+      externas,
+      decks: new Map([...decksDoUsuario, ...extras].map((deck) => [deck.id, deck])),
+    });
+
     const limite = 10;
     const totalPaginas = Math.max(1, Math.ceil(externas.length / limite));
     const pagina = Math.min(paginaPartidasExternas, totalPaginas);
@@ -144,6 +157,112 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
         .map(({ id, resultado, data, oponente, campeonato, deckNome, deckAdversarioNome }) => ({ id, resultado, data, oponente, campeonato, deckNome, deckAdversarioNome })),
       ultimosTorneios,
       decks: decksPublicos.map((deck) => ({ id: deck.id, nome: deck.nome, formato: deck.formato, cartaRepresentativa: deck.cartaRepresentativa, cartaFundo: deck.cartaRepresentativa || deck.maindeck[0]?.nome || deck.commander[0]?.nome || null, visualizacoes: deck.visualizacoes, criadoEm: deck.criadoEm })),
+      matrizConfrontos,
     };
   }
+}
+
+type Acumulo = { vitorias: number; derrotas: number; empates: number };
+
+export type CelulaConfronto = Acumulo & { partidas: number; winrate: number };
+
+export type LinhaConfronto = CelulaConfronto & {
+  nome: string;
+  confrontos: Array<CelulaConfronto & { nome: string }>;
+};
+
+export type MatrizConfrontosPerfil = {
+  adversarios: string[];
+  linhas: LinhaConfronto[];
+};
+
+function rotuloDeck(valor?: string | null) {
+  const limpo = String(valor || "").replace(/\s+/g, " ").trim();
+  return limpo || "Não informado";
+}
+
+function nomeExibicao(deck?: Deck) {
+  return rotuloDeck(deck?.nomeConsolidado || deck?.nome);
+}
+
+function publicarAcumulo(acumulo: Acumulo): CelulaConfronto {
+  const partidas = acumulo.vitorias + acumulo.derrotas + acumulo.empates;
+  return {
+    ...acumulo,
+    partidas,
+    winrate: partidas ? Math.round((acumulo.vitorias / partidas) * 1000) / 10 : 0,
+  };
+}
+
+function montarMatrizConfrontos({
+  usuarioId,
+  partidas,
+  externas,
+  decks,
+}: {
+  usuarioId: string;
+  partidas: Partida[];
+  externas: PartidaExterna[];
+  decks: Map<string, Deck>;
+}): MatrizConfrontosPerfil {
+  const porPar = new Map<string, Acumulo>();
+  const porDeck = new Map<string, Acumulo>();
+  const rotulos = new Map<string, string>();
+
+  const registrar = (deck: string, adversario: string, tipo: keyof Acumulo) => {
+    if (deck === "Não informado" && adversario === "Não informado") return;
+    const chaveDeck = deck.toLowerCase();
+    const chaveAdversario = adversario.toLowerCase();
+    if (!rotulos.has(chaveDeck)) rotulos.set(chaveDeck, deck);
+    if (!rotulos.has(chaveAdversario)) rotulos.set(chaveAdversario, adversario);
+    const geral = porDeck.get(chaveDeck) ?? { vitorias: 0, derrotas: 0, empates: 0 };
+    geral[tipo] += 1;
+    porDeck.set(chaveDeck, geral);
+    const par = porPar.get(`${chaveDeck}\u0000${chaveAdversario}`) ?? { vitorias: 0, derrotas: 0, empates: 0 };
+    par[tipo] += 1;
+    porPar.set(`${chaveDeck}\u0000${chaveAdversario}`, par);
+  };
+
+  for (const partida of partidas) {
+    const meuLado = partida.jogador1Id === usuarioId;
+    const meuDeckId = meuLado ? partida.deckJogador1Id : partida.deckJogador2Id;
+    const deckAdversarioId = meuLado ? partida.deckJogador2Id : partida.deckJogador1Id;
+    const proprias = meuLado ? partida.vitoriasJogador1 : partida.vitoriasJogador2;
+    const doAdversario = meuLado ? partida.vitoriasJogador2 : partida.vitoriasJogador1;
+    const tipo: keyof Acumulo = proprias > doAdversario ? "vitorias" : proprias < doAdversario ? "derrotas" : "empates";
+    registrar(
+      meuDeckId ? nomeExibicao(decks.get(meuDeckId)) : "Não informado",
+      deckAdversarioId ? nomeExibicao(decks.get(deckAdversarioId)) : "Não informado",
+      tipo,
+    );
+  }
+
+  for (const externa of externas) {
+    const tipo: keyof Acumulo = externa.resultado === "vitoria" ? "vitorias" : externa.resultado === "derrota" ? "derrotas" : "empates";
+    registrar(rotuloDeck(externa.deckNome), rotuloDeck(externa.deckAdversarioNome), tipo);
+  }
+
+  const partidasDo = (chave: string) => {
+    const item = porDeck.get(chave);
+    return item ? item.vitorias + item.derrotas + item.empates : 0;
+  };
+  const partidasContra = (adversario: string) => [...porPar.entries()]
+    .filter(([chave]) => chave.endsWith(`\u0000${adversario}`))
+    .reduce((total, [, item]) => total + item.vitorias + item.derrotas + item.empates, 0);
+
+  const decksOrdenados = [...porDeck.keys()].sort((a, b) => partidasDo(b) - partidasDo(a) || (rotulos.get(a) || a).localeCompare(rotulos.get(b) || b, "pt-BR"));
+  const adversarios = [...new Set([...porPar.keys()].map((chave) => chave.split("\u0000")[1]))]
+    .sort((a, b) => partidasContra(b) - partidasContra(a) || (rotulos.get(a) || a).localeCompare(rotulos.get(b) || b, "pt-BR"));
+
+  return {
+    adversarios: adversarios.map((chave) => rotulos.get(chave) || chave),
+    linhas: decksOrdenados.map((deck) => ({
+      nome: rotulos.get(deck) || deck,
+      ...publicarAcumulo(porDeck.get(deck)!),
+      confrontos: adversarios.map((adversario) => ({
+        nome: rotulos.get(adversario) || adversario,
+        ...publicarAcumulo(porPar.get(`${deck}\u0000${adversario}`) ?? { vitorias: 0, derrotas: 0, empates: 0 }),
+      })),
+    })),
+  };
 }
