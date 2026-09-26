@@ -149,7 +149,7 @@ POST /usuario/cadastrar, /login, /refresh-token, /logout
 POST /usuario/reset-senha/solicitar, /confirmar
 PUT  /usuario/atualizar
 DELETE /usuario/conta                   (auth — body: { confirmacao } = nome do perfil; soft-delete/anonimiza; preserva decks e inscrições; marca excluido)
-GET  /usuario/listar                    (admin — busca por nome/email; query bloqueadoTorneios; omite excluídos por padrão)
+GET  /usuario/listar                    (admin — busca por nome/email; query role e bloqueadoTorneios; omite excluídos por padrão)
 PUT  /usuario/:usuarioId/bloqueio-torneios (admin — body: { bloqueado }; remove inscricoes abertas)
 ```
 

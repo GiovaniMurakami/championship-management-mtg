@@ -320,6 +320,7 @@ export const torneioRodadaParamSchema = z.object({
 export const listarUsuariosQuerySchema = z.object({
   nome: z.string().max(200).optional(),
   jogador: z.string().max(200).optional(),
+  role: z.enum(["user", "admin", "editor"]).optional(),
   bloqueadoTorneios: z
     .enum(["true", "false"])
     .optional()
