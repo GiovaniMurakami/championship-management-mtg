@@ -396,4 +396,4 @@ Implementação DynamoDB:
 
 As datas são opcionais e devem ser informadas juntas em `YYYY-MM-DD`, com início ≤ fim. Incluem os dias completos no horário de Brasília (UTC−3). O filtro afeta estatísticas, a matriz de confrontos, últimos torneios (pelo horário do evento) e partidas externas (pela data informada), antes da paginação. Sem datas, o perfil usa todo o histórico. A coleção de decks públicos e os dados cadastrais permanecem independentes do período.
 
-`matrizConfrontos` traz o winrate de cada deck jogado (linha, pelo nome consolidado do arquétipo) contra cada deck enfrentado (coluna). Partidas externas entram pelo nome informado. Empates contam no total. Confrontos sem nome dos dois lados ficam de fora.
+`matrizConfrontos` só é preenchida quando o pedido traz o JWT do próprio dono. Visitantes recebem a matriz vazia. O dono vê o winrate de cada deck jogado (linha, pelo nome consolidado do arquétipo) contra cada deck enfrentado (coluna). Partidas externas entram pelo nome informado. Empates contam no total. Confrontos sem nome dos dois lados ficam de fora.

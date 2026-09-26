@@ -118,7 +118,7 @@ describe("BuscarPerfilPublico", () => {
       ]) },
     );
 
-    const resultado = await uc.executar({ id: usuario.id });
+    const resultado = await uc.executar({ id: usuario.id, requisitanteId: usuario.id });
 
     expect(resultado.matrizConfrontos.adversarios).toEqual(["Affinity", "Faeries"]);
     expect(resultado.matrizConfrontos.linhas).toEqual([
@@ -135,6 +135,8 @@ describe("BuscarPerfilPublico", () => {
       expect.objectContaining({ nome: "Affinity", vitorias: 1, derrotas: 1, partidas: 2, winrate: 50 }),
       expect.objectContaining({ nome: "Faeries", vitorias: 1, derrotas: 0, partidas: 1, winrate: 100 }),
     ]);
+    const publico = await uc.executar({ id: usuario.id, requisitanteId: "visitante" });
+    expect(publico.matrizConfrontos).toEqual({ adversarios: [], linhas: [] });
   });
 
   it("retorna 404 para usuário inexistente ou excluído", async () => {

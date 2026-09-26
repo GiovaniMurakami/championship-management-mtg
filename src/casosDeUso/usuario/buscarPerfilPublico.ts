@@ -64,7 +64,7 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     return new BuscarPerfilPublico(usuarioGateway, deckGateway, partidaGateway, torneioGateway, partidasExternas);
   }
 
-  public async executar({ id, paginaPartidasExternas = 1, dataInicio, dataFim }: { id: string; paginaPartidasExternas?: number } & IntervaloDatas): Promise<BuscarPerfilPublicoOutputDto> {
+  public async executar({ id, paginaPartidasExternas = 1, dataInicio, dataFim, requisitanteId }: { id: string; paginaPartidasExternas?: number; requisitanteId?: string } & IntervaloDatas): Promise<BuscarPerfilPublicoOutputDto> {
     const intervalo = resolverIntervaloDatas({ dataInicio, dataFim });
     const usuario = await this.usuarioGateway.buscarPorId(id);
     if (!usuario || usuario.excluido) {
@@ -134,15 +134,20 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
       const total = wins + losses + draws;
       return { id: torneio!.id, nome: torneio!.nome, formato: torneio!.formato, horario: torneio!.horario, vitorias: wins, derrotas: losses, empates: draws, totalPartidas: total, winrate: total ? Math.round((wins / total) * 1000) / 10 : 0 };
     });
-    const idsFaltando = [...new Set(partidasNoPeriodo.flatMap((partida) => [partida.deckJogador1Id, partida.deckJogador2Id].filter((deckId): deckId is string => Boolean(deckId))))]
-      .filter((deckId) => !decksDoUsuario.some((deck) => deck.id === deckId));
+    const donoDoPerfil = requisitanteId === id;
+    const idsFaltando = donoDoPerfil
+      ? [...new Set(partidasNoPeriodo.flatMap((partida) => [partida.deckJogador1Id, partida.deckJogador2Id].filter((deckId): deckId is string => Boolean(deckId))))]
+        .filter((deckId) => !decksDoUsuario.some((deck) => deck.id === deckId))
+      : [];
     const extras = idsFaltando.length > 0 ? await this.deckGateway.buscarVarios(idsFaltando) : [];
-    const matrizConfrontos = montarMatrizConfrontos({
-      usuarioId: id,
-      partidas: partidasNoPeriodo,
-      externas,
-      decks: new Map([...decksDoUsuario, ...extras].map((deck) => [deck.id, deck])),
-    });
+    const matrizConfrontos = donoDoPerfil
+      ? montarMatrizConfrontos({
+        usuarioId: id,
+        partidas: partidasNoPeriodo,
+        externas,
+        decks: new Map([...decksDoUsuario, ...extras].map((deck) => [deck.id, deck])),
+      })
+      : { adversarios: [], linhas: [] };
 
     const limite = 10;
     const totalPaginas = Math.max(1, Math.ceil(externas.length / limite));
