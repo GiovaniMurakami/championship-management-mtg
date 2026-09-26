@@ -1,4 +1,5 @@
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
+import { RoleUsuario } from "../../dominio/entidade/usuario";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 
@@ -7,6 +8,7 @@ const LIMITE_PADRAO_USUARIOS = 20;
 
 export type ListarUsuariosInputDto = {
   nome?: string;
+  role?: RoleUsuario;
   bloqueadoTorneios?: boolean;
   limite?: number;
   offset?: number;
@@ -45,6 +47,7 @@ export class ListarUsuarios
 
     const filtros = {
       nome: input.nome?.trim() || undefined,
+      role: input.role,
       bloqueadoTorneios: input.bloqueadoTorneios,
       limite,
       offset,
@@ -54,6 +57,7 @@ export class ListarUsuarios
       this.usuarioGateway.listar(filtros),
       this.usuarioGateway.listarTotal({
         nome: filtros.nome,
+        role: filtros.role,
         bloqueadoTorneios: filtros.bloqueadoTorneios,
       }),
     ]);

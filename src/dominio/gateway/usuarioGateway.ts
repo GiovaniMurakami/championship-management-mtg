@@ -1,4 +1,4 @@
-import { Usuario } from "../entidade/usuario";
+import { Usuario, type RoleUsuario } from "../entidade/usuario";
 
 export class EmailUsuarioJaExisteErro extends Error {
   public constructor() {
@@ -9,6 +9,7 @@ export class EmailUsuarioJaExisteErro extends Error {
 
 export interface FiltrosListarUsuarios {
   nome?: string;
+  role?: RoleUsuario;
   bloqueadoTorneios?: boolean;
   excluido?: boolean;
   newsletterMetagame?: boolean;
@@ -22,7 +23,7 @@ export interface UsuarioGateway {
   buscarPorId(id: string): Promise<Usuario | null>;
   buscarVarios(ids: string[]): Promise<Usuario[]>;
   listar(filtros?: FiltrosListarUsuarios): Promise<Usuario[]>;
-  listarTotal(filtros?: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "newsletterMetagame">): Promise<number>;
+  listarTotal(filtros?: Pick<FiltrosListarUsuarios, "nome" | "role" | "bloqueadoTorneios" | "newsletterMetagame">): Promise<number>;
   atualizar(usuario: Usuario): Promise<void>;
   excluir(id: string): Promise<void>;
   incrementarResultadosExpressivos(ids: string[], incremento: number): Promise<void>;

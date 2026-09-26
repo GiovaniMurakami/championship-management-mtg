@@ -88,7 +88,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
       .map((item) => this.itemParaUsuario(item));
   }
 
-  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "newsletterMetagame"> = {}): Promise<number> {
+  public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome" | "role" | "bloqueadoTorneios" | "newsletterMetagame"> = {}): Promise<number> {
     const itens = await this.queryJson<UsuarioItem>(USUARIOS_PK);
     return this.filtrar(itens, { ...filtros, excluido: false }).length;
   }
@@ -158,11 +158,15 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
     ])));
   }
 
-  private filtrar(itens: UsuarioItem[], filtros: Pick<FiltrosListarUsuarios, "nome" | "bloqueadoTorneios" | "excluido" | "newsletterMetagame">): UsuarioItem[] {
+  private filtrar(itens: UsuarioItem[], filtros: Pick<FiltrosListarUsuarios, "nome" | "role" | "bloqueadoTorneios" | "excluido" | "newsletterMetagame">): UsuarioItem[] {
     const termo = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       const excluidoDesejado = filtros.excluido === true;
       if (excluidoDesejado !== Boolean(item.excluido)) return false;
+
+      if (filtros.role && (item.role || "user") !== filtros.role) {
+        return false;
+      }
 
       if (filtros.bloqueadoTorneios !== undefined && Boolean(item.bloqueadoTorneios) !== filtros.bloqueadoTorneios) {
         return false;

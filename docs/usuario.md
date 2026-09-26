@@ -229,6 +229,7 @@ Remover um campo (enviar string vazia):
 | Param  | Tipo   | Descrição                          |
 | ------ | ------ | ---------------------------------- |
 | `nome` | string | Filtro parcial por nome/e-mail (opcional) |
+| `role` | `"user"` \| `"editor"` \| `"admin"` | Filtra pelo papel do usuário |
 | `bloqueadoTorneios` | `"true"` \| `"false"` | Filtra por bloqueio de torneios |
 | `limite` | number | 1–100, padrão 20                 |
 | `offset` | number | Deslocamento (padrão 0)            |
