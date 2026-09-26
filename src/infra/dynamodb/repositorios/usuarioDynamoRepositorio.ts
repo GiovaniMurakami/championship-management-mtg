@@ -29,6 +29,8 @@ type UsuarioEmailIndex = {
 const USUARIOS_PK = "USUARIOS";
 
 export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements UsuarioGateway {
+  private leituraIndice: Promise<UsuarioItem[]> | null = null;
+
   private constructor() {
     super("usuarios");
   }
@@ -71,13 +73,14 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
   }
 
   public async buscarVarios(ids: string[]): Promise<Usuario[]> {
-    const unicos = Array.from(new Set(ids));
-    const usuarios = await Promise.all(unicos.map((id) => this.buscarPorId(id)));
-    return usuarios.filter((usuario): usuario is Usuario => usuario !== null);
+    const unicos = [...new Set(ids.filter(Boolean))];
+    if (unicos.length === 0) return [];
+    const itens = await this.batchGetJson<UsuarioItem>(unicos.map((id) => ({ pk: `USER#${id}`, sk: "DATA" })));
+    return itens.filter((item) => item?.id).map((item) => this.itemParaUsuario(item));
   }
 
   public async listar(filtros: FiltrosListarUsuarios = {}): Promise<Usuario[]> {
-    const itens = await this.queryJson<UsuarioItem>(USUARIOS_PK);
+    const itens = await this.carregarIndice();
     const filtrados = this.filtrar(itens, filtros)
       .sort((a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id));
 
@@ -89,8 +92,19 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
   }
 
   public async listarTotal(filtros: Pick<FiltrosListarUsuarios, "nome" | "role" | "bloqueadoTorneios" | "newsletterMetagame"> = {}): Promise<number> {
-    const itens = await this.queryJson<UsuarioItem>(USUARIOS_PK);
+    const itens = await this.carregarIndice();
     return this.filtrar(itens, { ...filtros, excluido: false }).length;
+  }
+
+  /** A listagem e a contagem saem juntas; as duas leem o mesmo índice. */
+  private carregarIndice(): Promise<UsuarioItem[]> {
+    if (!this.leituraIndice) {
+      const leitura = this.queryJson<UsuarioItem>(USUARIOS_PK).finally(() => {
+        if (this.leituraIndice === leitura) this.leituraIndice = null;
+      });
+      this.leituraIndice = leitura;
+    }
+    return this.leituraIndice;
   }
 
   public async atualizar(usuario: Usuario): Promise<void> {

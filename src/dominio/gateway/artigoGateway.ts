@@ -7,10 +7,14 @@ export interface ArtigoGateway {
   excluir(id: string): Promise<boolean>;
   incrementarVisualizacoes(id: string): Promise<number>;
   salvarComentario(comentario: ComentarioArtigo): Promise<void>;
+  buscarComentario(artigoId: string, comentarioId: string): Promise<ComentarioArtigo | null>;
   listarComentarios(artigoId: string): Promise<ComentarioArtigo[]>;
   curtir(artigoId: string, usuarioId: string): Promise<boolean>;
   descurtir(artigoId: string, usuarioId: string): Promise<boolean>;
   listarCurtidas(artigoId: string): Promise<string[]>;
+  curtirComentario(artigoId: string, comentarioId: string, usuarioId: string): Promise<boolean>;
+  descurtirComentario(artigoId: string, comentarioId: string, usuarioId: string): Promise<boolean>;
+  listarCurtidasComentarios(artigoId: string): Promise<Array<{ comentarioId: string; usuarioId: string }>>;
 }
 
 export interface ConteudoArtigoGateway {

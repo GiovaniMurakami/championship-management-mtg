@@ -1,4 +1,4 @@
-import { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand, UpdateItemCommand, TransactWriteItemsCommand, BatchWriteItemCommand, type AttributeValue } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand, UpdateItemCommand, TransactWriteItemsCommand, BatchWriteItemCommand, BatchGetItemCommand, type AttributeValue } from "@aws-sdk/client-dynamodb";
 
 type Item = Record<string, AttributeValue>;
 type Operacao = {
@@ -77,6 +77,16 @@ export class DynamoMemoria {
           if (op.DeleteRequest) this.itens.delete(this.chave({ TableName, ...op.DeleteRequest }));
         }
         return { UnprocessedItems: {} };
+      }
+      if (command instanceof BatchGetItemCommand) {
+        const Responses: Record<string, Item[]> = {};
+        for (const [TableName, request] of Object.entries(command.input.RequestItems ?? {})) {
+          Responses[TableName] = (request.Keys ?? [])
+            .map((Key) => this.itens.get(this.chave({ TableName, Key })))
+            .filter((item): item is Item => Boolean(item))
+            .map((item) => this.clone(item));
+        }
+        return { Responses, UnprocessedKeys: {} };
       }
       if (command instanceof PutItemCommand || command instanceof DeleteItemCommand || command instanceof UpdateItemCommand) {
         if (!this.condicao(command.input)) throw Object.assign(new Error("Condição falhou"), { name: "ConditionalCheckFailedException" });

@@ -6,9 +6,11 @@ import { EditarArtigo } from "../../../../../casosDeUso/artigo/editarArtigo";
 import { AprovarArtigo } from "../../../../../casosDeUso/artigo/aprovarArtigo";
 import { ComentarArtigo } from "../../../../../casosDeUso/artigo/comentarArtigo";
 import { CurtirArtigo } from "../../../../../casosDeUso/artigo/curtirArtigo";
+import { CurtirComentarioArtigo } from "../../../../../casosDeUso/artigo/curtirComentarioArtigo";
 import { ExcluirArtigo } from "../../../../../casosDeUso/artigo/excluirArtigo";
 import {
   aprovarArtigoSchema,
+  artigoComentarioParamSchema,
   artigoIdParamSchema,
   comentarArtigoSchema,
   criarArtigoSchema,
@@ -152,6 +154,7 @@ export class ComentarArtigoRota implements Rotas {
         artigoId: String(req.params.artigoId),
         autorId: req.usuario!.id,
         texto: dados.texto,
+        comentarioPaiId: dados.comentarioPaiId,
       }));
     });
   }
@@ -169,6 +172,26 @@ export class CurtirArtigoRota implements Rotas {
     return handlerErro(async (req, res) => {
       res.json(await this.caso.executar({
         artigoId: String(req.params.artigoId),
+        usuarioId: req.usuario!.id,
+        curtir: this.curtir,
+      }));
+    });
+  }
+}
+
+export class CurtirComentarioArtigoRota implements Rotas {
+  private constructor(private readonly caso: CurtirComentarioArtigo, private readonly curtir: boolean) {}
+  static criar(caso: CurtirComentarioArtigo, curtir: boolean) { return new CurtirComentarioArtigoRota(caso, curtir); }
+  getCaminho() { return "/artigo/:artigoId/comentario/:comentarioId/curtida"; }
+  getMetodo() { return this.curtir ? HttpMethod.POST : HttpMethod.DELETE; }
+  getMiddlewares(): RequestHandler[] {
+    return [mutationRateLimiter, autenticarJwt, validarParamsMiddleware(artigoComentarioParamSchema)];
+  }
+  getHandler() {
+    return handlerErro(async (req, res) => {
+      res.json(await this.caso.executar({
+        artigoId: String(req.params.artigoId),
+        comentarioId: String(req.params.comentarioId),
         usuarioId: req.usuario!.id,
         curtir: this.curtir,
       }));

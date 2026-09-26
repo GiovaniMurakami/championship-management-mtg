@@ -31,6 +31,7 @@ import { EditarArtigo } from "../casosDeUso/artigo/editarArtigo";
 import { AprovarArtigo } from "../casosDeUso/artigo/aprovarArtigo";
 import { ComentarArtigo } from "../casosDeUso/artigo/comentarArtigo";
 import { CurtirArtigo } from "../casosDeUso/artigo/curtirArtigo";
+import { CurtirComentarioArtigo } from "../casosDeUso/artigo/curtirComentarioArtigo";
 import { ExcluirArtigo } from "../casosDeUso/artigo/excluirArtigo";
 import { DefinirEditor } from "../casosDeUso/usuario/definirEditor";
 import { ListarAssinantesNewsletter } from "../casosDeUso/usuario/listarAssinantesNewsletter";
@@ -154,6 +155,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const aprovarArtigo = AprovarArtigo.criar(repos.artigo);
     const comentarArtigo = ComentarArtigo.criar(repos.artigo, repos.usuario);
     const curtirArtigo = CurtirArtigo.criar(repos.artigo);
+    const curtirComentarioArtigo = CurtirComentarioArtigo.criar(repos.artigo);
     const excluirArtigo = ExcluirArtigo.criar(repos.artigo, servicos.s3);
     const definirEditor = DefinirEditor.criar(repos.usuario);
     const listarAssinantesNewsletter = ListarAssinantesNewsletter.criar(repos.usuario);
@@ -245,7 +247,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         cadastrarDeck, atualizarDeck, excluirDeck, buscarDeck, listarDecks,
         gerarUrlUploadImagem,
         criarPost, listarPosts, buscarPost, editarPost, comentarPost, curtirPost, excluirPost,
-        criarArtigo, listarArtigos, buscarArtigo, editarArtigo, aprovarArtigo, comentarArtigo, curtirArtigo, excluirArtigo,
+        criarArtigo, listarArtigos, buscarArtigo, editarArtigo, aprovarArtigo, comentarArtigo, curtirArtigo, curtirComentarioArtigo, excluirArtigo,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, publicarRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,

@@ -1,3 +1,4 @@
+import { Torneio } from "../../src/dominio/entidade/torneio";
 import { UsuarioGateway } from "../../src/dominio/gateway/usuarioGateway";
 import { TokenBlacklistGateway } from "../../src/dominio/gateway/tokenBlacklistGateway";
 import { DeckGateway } from "../../src/dominio/gateway/deckGateway";
@@ -46,11 +47,21 @@ export function criarMockDeckGateway(overrides: Partial<DeckGateway> = {}): Deck
     };
 }
 
+async function buscarVariosPeloId(
+    ids: string[],
+    buscarPorId: (id: string) => Promise<Torneio | null>,
+): Promise<Torneio[]> {
+    const encontrados = await Promise.all(ids.map((id) => buscarPorId(id)));
+    return encontrados.filter((torneio): torneio is Torneio => torneio !== null);
+}
+
 export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {}): TorneioGateway {
-    return {
+    const buscarPorId = vi.fn(async (_id: string): Promise<Torneio | null> => null);
+    const gateway = {
         salvar: vi.fn(),
-        buscarPorId: vi.fn().mockResolvedValue(null),
+        buscarPorId,
         buscarPorPrefixo: vi.fn().mockResolvedValue(null),
+        buscarVarios: vi.fn((ids: string[]) => buscarVariosPeloId(ids, buscarPorId)),
         listar: vi.fn().mockResolvedValue([]),
         listarTotal: vi.fn().mockResolvedValue(0),
         incrementarVisualizacoes: vi.fn().mockResolvedValue(null),
@@ -59,7 +70,13 @@ export function criarMockTorneioGateway(overrides: Partial<TorneioGateway> = {})
         excluir: vi.fn(),
         contarPorDono: vi.fn().mockResolvedValue(0),
         removerAnfitriaoDoUsuario: vi.fn().mockResolvedValue(0),
+    } satisfies TorneioGateway;
+    const buscarPorIdEfetivo = overrides.buscarPorId ?? gateway.buscarPorId;
+    return {
+        ...gateway,
         ...overrides,
+        buscarPorId: buscarPorIdEfetivo,
+        buscarVarios: overrides.buscarVarios ?? vi.fn((ids: string[]) => buscarVariosPeloId(ids, buscarPorIdEfetivo)),
     };
 }
 

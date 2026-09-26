@@ -1,4 +1,5 @@
 import {
+  BatchGetItemCommand,
   BatchWriteItemCommand,
   DeleteItemCommand,
   DynamoDBClient,
@@ -194,6 +195,40 @@ export abstract class BaseDynamoRepositorio {
     }));
 
     return this.itemParaJson<T>(resposta.Item);
+  }
+
+  /** Até 100 chaves por chamada. Relê UnprocessedKeys para não perder item. */
+  protected async batchGetJson<T>(chaves: Array<{ pk: string; sk: string }>): Promise<T[]> {
+    this.assertTabelaConfigurada();
+    const unicas = [...new Map(chaves.filter((chave) => chave.pk && chave.sk).map((chave) => [`${chave.pk}\u0000${chave.sk}`, chave])).values()];
+    const encontrados: T[] = [];
+
+    for (let inicio = 0; inicio < unicas.length; inicio += 100) {
+      let pendentes: DynamoItem[] = unicas.slice(inicio, inicio + 100).map((chave) => ({
+        pk: { S: chave.pk },
+        sk: { S: chave.sk },
+      }));
+
+      for (let tentativa = 0; pendentes.length > 0 && tentativa < MAX_TENTATIVAS_BATCH_WRITE; tentativa += 1) {
+        const resposta = await this.cliente.send(new BatchGetItemCommand({
+          RequestItems: {
+            [this.tabela]: {
+              Keys: pendentes,
+              ConsistentRead: true,
+            },
+          },
+        }));
+
+        for (const item of resposta.Responses?.[this.tabela] ?? []) {
+          const json = this.itemParaJson<T>(item);
+          if (json) encontrados.push(json);
+        }
+
+        pendentes = resposta.UnprocessedKeys?.[this.tabela]?.Keys ?? [];
+      }
+    }
+
+    return encontrados;
   }
 
   protected async queryJson<T>(pk: string): Promise<T[]> {

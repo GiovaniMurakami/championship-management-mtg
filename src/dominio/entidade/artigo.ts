@@ -77,6 +77,7 @@ export interface ComentarioArtigoProps {
   artigoId: string;
   autorId: string;
   texto: string;
+  comentarioPaiId?: string | null;
   criadoEm?: Date;
 }
 
@@ -85,6 +86,7 @@ export class ComentarioArtigo {
   public artigoId: string;
   public autorId: string;
   public texto: string;
+  public comentarioPaiId: string | null;
   public criadoEm: Date;
 
   public constructor(props: ComentarioArtigoProps) {
@@ -92,6 +94,7 @@ export class ComentarioArtigo {
     this.artigoId = props.artigoId;
     this.autorId = props.autorId;
     this.texto = props.texto;
+    this.comentarioPaiId = props.comentarioPaiId ?? null;
     this.criadoEm = props.criadoEm ?? new Date();
   }
 

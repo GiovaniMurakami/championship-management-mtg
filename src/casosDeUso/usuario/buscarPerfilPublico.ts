@@ -83,7 +83,7 @@ export class BuscarPerfilPublico implements CasoDeUso<{ id: string; paginaPartid
     );
 
     const torneioIds = Array.from(new Set(partidas.map(partida => partida.torneioId)));
-    const todosTorneios = await Promise.all(torneioIds.map(torneioId => this.torneioGateway.buscarPorId(torneioId)));
+    const todosTorneios = torneioIds.length > 0 ? await this.torneioGateway.buscarVarios(torneioIds) : [];
     const idsNoPeriodo = new Set(todosTorneios.filter(t => t && (!intervalo || (t.horario >= intervalo.dataInicio && t.horario <= intervalo.dataFim))).map(t => t!.id));
     const partidasNoPeriodo = intervalo ? partidas.filter(p => idsNoPeriodo.has(p.torneioId)) : partidas;
     let vitorias = 0;

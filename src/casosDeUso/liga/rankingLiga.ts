@@ -225,7 +225,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const inscricoesPorDeck = new Map<string, Set<string>>();
     const timeIdsInscritos = new Set<string>();
 
-    const torneios = await Promise.all(liga.torneioIds.map((id) => this.torneioGateway.buscarPorId(id)));
+    const torneios = await this.torneioGateway.buscarVarios(liga.torneioIds);
     const finalizados = torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id);
 
     // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)

@@ -59,9 +59,7 @@ export class AlterarBloqueioTorneios
       const inscricoes = await this.inscricaoGateway.listarPorUsuario(usuario.id);
       if (inscricoes.length > 0) {
         const torneioIds = Array.from(new Set(inscricoes.map((i) => i.torneioId)));
-        const torneios = await Promise.all(
-          torneioIds.map((id) => this.torneioGateway.buscarPorId(id)),
-        );
+        const torneios = await this.torneioGateway.buscarVarios(torneioIds);
         const abertos = new Set(
           torneios
             .filter((t) => t?.status === "inscricoes_abertas")

@@ -62,14 +62,14 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
     }
 
     if (input.torneioIds !== undefined) {
-      for (const torneioId of input.torneioIds) {
-        const torneio = await this.torneioGateway.buscarPorId(torneioId);
-        if (!torneio) {
-          throw ErroPersonalizado.criar({
-            mensagem: `Torneio não encontrado: ${torneioId}`,
-            status: StatusErro.erroNaoEncontrado,
-          });
-        }
+      const encontrados = await this.torneioGateway.buscarVarios(input.torneioIds);
+      const idsEncontrados = new Set(encontrados.map((torneio) => torneio.id));
+      const ausente = input.torneioIds.find((torneioId) => !idsEncontrados.has(torneioId));
+      if (ausente) {
+        throw ErroPersonalizado.criar({
+          mensagem: `Torneio não encontrado: ${ausente}`,
+          status: StatusErro.erroNaoEncontrado,
+        });
       }
       liga.torneioIds = input.torneioIds;
     }

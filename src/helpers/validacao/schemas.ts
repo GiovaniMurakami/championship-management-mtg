@@ -252,6 +252,10 @@ export const artigoIdParamSchema = z.object({
   artigoId: uuidCampo("artigoId"),
 });
 
+export const artigoComentarioParamSchema = artigoIdParamSchema.extend({
+  comentarioId: uuidCampo("comentarioId"),
+});
+
 export const criarArtigoSchema = z.object({
   titulo: z.string().trim().min(1, "Título é obrigatório.").max(200),
   chamada: z.string().trim().max(300).optional(),
@@ -276,7 +280,9 @@ export const aprovarArtigoSchema = z.object({
   aprovar: z.boolean(),
 });
 
-export const comentarArtigoSchema = comentarPostSchema;
+export const comentarArtigoSchema = comentarPostSchema.extend({
+  comentarioPaiId: uuidCampo("comentarioPaiId").optional(),
+});
 
 export const listarArtigosQuerySchema = z.object({
   pendentes: z.enum(["true", "false"]).optional(),

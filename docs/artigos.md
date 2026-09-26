@@ -20,7 +20,8 @@ API de artigos editoriais (separada da comunidade `/post`).
 | PUT | `/artigo/:artigoId` | editor (autor) / admin |
 | POST | `/artigo/:artigoId/aprovacao` | admin `{ aprovar: boolean }` |
 | DELETE | `/artigo/:artigoId` | admin |
-| POST | `/artigo/:artigoId/comentario` | JWT |
+| POST | `/artigo/:artigoId/comentario` | JWT. Body: `{ texto, comentarioPaiId? }` |
+| POST/DELETE | `/artigo/:artigoId/comentario/:comentarioId/curtida` | JWT |
 | POST/DELETE | `/artigo/:artigoId/curtida` | JWT |
 | PUT | `/usuario/:usuarioId/editor` | admin `{ editor: boolean }` |
 

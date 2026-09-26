@@ -51,7 +51,7 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
       this.ligaGateway.listarTotal({ tipo, nome }),
     ]);
 
-    const torneios = await Promise.all([...new Set(ligas.flatMap((liga) => liga.torneioIds))].map((id) => this.torneioGateway.buscarPorId(id)));
+    const torneios = await this.torneioGateway.buscarVarios([...new Set(ligas.flatMap((liga) => liga.torneioIds))]);
     const finalizados = new Set(torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id));
     return {
       ligas: ligas.map((liga) => ({

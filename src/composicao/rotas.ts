@@ -102,6 +102,7 @@ import {
   AprovarArtigoRota,
   ComentarArtigoRota,
   CurtirArtigoRota,
+  CurtirComentarioArtigoRota,
   ExcluirArtigoRota,
 } from "../infra/api/express/rotas/artigo/artigoRotas.express.route";
 
@@ -206,6 +207,8 @@ export function criarRotas(casos: CasosDeUso) {
         ComentarArtigoRota.criar(casos.comentarArtigo),
         CurtirArtigoRota.criar(casos.curtirArtigo, true),
         CurtirArtigoRota.criar(casos.curtirArtigo, false),
+        CurtirComentarioArtigoRota.criar(casos.curtirComentarioArtigo, true),
+        CurtirComentarioArtigoRota.criar(casos.curtirComentarioArtigo, false),
         ExcluirArtigoRota.criar(casos.excluirArtigo),
         ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),

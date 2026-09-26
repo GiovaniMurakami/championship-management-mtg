@@ -45,14 +45,14 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
   public async executar(input: CriarLigaInputDto): Promise<CriarLigaOutputDto> {
     const torneioIds = input.torneioIds ?? [];
 
-    for (const torneioId of torneioIds) {
-      const torneio = await this.torneioGateway.buscarPorId(torneioId);
-      if (!torneio) {
-        throw ErroPersonalizado.criar({
-          mensagem: `Torneio não encontrado: ${torneioId}`,
-          status: StatusErro.erroNaoEncontrado,
-        });
-      }
+    const encontrados = await this.torneioGateway.buscarVarios(torneioIds);
+    const idsEncontrados = new Set(encontrados.map((torneio) => torneio.id));
+    const ausente = torneioIds.find((torneioId) => !idsEncontrados.has(torneioId));
+    if (ausente) {
+      throw ErroPersonalizado.criar({
+        mensagem: `Torneio não encontrado: ${ausente}`,
+        status: StatusErro.erroNaoEncontrado,
+      });
     }
 
     const liga = Liga.criar({

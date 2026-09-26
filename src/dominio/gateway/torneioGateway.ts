@@ -16,6 +16,7 @@ export interface FiltrosListarTorneios {
 export interface TorneioGateway {
   salvar(torneio: Torneio): Promise<void>;
   buscarPorId(id: string): Promise<Torneio | null>;
+  buscarVarios(ids: string[]): Promise<Torneio[]>;
   buscarPorPrefixo(prefixo: string): Promise<Torneio | null>;
   listar(filtros?: FiltrosListarTorneios): Promise<Torneio[]>;
   listarTotal(filtros?: Pick<FiltrosListarTorneios, 'incluirSecretos' | 'status' | 'nome' | 'dataInicio' | 'dataFim'>): Promise<number>;

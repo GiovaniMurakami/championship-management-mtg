@@ -68,6 +68,13 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return item ? this.itemParaTorneio(item) : null;
   }
 
+  public async buscarVarios(ids: string[]): Promise<Torneio[]> {
+    const unicos = [...new Set(ids.filter(Boolean))];
+    if (unicos.length === 0) return [];
+    const itens = await this.batchGetJson<TorneioItem>(unicos.map((id) => ({ pk: `TORNEIO#${id}`, sk: "METADATA" })));
+    return itens.filter((item) => item?.id).map((item) => this.itemParaTorneio(item));
+  }
+
   public async buscarPorPrefixo(prefixo: string): Promise<Torneio | null> {
     const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
     const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));

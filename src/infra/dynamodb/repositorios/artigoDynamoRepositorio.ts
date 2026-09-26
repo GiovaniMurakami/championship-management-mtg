@@ -19,8 +19,16 @@ type ArtigoItem = {
   criadoEm: string;
 };
 
-type ComentarioItem = { id: string; artigoId: string; autorId: string; texto: string; criadoEm: string };
+type ComentarioItem = {
+  id: string;
+  artigoId: string;
+  autorId: string;
+  texto: string;
+  comentarioPaiId?: string | null;
+  criadoEm: string;
+};
 type CurtidaItem = { usuarioId: string };
+type CurtidaComentarioItem = { comentarioId: string; usuarioId: string };
 
 const ARTIGOS_PK = "ARTIGOS";
 
@@ -51,11 +59,8 @@ export class ArtigoDynamoRepositorio extends BaseDynamoRepositorio implements Ar
 
   public async excluir(id: string): Promise<boolean> {
     if (!await this.buscarPorId(id)) return false;
-    const relacionados = await this.queryJson<ComentarioItem | CurtidaItem>(`ARTIGO#${id}`);
-    const requests = relacionados.map((item) => this.toDeleteRequest(
-      `ARTIGO#${id}`,
-      "texto" in item ? `COMENTARIO#${(item as ComentarioItem).id}` : `CURTIDA#${(item as CurtidaItem).usuarioId}`
-    ));
+    const relacionados = await this.queryJson<ComentarioItem | CurtidaItem | CurtidaComentarioItem>(`ARTIGO#${id}`);
+    const requests = relacionados.map((item) => this.toDeleteRequest(`ARTIGO#${id}`, this.skRelacionado(item)));
     await this.batchWrite(requests);
     await this.delete(ARTIGOS_PK, `ARTIGO#${id}`);
     return true;
@@ -75,12 +80,18 @@ export class ArtigoDynamoRepositorio extends BaseDynamoRepositorio implements Ar
       artigoId: comentario.artigoId,
       autorId: comentario.autorId,
       texto: comentario.texto,
+      comentarioPaiId: comentario.comentarioPaiId,
       criadoEm: comentario.criadoEm.toISOString(),
     } satisfies ComentarioItem, { entity: "COMENTARIO_ARTIGO" });
   }
 
+  public async buscarComentario(artigoId: string, comentarioId: string): Promise<ComentarioArtigo | null> {
+    const item = await this.getJson<ComentarioItem>(`ARTIGO#${artigoId}`, `COMENTARIO#${comentarioId}`);
+    return item?.texto ? new ComentarioArtigo({ ...item, criadoEm: new Date(item.criadoEm) }) : null;
+  }
+
   public async listarComentarios(artigoId: string): Promise<ComentarioArtigo[]> {
-    const itens = await this.queryJson<ComentarioItem | CurtidaItem>(`ARTIGO#${artigoId}`);
+    const itens = await this.queryJson<ComentarioItem | CurtidaItem | CurtidaComentarioItem>(`ARTIGO#${artigoId}`);
     return itens
       .filter((i): i is ComentarioItem => "texto" in i)
       .map((i) => new ComentarioArtigo({ ...i, criadoEm: new Date(i.criadoEm) }))
@@ -104,10 +115,39 @@ export class ArtigoDynamoRepositorio extends BaseDynamoRepositorio implements Ar
   }
 
   public async listarCurtidas(artigoId: string): Promise<string[]> {
-    const itens = await this.queryJson<ComentarioItem | CurtidaItem>(`ARTIGO#${artigoId}`);
+    const itens = await this.queryJson<ComentarioItem | CurtidaItem | CurtidaComentarioItem>(`ARTIGO#${artigoId}`);
     return itens
-      .filter((i): i is CurtidaItem => "usuarioId" in i && !("texto" in i))
+      .filter((i): i is CurtidaItem => "usuarioId" in i && !("texto" in i) && !("comentarioId" in i))
       .map((i) => i.usuarioId);
+  }
+
+  public async curtirComentario(artigoId: string, comentarioId: string, usuarioId: string): Promise<boolean> {
+    const pk = `ARTIGO#${artigoId}`;
+    const sk = `CURTIDA_COMENTARIO#${comentarioId}#${usuarioId}`;
+    if (await this.getJson<CurtidaComentarioItem>(pk, sk)) return false;
+    await this.putJson(pk, sk, { comentarioId, usuarioId }, { entity: "CURTIDA_COMENTARIO" });
+    return true;
+  }
+
+  public async descurtirComentario(artigoId: string, comentarioId: string, usuarioId: string): Promise<boolean> {
+    const pk = `ARTIGO#${artigoId}`;
+    const sk = `CURTIDA_COMENTARIO#${comentarioId}#${usuarioId}`;
+    if (!await this.getJson<CurtidaComentarioItem>(pk, sk)) return false;
+    await this.delete(pk, sk);
+    return true;
+  }
+
+  public async listarCurtidasComentarios(artigoId: string): Promise<Array<{ comentarioId: string; usuarioId: string }>> {
+    const itens = await this.queryJson<ComentarioItem | CurtidaItem | CurtidaComentarioItem>(`ARTIGO#${artigoId}`);
+    return itens
+      .filter((i): i is CurtidaComentarioItem => "comentarioId" in i && "usuarioId" in i)
+      .map((i) => ({ comentarioId: i.comentarioId, usuarioId: i.usuarioId }));
+  }
+
+  private skRelacionado(item: ComentarioItem | CurtidaItem | CurtidaComentarioItem): string {
+    if ("texto" in item) return `COMENTARIO#${item.id}`;
+    if ("comentarioId" in item) return `CURTIDA_COMENTARIO#${item.comentarioId}#${item.usuarioId}`;
+    return `CURTIDA#${item.usuarioId}`;
   }
 
   private paraItem(artigo: Artigo): ArtigoItem {

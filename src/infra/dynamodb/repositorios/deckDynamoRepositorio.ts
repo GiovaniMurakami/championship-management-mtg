@@ -49,8 +49,10 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
   }
 
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
-    const decks = await Promise.all(Array.from(new Set(ids)).map((id) => this.buscarPorId(id)));
-    return decks.filter((deck): deck is Deck => deck !== null);
+    const unicos = [...new Set(ids.filter(Boolean))];
+    if (unicos.length === 0) return [];
+    const itens = await this.batchGetJson<DeckItem>(unicos.map((id) => ({ pk: `DECK#${id}`, sk: "DATA" })));
+    return itens.filter((item) => item?.id).map((item) => this.itemParaDeck(item));
   }
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {

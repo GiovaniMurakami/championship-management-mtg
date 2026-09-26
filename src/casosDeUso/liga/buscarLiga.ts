@@ -47,9 +47,7 @@ export class BuscarLiga implements CasoDeUso<BuscarLigaInputDto, BuscarLigaOutpu
       });
     }
 
-    const torneios = await Promise.all(
-      liga.torneioIds.map((id) => this.torneioGateway.buscarPorId(id))
-    );
+    const torneios = await this.torneioGateway.buscarVarios(liga.torneioIds);
 
     return {
       id: liga.id,
