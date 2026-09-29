@@ -6,7 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 const CORTES_VALIDOS = [2, 4, 8, 16];
 
@@ -61,11 +61,16 @@ export class CriarTorneio
   implements CasoDeUso<CriarTorneioInputDto, CriarTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly ligaGateway?: LigaGateway,
+    private readonly ligaGateway: LigaGateway | undefined,
+    private readonly eventos: EventoTorneioGateway,
   ) { }
 
-  public static criar(torneioGateway: TorneioGateway, ligaGateway?: LigaGateway) {
-    return new CriarTorneio(torneioGateway, ligaGateway);
+  public static criar(
+    torneioGateway: TorneioGateway,
+    ligaGateway?: LigaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+  ) {
+    return new CriarTorneio(torneioGateway, ligaGateway, eventos);
   }
 
   public async executar(
@@ -128,7 +133,7 @@ export class CriarTorneio
       }
     }
 
-    eventosTorneio.emit("torneio_criado", {
+    this.eventos.publicar("torneio_criado", {
       torneioId: torneio.id,
     });
 

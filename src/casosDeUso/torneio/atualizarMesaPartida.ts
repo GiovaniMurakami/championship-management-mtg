@@ -4,7 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AtualizarMesaPartidaInputDto = {
     partidaId: string;
@@ -26,14 +26,16 @@ export class AtualizarMesaPartida
     implements CasoDeUso<AtualizarMesaPartidaInputDto, AtualizarMesaPartidaOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new AtualizarMesaPartida(torneioGateway, partidaGateway);
+        return new AtualizarMesaPartida(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -83,7 +85,7 @@ export class AtualizarMesaPartida
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("mesa_atualizada", {
+        this.eventos.publicar("mesa_atualizada", {
             torneioId: partidaAtualizada.torneioId,
             partidaId: partidaAtualizada.id,
             rodada: partidaAtualizada.rodada,

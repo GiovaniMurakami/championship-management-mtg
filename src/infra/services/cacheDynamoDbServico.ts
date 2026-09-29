@@ -8,6 +8,7 @@ import {
 import { randomUUID } from "crypto";
 import { dependenciasCache, dominioParticao } from "../../helpers/cache/dependenciasCache";
 import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { logger } from "../../helpers/logger";
 import { comRetry } from "../../helpers/retry";
 
@@ -18,7 +19,7 @@ export type CacheDynamoDbItem<T> = {
   criadoEm: string;
 };
 
-export class CacheDynamoDbServico {
+export class CacheDynamoDbServico implements CacheGateway {
   private readonly cliente: DynamoDBClient;
 
   private constructor(
@@ -147,7 +148,3 @@ export class CacheDynamoDbServico {
   }
 }
 
-export function getCacheTtlSegundos(nomeEnv: string, padrao: number): number {
-  const valor = Number(process.env[nomeEnv]);
-  return Number.isFinite(valor) && valor > 0 ? Math.floor(valor) : padrao;
-}

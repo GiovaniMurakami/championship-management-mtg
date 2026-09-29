@@ -12,6 +12,7 @@ export default defineConfig({
       include: [
         "src/casosDeUso/**/*.ts",
         "src/dominio/entidade/**/*.ts",
+        "src/dominio/torneio/**/*.ts",
         "src/helpers/**/*.ts",
         "src/middlewares/**/*.ts",
       ],

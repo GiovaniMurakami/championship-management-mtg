@@ -1,7 +1,7 @@
-import { DynamoDBClient, GetItemCommand, TransactWriteItemsCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, QueryCommand, TransactWriteItemsCommand } from "@aws-sdk/client-dynamodb";
 import { Partida } from "../../../../src/dominio/entidade/partida";
 import { Torneio } from "../../../../src/dominio/entidade/torneio";
-import { PartidaDynamoRepositorio } from "../../../../src/infra/dynamodb/repositorios/partidaDynamoRepositorio";
+import { persistirTorneioComPartidas } from "../../../../src/casosDeUso/torneio/persistirTorneioComPartidas";
 import { TorneioDynamoRepositorio } from "../../../../src/infra/dynamodb/repositorios/torneioDynamoRepositorio";
 
 const criarTorneio = (version = 2) => new Torneio({
@@ -50,7 +50,7 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
     expect(torneio.version).toBe(3);
   });
 
-  it("reconcilia as partidas e nao remove a rodada quando a publicacao do torneio falha", async () => {
+  it("reconcilia as partidas antes de atualizar o torneio", async () => {
     const torneio = criarTorneio();
     const partida = new Partida({
       id: "p-1",
@@ -59,15 +59,44 @@ describe("TorneioDynamoRepositorio - consistencia", () => {
       jogador1Id: "u-1",
       jogador2Id: "u-2",
     });
-    const reconciliar = vi.spyOn(PartidaDynamoRepositorio.prototype, "reconciliarRodada").mockResolvedValue();
-    const excluir = vi.spyOn(PartidaDynamoRepositorio.prototype, "excluirPorIds").mockResolvedValue(1);
-    const repositorio = TorneioDynamoRepositorio.criar();
-    vi.spyOn(repositorio, "atualizar").mockRejectedValue(new Error("conflito"));
+    const ordem: string[] = [];
+    const partidaGateway = {
+      reconciliarRodada: vi.fn(async () => {
+        ordem.push("partidas");
+      }),
+    };
+    const torneioGateway = {
+      atualizar: vi.fn(async () => {
+        ordem.push("torneio");
+        throw new Error("conflito");
+      }),
+    };
 
-    await expect(repositorio.atualizarECriarPartidas(torneio, [partida])).rejects.toThrow("conflito");
+    await expect(persistirTorneioComPartidas(
+      torneioGateway as never,
+      partidaGateway as never,
+      torneio,
+      [partida],
+    )).rejects.toThrow("conflito");
 
-    expect(reconciliar).toHaveBeenCalledWith(torneio.id, 3, [partida]);
-    expect(excluir).not.toHaveBeenCalled();
+    expect(partidaGateway.reconciliarRodada).toHaveBeenCalledWith(torneio.id, 3, [partida]);
+    expect(ordem).toEqual(["partidas", "torneio"]);
+  });
+
+  it("lista por intervalo de horario sem leitura consistente", async () => {
+    sendSpy.mockResolvedValue({ Items: [] } as never);
+
+    await TorneioDynamoRepositorio.criar().listar({
+      dataInicio: new Date("2026-08-01T00:00:00.000Z"),
+      dataFim: new Date("2026-08-31T23:59:59.000Z"),
+      horarioDesc: true,
+    });
+
+    const comando = sendSpy.mock.calls[0][0] as QueryCommand;
+    expect(comando.input.ConsistentRead).toBe(false);
+    expect(comando.input.ScanIndexForward).toBe(false);
+    expect(comando.input.KeyConditionExpression).toContain("BETWEEN");
+    expect(comando.input.ExpressionAttributeValues?.[":skInicio"]).toEqual({ S: "TORNEIO#2026-08-01T00:00:00.000Z" });
   });
 
   it("inicializa o contador atomico a partir do valor legado antes de incrementar", async () => {

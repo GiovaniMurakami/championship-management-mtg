@@ -5,7 +5,8 @@ import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_TORNEIOS, cacheSkListarTorneios } from "../../helpers/cache/chavesCache";
 
 const LIMITE_MAXIMO_TORNEIOS = 100;
@@ -64,14 +65,14 @@ export class ListarTorneios
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly ligaGateway?: LigaGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     ligaGateway?: LigaGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new ListarTorneios(torneioGateway, inscricaoGateway, ligaGateway, cache);
   }

@@ -5,7 +5,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
 export type InscreverTorneioInputDto = {
@@ -26,15 +26,17 @@ export class InscreverTorneio
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
-    private readonly usuarioGateway: UsuarioGateway
-  ) { }
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
-    usuarioGateway: UsuarioGateway
-  ) {
-    return new InscreverTorneio(torneioGateway, inscricaoGateway, usuarioGateway);
+    usuarioGateway: UsuarioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new InscreverTorneio(torneioGateway, inscricaoGateway, usuarioGateway, eventos);
   }
 
   public async executar(
@@ -124,7 +126,7 @@ export class InscreverTorneio
 
     const usuarioNome = resolverNomeJogador(usuario, torneio.exibirNomeJogador);
 
-    eventosTorneio.emit("participante_inscrito", {
+    this.eventos.publicar("participante_inscrito", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
       usuarioNome,

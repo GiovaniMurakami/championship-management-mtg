@@ -4,7 +4,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CACHE_PK_LIGAS } from "../../helpers/cache/chavesCache";
 
 export type CriarLigaInputDto = {
@@ -31,13 +31,13 @@ export class CriarLiga implements CasoDeUso<CriarLigaInputDto, CriarLigaOutputDt
   private constructor(
     private readonly ligaGateway: LigaGateway,
     private readonly torneioGateway: TorneioGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
   public static criar(
     ligaGateway: LigaGateway,
     torneioGateway: TorneioGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new CriarLiga(ligaGateway, torneioGateway, cache);
   }

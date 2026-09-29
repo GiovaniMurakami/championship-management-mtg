@@ -3,7 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type EncerrarTorneioInputDto = {
   torneioId: string;
@@ -26,10 +26,12 @@ export type EncerrarTorneioOutputDto = {
 export class EncerrarTorneio
   implements CasoDeUso<EncerrarTorneioInputDto, EncerrarTorneioOutputDto>
 {
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  private constructor(private readonly torneioGateway: TorneioGateway,
+    private readonly eventos: EventoTorneioGateway,) {}
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new EncerrarTorneio(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao()) {
+    return new EncerrarTorneio(torneioGateway, eventos);
   }
 
   public async executar(
@@ -61,7 +63,7 @@ export class EncerrarTorneio
     torneio.totalRodadas = Math.max(torneio.totalRodadas, torneio.rodadaAtual);
     torneio.finalizar();
     await this.torneioGateway.atualizar(torneio);
-    eventosTorneio.emit("torneio_finalizado", {
+    this.eventos.publicar("torneio_finalizado", {
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,

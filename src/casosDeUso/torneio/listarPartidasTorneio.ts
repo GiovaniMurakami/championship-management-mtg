@@ -8,7 +8,8 @@ import {
   isUsuarioExcluido,
   resolverNomeJogador as resolverNome,
 } from "../../helpers/torneio/resolverNomeJogador";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { cachePkTorneio, cacheSkPartidas } from "../../helpers/cache/chavesCache";
 import { filtrarPartidasNaoPublicadas, rodadaEstaPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
@@ -51,14 +52,14 @@ export class ListarPartidasTorneio
         private readonly torneioGateway: TorneioGateway,
         private readonly partidaGateway: PartidaGateway,
         private readonly usuarioGateway: UsuarioGateway,
-        private readonly cache?: CacheDynamoDbServico
+        private readonly cache?: CacheGateway
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
         partidaGateway: PartidaGateway,
         usuarioGateway: UsuarioGateway,
-        cache?: CacheDynamoDbServico
+        cache?: CacheGateway
     ) {
         return new ListarPartidasTorneio(torneioGateway, partidaGateway, usuarioGateway, cache);
     }

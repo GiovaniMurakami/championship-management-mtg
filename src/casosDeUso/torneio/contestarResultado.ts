@@ -4,7 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type ContestarResultadoInputDto = {
     partidaId: string;
@@ -30,14 +30,16 @@ export class ContestarResultado
     implements CasoDeUso<ContestarResultadoInputDto, ContestarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new ContestarResultado(torneioGateway, partidaGateway);
+        return new ContestarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -108,7 +110,7 @@ export class ContestarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_contestado", {
+        this.eventos.publicar("resultado_contestado", {
             torneioId: partidaContestada.torneioId,
             partidaId: partidaContestada.id,
             rodada: partidaContestada.rodada,

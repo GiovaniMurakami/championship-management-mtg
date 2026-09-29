@@ -4,7 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { CACHE_PK_METAGAME } from "../../helpers/cache/chavesCache";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import {
   normalizarFormatoDeck,
   normalizarLinkLigaMagic,
@@ -70,10 +70,10 @@ export class AtualizarDeck
   implements CasoDeUso<AtualizarDeckInputDto, AtualizarDeckOutputDto> {
   private constructor(
     private readonly deckGateway: DeckGateway,
-    private readonly cache?: CacheDynamoDbServico,
+    private readonly cache?: CacheGateway,
   ) { }
 
-  public static criar(deckGateway: DeckGateway, cache?: CacheDynamoDbServico) {
+  public static criar(deckGateway: DeckGateway, cache?: CacheGateway) {
     return new AtualizarDeck(deckGateway, cache);
   }
 

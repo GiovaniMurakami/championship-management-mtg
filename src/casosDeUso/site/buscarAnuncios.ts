@@ -1,6 +1,7 @@
 import { SiteConfigGateway } from "../../dominio/gateway/siteConfigGateway";
 import { mapearAnunciosSite } from "./mapearAnunciosSite";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_SITE, cacheSkAnunciosSite } from "../../helpers/cache/chavesCache";
 
 type BuscarAnunciosInput = {
@@ -15,10 +16,10 @@ type BuscarAnunciosOutput = {
 export class BuscarAnuncios {
   private constructor(
     private readonly siteConfigGateway: SiteConfigGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheGateway) {
     return new BuscarAnuncios(siteConfigGateway, cache);
   }
 

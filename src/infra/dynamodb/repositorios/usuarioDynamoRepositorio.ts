@@ -99,7 +99,7 @@ export class UsuarioDynamoRepositorio extends BaseDynamoRepositorio implements U
   /** A listagem e a contagem saem juntas; as duas leem o mesmo índice. */
   private carregarIndice(): Promise<UsuarioItem[]> {
     if (!this.leituraIndice) {
-      const leitura = this.queryJson<UsuarioItem>(USUARIOS_PK).finally(() => {
+      const leitura = this.queryJson<UsuarioItem>(USUARIOS_PK, { consistente: false }).finally(() => {
         if (this.leituraIndice === leitura) this.leituraIndice = null;
       });
       this.leituraIndice = leitura;

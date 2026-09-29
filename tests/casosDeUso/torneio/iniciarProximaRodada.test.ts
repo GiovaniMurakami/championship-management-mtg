@@ -55,7 +55,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2);
             expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         }
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve lanÃ§ar erro se nÃ£o for o dono e nÃ£o for admin", async () => {
@@ -214,7 +214,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.rodadaAtual).toBe(2);
             expect(resultado.partidas.length).toBeGreaterThan(0);
         }
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve iniciar o corte top 4 ao fim do Swiss", async () => {
@@ -260,7 +260,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2); // top4 = 2 partidas
         }
         // totalRodadas deve ser estendido: rodada 3 (semis) + rodada 4 (final)
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve gerar prÃ³xima rodada de corte com os vencedores", async () => {
