@@ -23,24 +23,32 @@ function removerAssetsComHash(html: string): string {
 }
 
 /** Carrega o bundle atual da SPA no cliente, sem embutir hashes que quebram após o deploy. */
-export function scriptBootstrapSpa(frontendUrl: string): string {
+export function scriptBootstrapSpa(
+  frontendUrl: string,
+  mensagemErro = "Não foi possível carregar o torneio. Atualize a página.",
+): string {
   const origin = JSON.stringify(frontendUrl.replace(/\/+$/, ""));
-  return `<script data-ssr-bootstrap="spa">(function(){var o=${origin};function boot(html){var c=html.match(/href="(\\/assets\\/[^"]+\\.css)"/);if(c){var l=document.createElement("link");l.rel="stylesheet";l.crossOrigin="";l.href=c[1];document.head.appendChild(l);}var j=html.match(/src="(\\/assets\\/index-[^"]+\\.js)"/);if(!j)throw new Error("bundle");var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=j[1];document.head.appendChild(s);}fetch(o+"/?ssr="+Date.now(),{cache:"no-store",headers:{Accept:"text/html"}}).then(function(r){if(!r.ok)throw new Error("spa");return r.text();}).then(boot).catch(function(){var el=document.getElementById("root");if(el)el.textContent="Não foi possível carregar o torneio. Atualize a página.";});})();</script>`;
+  const mensagem = JSON.stringify(mensagemErro);
+  return `<script data-ssr-bootstrap="spa">(function(){var o=${origin};function boot(html){var c=html.match(/href="(\\/assets\\/[^"]+\\.css)"/);if(c){var l=document.createElement("link");l.rel="stylesheet";l.crossOrigin="";l.href=c[1];document.head.appendChild(l);}var j=html.match(/src="(\\/assets\\/index-[^"]+\\.js)"/);if(!j)throw new Error("bundle");var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=j[1];document.head.appendChild(s);}fetch(o+"/?ssr="+Date.now(),{cache:"no-store",headers:{Accept:"text/html"}}).then(function(r){if(!r.ok)throw new Error("spa");return r.text();}).then(boot).catch(function(){var el=document.getElementById("root");if(el)el.textContent=${mensagem};});})();</script>`;
 }
 
-export function montarHtmlCompartilhamentoTorneio(
-  seo: Awaited<ReturnType<BuscarSeoTorneio["executar"]>>,
-  indexHtml = HTML_SHELL_COMPARTILHAMENTO,
-  frontendUrl = getFrontendUrl(),
-): string {
+export function montarHtmlCompartilhamento(input: {
+  canonicalPath: string;
+  title: string;
+  description: string | null;
+  image: string | null;
+  imageType: string | null;
+  fallbackDescription: string;
+  mensagemErro?: string;
+}, indexHtml = HTML_SHELL_COMPARTILHAMENTO, frontendUrl = getFrontendUrl()): string {
   const appUrl = frontendUrl.replace(/\/+$/, "");
-  const canonical = `${appUrl}/torneios/${seo.torneioId.slice(0, 5)}-${slugify(seo.title)}`;
-  const title = escapeHtml(`${seo.title} | Fuguete Liga Magic`);
-  const description = escapeHtml(seo.description || "Acompanhe inscrições, rodadas e resultados deste torneio.");
-  const image = seo.image ? escapeHtml(seo.image) : "";
+  const canonical = `${appUrl}${input.canonicalPath}`;
+  const title = escapeHtml(`${input.title} | Fuguete Liga Magic`);
+  const description = escapeHtml(input.description || input.fallbackDescription);
+  const image = input.image ? escapeHtml(input.image) : "";
   const imageTags = image ? `
   <meta property="og:image" content="${image}">
-  <meta property="og:image:type" content="${escapeHtml(seo.imageType || "image/jpeg")}">
+  <meta property="og:image:type" content="${escapeHtml(input.imageType || "image/jpeg")}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:image" content="${image}">` : "";
@@ -50,7 +58,7 @@ export function montarHtmlCompartilhamentoTorneio(
   <meta property="og:title" content="${title}"><meta property="og:description" content="${description}">
   <meta property="og:url" content="${escapeHtml(canonical)}">${imageTags}
   <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">${scriptBootstrapSpa(appUrl)}`;
+  <meta name="twitter:description" content="${description}">${scriptBootstrapSpa(appUrl, input.mensagemErro)}`;
   return removerAssetsComHash(indexHtml)
     .replace(/<title>[\s\S]*?<\/title>/i, "")
     .replace(/<meta\s+name=["']description["'][^>]*>/i, "")
@@ -58,6 +66,21 @@ export function montarHtmlCompartilhamentoTorneio(
     .replace(/<script[^>]*data-ssr-bootstrap=["']spa["'][^>]*>[\s\S]*?<\/script>/i, "")
     .replace(/<meta\s+(?:property=["']og:[^"']+["']|name=["']twitter:[^"']+["'])[^>]*>\s*/gi, "")
     .replace("</head>", `${metaTags}</head>`);
+}
+
+export function montarHtmlCompartilhamentoTorneio(
+  seo: Awaited<ReturnType<BuscarSeoTorneio["executar"]>>,
+  indexHtml = HTML_SHELL_COMPARTILHAMENTO,
+  frontendUrl = getFrontendUrl(),
+): string {
+  return montarHtmlCompartilhamento({
+    canonicalPath: `/torneios/${seo.torneioId.slice(0, 5)}-${slugify(seo.title)}`,
+    title: seo.title,
+    description: seo.description,
+    image: seo.image,
+    imageType: seo.imageType,
+    fallbackDescription: "Acompanhe inscrições, rodadas e resultados deste torneio.",
+  }, indexHtml, frontendUrl);
 }
 
 function removerCabecalhosDaApi(response: Response) {

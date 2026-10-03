@@ -1,3 +1,4 @@
+import { Artigo } from "../../dominio/entidade/artigo";
 import { ArtigoGateway, ConteudoArtigoGateway } from "../../dominio/gateway/artigoGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -12,6 +13,13 @@ export type BuscarArtigoInputDto = {
   role?: string;
   registrarVisualizacao?: boolean;
 };
+
+export async function buscarArtigoPorIdOuSlug(gateway: ArtigoGateway, id: string): Promise<Artigo | null> {
+  const direto = await gateway.buscarPorId(id);
+  if (direto) return direto;
+  if (/^[a-z0-9]{5}-/i.test(id)) return gateway.buscarPorPrefixo(id.slice(0, 5));
+  return null;
+}
 
 export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<string, unknown>> {
   private constructor(
@@ -29,7 +37,7 @@ export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<stri
   }
 
   public async executar(input: BuscarArtigoInputDto) {
-    const artigo = await this.artigoGateway.buscarPorId(input.id);
+    const artigo = await buscarArtigoPorIdOuSlug(this.artigoGateway, input.id);
     if (!artigo) {
       throw ErroPersonalizado.criar({
         mensagem: "Artigo não encontrado.",

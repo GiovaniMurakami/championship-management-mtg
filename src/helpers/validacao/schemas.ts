@@ -252,6 +252,10 @@ export const artigoIdParamSchema = z.object({
   artigoId: uuidCampo("artigoId"),
 });
 
+export const artigoIdOuSlugParamSchema = z.object({
+  artigoId: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "artigoId inválido"),
+});
+
 export const artigoComentarioParamSchema = artigoIdParamSchema.extend({
   comentarioId: uuidCampo("comentarioId"),
 });
