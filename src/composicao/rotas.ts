@@ -105,6 +105,8 @@ import {
   CurtirComentarioArtigoRota,
   ExcluirArtigoRota,
 } from "../infra/api/express/rotas/artigo/artigoRotas.express.route";
+import { BuscarSeoArtigoRota } from "../infra/api/express/rotas/artigo/buscarSeoArtigo.express.route";
+import { RenderizarCompartilhamentoArtigoRota } from "../infra/api/express/rotas/artigo/renderizarCompartilhamentoArtigo.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
@@ -202,6 +204,9 @@ export function criarRotas(casos: CasosDeUso) {
         CriarArtigoRota.criar(casos.criarArtigo),
         ListarArtigosRota.criar(casos.listarArtigos),
         BuscarArtigoRota.criar(casos.buscarArtigo),
+        BuscarSeoArtigoRota.criar(casos.buscarSeoArtigo),
+        RenderizarCompartilhamentoArtigoRota.criar(casos.buscarSeoArtigo),
+        RenderizarCompartilhamentoArtigoRota.criar(casos.buscarSeoArtigo, "/artigo/share/:artigoId"),
         EditarArtigoRota.criar(casos.editarArtigo),
         AprovarArtigoRota.criar(casos.aprovarArtigo),
         ComentarArtigoRota.criar(casos.comentarArtigo),

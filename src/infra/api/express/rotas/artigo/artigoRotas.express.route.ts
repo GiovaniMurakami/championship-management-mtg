@@ -11,6 +11,7 @@ import { ExcluirArtigo } from "../../../../../casosDeUso/artigo/excluirArtigo";
 import {
   aprovarArtigoSchema,
   artigoComentarioParamSchema,
+  artigoIdOuSlugParamSchema,
   artigoIdParamSchema,
   comentarArtigoSchema,
   criarArtigoSchema,
@@ -81,7 +82,7 @@ export class BuscarArtigoRota implements Rotas {
   getCaminho() { return "/artigo/:artigoId"; }
   getMetodo() { return HttpMethod.GET; }
   getMiddlewares(): RequestHandler[] {
-    return [publicReadRateLimiter, autenticarJwtOpcional, validarParamsMiddleware(artigoIdParamSchema)];
+    return [publicReadRateLimiter, autenticarJwtOpcional, validarParamsMiddleware(artigoIdOuSlugParamSchema)];
   }
   getHandler() {
     return handlerErro(async (req, res) => {

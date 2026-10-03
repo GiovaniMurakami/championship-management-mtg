@@ -45,6 +45,12 @@ export class ArtigoDynamoRepositorio extends BaseDynamoRepositorio implements Ar
     return item ? this.deItem(item) : null;
   }
 
+  public async buscarPorPrefixo(prefixo: string): Promise<Artigo | null> {
+    const itens = await this.queryJson<ArtigoItem>(ARTIGOS_PK);
+    const encontrados = itens.filter((item) => item.id?.toLowerCase().startsWith(prefixo.toLowerCase()));
+    return encontrados.length === 1 ? this.deItem(encontrados[0]) : null;
+  }
+
   public async listar(filtro?: { status?: StatusArtigo | StatusArtigo[] }): Promise<Artigo[]> {
     const itens = await this.queryJson<ArtigoItem>(ARTIGOS_PK);
     const statusFiltro = filtro?.status

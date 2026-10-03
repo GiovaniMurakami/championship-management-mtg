@@ -3,6 +3,7 @@ import { Artigo, ComentarioArtigo, StatusArtigo } from "../entidade/artigo";
 export interface ArtigoGateway {
   salvar(artigo: Artigo): Promise<void>;
   buscarPorId(id: string): Promise<Artigo | null>;
+  buscarPorPrefixo(prefixo: string): Promise<Artigo | null>;
   listar(filtro?: { status?: StatusArtigo | StatusArtigo[] }): Promise<Artigo[]>;
   excluir(id: string): Promise<boolean>;
   incrementarVisualizacoes(id: string): Promise<number>;
