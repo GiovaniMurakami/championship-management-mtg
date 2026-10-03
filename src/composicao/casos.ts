@@ -104,8 +104,10 @@ import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoM
 import { SalvarCartaRepresentativaArquetipo } from "../casosDeUso/metagame/salvarCartaRepresentativaArquetipo";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
+import { EventoTorneioPublicador } from "../infra/socketio/eventoTorneioPublicador";
 
 export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
+    const eventos = new EventoTorneioPublicador();
     // --- Usuário ---
     const cadastrarUsuario = CadastrarUsuario.criar(repos.usuario, servicos.email);
     const loginUsuario = LoginUsuario.criar(repos.usuario, repos.loginAttempt, repos.refreshToken, servicos.email, repos.resetSenha);
@@ -122,6 +124,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
       repos.usuario,
       repos.inscricao,
       repos.torneio,
+      eventos,
     );
     const excluirConta = ExcluirConta.criar(
       repos.usuario,
@@ -164,37 +167,37 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const descadastrarNewsletter = DescadastrarNewsletter.criar(repos.usuario);
 
     // --- Torneio ---
-    const criarTorneio = CriarTorneio.criar(repos.torneio, repos.liga);
-    const inscreverTorneio = InscreverTorneio.criar(repos.torneio, repos.inscricao, repos.usuario);
-    const checkInTorneio = CheckInTorneio.criar(repos.torneio, repos.inscricao, repos.usuario);
-    const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck, repos.usuario);
-    const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const publicarRodada = PublicarRodada.criar(repos.torneio, repos.partida, repos.usuario);
-    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida);
-    const ajustarTotalRodadas = AjustarTotalRodadas.criar(repos.torneio);
-    const encerrarTorneio = EncerrarTorneio.criar(repos.torneio);
-    const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida);
-    const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida);
-    const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida);
-    const atualizarMesaPartida = AtualizarMesaPartida.criar(repos.torneio, repos.partida);
-    const atualizarPareamentosRodada = AtualizarPareamentosRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario);
-    const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
+    const criarTorneio = CriarTorneio.criar(repos.torneio, repos.liga, eventos);
+    const inscreverTorneio = InscreverTorneio.criar(repos.torneio, repos.inscricao, repos.usuario, eventos);
+    const checkInTorneio = CheckInTorneio.criar(repos.torneio, repos.inscricao, repos.usuario, eventos);
+    const escolherDeckTorneio = EscolherDeckTorneio.criar(repos.torneio, repos.inscricao, repos.deck, repos.usuario, eventos);
+    const iniciarTorneio = IniciarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, eventos);
+    const iniciarProximaRodada = IniciarProximaRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, eventos);
+    const publicarRodada = PublicarRodada.criar(repos.torneio, repos.partida, repos.usuario, eventos);
+    const refazerRodada = RefazerRodada.criar(repos.torneio, repos.partida, eventos);
+    const ajustarTotalRodadas = AjustarTotalRodadas.criar(repos.torneio, eventos);
+    const encerrarTorneio = EncerrarTorneio.criar(repos.torneio, eventos);
+    const registrarResultado = RegistrarResultado.criar(repos.torneio, repos.partida, eventos);
+    const contestarResultado = ContestarResultado.criar(repos.torneio, repos.partida, eventos);
+    const confirmarResultado = ConfirmarResultado.criar(repos.torneio, repos.partida, eventos);
+    const atualizarMesaPartida = AtualizarMesaPartida.criar(repos.torneio, repos.partida, eventos);
+    const atualizarPareamentosRodada = AtualizarPareamentosRodada.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, eventos);
+    const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida, eventos);
     const droparJogadoresSemDeck = DroparJogadoresSemDeck.criar(repos.torneio, repos.inscricao, droparJogador);
     const droparJogadoresSemCheckin = DroparJogadoresSemCheckin.criar(repos.torneio, repos.inscricao, droparJogador);
-    const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida);
+    const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida, eventos);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao, repos.liga);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.liga);
     const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
     const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
     const meuHistoricoTorneio = MeuHistoricoTorneio.criar(repos.torneio, repos.partida, repos.usuario);
     const listarPartidasTorneio = ListarPartidasTorneio.criar(repos.torneio, repos.partida, repos.usuario);
-    const alterarTorneio = AlterarTorneio.criar(repos.torneio);
-    const excluirTorneio = ExcluirTorneio.criar(repos.torneio);
+    const alterarTorneio = AlterarTorneio.criar(repos.torneio, eventos);
+    const excluirTorneio = ExcluirTorneio.criar(repos.torneio, eventos);
     const gerarLinkIngresso = GerarLinkIngresso.criar(repos.torneio, repos.linkIngresso);
-    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck);
-    const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida);
-    const definirAnfitriaoTorneio = DefinirAnfitriaoTorneio.criar(repos.torneio, repos.usuario);
+    const ingressarViaTorneio = IngressarViaTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.linkIngresso, repos.deck, eventos);
+    const ajustarResultado = AjustarResultado.criar(repos.torneio, repos.partida, eventos);
+    const definirAnfitriaoTorneio = DefinirAnfitriaoTorneio.criar(repos.torneio, repos.usuario, eventos);
 
     // --- Liga ---
     const criarLiga = CriarLiga.criar(repos.liga, repos.torneio);

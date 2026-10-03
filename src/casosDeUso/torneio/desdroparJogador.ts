@@ -7,7 +7,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type DesdroparJogadorInputDto = {
   torneioId: string;
@@ -30,16 +30,18 @@ export class DesdroparJogador
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) {}
+    private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) {}
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     usuarioGateway: UsuarioGateway,
-    partidaGateway: PartidaGateway
-  ) {
-    return new DesdroparJogador(torneioGateway, inscricaoGateway, usuarioGateway, partidaGateway);
+    partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new DesdroparJogador(torneioGateway, inscricaoGateway, usuarioGateway, partidaGateway, eventos);
   }
 
   public async executar(
@@ -138,7 +140,7 @@ export class DesdroparJogador
       ? resolverNomeJogador(jogador, torneio.exibirNomeJogador)
       : input.jogadorId;
 
-    eventosTorneio.emit("jogador_voltou", {
+    this.eventos.publicar("jogador_voltou", {
       torneioId: input.torneioId,
       jogadorId: input.jogadorId,
       jogadorNome,

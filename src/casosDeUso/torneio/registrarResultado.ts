@@ -5,7 +5,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { rejeitarResultadoSeRodadaNaoPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type RegistrarResultadoInputDto = {
   partidaId: string;
@@ -33,14 +33,16 @@ export class RegistrarResultado
   CasoDeUso<RegistrarResultadoInputDto, RegistrarResultadoOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) { }
+    private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    partidaGateway: PartidaGateway
-  ) {
-    return new RegistrarResultado(torneioGateway, partidaGateway);
+    partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new RegistrarResultado(torneioGateway, partidaGateway, eventos);
   }
 
   public async executar(
@@ -109,7 +111,7 @@ export class RegistrarResultado
         status: StatusErro.erroParametro,
       });
     }
-    eventosTorneio.emit("resultado_registrado", {
+    this.eventos.publicar("resultado_registrado", {
       torneioId: partidaAtualizada.torneioId,
       partidaId: partidaAtualizada.id,
       rodada: partidaAtualizada.rodada,

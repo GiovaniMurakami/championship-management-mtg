@@ -55,9 +55,26 @@ export class DynamoMemoria {
       await this.antes?.(command);
       if (command instanceof GetItemCommand) return { Item: this.clone(this.itens.get(this.chave(command.input))) };
       if (command instanceof QueryCommand) {
-        if (command.input.KeyConditionExpression !== "pk = :pk") throw new Error("Query não simulada");
-        const prefix = `${command.input.TableName}/${command.input.ExpressionAttributeValues![":pk"].S}/`;
-        return { Items: this.clone([...this.itens.entries()].filter(([key]) => key.startsWith(prefix)).sort(([a], [b]) => a.localeCompare(b)).map(([, item]) => item)) };
+        const expr = command.input.KeyConditionExpression;
+        const valores = command.input.ExpressionAttributeValues ?? {};
+        const pk = valores[":pk"]?.S;
+        if (!pk || (expr !== "pk = :pk" && expr !== "pk = :pk AND sk >= :skInicio" && expr !== "pk = :pk AND sk <= :skFim" && expr !== "pk = :pk AND sk BETWEEN :skInicio AND :skFim")) {
+          throw new Error("Query não simulada");
+        }
+        const prefix = `${command.input.TableName}/${pk}/`;
+        const inicio = valores[":skInicio"]?.S;
+        const fim = valores[":skFim"]?.S;
+        const itens = [...this.itens.entries()]
+          .filter(([key]) => key.startsWith(prefix))
+          .filter(([key]) => {
+            const sk = key.slice(prefix.length);
+            if (inicio && sk < inicio) return false;
+            if (fim && sk > fim) return false;
+            return true;
+          })
+          .sort(([a], [b]) => a.localeCompare(b));
+        if (command.input.ScanIndexForward === false) itens.reverse();
+        return { Items: this.clone(itens.map(([, item]) => item)) };
       }
       if (command instanceof TransactWriteItemsCommand) {
         const ops = command.input.TransactItems!;

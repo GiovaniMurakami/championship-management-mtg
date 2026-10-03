@@ -3,7 +3,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type ExcluirTorneioInputDto = {
   id: string;
@@ -17,10 +17,12 @@ export type ExcluirTorneioOutputDto = {
 
 export class ExcluirTorneio
   implements CasoDeUso<ExcluirTorneioInputDto, ExcluirTorneioOutputDto> {
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  private constructor(private readonly torneioGateway: TorneioGateway,
+    private readonly eventos: EventoTorneioGateway,) {}
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new ExcluirTorneio(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao()) {
+    return new ExcluirTorneio(torneioGateway, eventos);
   }
 
   public async executar(input: ExcluirTorneioInputDto): Promise<ExcluirTorneioOutputDto> {
@@ -48,7 +50,7 @@ export class ExcluirTorneio
     }
 
     await this.torneioGateway.excluir(input.id);
-    eventosTorneio.emit("torneio_excluido", {
+    this.eventos.publicar("torneio_excluido", {
       torneioId: input.id,
     });
 

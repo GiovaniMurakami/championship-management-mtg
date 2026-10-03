@@ -3,7 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type ConfirmarResultadoInputDto = {
     partidaId: string;
@@ -29,14 +29,16 @@ export class ConfirmarResultado
     implements CasoDeUso<ConfirmarResultadoInputDto, ConfirmarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new ConfirmarResultado(torneioGateway, partidaGateway);
+        return new ConfirmarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -94,7 +96,7 @@ export class ConfirmarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_confirmado", {
+        this.eventos.publicar("resultado_confirmado", {
             torneioId: partidaAtualizada.torneioId,
             partidaId: partidaAtualizada.id,
             usuarioId: input.usuarioId,

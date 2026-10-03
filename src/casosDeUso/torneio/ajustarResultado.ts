@@ -4,7 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AjustarResultadoInputDto = {
     partidaId: string;
@@ -30,14 +30,16 @@ export class AjustarResultado
     implements CasoDeUso<AjustarResultadoInputDto, AjustarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new AjustarResultado(torneioGateway, partidaGateway);
+        return new AjustarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -101,7 +103,7 @@ export class AjustarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_ajustado", {
+        this.eventos.publicar("resultado_ajustado", {
             torneioId: partidaAjustada.torneioId,
             partidaId: partidaAjustada.id,
             rodada: partidaAjustada.rodada,

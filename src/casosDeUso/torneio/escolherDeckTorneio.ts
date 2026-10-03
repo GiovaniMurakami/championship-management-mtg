@@ -5,7 +5,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
@@ -34,15 +34,19 @@ export class EscolherDeckTorneio
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly deckGateway: DeckGateway,
     private readonly usuarioGateway: UsuarioGateway,
-  ) { }
+
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     deckGateway: DeckGateway,
     usuarioGateway: UsuarioGateway,
-  ) {
-    return new EscolherDeckTorneio(torneioGateway, inscricaoGateway, deckGateway, usuarioGateway);
+
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new EscolherDeckTorneio(torneioGateway, inscricaoGateway, deckGateway, usuarioGateway, eventos);
   }
 
   public async executar(
@@ -116,7 +120,7 @@ export class EscolherDeckTorneio
       ? resolverNomeJogador(usuario, torneio.exibirNomeJogador)
       : (input.usuarioNome ?? input.usuarioId);
 
-    eventosTorneio.emit("deck_inserido", {
+    this.eventos.publicar("deck_inserido", {
       torneioId: inscricao.torneioId,
       usuarioId: inscricao.usuarioId,
       usuarioNome,

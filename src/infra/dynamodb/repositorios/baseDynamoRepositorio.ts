@@ -231,19 +231,39 @@ export abstract class BaseDynamoRepositorio {
     return encontrados;
   }
 
-  protected async queryJson<T>(pk: string): Promise<T[]> {
+  protected async queryJson<T>(
+    pk: string,
+    opcoes: {
+      consistente?: boolean;
+      skInicio?: string;
+      skFim?: string;
+      ordemDesc?: boolean;
+    } = {},
+  ): Promise<T[]> {
     this.assertTabelaConfigurada();
     const itens: T[] = [];
     let exclusiveStartKey: DynamoItem | undefined;
+    const valores: Record<string, { S: string }> = { ":pk": { S: pk } };
+    let condicao = "pk = :pk";
+    if (opcoes.skInicio && opcoes.skFim) {
+      condicao += " AND sk BETWEEN :skInicio AND :skFim";
+      valores[":skInicio"] = { S: opcoes.skInicio };
+      valores[":skFim"] = { S: opcoes.skFim };
+    } else if (opcoes.skInicio) {
+      condicao += " AND sk >= :skInicio";
+      valores[":skInicio"] = { S: opcoes.skInicio };
+    } else if (opcoes.skFim) {
+      condicao += " AND sk <= :skFim";
+      valores[":skFim"] = { S: opcoes.skFim };
+    }
 
     do {
       const resposta = await this.cliente.send(new QueryCommand({
         TableName: this.tabela,
-        KeyConditionExpression: "pk = :pk",
-        ExpressionAttributeValues: {
-          ":pk": { S: pk },
-        },
-        ConsistentRead: true,
+        KeyConditionExpression: condicao,
+        ExpressionAttributeValues: valores,
+        ConsistentRead: opcoes.consistente ?? true,
+        ScanIndexForward: opcoes.ordemDesc ? false : undefined,
         ExclusiveStartKey: exclusiveStartKey,
       }));
 

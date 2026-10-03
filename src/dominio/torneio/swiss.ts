@@ -1,4 +1,4 @@
-import { Partida } from "../../dominio/entidade/partida";
+import { Partida } from "../entidade/partida";
 
 export interface EstatisticasJogador {
   usuarioId: string;

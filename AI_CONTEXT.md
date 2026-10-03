@@ -60,7 +60,8 @@ src/
 │   └── rotas.ts                # Registro das rotas Express
 ├── dominio/
 │   ├── entidade/               # Torneio, Deck, Usuario, Partida, etc.
-│   └── gateway/                # Interfaces dos repositórios
+│   ├── torneio/swiss.ts        # Pareamento, estatística e desempate
+│   └── gateway/                # Interfaces dos repositórios, cache e eventos
 ├── casosDeUso/                 # Regras de negócio por domínio
 │   ├── usuario/
 │   ├── deck/
@@ -76,7 +77,7 @@ src/
 │   ├── cache/                  # Invalidação compartilhada por evento
 │   ├── ably/                   # NotificacaoAbly
 │   ├── s3/, email/
-│   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably
+│   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably; casos de uso usam EventoTorneioGateway
 ├── middlewares/express/        # autenticarJwt, rateLimiter, sanitização
 └── helpers/
     ├── validacao/              # schemas.ts, validarBody/Params/Query
@@ -89,7 +90,7 @@ docs/                           # Documentação por entidade (usuario, torneio,
 tests/                          # Vitest (unitários + E2E DynamoDB opt-in)
 ```
 
-**Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
+**Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container). Casos de uso dependem de `CacheGateway` e `EventoTorneioGateway`, não das classes de infra. Access patterns do DynamoDB: `docs/dynamodb-access-patterns.md`.
 
 ---
 
@@ -335,19 +336,19 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 
 | Limiter | Máx/15min | Uso |
 |---|---|---|
-| `auth` | 50 | login, cadastro, reset senha (mesmo bucket) |
-| `refresh` | 50 | refresh token |
-| `account` | 15 | logout, perfil |
-| `deck` | 40 | criar deck |
-| `inscricao` | 400 | inscrever, check-in, escolher deck |
-| `resultado` | 600 | resultado/confirmação/contestação |
-| `mutation` | 60 | demais mutações autenticadas (fora de torneio) |
-| `torneio-mutation` | 500 | mutações de torneio (rodada, drop, mesa…) |
-| `public-read` | 100 | listagens/buscas públicas (fora de torneio) |
-| `torneio-read` | 800 | detalhe/listar/standings/partidas de torneio |
-| `heavy-read` | 40 | metagame e ranking de liga |
-| `public-action` | 30 | POST público (clique anúncio) |
-| `upload` | 20 | presigned URL S3 |
+| `auth` | 60 | login, cadastro, reset senha (mesmo bucket) |
+| `refresh` | 60 | refresh token |
+| `account` | 18 | logout, perfil |
+| `deck` | 48 | criar deck |
+| `inscricao` | 480 | inscrever, check-in, escolher deck |
+| `resultado` | 720 | resultado/confirmação/contestação |
+| `mutation` | 72 | demais mutações autenticadas (fora de torneio) |
+| `torneio-mutation` | 600 | mutações de torneio (rodada, drop, mesa…) |
+| `public-read` | 120 | listagens/buscas públicas (fora de torneio) |
+| `torneio-read` | 960 | detalhe/listar/standings/partidas de torneio |
+| `heavy-read` | 48 | metagame e ranking de liga |
+| `public-action` | 36 | POST público (clique anúncio) |
+| `upload` | 24 | presigned URL S3 |
 
 `GET /health` sem limiter. Em rotas caras o limiter vem **antes** da validação, para contar spam de payload inválido.
 

@@ -43,7 +43,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
   }
 
   public async buscarPorPrefixo(prefixo: string): Promise<Deck | null> {
-    const itens = await this.queryJson<DeckItem>(DECKS_PK);
+    const itens = await this.queryJson<DeckItem>(DECKS_PK, { consistente: false });
     const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
     return encontrados.length === 1 ? this.itemParaDeck(encontrados[0]) : null;
   }
@@ -140,7 +140,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       const listas = await Promise.all(filtros.usuarioIds.map((usuarioId) => this.queryJson<DeckItem>(`USER#${usuarioId}`)));
       return listas.flat().filter((item) => item.id && item.formato);
     }
-    return this.queryJson<DeckItem>(DECKS_PK);
+    return this.queryJson<DeckItem>(DECKS_PK, { consistente: false });
   }
 
   private filtrar(

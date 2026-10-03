@@ -19,7 +19,7 @@ export class PostDynamoRepositorio extends BaseDynamoRepositorio implements Post
     return item ? this.itemParaPost(item) : null;
   }
   public async listar(): Promise<Post[]> {
-    const itens = await this.queryJson<PostItem>(POSTS_PK);
+    const itens = await this.queryJson<PostItem>(POSTS_PK, { consistente: false });
     return itens.filter((i) => Boolean(i.id && i.imagens)).map((i) => this.itemParaPost(i))
       .sort((a, b) => b.criadoEm.getTime() - a.criadoEm.getTime());
   }

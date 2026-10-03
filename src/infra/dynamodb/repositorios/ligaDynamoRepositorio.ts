@@ -34,7 +34,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
   }
 
   public async listar(filtros: FiltrosListarLigas = {}): Promise<Liga[]> {
-    const filtradas = this.filtrar(await this.queryJson<LigaItem>(LIGAS_PK), filtros)
+    const filtradas = this.filtrar(await this.queryJson<LigaItem>(LIGAS_PK, { consistente: false }), filtros)
       .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime() || a.id.localeCompare(b.id));
     const offset = filtros.offset ?? 0;
     const limite = filtros.limite ?? filtradas.length;
@@ -42,7 +42,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
   }
 
   public async listarTotal(filtros: Pick<FiltrosListarLigas, "tipo" | "nome"> = {}): Promise<number> {
-    return this.filtrar(await this.queryJson<LigaItem>(LIGAS_PK), filtros).length;
+    return this.filtrar(await this.queryJson<LigaItem>(LIGAS_PK, { consistente: false }), filtros).length;
   }
 
   public async buscarPorTorneioIds(torneioIds: string[]): Promise<Liga[]> {

@@ -52,7 +52,7 @@ export class ArtigoDynamoRepositorio extends BaseDynamoRepositorio implements Ar
   }
 
   public async listar(filtro?: { status?: StatusArtigo | StatusArtigo[] }): Promise<Artigo[]> {
-    const itens = await this.queryJson<ArtigoItem>(ARTIGOS_PK);
+    const itens = await this.queryJson<ArtigoItem>(ARTIGOS_PK, { consistente: false });
     const statusFiltro = filtro?.status
       ? (Array.isArray(filtro.status) ? filtro.status : [filtro.status])
       : null;

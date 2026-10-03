@@ -1,8 +1,6 @@
 import { ExibirNomeJogador, StatusTorneio, StoryFundoTextoRodape, Torneio } from "../../../dominio/entidade/torneio";
-import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
-import { PartidaDynamoRepositorio } from "./partidaDynamoRepositorio";
 
 type TorneioItem = {
   id: string;
@@ -76,13 +74,17 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
   }
 
   public async buscarPorPrefixo(prefixo: string): Promise<Torneio | null> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, { consistente: false });
     const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
     return encontrados.length === 1 ? this.itemParaTorneio(encontrados[0]) : null;
   }
 
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, {
+      consistente: false,
+      ...this.limitesHorario(filtros),
+      ordemDesc: filtros.horarioDesc,
+    });
     const filtrados = this.filtrar(itens, filtros)
       .sort((a, b) => {
         const diff = new Date(a.horario).getTime() - new Date(b.horario).getTime() || a.id.localeCompare(b.id);
@@ -97,7 +99,10 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
   public async listarTotal(
     filtros: Pick<FiltrosListarTorneios, "incluirSecretos" | "status" | "nome" | "dataInicio" | "dataFim"> = {}
   ): Promise<number> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, {
+      consistente: false,
+      ...this.limitesHorario(filtros),
+    });
     return this.filtrar(itens, filtros).length;
   }
 
@@ -158,27 +163,6 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return this.buscarPorId(id);
   }
 
-  public async atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void> {
-    const partidaRepositorio = PartidaDynamoRepositorio.criar();
-    if (partidas.length === 0) {
-      await this.atualizar(torneio);
-      return;
-    }
-
-    const partidasPorRodada = new Map<string, Partida[]>();
-    for (const partida of partidas) {
-      const chave = `${partida.torneioId}|${partida.rodada}`;
-      partidasPorRodada.set(chave, [...(partidasPorRodada.get(chave) ?? []), partida]);
-    }
-
-    for (const rodadaPartidas of partidasPorRodada.values()) {
-      const primeira = rodadaPartidas[0];
-      await partidaRepositorio.reconciliarRodada(primeira.torneioId, primeira.rodada, rodadaPartidas);
-    }
-
-    await this.atualizar(torneio);
-  }
-
   public async excluir(id: string): Promise<void> {
     const torneio = await this.buscarPorId(id);
     if (!torneio) return;
@@ -197,6 +181,13 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       return this.atualizar(torneio);
     }));
     return torneios.length;
+  }
+
+  private limitesHorario(filtros: Pick<FiltrosListarTorneios, "dataInicio" | "dataFim">) {
+    return {
+      skInicio: filtros.dataInicio ? `TORNEIO#${filtros.dataInicio.toISOString()}` : undefined,
+      skFim: filtros.dataFim ? `TORNEIO#${filtros.dataFim.toISOString()}#\uffff` : undefined,
+    };
   }
 
   private filtrar(

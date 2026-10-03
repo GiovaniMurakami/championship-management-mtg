@@ -93,7 +93,7 @@ function criarDeckGwMemoria(): DeckGateway {
     };
 }
 
-function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGateway {
+function criarTorneioGwMemoria(): TorneioGateway {
     const store = new Map<string, Torneio>();
     return {
         salvar: async (t) => { store.set(t.id, t); },
@@ -107,10 +107,6 @@ function criarTorneioGwMemoria(partidaStoreRef: Map<string, Partida>): TorneioGa
             torneio.visualizacoes = (torneio.visualizacoes ?? 0) + 1;
             store.set(id, torneio);
             return torneio;
-        },
-        atualizarECriarPartidas: async (t, partidas) => {
-            store.set(t.id, t);
-            for (const p of partidas) partidaStoreRef.set(p.id, p);
         },
         excluir: async (id) => { store.delete(id); },
     };
@@ -183,6 +179,9 @@ function criarPartidaGwMemoria(store: Map<string, Partida>): PartidaGateway {
             (p as any).jogador2Id = jogador2Id;
             store.set(id, p);
             return p;
+        },
+        reconciliarRodada: async (_torneioId, _rodada, partidas) => {
+            for (const p of partidas) store.set(p.id, p);
         },
         excluirPorTorneioERodada: async (torneioId, rodada) => {
             const partidas = Array.from(store.values()).filter(
@@ -285,7 +284,7 @@ describe("Integração - Torneio 150 jogadores (Swiss completo)", () => {
     const usuarioGw = criarUsuarioGwMemoria();
     const deckGw = criarDeckGwMemoria();
     const partidaStore = new Map<string, Partida>();
-    const torneioGw = criarTorneioGwMemoria(partidaStore);
+    const torneioGw = criarTorneioGwMemoria();
     const inscricaoGw = criarInscricaoGwMemoria();
     const partidaGw = criarPartidaGwMemoria(partidaStore);
 

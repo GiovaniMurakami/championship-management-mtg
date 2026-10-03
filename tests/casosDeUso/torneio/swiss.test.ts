@@ -8,7 +8,7 @@ import {
     gerarPareamentos,
     MIN_PERCENTUAL,
     EstatisticasJogador,
-} from "../../../src/casosDeUso/torneio/swiss";
+} from "../../../src/dominio/torneio/swiss";
 import { Partida } from "../../../src/dominio/entidade/partida";
 
 function criarPartida(overrides: Partial<Partida> & Pick<Partida, "jogador1Id" | "jogador2Id" | "vitoriasJogador1" | "vitoriasJogador2">): Partida {

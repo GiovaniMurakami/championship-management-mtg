@@ -15,9 +15,10 @@ import {
   omwp,
   gwp,
   ogwp,
-} from "./swiss";
+} from "../../dominio/torneio/swiss";
 import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { cachePkTorneio, cacheSkStandings } from "../../helpers/cache/chavesCache";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
@@ -69,7 +70,7 @@ export class BuscarStandings
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
     private readonly timeGateway: TimeGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
   public static criar(
@@ -79,7 +80,7 @@ export class BuscarStandings
     usuarioGateway: UsuarioGateway,
     deckGateway: DeckGateway,
     timeGateway: TimeGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway, cache);
   }

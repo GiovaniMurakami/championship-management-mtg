@@ -4,7 +4,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AlterarBloqueioTorneiosInputDto = {
   usuarioId: string;
@@ -25,14 +25,18 @@ export class AlterarBloqueioTorneios
     private readonly usuarioGateway: UsuarioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly torneioGateway: TorneioGateway,
-  ) {}
+
+    private readonly eventos: EventoTorneioGateway,
+    ) {}
 
   public static criar(
     usuarioGateway: UsuarioGateway,
     inscricaoGateway: InscricaoGateway,
     torneioGateway: TorneioGateway,
-  ) {
-    return new AlterarBloqueioTorneios(usuarioGateway, inscricaoGateway, torneioGateway);
+
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new AlterarBloqueioTorneios(usuarioGateway, inscricaoGateway, torneioGateway, eventos);
   }
 
   public async executar(
@@ -70,7 +74,7 @@ export class AlterarBloqueioTorneios
           if (!abertos.has(inscricao.torneioId)) continue;
           await this.inscricaoGateway.excluir(inscricao.id);
           inscricoesRemovidas += 1;
-          eventosTorneio.emit("jogador_dropou", {
+          this.eventos.publicar("jogador_dropou", {
             torneioId: inscricao.torneioId,
             jogadorId: usuario.id,
             jogadorNome: usuario.nome,

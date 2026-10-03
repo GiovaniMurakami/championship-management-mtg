@@ -5,7 +5,7 @@ import { Torneio } from "../../dominio/entidade/torneio";
 import { Usuario } from "../../dominio/entidade/usuario";
 import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
-import { calcularEstatisticas, ordenarPorDesempate } from "../torneio/swiss";
+import { calcularEstatisticas, ordenarPorDesempate } from "../../dominio/torneio/swiss";
 import { coresDoArquetipo } from "../../helpers/deck/coresDeck";
 
 export const DIAS_METAGAME = [7, 14, 30, 90] as const;

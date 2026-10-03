@@ -5,7 +5,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AlterarTorneioInputDto = {
   id: string;
@@ -57,10 +57,12 @@ export type AlterarTorneioOutputDto = {
 
 export class AlterarTorneio
   implements CasoDeUso<AlterarTorneioInputDto, AlterarTorneioOutputDto> {
-  private constructor(private readonly torneioGateway: TorneioGateway) { }
+  private constructor(private readonly torneioGateway: TorneioGateway,
+    private readonly eventos: EventoTorneioGateway,) { }
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new AlterarTorneio(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao()) {
+    return new AlterarTorneio(torneioGateway, eventos);
   }
 
   public async executar(input: AlterarTorneioInputDto): Promise<AlterarTorneioOutputDto> {
@@ -113,7 +115,7 @@ export class AlterarTorneio
     if (input.exibirNomeJogador !== undefined) torneio.exibirNomeJogador = input.exibirNomeJogador;
 
     await this.torneioGateway.atualizar(torneio);
-    eventosTorneio.emit("torneio_alterado", {
+    this.eventos.publicar("torneio_alterado", {
       torneioId: torneio.id,
     });
 
