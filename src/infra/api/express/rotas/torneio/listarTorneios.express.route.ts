@@ -76,6 +76,7 @@ export class ListarTorneiosRota implements Rotas {
 
         const resultado = await this.listarTorneiosServico.executar({
           usuarioId: request.usuario?.id,
+          isAdmin: request.usuario?.role === "admin",
           limite,
           offset,
           status: status as StatusTorneio | undefined,

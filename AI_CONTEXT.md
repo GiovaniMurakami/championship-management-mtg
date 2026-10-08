@@ -437,7 +437,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 4. **`nomeConsolidado` / carta representativa do arquétipo** — nome do arquétipo (admin altera nos decks). Arte do metagame: override por `formato#slug` em SITE_CONFIG; sem override, maioria das `cartaRepresentativa` dos decks; depois carta mais jogada. `cartaRepresentativa: null` no PUT do arquétipo remove o override.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
 6. **Alterar torneio** — só em `inscricoes_abertas`; dono ou admin.
-7. **Torneios secretos** — filtrados em `listarTorneios`, acessíveis por UUID direto.
+7. **Torneios secretos** — filtrados em `listarTorneios` (exceto para admin), acessíveis por UUID direto.
 8. **Não alterar contratos da API** sem alinhar com o front (`backendApi.js`).
 9. **Eventos Ably** — incluir `torneioId` no payload; front assina `torneio-{id}`.
 10. **Não criar commits** a menos que o usuário peça.

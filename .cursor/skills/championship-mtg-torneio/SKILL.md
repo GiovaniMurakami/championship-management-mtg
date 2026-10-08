@@ -69,4 +69,4 @@ Starting a tournament / next round: reconcile matches per round via `partidaGate
 
 ## Secrets / listing
 
-`secreto` tournaments are omitted from public lists but reachable by direct id/slug. Share SEO: `GET /torneio/:id/seo` + HTML share routes for Amplify proxy.
+`secreto` tournaments are omitted from public lists (admin JWT sees them via `incluirSecretos`) but reachable by direct id/slug. Share SEO: `GET /torneio/:id/seo` + HTML share routes for Amplify proxy.

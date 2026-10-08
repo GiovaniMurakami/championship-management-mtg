@@ -15,6 +15,8 @@ const LIMITE_PADRAO_TORNEIOS = 20;
 export type ListarTorneiosInputDto = {
   /** Ausente para visitante sem login — todos os torneios saem com inscrito=false. */
   usuarioId?: string;
+  /** Admin vê torneios secretos na listagem. */
+  isAdmin?: boolean;
   limite?: number;
   offset?: number;
   status?: StatusTorneio;
@@ -79,6 +81,7 @@ export class ListarTorneios
 
   public async executar({
     usuarioId,
+    isAdmin,
     limite,
     offset,
     status,
@@ -92,8 +95,10 @@ export class ListarTorneios
       LIMITE_PADRAO_TORNEIOS,
       LIMITE_MAXIMO_TORNEIOS
     );
+    const incluirSecretos = isAdmin === true;
     const cacheKey = cacheSkListarTorneios({
       usuarioId: usuarioId ?? null,
+      incluirSecretos,
       limite: paginacao.limite,
       offset: paginacao.offset,
       status: status ?? null,
@@ -109,14 +114,14 @@ export class ListarTorneios
       this.torneioGateway.listar({
         limite: paginacao.limite,
         offset: paginacao.offset,
-        incluirSecretos: false,
+        incluirSecretos,
         status,
         nome,
         dataInicio,
         dataFim,
         horarioDesc: status === "finalizado",
       }),
-      this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
+      this.torneioGateway.listarTotal({ incluirSecretos, status, nome, dataInicio, dataFim }),
       usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
     ]);
 
