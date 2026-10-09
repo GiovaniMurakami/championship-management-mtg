@@ -101,6 +101,7 @@ import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
 import { ExcluirStoryFundo } from "../casosDeUso/storyFundo/excluirStoryFundo";
 import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
+import { BuscarMetagameTorneio } from "../casosDeUso/metagame/buscarMetagameTorneio";
 import { SalvarCartaRepresentativaArquetipo } from "../casosDeUso/metagame/salvarCartaRepresentativaArquetipo";
 import { type Repositorios } from "./repositorios";
 import { type Servicos } from "./servicos";
@@ -241,6 +242,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const buscarArquetipoMetagame = BuscarArquetipoMetagame.criar(
         repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache, repos.siteConfig
     );
+    const buscarMetagameTorneio = BuscarMetagameTorneio.criar(
+        repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, repos.siteConfig
+    );
     const salvarCartaRepresentativaArquetipo = SalvarCartaRepresentativaArquetipo.criar(
         repos.siteConfig, servicos.cache
     );
@@ -264,7 +268,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
-        listarMetagame, buscarArquetipoMetagame, salvarCartaRepresentativaArquetipo,
+        listarMetagame, buscarArquetipoMetagame, buscarMetagameTorneio, salvarCartaRepresentativaArquetipo,
     };
 }
 

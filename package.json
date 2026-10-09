@@ -13,6 +13,8 @@
     "db:migrate-dynamodb": "APP_ENV=local ts-node src/infra/dynamodb/migrarMongoParaDynamo.ts",
     "db:migrate-dynamodb:dry-run": "npm run db:migrate-dynamodb -- --dry-run",
     "db:migrate-dynamodb:reset": "npm run db:migrate-dynamodb -- --truncate",
+    "db:dump-homolog-local": "node scripts/dumpHomologParaLocal.mjs --truncate",
+    "db:dump-homolog-local:dry-run": "node scripts/dumpHomologParaLocal.mjs --dry-run",
     "deploy": "npm run deploy:prod",
     "deploy:dev": "node scripts/deploy.mjs homolog",
     "deploy:homolog": "node scripts/deploy.mjs homolog",

@@ -127,6 +127,8 @@ export type AgregarMetagameInput = {
   usuarios: Usuario[];
   /** Overrides de carta representativa por arquétipo (`formato#slug` → carta). */
   overridesCartasRepresentativas?: Record<string, string>;
+  /** Inclui torneios secretos (ex.: breakdown por id direto). */
+  permitirSecretos?: boolean;
 };
 
 export function chaveCartaRepresentativaMetagame(formato: string, slug: string): string {
@@ -167,12 +169,31 @@ function nomeArquetipo(deck: Deck | undefined): string {
   return nome || NOME_OUTROS;
 }
 
+/** Chave de agrupamento case-insensitive (ex.: "Blue Terror" ≡ "blue terror"). */
+export function chaveNomeArquetipo(nome: string): string {
+  return nome.trim().toLocaleLowerCase("pt-BR");
+}
+
+/** Escolhe o casing mais frequente; empate → ordem alfabética. */
+export function escolherNomeCanonico(variantes: Iterable<string>): string {
+  const contagem = new Map<string, number>();
+  for (const variante of variantes) {
+    contagem.set(variante, (contagem.get(variante) ?? 0) + 1);
+  }
+  const ordenados = [...contagem.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR")
+  );
+  return ordenados[0]?.[0] ?? NOME_OUTROS;
+}
+
 function mapaSlugs(nomes: string[]): Map<string, string> {
   const ordenados = [...new Set(nomes)].sort((a, b) => a.localeCompare(b, "pt-BR"));
   const usados = new Map<string, number>();
   const resultado = new Map<string, string>();
   for (const nome of ordenados) {
-    const base = nome === NOME_OUTROS ? SLUG_OUTROS : slugificarArquetipo(nome);
+    const base = chaveNomeArquetipo(nome) === chaveNomeArquetipo(NOME_OUTROS)
+      ? SLUG_OUTROS
+      : slugificarArquetipo(nome);
     const n = (usados.get(base) ?? 0) + 1;
     usados.set(base, n);
     resultado.set(nome, n === 1 ? base : `${base}-${n}`);
@@ -263,7 +284,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
 
   const torneios = input.torneios.filter((t) => {
     if (t.status !== "finalizado") return false;
-    if (t.secreto) return false;
+    if (t.secreto && !input.permitirSecretos) return false;
     if (normalizarFormatoDeck(t.formato) !== formato) return false;
     return t.horario.getTime() >= inicio.getTime() && (!input.intervalo || t.horario.getTime() <= input.intervalo.dataFim.getTime());
   });
@@ -277,69 +298,89 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     (i) => torneioIds.has(i.torneioId) && i.deckId && decksPorId.has(i.deckId)
   );
 
-  const nomesArquetipo = new Set<string>();
   const copias: Array<{
     inscricao: Inscricao;
     deck: Deck;
-    nome: string;
+    chave: string;
+    nomeBruto: string;
   }> = [];
 
   for (const inscricao of inscricoes) {
     const deck = decksPorId.get(inscricao.deckId!)!;
-    const nome = nomeArquetipo(deck);
-    nomesArquetipo.add(nome);
-    copias.push({ inscricao, deck, nome });
+    const nomeBruto = nomeArquetipo(deck);
+    copias.push({
+      inscricao,
+      deck,
+      chave: chaveNomeArquetipo(nomeBruto),
+      nomeBruto,
+    });
   }
 
-  const slugs = mapaSlugs([...nomesArquetipo]);
+  const variantesPorChave = new Map<string, string[]>();
+  for (const copia of copias) {
+    const lista = variantesPorChave.get(copia.chave) ?? [];
+    lista.push(copia.nomeBruto);
+    variantesPorChave.set(copia.chave, lista);
+  }
+  const nomePorChave = new Map<string, string>();
+  for (const [chave, variantes] of variantesPorChave) {
+    nomePorChave.set(chave, escolherNomeCanonico(variantes));
+  }
+
+  const slugsPorNome = mapaSlugs([...nomePorChave.values()]);
+  const slugs = new Map<string, string>();
+  for (const [chave, nome] of nomePorChave) {
+    slugs.set(chave, slugsPorNome.get(nome)!);
+  }
+
   const deckPorJogadorTorneio = new Map<string, string>();
   for (const { inscricao } of copias) {
     deckPorJogadorTorneio.set(`${inscricao.torneioId}:${inscricao.usuarioId}`, inscricao.deckId!);
   }
 
-  const resolverNome = (torneioId: string, jogadorId: string, deckIdPartida?: string | null) => {
+  const resolverChave = (torneioId: string, jogadorId: string, deckIdPartida?: string | null) => {
     const deckId = deckIdPartida || deckPorJogadorTorneio.get(`${torneioId}:${jogadorId}`);
     if (!deckId) return null;
     const deck = decksPorId.get(deckId);
     if (!deck) return null;
-    return nomeArquetipo(deck);
+    return chaveNomeArquetipo(nomeArquetipo(deck));
   };
 
-  const statsPorNome = new Map<string, StatsWL>();
+  const statsPorChave = new Map<string, StatsWL>();
   const matchupPorPar = new Map<string, StatsWL>();
-  const garantir = (nome: string) => {
-    if (!statsPorNome.has(nome)) statsPorNome.set(nome, { vitorias: 0, derrotas: 0, empates: 0 });
-    return statsPorNome.get(nome)!;
+  const garantir = (chave: string) => {
+    if (!statsPorChave.has(chave)) statsPorChave.set(chave, { vitorias: 0, derrotas: 0, empates: 0 });
+    return statsPorChave.get(chave)!;
   };
-  for (const nome of nomesArquetipo) garantir(nome);
+  for (const chave of nomePorChave.keys()) garantir(chave);
 
   const partidasValidas = input.partidas.filter(
     (p) => torneioIds.has(p.torneioId) && p.status === "finalizada" && p.jogador2Id
   );
 
   for (const partida of partidasValidas) {
-    const nome1 = resolverNome(partida.torneioId, partida.jogador1Id, partida.deckJogador1Id);
-    const nome2 = resolverNome(partida.torneioId, partida.jogador2Id!, partida.deckJogador2Id);
-    if (!nome1 || !nome2) continue;
+    const chave1 = resolverChave(partida.torneioId, partida.jogador1Id, partida.deckJogador1Id);
+    const chave2 = resolverChave(partida.torneioId, partida.jogador2Id!, partida.deckJogador2Id);
+    if (!chave1 || !chave2) continue;
 
     const resultado = resultadoPartida(partida.vitoriasJogador1, partida.vitoriasJogador2);
-    registrar(garantir(nome1), resultado);
-    registrar(garantir(nome2), inverter(resultado));
+    registrar(garantir(chave1), resultado);
+    registrar(garantir(chave2), inverter(resultado));
 
-    if (nome1 !== nome2) {
-      const chave = [nome1, nome2].sort().join("\0");
-      if (!matchupPorPar.has(chave)) matchupPorPar.set(chave, { vitorias: 0, derrotas: 0, empates: 0 });
-      const stats = matchupPorPar.get(chave)!;
-      if (nome1 < nome2) registrar(stats, resultado);
+    if (chave1 !== chave2) {
+      const chavePar = [chave1, chave2].sort().join("\0");
+      if (!matchupPorPar.has(chavePar)) matchupPorPar.set(chavePar, { vitorias: 0, derrotas: 0, empates: 0 });
+      const stats = matchupPorPar.get(chavePar)!;
+      if (chave1 < chave2) registrar(stats, resultado);
       else registrar(stats, inverter(resultado));
     }
   }
 
-  const copiasPorNome = new Map<string, typeof copias>();
+  const copiasPorChave = new Map<string, typeof copias>();
   for (const copia of copias) {
-    const lista = copiasPorNome.get(copia.nome) ?? [];
+    const lista = copiasPorChave.get(copia.chave) ?? [];
     lista.push(copia);
-    copiasPorNome.set(copia.nome, lista);
+    copiasPorChave.set(copia.chave, lista);
   }
 
   const totalDecks = copias.length;
@@ -370,9 +411,10 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
   const porSlug = new Map<string, ArquetipoDetalhe>();
   const arquetipos: ArquetipoResumo[] = [];
 
-  for (const [nome, listaCopias] of copiasPorNome) {
-    const slug = slugs.get(nome)!;
-    const stats = statsPorNome.get(nome) ?? { vitorias: 0, derrotas: 0, empates: 0 };
+  for (const [chave, listaCopias] of copiasPorChave) {
+    const nome = nomePorChave.get(chave)!;
+    const slug = slugs.get(chave)!;
+    const stats = statsPorChave.get(chave) ?? { vitorias: 0, derrotas: 0, empates: 0 };
     const decksUnicos = listaCopias.map((c) => c.deck);
     const primeiroDeck = listaCopias[0]?.deck;
     const tipicaMain = cartasDoCampo(primeiroDeck, "maindeck");
@@ -401,15 +443,16 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     arquetipos.push(resumo);
 
     const matchups: ArquetipoDetalhe["matchups"] = [];
-    for (const [chave, wl] of matchupPorPar) {
-      const [a, b] = chave.split("\0");
-      const oponente = a === nome ? b : b === nome ? a : null;
-      if (!oponente) continue;
+    for (const [chavePar, wl] of matchupPorPar) {
+      const [a, b] = chavePar.split("\0");
+      const oponenteChave = a === chave ? b : b === chave ? a : null;
+      if (!oponenteChave) continue;
       const doPontoDeVista: StatsWL =
-        nome === a ? wl : { vitorias: wl.derrotas, derrotas: wl.vitorias, empates: wl.empates };
+        chave === a ? wl : { vitorias: wl.derrotas, derrotas: wl.vitorias, empates: wl.empates };
+      const nomeOponente = nomePorChave.get(oponenteChave) ?? oponenteChave;
       matchups.push({
-        nome: oponente,
-        slug: slugs.get(oponente) ?? slugificarArquetipo(oponente),
+        nome: nomeOponente,
+        slug: slugs.get(oponenteChave) ?? slugificarArquetipo(nomeOponente),
         vitorias: doPontoDeVista.vitorias,
         derrotas: doPontoDeVista.derrotas,
         empates: doPontoDeVista.empates,
@@ -417,7 +460,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
         partidas: doPontoDeVista.vitorias + doPontoDeVista.derrotas + doPontoDeVista.empates,
       });
     }
-    matchups.sort((x, y) => y.partidas - x.partidas || x.nome.localeCompare(y.nome));
+    matchups.sort((x, y) => y.partidas - x.partidas || x.nome.localeCompare(y.nome, "pt-BR"));
 
     const listas = listaCopias.map(({ inscricao, deck }) => ({
       deckId: deck.id,

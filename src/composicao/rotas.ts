@@ -45,6 +45,7 @@ import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorn
 import { BuscarSeoTorneioRota } from "../infra/api/express/rotas/torneio/buscarSeoTorneio.express.route";
 import { RenderizarCompartilhamentoTorneioRota } from "../infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
 import { BuscarStandingsRota } from "../infra/api/express/rotas/torneio/buscarStandings.express.route";
+import { BuscarMetagameTorneioRota } from "../infra/api/express/rotas/torneio/buscarMetagameTorneio.express.route";
 import { MeuHistoricoTorneioRota } from "../infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
 import { ListarPartidasTorneioRota } from "../infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
 import { AlterarTorneioRota } from "../infra/api/express/rotas/torneio/alterarTorneio.express.route";
@@ -156,6 +157,7 @@ export function criarRotas(casos: CasosDeUso) {
         RenderizarCompartilhamentoTorneioRota.criar(casos.buscarSeoTorneio, "/torneio/share/:torneioId"),
         BuscarTorneioRota.criar(casos.buscarTorneio),
         BuscarStandingsRota.criar(casos.buscarStandings),
+        BuscarMetagameTorneioRota.criar(casos.buscarMetagameTorneio),
         MeuHistoricoTorneioRota.criar(casos.meuHistoricoTorneio),
         ListarPartidasTorneioRota.criar(casos.listarPartidasTorneio),
         AlterarTorneioRota.criar(casos.alterarTorneio),

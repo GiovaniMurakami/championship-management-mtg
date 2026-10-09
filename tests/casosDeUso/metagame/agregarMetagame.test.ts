@@ -284,6 +284,23 @@ describe("agregarMetagame", () => {
         expect(resultado.arquetipos).toEqual([]);
     });
 
+    it("inclui torneio secreto quando permitirSecretos=true", () => {
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            permitirSecretos: true,
+            torneios: [torneio({ id: "secreto", secreto: true })],
+            inscricoes: [inscricao("secreto", "user-1", "deck-terror")],
+            partidas: [],
+            decks: [terror],
+            usuarios: [alice],
+        });
+
+        expect(resultado.totalTorneios).toBe(1);
+        expect(resultado.totalDecks).toBe(1);
+    });
+
     it("calcula matchup e lista típica no detalhe", () => {
         const t = torneio();
         const terror2 = deck({
@@ -374,6 +391,50 @@ describe("agregarMetagame", () => {
         expect(slugificarArquetipo("Blue Terror")).toBe("blue-terror");
         expect(slugificarArquetipo("Café Aggro")).toBe("cafe-aggro");
         expect(slugificarArquetipo("   ")).toBe("outros");
+    });
+
+    it("agrupa arquétipos de forma case-insensitive e usa o casing mais frequente", () => {
+        const t = torneio();
+        const a = deck({
+            id: "deck-a",
+            nome: "blue terror",
+            nomeConsolidado: "blue terror",
+            maindeck: [{ nome: "tolarian terror", quantidade: 4 }],
+        });
+        const b = deck({
+            id: "deck-b",
+            usuarioId: "user-2",
+            nome: "Blue Terror",
+            nomeConsolidado: "Blue Terror",
+            maindeck: [{ nome: "tolarian terror", quantidade: 4 }],
+        });
+        const c = deck({
+            id: "deck-c",
+            usuarioId: "user-3",
+            nome: "BLUE TERROR",
+            nomeConsolidado: "Blue Terror",
+            maindeck: [{ nome: "tolarian terror", quantidade: 4 }],
+        });
+        const carol = usuario("user-3", "Carol");
+        const resultado = agregarMetagame({
+            formato: "pauper",
+            dias: 30,
+            agora,
+            torneios: [t],
+            inscricoes: [
+                inscricao("torneio-1", "user-1", "deck-a"),
+                inscricao("torneio-1", "user-2", "deck-b"),
+                inscricao("torneio-1", "user-3", "deck-c"),
+            ],
+            partidas: [],
+            decks: [a, b, c],
+            usuarios: [alice, bob, carol],
+        });
+
+        expect(resultado.arquetipos).toHaveLength(1);
+        expect(resultado.arquetipos[0].nome).toBe("Blue Terror");
+        expect(resultado.arquetipos[0].slug).toBe("blue-terror");
+        expect(resultado.arquetipos[0].copias).toBe(3);
     });
 
     it("desambigua slugs iguais e agrupa deck sem nome em Outros", () => {
