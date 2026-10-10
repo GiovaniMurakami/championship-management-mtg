@@ -52,9 +52,9 @@ export class EncerrarTorneio
       });
     }
 
-    if (torneio.status !== "em_andamento") {
+    if (torneio.status !== "em_andamento" && torneio.status !== "pausado") {
       throw ErroPersonalizado.criar({
-        mensagem: "Só é possível encerrar torneios em andamento.",
+        mensagem: "Só é possível encerrar torneios em andamento ou pausados.",
         status: StatusErro.erroParametro,
       });
     }

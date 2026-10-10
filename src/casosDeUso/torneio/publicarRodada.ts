@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
@@ -67,12 +68,10 @@ export class PublicarRodada implements CasoDeUso<PublicarRodadaInputDto, Publica
       });
     }
 
-    if (torneio.status !== "em_andamento") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Só é possível publicar a rodada de um torneio em andamento.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    assertStatusEmAndamento(
+      torneio,
+      "Só é possível publicar a rodada de um torneio em andamento.",
+    );
 
     if (rodadaEstaPublicada(torneio)) {
       throw ErroPersonalizado.criar({

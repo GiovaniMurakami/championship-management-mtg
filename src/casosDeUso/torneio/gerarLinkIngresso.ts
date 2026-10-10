@@ -3,6 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 
@@ -45,12 +46,10 @@ export class GerarLinkIngresso
             });
         }
 
-        if (torneio.status !== "em_andamento") {
-            throw ErroPersonalizado.criar({
-                mensagem: "Só é possível gerar link de ingresso para torneios em andamento.",
-                status: StatusErro.erroParametro,
-            });
-        }
+        assertStatusEmAndamento(
+            torneio,
+            "Só é possível gerar link de ingresso para torneios em andamento.",
+        );
 
         if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({

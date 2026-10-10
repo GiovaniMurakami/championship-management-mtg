@@ -608,14 +608,14 @@ describe("IniciarProximaRodada", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("permite avanço após Day 1 encerrado", async () => {
+    it("permite avanço após Day 1 encerrado (status pausado → em_andamento)", async () => {
         const torneioDay1 = new Torneio({
             id: "t-1",
             nome: "T",
             horario: new Date(),
             formato: "f",
             donoId: "dono",
-            status: "em_andamento",
+            status: "pausado",
             rodadaAtual: 2,
             totalRodadas: 5,
             rodadasDay1: 2,
@@ -641,5 +641,6 @@ describe("IniciarProximaRodada", () => {
         if (!resultado.finalizado) {
             expect(resultado.rodadaAtual).toBe(3);
         }
+        expect(torneioDay1.status).toBe("em_andamento");
     });
 });

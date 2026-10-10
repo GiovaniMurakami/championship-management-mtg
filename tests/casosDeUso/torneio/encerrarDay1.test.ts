@@ -94,10 +94,12 @@ describe("EncerrarDay1", () => {
     expect(resultado.classificados).toBe(2);
     expect(resultado.dropados).toBe(2);
     expect(resultado.day1Encerrado).toBe(true);
+    expect(resultado.status).toBe("pausado");
     expect(resultado.jogadoresClassificados[0].id).toBe("u-1");
     expect(inscricaoGw.atualizar).toHaveBeenCalledTimes(2);
     expect(torneioGw.atualizar).toHaveBeenCalled();
     expect(t.day1Encerrado).toBe(true);
+    expect(t.status).toBe("pausado");
   });
 
   it("bloqueia se Day 1 já encerrado", async () => {

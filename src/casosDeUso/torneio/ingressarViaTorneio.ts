@@ -9,6 +9,7 @@ import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
@@ -82,12 +83,13 @@ export class IngressarViaTorneio
         }
 
         const torneio = await this.torneioGateway.buscarPorId(linkData.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Torneio não está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(torneio, "Torneio não está em andamento.");
 
         if (torneio.emCorte) {
             throw ErroPersonalizado.criar({

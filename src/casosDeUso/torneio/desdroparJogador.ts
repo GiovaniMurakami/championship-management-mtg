@@ -55,9 +55,9 @@ export class DesdroparJogador
       });
     }
 
-    if (torneio.status !== "em_andamento") {
+    if (torneio.status !== "em_andamento" && torneio.status !== "pausado") {
       throw ErroPersonalizado.criar({
-        mensagem: "Só é possível voltar ao torneio enquanto ele está em andamento.",
+        mensagem: "Só é possível voltar ao torneio enquanto ele está em andamento ou pausado.",
         status: StatusErro.erroParametro,
       });
     }

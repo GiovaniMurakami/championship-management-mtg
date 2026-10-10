@@ -12,7 +12,7 @@ Detail docs: `docs/torneio.md`. Pairing helpers: `src/dominio/torneio/swiss.ts`.
 
 ## Status machine
 
-`inscricoes_abertas` → `em_andamento` → `finalizado`
+`inscricoes_abertas` → `em_andamento` → (`pausado` após Encerrar Day 1) → `em_andamento` (Day 2) → `finalizado`
 
 - Edit while open: `podeGerenciarTorneio`.
 - While `em_andamento`, block changing `formato`, `maxJogadores`, `maxRodadas`, `corteTop`.

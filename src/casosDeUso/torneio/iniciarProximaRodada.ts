@@ -112,7 +112,7 @@ export class IniciarProximaRodada
       });
     }
 
-    if (torneio.status !== "em_andamento") {
+    if (torneio.status !== "em_andamento" && torneio.status !== "pausado") {
       throw ErroPersonalizado.criar({
         mensagem:
           "O torneio não está em andamento. Use POST /torneio/:id/iniciar primeiro.",

@@ -384,7 +384,7 @@ export const listarDecksQuerySchema = z.object({
 const dataQueryCampo = z.string().optional();
 
 export const listarTorneiosQuerySchema = z.object({
-  status: z.enum(["inscricoes_abertas", "em_andamento", "finalizado"]).optional(),
+  status: z.enum(["inscricoes_abertas", "em_andamento", "pausado", "finalizado"]).optional(),
   nome: z.string().max(200).optional(),
   dataInicio: dataQueryCampo,
   dataFim: dataQueryCampo,

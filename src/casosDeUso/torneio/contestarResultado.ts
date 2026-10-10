@@ -2,6 +2,7 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
@@ -69,12 +70,16 @@ export class ContestarResultado
         }
 
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Contestações só são permitidas enquanto o torneio está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(
+            torneio,
+            "Contestações só são permitidas enquanto o torneio está em andamento.",
+        );
 
         // Impedir contestação se já existem rodadas posteriores geradas
         const existeRodadaPosterior = await this.partidaGateway.existePartidaRodadaPosterior(

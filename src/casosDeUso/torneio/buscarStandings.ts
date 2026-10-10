@@ -184,10 +184,10 @@ export class BuscarStandings
     const partidasElegiveisParaStandings = primeiraRodadaCorte
       ? todasPartidas.filter((p) => p.rodada < primeiraRodadaCorte)
       : todasPartidas;
-    // Em andamento, a rodada vigente fica de fora até avançar — exceto após Encerrar Day 1,
-    // que fecha a etapa do Day 1 e precisa consolidar a última rodada (ex.: R7) nos standings.
+    // Em andamento, a rodada vigente fica de fora até avançar — exceto após Encerrar Day 1
+    // (`pausado` / day1Encerrado), que consolida a última rodada do Day 1 nos standings.
     const day1EtapaEncerrada =
-      torneio.day1Encerrado &&
+      (torneio.status === "pausado" || torneio.day1Encerrado) &&
       Number(torneio.rodadasDay1 || 0) > 0 &&
       torneio.rodadaAtual <= Number(torneio.rodadasDay1);
     const partidasConsolidadas =

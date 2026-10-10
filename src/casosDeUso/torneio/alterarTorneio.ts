@@ -97,7 +97,7 @@ export class AlterarTorneio
       });
     }
 
-    if (torneio.status === "em_andamento") {
+    if (torneio.status === "em_andamento" || torneio.status === "pausado") {
       const campos = ["formato", "maxJogadores", "maxRodadas", "corteTop"] as const;
       if (campos.some((campo) => input[campo] !== undefined && input[campo] !== torneio[campo])) {
         throw ErroPersonalizado.criar({ mensagem: "A estrutura do torneio não pode ser alterada após o início.", status: StatusErro.erroParametro });

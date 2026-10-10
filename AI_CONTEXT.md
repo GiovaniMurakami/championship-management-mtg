@@ -257,7 +257,7 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ## 9. Torneio — lógica de negócio
 
 ### Status
-`inscricoes_abertas` → `em_andamento` → `finalizado`
+`inscricoes_abertas` → `em_andamento` → (`pausado` após Encerrar Day 1) → `em_andamento` (Day 2) → `finalizado`
 
 ### Swiss
 - Rodadas: `ceil(log₂(n))` com teto opcional `maxRodadas`

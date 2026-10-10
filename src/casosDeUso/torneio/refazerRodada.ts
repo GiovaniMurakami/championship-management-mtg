@@ -2,6 +2,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
@@ -69,12 +70,10 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
       });
     }
 
-    if (torneio.status !== "em_andamento") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Somente torneios em andamento podem refazer rodada.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    assertStatusEmAndamento(
+      torneio,
+      "Somente torneios em andamento podem refazer rodada.",
+    );
 
     if (torneio.rodadaAtual <= 1) {
       throw ErroPersonalizado.criar({

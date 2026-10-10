@@ -2,6 +2,7 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
@@ -57,12 +58,10 @@ export class AtualizarMesaPartida
             });
         }
 
-        if (torneio.status !== "em_andamento") {
-            throw ErroPersonalizado.criar({
-                mensagem: "Mesas só podem ser alteradas enquanto o torneio está em andamento.",
-                status: StatusErro.erroParametro,
-            });
-        }
+        assertStatusEmAndamento(
+            torneio,
+            "Mesas só podem ser alteradas enquanto o torneio está em andamento.",
+        );
 
         if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({

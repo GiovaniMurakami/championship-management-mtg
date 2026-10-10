@@ -5,6 +5,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
@@ -85,12 +86,10 @@ export class AtualizarPareamentosRodada
       });
     }
 
-    if (torneio.status !== "em_andamento") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Pareamentos só podem ser alterados enquanto o torneio está em andamento.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    assertStatusEmAndamento(
+      torneio,
+      "Pareamentos só podem ser alterados enquanto o torneio está em andamento.",
+    );
 
     if (input.rodada !== torneio.rodadaAtual) {
       throw ErroPersonalizado.criar({

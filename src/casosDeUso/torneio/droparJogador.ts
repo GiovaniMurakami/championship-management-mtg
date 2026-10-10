@@ -117,7 +117,7 @@ export class DroparJogador
       };
     }
 
-    // Auto-resolve pending matches: give WO (2-0) to the opponent
+    // Auto-resolve pending matches: give WO (2-0) to the opponent (não há mesas ativas na pausa)
     if (torneio.status === "em_andamento") {
       const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
       const pendentes = partidas.filter(
@@ -154,7 +154,10 @@ export class DroparJogador
     }
 
     inscricao.dropped = true;
-    inscricao.droppedRodada = torneio.status === "em_andamento" ? torneio.rodadaAtual : null;
+    inscricao.droppedRodada =
+      torneio.status === "em_andamento" || torneio.status === "pausado"
+        ? torneio.rodadaAtual
+        : null;
     inscricao.dropPartidaIds = partidasResolvidas.map((p) => p.partidaId);
     await this.inscricaoGateway.atualizar(inscricao);
 

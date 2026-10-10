@@ -193,7 +193,7 @@ describe("BuscarStandings", () => {
     it("deve incluir a última rodada do Day 1 nos standings após encerrar a etapa", async () => {
         const torneioDay1Encerrado = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "pauper",
-            donoId: "d", status: "em_andamento", rodadaAtual: 2, totalRodadas: 5,
+            donoId: "d", status: "pausado", rodadaAtual: 2, totalRodadas: 5,
             rodadasDay1: 2, vagasDay2: 2, day1Encerrado: true,
         });
         const inscricoes = [

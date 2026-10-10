@@ -23,6 +23,7 @@ export type EncerrarDay1OutputDto = {
   vagasDay2: number;
   day1Encerrado: boolean;
   day1EncerradoEm?: string;
+  status: "pausado";
   classificados: number;
   dropados: number;
   jogadoresClassificados: Array<{ id: string; nome: string; posicao: number; pontosMesa: number }>;
@@ -177,6 +178,7 @@ export class EncerrarDay1
       torneioId: torneio.id,
       rodadasDay1,
       vagasDay2,
+      status: torneio.status,
       classificados: classificadosIds.size,
       dropados: aDropar.length,
       day1EncerradoEm: toBrasiliaISO(torneio.day1EncerradoEm),
@@ -197,6 +199,7 @@ export class EncerrarDay1
       vagasDay2,
       day1Encerrado: true,
       day1EncerradoEm: toBrasiliaISO(torneio.day1EncerradoEm),
+      status: "pausado",
       classificados: classificadosIds.size,
       dropados: aDropar.length,
       jogadoresClassificados,

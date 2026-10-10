@@ -44,10 +44,14 @@ export class DroparJogadoresSemCheckin
         status: StatusErro.erroProibido,
       });
     }
-    if (torneio.status !== "inscricoes_abertas" && torneio.status !== "em_andamento") {
+    if (
+      torneio.status !== "inscricoes_abertas" &&
+      torneio.status !== "em_andamento" &&
+      torneio.status !== "pausado"
+    ) {
       throw ErroPersonalizado.criar({ mensagem: "O torneio não aceita mais drops por check-in.", status: StatusErro.erroParametro });
     }
-    if (torneio.status === "em_andamento" && torneio.emCorte) {
+    if ((torneio.status === "em_andamento" || torneio.status === "pausado") && torneio.emCorte) {
       throw ErroPersonalizado.criar({
         mensagem: "Não há check-in por rodada durante a fase eliminatória.",
         status: StatusErro.erroParametro,

@@ -202,7 +202,12 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     const termo = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       if (!filtros.incluirSecretos && item.secreto) return false;
-      if (filtros.status && item.status !== filtros.status) return false;
+      // Filtro "em_andamento" inclui intervalo Day 1→Day 2 (`pausado`) para listagens "ao vivo".
+      if (filtros.status === "em_andamento") {
+        if (item.status !== "em_andamento" && item.status !== "pausado") return false;
+      } else if (filtros.status && item.status !== filtros.status) {
+        return false;
+      }
       if (termo && !item.nome.toLowerCase().includes(termo)) return false;
       const horario = new Date(item.horario).getTime();
       if (filtros.dataInicio && horario < filtros.dataInicio.getTime()) return false;

@@ -2,6 +2,7 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
@@ -78,12 +79,16 @@ export class ConfirmarResultado
         }
 
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Confirmações só são permitidas enquanto o torneio está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(
+            torneio,
+            "Confirmações só são permitidas enquanto o torneio está em andamento.",
+        );
 
         const partidaAtualizada = await this.partidaGateway.confirmarResultado(
             input.partidaId,

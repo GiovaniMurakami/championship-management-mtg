@@ -4,6 +4,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { rejeitarResultadoSeRodadaNaoPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
@@ -57,13 +58,16 @@ export class RegistrarResultado
     }
 
     const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-
-    if (!torneio || torneio.status !== "em_andamento") {
+    if (!torneio) {
       throw ErroPersonalizado.criar({
         mensagem: "Resultados só podem ser registrados enquanto o torneio está em andamento.",
         status: StatusErro.erroParametro,
       });
     }
+    assertStatusEmAndamento(
+      torneio,
+      "Resultados só podem ser registrados enquanto o torneio está em andamento.",
+    );
     const ehJogador =
       input.usuarioId === partida.jogador1Id ||
       input.usuarioId === partida.jogador2Id;
