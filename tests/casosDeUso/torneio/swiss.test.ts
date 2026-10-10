@@ -99,9 +99,15 @@ describe("Swiss - calcularEstatisticas", () => {
         expect(s.oponentesIds).toEqual([]);
     });
 
-    it("deve calcular bye de penalidade corretamente (0 pontos, 0-2)", () => {
+    it("deve calcular bye de penalidade corretamente (0 pontos, sem jogos no GWP)", () => {
         const partidas = [
-            criarPartida({ jogador1Id: "j1", jogador2Id: null as unknown as string, vitoriasJogador1: 0, vitoriasJogador2: 2 }),
+            criarPartida({
+                jogador1Id: "j1",
+                jogador2Id: null as unknown as string,
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 2,
+                tipoBye: "penalidade",
+            }),
         ];
 
         const stats = calcularEstatisticas(["j1"], partidas);
@@ -111,7 +117,7 @@ describe("Swiss - calcularEstatisticas", () => {
         expect(s.derrotasPartida).toBe(1);
         expect(s.vitoriasPartida).toBe(0);
         expect(s.vitoriasJogo).toBe(0);
-        expect(s.totalJogosJogados).toBe(2);
+        expect(s.totalJogosJogados).toBe(0);
         expect(s.totalPartidasJogadas).toBe(1);
         expect(s.oponentesIds).toEqual([]);
     });
@@ -198,7 +204,7 @@ describe("Swiss - critérios de desempate", () => {
         expect(mwp(s)).toBeCloseTo(2 / 3, 5);
     });
 
-    it("mwp deve respeitar o mínimo de 0.33", () => {
+    it("mwp deve respeitar o mínimo de 1/3", () => {
         const s: EstatisticasJogador = {
             usuarioId: "j1", pontosMesa: 0, vitoriasPartida: 0, empatesPartida: 0,
             derrotasPartida: 3, totalPartidasJogadas: 3, vitoriasJogo: 0,

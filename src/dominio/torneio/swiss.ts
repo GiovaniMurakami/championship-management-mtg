@@ -47,8 +47,12 @@ export function calcularEstatisticas(
         s.empatesPartida += ehEmpate ? 1 : 0;
         s.derrotasPartida += (!ehVitoria && !ehEmpate) ? 1 : 0;
         s.totalPartidasJogadas += 1;
-        s.vitoriasJogo += v1;
-        s.totalJogosJogados += v1 + v2;
+        // Bye de penalidade/forfeit: conta como partida, mas não entra no GWP
+        // (alinha com Melee/WotC: forfeit sem game wins/byes).
+        if (partida.tipoBye !== "penalidade") {
+          s.vitoriasJogo += v1;
+          s.totalJogosJogados += v1 + v2;
+        }
       }
       continue;
     }
@@ -82,7 +86,8 @@ export function calcularEstatisticas(
   return statsMap;
 }
 
-export const MIN_PERCENTUAL = 0.33;
+/** Piso WotC/Melee para MWP/GWP/OMW/OGW (1/3, não 0.33). */
+export const MIN_PERCENTUAL = 1 / 3;
 
 export function mwp(s: EstatisticasJogador): number {
   if (s.totalPartidasJogadas === 0) return MIN_PERCENTUAL;

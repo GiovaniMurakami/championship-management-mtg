@@ -14,6 +14,7 @@ import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Deck } from "../../../src/dominio/entidade/deck";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Time } from "../../../src/dominio/entidade/time";
+import { MIN_PERCENTUAL } from "../../../src/dominio/torneio/swiss";
 
 describe("RankingLiga", () => {
     const torneiosFinalizados = () => criarMockTorneioGateway({ buscarPorId: vi.fn().mockImplementation(async (id) => ({ id, status: "finalizado" })) });
@@ -517,9 +518,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
-                omwp: 0.33,
+                omwp: MIN_PERCENTUAL,
                 gwp: 1,
-                ogwp: 0.33,
+                ogwp: MIN_PERCENTUAL,
             },
         ]);
     });
@@ -584,9 +585,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 6,
-                omwp: 0.33,
+                omwp: MIN_PERCENTUAL,
                 gwp: 0.8,
-                ogwp: 0.33,
+                ogwp: MIN_PERCENTUAL,
             },
             {
                 posicao: 2,
@@ -596,7 +597,7 @@ describe("RankingLiga", () => {
                 empates: 0,
                 pontos: 0,
                 omwp: 1,
-                gwp: 0.33,
+                gwp: MIN_PERCENTUAL,
                 ogwp: 0.8,
             },
         ]);
@@ -663,9 +664,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
-                omwp: 0.33,
+                omwp: MIN_PERCENTUAL,
                 gwp: 1,
-                ogwp: 0.33,
+                ogwp: MIN_PERCENTUAL,
             },
         ]);
     });
@@ -720,9 +721,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
-                omwp: 0.33,
+                omwp: MIN_PERCENTUAL,
                 gwp: 1,
-                ogwp: 0.33,
+                ogwp: MIN_PERCENTUAL,
             },
             {
                 posicao: 2,
@@ -732,7 +733,7 @@ describe("RankingLiga", () => {
                 empates: 0,
                 pontos: 0,
                 omwp: 1,
-                gwp: 0.33,
+                gwp: MIN_PERCENTUAL,
                 ogwp: 1,
             },
             {
@@ -742,9 +743,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 0,
-                omwp: 0.33,
-                gwp: 0.33,
-                ogwp: 0.33,
+                omwp: MIN_PERCENTUAL,
+                gwp: MIN_PERCENTUAL,
+                ogwp: MIN_PERCENTUAL,
             },
         ]);
     });
@@ -799,9 +800,9 @@ describe("RankingLiga", () => {
                 derrotas: 0,
                 empates: 0,
                 pontos: 3,
-                omwp: 0.33,
+                omwp: MIN_PERCENTUAL,
                 gwp: 1,
-                ogwp: 0.33,
+                ogwp: MIN_PERCENTUAL,
             },
             {
                 posicao: 2,
@@ -811,7 +812,7 @@ describe("RankingLiga", () => {
                 empates: 0,
                 pontos: 0,
                 omwp: 1,
-                gwp: 0.33,
+                gwp: MIN_PERCENTUAL,
                 ogwp: 1,
             },
         ]);

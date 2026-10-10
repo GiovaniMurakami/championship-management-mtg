@@ -1,0 +1,242 @@
+[
+  {
+    "type": "pair_mismatch",
+    "round": 1,
+    "table": null,
+    "live": {
+      "users": [
+        "Oboli_1"
+      ],
+      "result": "Oboli_1 was awarded a bye",
+      "scores": {
+        "oboli_1": null
+      }
+    },
+    "fug": {
+      "ids": [
+        "ba3285f2-f6f1-416c-a5b7-a057e26d0123",
+        null
+      ],
+      "names": [
+        "Oboli_1",
+        "?"
+      ],
+      "score": "2-0",
+      "status": "finalizada",
+      "partidaId": "2566dae1-8394-57c1-9f1e-650634cbbec4",
+      "sk": "PARTIDA#01#9001#2566dae1-8394-57c1-9f1e-650634cbbec4"
+    }
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 1,
+    "table": null,
+    "live": {
+      "users": [
+        "horusorlandi"
+      ],
+      "result": "horusorlandi forfeited the match",
+      "scores": {
+        "horusorlandi": null
+      }
+    },
+    "fug": {
+      "ids": [
+        "7c8fdd70-ca19-4d65-8ac0-4dc217be50d7",
+        null
+      ],
+      "names": [
+        "horusorlandi",
+        "?"
+      ],
+      "score": "0-2",
+      "status": "finalizada",
+      "partidaId": "eae4a512-0476-5263-beb4-a0ec68dba307",
+      "sk": "PARTIDA#01#9002#eae4a512-0476-5263-beb4-a0ec68dba307"
+    }
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 1,
+    "table": null,
+    "live": {
+      "users": [
+        "ShoWerVer"
+      ],
+      "result": "ShoWerVer forfeited the match",
+      "scores": {
+        "showerver": null
+      }
+    },
+    "fug": {
+      "ids": [
+        "97413e8e-e003-463a-984d-3fdbd6d1637f",
+        null
+      ],
+      "names": [
+        "ShoWerVer",
+        "?"
+      ],
+      "score": "0-2",
+      "status": "finalizada",
+      "partidaId": "9dea128c-aad0-51ef-8617-7cbbdc45a12e",
+      "sk": "PARTIDA#01#9003#9dea128c-aad0-51ef-8617-7cbbdc45a12e"
+    }
+  },
+  {
+    "type": "unmapped",
+    "round": 1,
+    "table": 114,
+    "users": [
+      "luccianolf",
+      "luskao666"
+    ],
+    "result": "luskao666 won 2-1-0"
+  },
+  {
+    "type": "unmapped",
+    "round": 2,
+    "table": 50,
+    "users": [
+      "UAshura",
+      "luskao666"
+    ],
+    "result": "UAshura won 2-1-0"
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 2,
+    "table": 88,
+    "live": {
+      "users": [
+        "PolarBoy",
+        "0800deus"
+      ],
+      "result": "0800deus won 2-1-0",
+      "scores": {
+        "polarboy": 1,
+        "0800deus": 2
+      }
+    },
+    "fug": {
+      "ids": [
+        "da896701-cf63-48f1-a91d-e8db13e25f77",
+        "b5eeac1a-6aeb-490a-92fa-62c788f0d26f"
+      ],
+      "names": [
+        "gustavorg",
+        "PolarBoy"
+      ],
+      "score": "2-1",
+      "status": "finalizada",
+      "partidaId": "d29883f6-d240-5ebb-b1ba-01dd4ba057d2",
+      "sk": "PARTIDA#02#0088#d29883f6-d240-5ebb-b1ba-01dd4ba057d2"
+    }
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 2,
+    "table": 118,
+    "live": {
+      "users": [
+        "gustavorg",
+        "Nozovoz"
+      ],
+      "result": "Nozovoz won 2-1-0",
+      "scores": {
+        "gustavorg": 1,
+        "nozovoz": 2
+      }
+    },
+    "fug": {
+      "ids": [
+        "1a8cb67a-a95d-4f7a-b698-996585cc468f",
+        "607d53e8-ffb7-457e-86f6-68620e5979f8"
+      ],
+      "names": [
+        "Nozovoz",
+        "0800deus"
+      ],
+      "score": "2-1",
+      "status": "finalizada",
+      "partidaId": "8b5bf9d2-9de9-5f21-be8e-d0bcdb13c308",
+      "sk": "PARTIDA#02#0118#8b5bf9d2-9de9-5f21-be8e-d0bcdb13c308"
+    }
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 3,
+    "table": null,
+    "live": {
+      "users": [
+        "JoaoLuiz"
+      ],
+      "result": "JoaoLuiz was awarded a bye",
+      "scores": {
+        "joaoluiz": null
+      }
+    },
+    "fug": {
+      "ids": [
+        "11207096-6651-48fc-bf76-2cc8a159524d",
+        null
+      ],
+      "names": [
+        "JoaoLuiz",
+        "?"
+      ],
+      "score": "2-0",
+      "status": "finalizada",
+      "partidaId": "f3d1a94a-5009-5dd9-b384-726543e4d5f2",
+      "sk": "PARTIDA#03#9001#f3d1a94a-5009-5dd9-b384-726543e4d5f2"
+    }
+  },
+  {
+    "type": "unmapped",
+    "round": 3,
+    "table": 68,
+    "users": [
+      "luskao666",
+      "paulolencioni92"
+    ],
+    "result": "Paulo Lencioni won 2-0-0"
+  },
+  {
+    "type": "pair_mismatch",
+    "round": 4,
+    "table": null,
+    "live": {
+      "users": [
+        "rafahenrique"
+      ],
+      "result": "rafahenrique was assigned a bye",
+      "scores": {
+        "rafahenrique": null
+      }
+    },
+    "fug": {
+      "ids": [
+        "2ecb117a-6cc3-4e3e-942f-dd73e256b37e",
+        null
+      ],
+      "names": [
+        "rafahenrique",
+        "?"
+      ],
+      "score": "2-0",
+      "status": "finalizada",
+      "partidaId": "8ee37434-028e-51b9-96fe-46d3899193fd",
+      "sk": "PARTIDA#04#9001#8ee37434-028e-51b9-96fe-46d3899193fd"
+    }
+  },
+  {
+    "type": "unmapped",
+    "round": 4,
+    "table": 97,
+    "users": [
+      "luskao666",
+      "Luizfml93"
+    ],
+    "result": "Not reported"
+  }
+]

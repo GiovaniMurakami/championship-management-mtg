@@ -1,0 +1,2700 @@
+{
+  "total": 122,
+  "withResult": 1,
+  "byes": 1,
+  "notReported": 121,
+  "sample": {
+    "table": null,
+    "result": "rafahenrique was assigned a bye",
+    "hasResult": true,
+    "players": [
+      {
+        "username": "rafahenrique",
+        "name": "rafahenrique",
+        "id": 4465747,
+        "gameWins": null,
+        "gameByes": 2
+      }
+    ],
+    "isBye": true
+  },
+  "rows": [
+    {
+      "table": null,
+      "result": "rafahenrique was assigned a bye",
+      "hasResult": true,
+      "players": [
+        {
+          "username": "rafahenrique",
+          "name": "rafahenrique",
+          "id": 4465747,
+          "gameWins": null,
+          "gameByes": 2
+        }
+      ],
+      "isBye": true
+    },
+    {
+      "table": 1,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "RUBENSNETTO",
+          "name": "Rubens Neto",
+          "id": 4467035,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Lucasoli89",
+          "name": "Lucasoli89",
+          "id": 4465746,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 2,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "NicolasLeite",
+          "name": "NicolasLeite",
+          "id": 4467555,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Erick_Jones",
+          "name": "Erick Jones",
+          "id": 4468887,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 3,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "VitorDeFariasMetzner",
+          "name": "VitorDeFariasMetzner",
+          "id": 4426988,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "VagaL",
+          "name": "Juan Gaston",
+          "id": 4470259,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 4,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "batuta35",
+          "name": "batuta35",
+          "id": 4470301,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Inhunkes",
+          "name": "Daniel Jung",
+          "id": 4465615,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 5,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Manzoni",
+          "name": "Pedro Manzoni",
+          "id": 4457806,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Gregorio",
+          "name": "Gregorio",
+          "id": 4475420,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 6,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Carlinhos",
+          "name": "Carlinhos",
+          "id": 4476568,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "BrunoGuerra",
+          "name": "Bruno Guerra",
+          "id": 4475816,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 7,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "duuuucouto",
+          "name": "duuuucouto",
+          "id": 4468393,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "OtalDoBilada",
+          "name": "Maurício Junior",
+          "id": 4468895,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 8,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "cacasouza89",
+          "name": "cacasouza89",
+          "id": 4473363,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Shiroya",
+          "name": "Shiroya",
+          "id": 4456493,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 9,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "VitorOliveiraTIM",
+          "name": "VitorOliveiraTIM",
+          "id": 4464397,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Christopher_Estanislau",
+          "name": "Christopher_Estanislau",
+          "id": 4478123,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 10,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FJH",
+          "name": "FJH",
+          "id": 4419102,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "kiko2509",
+          "name": "kiko2509",
+          "id": 4475572,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 11,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Muxu",
+          "name": "Muxu",
+          "id": 4471180,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Cless",
+          "name": "Marcelo Bueno",
+          "id": 4467101,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 12,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "CarlosMachado",
+          "name": "CarlosMachado",
+          "id": 4298014,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Lucas_Costa_Leite",
+          "name": "Lucas_Costa_Leite",
+          "id": 4463836,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 13,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "jrpaulon",
+          "name": "José Renato Paulon",
+          "id": 4467438,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "RodrigoMunhoz",
+          "name": "RodrigoMunhoz",
+          "id": 4462248,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 14,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Minero",
+          "name": "Minero",
+          "id": 4462206,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "RafaVenancio",
+          "name": "RafaVenancio",
+          "id": 4475100,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 15,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Maraja",
+          "name": "Maraja",
+          "id": 4369647,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Tiomax",
+          "name": "Tiomax",
+          "id": 4477800,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 16,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "benjamin13",
+          "name": "Benjamin Soler",
+          "id": 4320622,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "TOGNI007",
+          "name": "TOGNI007",
+          "id": 4461706,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 17,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FabioBarbosa",
+          "name": "FabioBarbosa",
+          "id": 4463419,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "KochBJJ",
+          "name": "KochBJJ",
+          "id": 4478249,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 18,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "rodrigocosta15",
+          "name": "rodrigocosta15",
+          "id": 4461493,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Highlander",
+          "name": "Lucas Carvalho",
+          "id": 4463728,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 19,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Dentinho",
+          "name": "Luiz Felipe Dentinho ",
+          "id": 4454047,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "VaT69",
+          "name": "VaT 69",
+          "id": 4452527,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 20,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "MALLAYDER",
+          "name": "MALLAYDER",
+          "id": 4419744,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Stamford",
+          "name": "Stamford",
+          "id": 4468067,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 21,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Rudzilla_Rudson",
+          "name": "Rudzilla_Rudson",
+          "id": 4478394,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "bitoca09",
+          "name": "Diego Lima",
+          "id": 4467439,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 22,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "b4ttous4y",
+          "name": "Bruno Ribeiro",
+          "id": 4452629,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Hayzen",
+          "name": "Mateus Gabriel Ascari",
+          "id": 4478182,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 23,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Yutha",
+          "name": "Augusto Yasuda",
+          "id": 4467957,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Darbello",
+          "name": "Darbello",
+          "id": 4463918,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 24,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Tutuu",
+          "name": "Tutuu",
+          "id": 4458409,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "UAshura",
+          "name": "UAshura",
+          "id": 4476652,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 25,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Gullyt",
+          "name": "Rafael  Gullyt Cardoso",
+          "id": 4455916,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "LINCAO",
+          "name": "Lincoln LINCAO",
+          "id": 4470385,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 26,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "MauroSena",
+          "name": "Mauro Sena",
+          "id": 4303925,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Terezu",
+          "name": "Terezu",
+          "id": 4477959,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 27,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "CaioCresciulo",
+          "name": "CaioCresciulo",
+          "id": 4475169,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "btaranti",
+          "name": "btaranti",
+          "id": 4464098,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 28,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Arthursantarem",
+          "name": "Arthursantarem",
+          "id": 4475305,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "JARX1_Jacinto",
+          "name": "JARX1_Jacinto",
+          "id": 4473680,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 29,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FeSouza",
+          "name": "FeSouza",
+          "id": 4465470,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "telin",
+          "name": "telin",
+          "id": 4478308,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 30,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "GeorgeKowalskii",
+          "name": "GeorgeKowalskii",
+          "id": 4478294,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Saraiva",
+          "name": "Saraiva",
+          "id": 4286707,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 31,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "0800deus",
+          "name": "0800deus",
+          "id": 4467908,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Camata",
+          "name": "Camata",
+          "id": 4462404,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 32,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "LucasFeerns",
+          "name": "LucasFeerns",
+          "id": 4471762,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Fuinha",
+          "name": "Fuinha",
+          "id": 4476545,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 33,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "luccianolf",
+          "name": "luccianolf",
+          "id": 4460661,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "F3rnandes",
+          "name": "F3rnandes",
+          "id": 4276228,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 34,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "rafabsq",
+          "name": "rafabsq",
+          "id": 4466442,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "HugoBenevides",
+          "name": "HugoBenevides",
+          "id": 4469053,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 35,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "RamosMTG",
+          "name": "RamosMTG",
+          "id": 4467161,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "cigano",
+          "name": "cigano",
+          "id": 4467494,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 36,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "imbrochavel",
+          "name": "DAVI ALVES",
+          "id": 4473358,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "leonelo",
+          "name": "leonelo",
+          "id": 4466961,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 37,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Duughs",
+          "name": "Duughs",
+          "id": 4473085,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Nozovoz",
+          "name": "Nozovoz",
+          "id": 4461264,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 38,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "drakeex",
+          "name": "drakeex",
+          "id": 4463115,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "PauloLaboissiere",
+          "name": "Paulo Laboissiere",
+          "id": 4478094,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 39,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Marcusgar",
+          "name": "Marcusgar",
+          "id": 4464262,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Leshira",
+          "name": "Leshira",
+          "id": 4464318,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 40,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "eggBR",
+          "name": "eggBR",
+          "id": 4476961,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "DiegoAwey",
+          "name": "DiegoAwey",
+          "id": 4460476,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 41,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "TardSir",
+          "name": "TardSir",
+          "id": 4469094,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Maher",
+          "name": "Maher",
+          "id": 4475185,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 42,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Rhods",
+          "name": "Gabriel Pinheiro",
+          "id": 4466365,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "LuizGG",
+          "name": "LuizGG",
+          "id": 4464216,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 43,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Thieoes",
+          "name": "Thiago Vieira",
+          "id": 4469211,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Oboli_1",
+          "name": "Oboli_1",
+          "id": 4477336,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 44,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "ItaN",
+          "name": "ItaN",
+          "id": 4476632,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Spock",
+          "name": "Vinicius Raymundi",
+          "id": 4467444,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 45,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FelipeNemeth",
+          "name": "FelipeNemeth",
+          "id": 4475679,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "WillianVieira",
+          "name": "WillianVieira",
+          "id": 4467451,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 46,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "N4G64",
+          "name": "N4G64",
+          "id": 4467683,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Coreia",
+          "name": "Coreia",
+          "id": 4469320,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 47,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Gnarr",
+          "name": "Agnaldo dos Santos Teixeira Junior  Gnarr",
+          "id": 4467396,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "CaioCastello",
+          "name": "caio castello",
+          "id": 4460384,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 48,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Thyron",
+          "name": "Thyron",
+          "id": 4465866,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Elvengrillo",
+          "name": "Elvengrillo",
+          "id": 4417670,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 49,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "jonatard",
+          "name": "jonatard",
+          "id": 4468231,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "FFFoi",
+          "name": "Fernando Flora Filho",
+          "id": 4464940,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 50,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "paulolencioni92",
+          "name": "Paulo Lencioni",
+          "id": 4452681,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "CecilMonk",
+          "name": "CecilMonk",
+          "id": 4462927,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 51,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Bryanpander1",
+          "name": "Bryanpander1",
+          "id": 4473136,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "ElvisMachado",
+          "name": "ElvisMachado",
+          "id": 4464348,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 52,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "RicC44",
+          "name": "RicC44",
+          "id": 4465349,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Di-Rocco",
+          "name": "Di-Rocco",
+          "id": 4463183,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 53,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "GuiMachado",
+          "name": "GuiMachado",
+          "id": 4477859,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "VitorH_VH",
+          "name": "Vitor Hugo Correa",
+          "id": 4462506,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 54,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Kouks",
+          "name": "Lucas Kouks",
+          "id": 4473879,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Pigmax",
+          "name": "Pedro Gomes",
+          "id": 4476644,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 55,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Panzarin",
+          "name": "Panzarin",
+          "id": 4459494,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Boell",
+          "name": "Boell",
+          "id": 4462166,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 56,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Dogini",
+          "name": "Raphael Dogini Fassizoli",
+          "id": 4474006,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Otavio",
+          "name": "Otavio",
+          "id": 4469032,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 57,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "fernandomp85",
+          "name": "fernandomp85",
+          "id": 4460470,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "lucasnin255",
+          "name": "lucasnin255",
+          "id": 4467696,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 58,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "hideosuenaga",
+          "name": "Henrique Hideo Suenaga sunga",
+          "id": 4476245,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Matewosk",
+          "name": "Matewosk",
+          "id": 4273358,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 59,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Caca",
+          "name": "Caca",
+          "id": 4464414,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "samukapedroso",
+          "name": "samukapedroso",
+          "id": 4461369,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 60,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Potatos",
+          "name": "GUILHERME PACHER",
+          "id": 4465669,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "BrunoRech",
+          "name": "BrunoRech",
+          "id": 4467474,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 61,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FernandoGuarita",
+          "name": "Fernando Guarita",
+          "id": 4467096,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Jfreire",
+          "name": "Jfreire",
+          "id": 4478236,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 62,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "kikuTz",
+          "name": "kikuTz",
+          "id": 4467755,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "GilmarSiqueira",
+          "name": "GilmarSiqueira",
+          "id": 4462888,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 63,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "ShoWerVer",
+          "name": "ShoWerVer",
+          "id": 4478464,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "summerch1ld",
+          "name": "summerch1ld",
+          "id": 4437141,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 64,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Castelo",
+          "name": "Gabriel Castelo Garcia",
+          "id": 4434860,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "DDias9",
+          "name": "Denis  Cabral Barbosa Dias",
+          "id": 4462584,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 65,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "DrkK",
+          "name": "Kassio Rodrigues do Nascimento",
+          "id": 4464443,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "guilhermeinfante",
+          "name": "guilhermeinfante",
+          "id": 4468951,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 66,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "mathevs",
+          "name": "mathevs",
+          "id": 4468359,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "ManaNoPano",
+          "name": "ManaNoPano",
+          "id": 4465452,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 67,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "horusorlandi",
+          "name": "horusorlandi",
+          "id": 4478516,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "GustavoMatias",
+          "name": "GustavoMatias",
+          "id": 4474283,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 68,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "JoaoLuiz",
+          "name": "JoaoLuiz",
+          "id": 4451968,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "GoBlinho",
+          "name": "GoBlinho",
+          "id": 4463987,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 69,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "matheusalexsander",
+          "name": "matheusalexsander",
+          "id": 4465659,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Miguelitooo",
+          "name": "Felipe Miguelitooo",
+          "id": 4458304,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 70,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "floresta_rj",
+          "name": "leandro floresta",
+          "id": 4459343,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "AlessandroZanini",
+          "name": "AlessandroZanini",
+          "id": 4470893,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 71,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "CristianoCristo",
+          "name": "CristianoCristo",
+          "id": 4452635,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "ana_clara",
+          "name": "ana_clara",
+          "id": 4476635,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 72,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "PrimoShow",
+          "name": "PrimoShow",
+          "id": 4475612,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "morganeto",
+          "name": "morganeto",
+          "id": 4475510,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 73,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "leandro09",
+          "name": "leandro09",
+          "id": 4464327,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "ViniciusFelix",
+          "name": "ViniciusFelix",
+          "id": 4462224,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 74,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "DanielMotta",
+          "name": "DanielMotta",
+          "id": 4466329,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Bbarolo",
+          "name": "Bbarolo",
+          "id": 4476996,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 75,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Everton",
+          "name": "Everton",
+          "id": 4473077,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Josetti",
+          "name": "Josetti",
+          "id": 4467040,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 76,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Leonardolb",
+          "name": "Leonardolb",
+          "id": 4477954,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Precetti",
+          "name": "Precetti",
+          "id": 4463259,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 77,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Atogue",
+          "name": "Atogue",
+          "id": 4423845,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Firmezinha",
+          "name": "Igor marinho borges Firmezinha",
+          "id": 4456040,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 78,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Indiano",
+          "name": "Indiano",
+          "id": 4467030,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Salpke",
+          "name": "Thiago Oliveira",
+          "id": 4477783,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 79,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Ravager",
+          "name": "Ravager",
+          "id": 4460420,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "AndreNeder",
+          "name": "André Neder",
+          "id": 4457527,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 80,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "danilodanda",
+          "name": "danilodanda",
+          "id": 4462643,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Whenevar",
+          "name": "Whenevar",
+          "id": 4464389,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 81,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Alaor",
+          "name": "Alaor",
+          "id": 4456081,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "fozzimus",
+          "name": "fozzimus",
+          "id": 4446006,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 82,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "luisbyluis",
+          "name": "luisbyluis",
+          "id": 4477385,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "PedroJuniior",
+          "name": "Pedro juniior BuuGaaDuu",
+          "id": 4460572,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 83,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "robsonlm88",
+          "name": "robsonlm88",
+          "id": 4452987,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "iuribogar",
+          "name": "Iuri Guilherme Bogar Portilho ibogar",
+          "id": 4408753,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 84,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Nash06",
+          "name": "Nash06",
+          "id": 4476550,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Felove10",
+          "name": "Felipe Darbello Felipe",
+          "id": 4460467,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 85,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "joaopereirajp",
+          "name": "joaopereirajp",
+          "id": 4460526,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "DG10Will",
+          "name": "DG10Will",
+          "id": 4476660,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 86,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Tatimi1",
+          "name": "Tiago Leite Tatimi",
+          "id": 4465863,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "MuriloMuka",
+          "name": "MuriloMuka",
+          "id": 4465361,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 87,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "BrunoCarmo",
+          "name": "BrunoCarmo",
+          "id": 4469208,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Apprenti",
+          "name": "Apprenti",
+          "id": 4458942,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 88,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "planinauta_pobre",
+          "name": "planinauta_pobre",
+          "id": 4465492,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "FelipeBarreto",
+          "name": "Felipe Barreto",
+          "id": 4478316,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 89,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "caoscesar",
+          "name": "caoscesar",
+          "id": 4474977,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Miguel_Azalk",
+          "name": "Miguel_Azalk",
+          "id": 4462295,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 90,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "AndersonAnk",
+          "name": "AndersonAnk",
+          "id": 4463878,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Invictor",
+          "name": "Invictor",
+          "id": 4424381,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 91,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Will",
+          "name": "William Richard Romão da Silva",
+          "id": 4461924,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Vithor",
+          "name": "Vithor",
+          "id": 4461780,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 92,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "iuriassalin",
+          "name": "iuriassalin",
+          "id": 4461700,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "LucasMarcelino",
+          "name": "LucasMarcelino",
+          "id": 4455861,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 93,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Guizinho",
+          "name": "Guilherme Rodrigues Guizinho",
+          "id": 4273895,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "VitorKamada",
+          "name": "VitorKamada",
+          "id": 4465914,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 94,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Korvach",
+          "name": "Felipe Felisberto Freitas",
+          "id": 4462397,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Hipnoxx",
+          "name": "Mauro Saab",
+          "id": 4461090,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 95,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Maccheri",
+          "name": "Maccheri",
+          "id": 4462617,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "marcioneris",
+          "name": "marcioneris",
+          "id": 4478387,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 96,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "brnSalazar",
+          "name": "🎩 Bruno Salazar",
+          "id": 4474213,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Burns14",
+          "name": "Burns14",
+          "id": 4465652,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 97,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "luskao666",
+          "name": "luskao666",
+          "id": 4460489,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Luizfml93",
+          "name": "Luizfml93",
+          "id": 4467371,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 98,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "cristianbrisola",
+          "name": "cristianbrisola",
+          "id": 4466222,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "BoletoAgiota",
+          "name": "BoletoAgiota",
+          "id": 4460459,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 99,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "JoaoBandeira",
+          "name": "JoaoBandeira",
+          "id": 4469199,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Furquim",
+          "name": "Furquim",
+          "id": 4461932,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 100,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Eduvalle",
+          "name": "Eduvalle",
+          "id": 4460395,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Vryxiaz",
+          "name": "Carlos Frank",
+          "id": 4469194,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 101,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Anaclara23",
+          "name": "Anaclara23",
+          "id": 4475088,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "morenobloch",
+          "name": "morenobloch",
+          "id": 4459345,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 102,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "GelsonWOlff",
+          "name": "GelsonWOlff",
+          "id": 4453637,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "JARX1_Marcello_2L",
+          "name": "JARX1_Marcello_2L",
+          "id": 4472318,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 103,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Automud",
+          "name": "Automud",
+          "id": 4460436,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Loxodontes",
+          "name": "Loxodontes",
+          "id": 4473373,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 104,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "FlavioTNeto",
+          "name": "FlavioTNeto",
+          "id": 4476654,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "RafaelGama",
+          "name": "RafaelGama",
+          "id": 4478324,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 105,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "JohnnyJunior",
+          "name": "JohnnyJunior",
+          "id": 4466189,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "leoz3x",
+          "name": "leoz3x",
+          "id": 4478030,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 106,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "amrz",
+          "name": "Amaro Albuquerque",
+          "id": 4457913,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "EntropyBR",
+          "name": "EntropyBR",
+          "id": 4464981,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 107,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "phemartin",
+          "name": "phemartin",
+          "id": 4465438,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "rafaelfiamenghi",
+          "name": "rafaelfiamenghi",
+          "id": 4451330,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 108,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "TiagoRubo",
+          "name": "TiagoRubo",
+          "id": 4452643,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "bbartoli",
+          "name": "bbartoli",
+          "id": 4472010,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 109,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Hangf",
+          "name": "Hangf",
+          "id": 4476380,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "joaoyodog",
+          "name": "joaoyodog",
+          "id": 4465450,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 110,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "kaylegal",
+          "name": "kaylegal",
+          "id": 4284783,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "antifadinha",
+          "name": "antifadinha",
+          "id": 4475766,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 111,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Tartzei",
+          "name": "Tartzei",
+          "id": 4465400,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "luckyitu",
+          "name": "luckyitu",
+          "id": 4466847,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 112,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "gustavorg",
+          "name": "gustavorg",
+          "id": 4473844,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "PolarBoy",
+          "name": "PolarBoy",
+          "id": 4471440,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 113,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "BrewStation",
+          "name": "BrewStation",
+          "id": 4465396,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "AleDosGoblins",
+          "name": "AleDosGoblins",
+          "id": 4465982,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 114,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "ribless",
+          "name": "ribless",
+          "id": 4452782,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "pedrosojas",
+          "name": "pedrosojas",
+          "id": 4351251,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 115,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "felipermz",
+          "name": "felipermz",
+          "id": 4468832,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Ganon000",
+          "name": "Gabriel Garcia ganon000",
+          "id": 4478318,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 116,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Joao10",
+          "name": "Joao10",
+          "id": 4467068,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "williamoshiro",
+          "name": "William Oshiro",
+          "id": 4476640,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 117,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Krosty8",
+          "name": "Krosty8",
+          "id": 4465715,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Abalem",
+          "name": "Abalem",
+          "id": 4399437,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 118,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Viniissamu",
+          "name": "Viniissamu",
+          "id": 4462267,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "PedroBatista",
+          "name": "PedroBatista",
+          "id": 4468349,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 119,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Robertaaraujo",
+          "name": "Robertaaraujo",
+          "id": 4465795,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Vipzin",
+          "name": "Vinícius Panaroni",
+          "id": 4467432,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 120,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "Rodolfoalvesdealmeida",
+          "name": "Rodolfoalvesdealmeida",
+          "id": 4478281,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Dids7",
+          "name": "Dids7",
+          "id": 4465619,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    },
+    {
+      "table": 121,
+      "result": "Not reported",
+      "hasResult": false,
+      "players": [
+        {
+          "username": "JSimonetti",
+          "name": "JSimonetti",
+          "id": 4387023,
+          "gameWins": null,
+          "gameByes": 0
+        },
+        {
+          "username": "Edvaldo1997",
+          "name": "Edvaldo1997",
+          "id": 4476925,
+          "gameWins": null,
+          "gameByes": 0
+        }
+      ],
+      "isBye": false
+    }
+  ]
+}
