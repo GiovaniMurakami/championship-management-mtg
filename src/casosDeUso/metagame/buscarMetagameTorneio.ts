@@ -91,7 +91,10 @@ export class BuscarMetagameTorneio
   }
 
   public async executar(input: BuscarMetagameTorneioInputDto): Promise<BuscarMetagameTorneioOutputDto> {
-    const torneio = await this.gateways.torneio.buscarPorId(input.torneioId);
+    let torneio = await this.gateways.torneio.buscarPorId(input.torneioId);
+    if (!torneio && /^[a-z0-9]{5}-/i.test(input.torneioId)) {
+      torneio = await this.gateways.torneio.buscarPorPrefixo(input.torneioId.slice(0, 5));
+    }
     if (!torneio) {
       throw ErroPersonalizado.criar({
         mensagem: "Torneio não encontrado.",

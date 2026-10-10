@@ -118,6 +118,26 @@ describe("BuscarMetagameTorneio", () => {
     await expect(uc.executar({ torneioId: "x" })).rejects.toMatchObject({ status: StatusErro.erroNaoEncontrado });
   });
 
+  it("resolve torneio por prefixo no slug curto", async () => {
+    const t = torneio({ id: "9d8cc51b-425e-47a9-a7a8-3cd3e6657599", status: "finalizado" });
+    const buscarPorId = vi.fn().mockResolvedValue(null);
+    const buscarPorPrefixo = vi.fn().mockResolvedValue(t);
+    const uc = BuscarMetagameTorneio.criar(
+      criarMockTorneioGateway({ buscarPorId, buscarPorPrefixo }),
+      criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+      criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue([]) }),
+      criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
+      criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([]) }),
+    );
+
+    const resultado = await uc.executar({
+      torneioId: "9d8cc-super-pauper-50k-fuguete-edition",
+    });
+
+    expect(buscarPorPrefixo).toHaveBeenCalledWith("9d8cc");
+    expect(resultado.torneio.id).toBe(t.id);
+  });
+
   it("recusa torneio não finalizado sem Day 1 encerrado", async () => {
     const uc = BuscarMetagameTorneio.criar(
       criarMockTorneioGateway({
