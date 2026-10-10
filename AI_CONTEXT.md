@@ -270,6 +270,7 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ### Campos notáveis
 - `somRodada` — URL de áudio ao iniciar rodada (evento Ably + front toca)
 - `secreto` — excluído de listagens públicas
+- `listasPublicas` — decks visíveis nos standings (mesmo UX de torneio finalizado)
 - `corteTop`, `maxJogadores`, `exibirNomeJogador`
 - `anfitriaoId` + objeto `anfitriao` populado em `buscarTorneio`
 

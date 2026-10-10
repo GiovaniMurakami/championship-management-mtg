@@ -126,6 +126,7 @@ export const criarTorneioSchema = z.object({
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  listasPublicas: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
   ligaIds: z.array(uuidCampo("ligaId")).max(50).optional(),
 });
@@ -147,6 +148,7 @@ export const alterarTorneioSchema = z.object({
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  listasPublicas: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
 });
 

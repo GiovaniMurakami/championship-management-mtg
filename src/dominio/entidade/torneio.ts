@@ -28,6 +28,8 @@ export interface TorneioProps {
   linkLive?: string;
   emCorte?: boolean;
   secreto?: boolean;
+  /** Quando true, listas ficam visíveis nos standings como em torneio finalizado. */
+  listasPublicas?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
   visualizacoes?: number;
   criadoEm?: Date;
@@ -60,6 +62,7 @@ export class Torneio {
   public linkLive?: string;
   public emCorte: boolean = false;
   public secreto: boolean = false;
+  public listasPublicas: boolean = false;
   public exibirNomeJogador: ExibirNomeJogador;
   public visualizacoes: number;
   public criadoEm: Date;
@@ -91,6 +94,7 @@ export class Torneio {
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
+    this.listasPublicas = props.listasPublicas ?? false;
     this.exibirNomeJogador = props.exibirNomeJogador ?? "nome";
     this.visualizacoes = props.visualizacoes ?? 0;
     this.criadoEm = props.criadoEm || new Date();

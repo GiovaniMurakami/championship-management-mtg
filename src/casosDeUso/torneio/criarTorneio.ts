@@ -28,6 +28,7 @@ export type CriarTorneioInputDto = {
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
+  listasPublicas?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
   ligaIds?: string[];
 };
@@ -52,6 +53,7 @@ export type CriarTorneioOutputDto = {
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   ligaIds: string[];
   criadoEm: string;
@@ -101,6 +103,7 @@ export class CriarTorneio
       premio: input.premio,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
+      listasPublicas: input.listasPublicas ?? false,
       exibirNomeJogador: input.exibirNomeJogador ?? "nome",
     });
 
@@ -157,6 +160,7 @@ export class CriarTorneio
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       ligaIds,
       criadoEm: toBrasiliaISO(torneio.criadoEm)!,

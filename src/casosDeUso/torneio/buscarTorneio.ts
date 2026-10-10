@@ -52,6 +52,7 @@ export type BuscarTorneioOutputDto = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: string;
   visualizacoes: number;
   totalInscritos: number;
@@ -179,6 +180,7 @@ export class BuscarTorneio
       linkLive: torneioAtual.linkLive,
       emCorte: torneioAtual.emCorte,
       secreto: torneioAtual.secreto,
+      listasPublicas: torneioAtual.listasPublicas,
       exibirNomeJogador: torneioAtual.exibirNomeJogador,
       visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,

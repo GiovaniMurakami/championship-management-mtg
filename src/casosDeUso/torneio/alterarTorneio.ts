@@ -27,6 +27,7 @@ export type AlterarTorneioInputDto = {
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
+  listasPublicas?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
 };
 
@@ -51,6 +52,7 @@ export type AlterarTorneioOutputDto = {
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   criadoEm: string;
 };
@@ -112,6 +114,7 @@ export class AlterarTorneio
     if (input.premio !== undefined) torneio.premio = input.premio;
     if (input.linkLive !== undefined) torneio.linkLive = input.linkLive?.trim();
     if (input.secreto !== undefined) torneio.secreto = input.secreto;
+    if (input.listasPublicas !== undefined) torneio.listasPublicas = input.listasPublicas;
     if (input.exibirNomeJogador !== undefined) torneio.exibirNomeJogador = input.exibirNomeJogador;
 
     await this.torneioGateway.atualizar(torneio);
@@ -140,6 +143,7 @@ export class AlterarTorneio
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       criadoEm: toBrasiliaISO(torneio.criadoEm)!,
     };

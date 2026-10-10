@@ -26,6 +26,7 @@ type TorneioItem = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   visualizacoes: number;
   criadoEm: string;
@@ -273,6 +274,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
+      listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm.toISOString(),
@@ -307,6 +309,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       linkLive: item.linkLive,
       emCorte: item.emCorte,
       secreto: item.secreto,
+      listasPublicas: item.listasPublicas ?? false,
       exibirNomeJogador: item.exibirNomeJogador,
       visualizacoes: item.visualizacoes,
       criadoEm: new Date(item.criadoEm),
