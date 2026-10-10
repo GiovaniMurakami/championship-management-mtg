@@ -184,9 +184,18 @@ export class BuscarStandings
     const partidasElegiveisParaStandings = primeiraRodadaCorte
       ? todasPartidas.filter((p) => p.rodada < primeiraRodadaCorte)
       : todasPartidas;
-    const partidasConsolidadas = torneio.status === "finalizado"
-      ? partidasElegiveisParaStandings
-      : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
+    // Em andamento, a rodada vigente fica de fora até avançar — exceto após Encerrar Day 1,
+    // que fecha a etapa do Day 1 e precisa consolidar a última rodada (ex.: R7) nos standings.
+    const day1EtapaEncerrada =
+      torneio.day1Encerrado &&
+      Number(torneio.rodadasDay1 || 0) > 0 &&
+      torneio.rodadaAtual <= Number(torneio.rodadasDay1);
+    const partidasConsolidadas =
+      torneio.status === "finalizado"
+        ? partidasElegiveisParaStandings
+        : day1EtapaEncerrada
+          ? partidasElegiveisParaStandings.filter((p) => p.rodada <= torneio.rodadaAtual)
+          : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
 
     // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
     // para que omwp/ogwp use o MWP real de oponentes dropados

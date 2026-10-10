@@ -154,6 +154,7 @@ export class EncerrarDay1
       await this.inscricaoGateway.atualizar(inscricao);
     }
 
+    // Fecha a etapa vigente: day1Encerrado faz BuscarStandings consolidar a rodada atual.
     torneio.encerrarDay1();
     await this.torneioGateway.atualizar(torneio);
 

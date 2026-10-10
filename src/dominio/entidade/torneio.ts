@@ -178,6 +178,7 @@ export class Torneio {
     this.status = "finalizado";
   }
 
+  /** Fecha a etapa do Day 1 (corte + standings passam a incluir a rodada vigente). */
   public encerrarDay1(): void {
     if (this.status !== "em_andamento") {
       throw new Error(`Transição inválida: encerrar Day 1 requer status em_andamento`);

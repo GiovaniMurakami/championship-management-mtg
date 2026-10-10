@@ -3,7 +3,7 @@ import { CACHE_PK_METAGAME } from "../../helpers/cache/chavesCache";
 import { logger } from "../../helpers/logger";
 import { eventosTorneio } from "../socketio/eventosTorneio";
 
-const EVENTO_QUE_INVALIDA_METAGAME = "torneio_finalizado";
+const EVENTOS_QUE_INVALIDAM_METAGAME = ["torneio_finalizado", "day1_encerrado"] as const;
 
 let iniciado = false;
 let cacheAtivo: CacheDynamoDbServico | null = null;
@@ -14,12 +14,14 @@ export function iniciarInvalidadorCacheTorneio(cache: CacheDynamoDbServico): voi
   if (iniciado) return;
   iniciado = true;
 
-  eventosTorneio.on(EVENTO_QUE_INVALIDA_METAGAME, (payload: { torneioId?: string }) => {
-    if (!cacheAtivo) return;
-    const promessa = invalidarCacheMetagame(cacheAtivo, payload?.torneioId);
-    invalidacoesPendentes.add(promessa);
-    promessa.finally(() => invalidacoesPendentes.delete(promessa));
-  });
+  for (const evento of EVENTOS_QUE_INVALIDAM_METAGAME) {
+    eventosTorneio.on(evento, (payload: { torneioId?: string }) => {
+      if (!cacheAtivo) return;
+      const promessa = invalidarCacheMetagame(cacheAtivo, payload?.torneioId);
+      invalidacoesPendentes.add(promessa);
+      promessa.finally(() => invalidacoesPendentes.delete(promessa));
+    });
+  }
 }
 
 export async function aguardarInvalidacoesCachePendentes(): Promise<void> {
