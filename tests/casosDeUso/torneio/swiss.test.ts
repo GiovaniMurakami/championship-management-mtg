@@ -204,7 +204,7 @@ describe("Swiss - critérios de desempate", () => {
         expect(mwp(s)).toBeCloseTo(2 / 3, 5);
     });
 
-    it("mwp deve respeitar o mínimo de 1/3", () => {
+    it("mwp deve respeitar o mínimo de 0.33", () => {
         const s: EstatisticasJogador = {
             usuarioId: "j1", pontosMesa: 0, vitoriasPartida: 0, empatesPartida: 0,
             derrotasPartida: 3, totalPartidasJogadas: 3, vitoriasJogo: 0,

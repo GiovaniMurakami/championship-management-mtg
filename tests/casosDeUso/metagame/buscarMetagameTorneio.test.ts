@@ -208,11 +208,17 @@ describe("BuscarMetagameTorneio", () => {
     const resultado = await uc.executar({ torneioId: "t1" });
 
     expect(resultado.torneio.day1Encerrado).toBe(true);
-    expect(resultado.conversaoDay2).toEqual({
+    expect(resultado.conversaoDay2).toMatchObject({
       jogadoresDay1: 2,
       jogadoresDay2: 1,
       taxaConversao: 0.5,
       vagasDay2: 1,
+    });
+    expect(resultado.conversaoDay2?.cartasMaisPresentes?.[0]).toMatchObject({
+      nome: "Tolarian Terror",
+      decks: 1,
+      copias: 4,
+      pct: 1,
     });
     expect(resultado.totalDecks).toBeGreaterThanOrEqual(1);
     const terrorMeta = resultado.arquetipos.find((a) => a.slug.includes("terror") || a.nome.includes("Terror"));

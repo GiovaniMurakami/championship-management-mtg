@@ -213,6 +213,10 @@ function cartasDoCampo(
     .map((carta) => ({ nome: carta.nome, quantidade: carta.quantidade }));
 }
 
+function ehTerrenoBasico(nome: string): boolean {
+  return TERRENOS_BASICOS.has(nome.trim().toLowerCase());
+}
+
 function contarCartasChave(decks: Deck[], formato: string): Array<[string, number]> {
   const chave = normalizarFormatoDeck(formato);
   const contagem = new Map<string, number>();
@@ -227,13 +231,66 @@ function contarCartasChave(decks: Deck[], formato: string): Array<[string, numbe
   } else {
     for (const deck of decks) {
       for (const carta of deck.maindeck) {
-        if (!carta.nome || TERRENOS_BASICOS.has(carta.nome)) continue;
+        if (!carta.nome || ehTerrenoBasico(carta.nome)) continue;
         contagem.set(carta.nome, (contagem.get(carta.nome) ?? 0) + carta.quantidade);
       }
     }
   }
 
   return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+export type CartaPresenca = {
+  nome: string;
+  decks: number;
+  copias: number;
+  pct: number;
+};
+
+/** Cartas mais presentes no campo (maindeck / commander), por % de decks. */
+export function contarPresencaCartas(
+  decks: Deck[],
+  formato: string,
+  limite = 20,
+): CartaPresenca[] {
+  const lista = decks.filter(Boolean);
+  if (!lista.length || limite <= 0) return [];
+
+  const chave = normalizarFormatoDeck(formato);
+  const ehCommander = chave === "commander" || chave === "commander500";
+  const porNome = new Map<string, { decks: number; copias: number }>();
+
+  for (const deck of lista) {
+    const campo = ehCommander ? (deck.commander ?? []) : deck.maindeck;
+    const vistos = new Set<string>();
+    for (const carta of campo) {
+      const nome = carta.nome?.trim();
+      if (!nome || (!ehCommander && ehTerrenoBasico(nome))) continue;
+      const atual = porNome.get(nome) ?? { decks: 0, copias: 0 };
+      atual.copias += Number(carta.quantidade) || 0;
+      if (!vistos.has(nome)) {
+        atual.decks += 1;
+        vistos.add(nome);
+      }
+      porNome.set(nome, atual);
+    }
+  }
+
+  const total = lista.length;
+  return [...porNome.entries()]
+    .map(([nome, stats]) => ({
+      nome,
+      decks: stats.decks,
+      copias: stats.copias,
+      pct: total > 0 ? stats.decks / total : 0,
+    }))
+    .sort(
+      (a, b) =>
+        b.decks - a.decks
+        || b.copias - a.copias
+        || a.nome.localeCompare(b.nome, "pt-BR"),
+    )
+    .slice(0, limite);
 }
 
 function cartaRepresentativa(

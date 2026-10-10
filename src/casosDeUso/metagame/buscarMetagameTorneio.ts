@@ -9,7 +9,9 @@ import {
   agregarMetagame,
   ArquetipoDetalhe,
   ArquetipoResumo,
+  CartaPresenca,
   chaveNomeArquetipo,
+  contarPresencaCartas,
   NOME_OUTROS,
 } from "./agregarMetagame";
 import { MetagameGateways } from "./carregarMetagame";
@@ -19,6 +21,8 @@ export type ConversaoDay2Arquetipo = {
   day2: number;
   taxaConversao: number;
 };
+
+const LIMITE_CARTAS_DAY2 = 20;
 
 function slugPorDeckIdDoAgregado(
   porSlug: Map<string, ArquetipoDetalhe>,
@@ -55,6 +59,7 @@ export type BuscarMetagameTorneioOutputDto = {
     jogadoresDay2: number;
     taxaConversao: number;
     vagasDay2?: number;
+    cartasMaisPresentes: CartaPresenca[];
   };
   arquetipos: (ArquetipoResumo &
     Pick<ArquetipoDetalhe, "matchups"> & {
@@ -166,11 +171,15 @@ export class BuscarMetagameTorneio
       const day2 = comDeck.filter((i) => passouParaDay2(i, rodadasDay1));
       const jogadoresDay1 = comDeck.length;
       const jogadoresDay2 = day2.length;
+      const decksDay2 = day2
+        .map((i) => decksPorId.get(i.deckId!))
+        .filter((d): d is Deck => Boolean(d));
       conversaoDay2 = {
         jogadoresDay1,
         jogadoresDay2,
         taxaConversao: jogadoresDay1 > 0 ? jogadoresDay2 / jogadoresDay1 : 0,
         vagasDay2: torneio.vagasDay2,
+        cartasMaisPresentes: contarPresencaCartas(decksDay2, formato, LIMITE_CARTAS_DAY2),
       };
 
       // Mesmo agrupamento do agregarMetagame: deckId → slug do arquétipo.

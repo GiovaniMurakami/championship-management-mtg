@@ -86,8 +86,12 @@ export function calcularEstatisticas(
   return statsMap;
 }
 
-/** Piso WotC/Melee para MWP/GWP/OMW/OGW (1/3, não 0.33). */
-export const MIN_PERCENTUAL = 1 / 3;
+/**
+ * Piso para MWP/GWP/OMW/OGW.
+ * Usa 0.33 (como CLM / várias ferramentas BR) em vez de 1/3 ≈ 0.333… do doc WotC/Melee,
+ * para alinhar standings com circuitos que publicam com duas casas decimais.
+ */
+export const MIN_PERCENTUAL = 0.33;
 
 export function mwp(s: EstatisticasJogador): number {
   if (s.totalPartidasJogadas === 0) return MIN_PERCENTUAL;
