@@ -1,0 +1,50 @@
+{
+  "dry": false,
+  "r4": {
+    "updated": 92,
+    "created": 0
+  },
+  "r5": {
+    "deleted": 0,
+    "created": 116
+  },
+  "skipped": [],
+  "torneio": {
+    "rodadaAtual": 5,
+    "rodadaPublicada": true,
+    "secreto": false,
+    "status": "em_andamento"
+  },
+  "clm": [
+    {
+      "n": 1,
+      "status": 2,
+      "matches": 123,
+      "scored": 118
+    },
+    {
+      "n": 2,
+      "status": 2,
+      "matches": 122,
+      "scored": 118
+    },
+    {
+      "n": 3,
+      "status": 2,
+      "matches": 122,
+      "scored": 121
+    },
+    {
+      "n": 4,
+      "status": 2,
+      "matches": 121,
+      "scored": 117
+    },
+    {
+      "n": 5,
+      "status": 1,
+      "matches": 116,
+      "scored": 2
+    }
+  ]
+}

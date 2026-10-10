@@ -39,6 +39,7 @@ import { AtualizarPareamentosRodadaRota } from "../infra/api/express/rotas/torne
 import { DroparJogadorRota } from "../infra/api/express/rotas/torneio/droparJogador.express.route";
 import { DroparJogadoresSemDeckRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemDeck.express.route";
 import { DroparJogadoresSemCheckinRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemCheckin.express.route";
+import { EncerrarDay1Rota } from "../infra/api/express/rotas/torneio/encerrarDay1.express.route";
 import { DesdroparJogadorRota } from "../infra/api/express/rotas/torneio/desdroparJogador.express.route";
 import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTorneios.express.route";
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
@@ -140,6 +141,7 @@ export function criarRotas(casos: CasosDeUso) {
         DroparJogadoresSemDeckRota.criar(casos.droparJogadoresSemDeck),
         DroparJogadoresSemCheckinRota.criar(casos.droparJogadoresSemCheckin),
         DesdroparJogadorRota.criar(casos.desdroparJogador),
+        EncerrarDay1Rota.criar(casos.encerrarDay1),
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
         PublicarRodadaRota.criar(casos.publicarRodada),

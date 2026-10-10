@@ -45,6 +45,9 @@ export type ListarTorneiosOutputDto = {
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
+    rodadasDay1?: number;
+    vagasDay2?: number;
+    day1Encerrado: boolean;
     premio?: { playerPoints: number; tix: number };
   linkLive?: string;
     exibirNomeJogador?: string;
@@ -164,6 +167,9 @@ export class ListarTorneios
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,
+        rodadasDay1: t.rodadasDay1,
+        vagasDay2: t.vagasDay2,
+        day1Encerrado: t.day1Encerrado,
         premio: t.premio,
       linkLive: t.linkLive,
         emCorte: t.emCorte,

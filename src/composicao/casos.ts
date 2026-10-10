@@ -56,6 +56,7 @@ import { DroparJogador } from "../casosDeUso/torneio/droparJogador";
 import { DroparJogadoresSemDeck } from "../casosDeUso/torneio/droparJogadoresSemDeck";
 import { DroparJogadoresSemCheckin } from "../casosDeUso/torneio/droparJogadoresSemCheckin";
 import { DesdroparJogador } from "../casosDeUso/torneio/desdroparJogador";
+import { EncerrarDay1 } from "../casosDeUso/torneio/encerrarDay1";
 import { ListarTorneios } from "../casosDeUso/torneio/listarTorneios";
 import { BuscarTorneio } from "../casosDeUso/torneio/buscarTorneio";
 import { BuscarSeoTorneio } from "../casosDeUso/torneio/buscarSeoTorneio";
@@ -186,6 +187,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const droparJogador = DroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida, eventos);
     const droparJogadoresSemDeck = DroparJogadoresSemDeck.criar(repos.torneio, repos.inscricao, droparJogador);
     const droparJogadoresSemCheckin = DroparJogadoresSemCheckin.criar(repos.torneio, repos.inscricao, droparJogador);
+    const encerrarDay1 = EncerrarDay1.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, eventos);
     const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida, eventos);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao, repos.liga);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.liga);
@@ -259,7 +261,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         criarArtigo, listarArtigos, buscarArtigo, buscarSeoArtigo, editarArtigo, aprovarArtigo, comentarArtigo, curtirArtigo, curtirComentarioArtigo, excluirArtigo,
         criarTorneio, inscreverTorneio, checkInTorneio, escolherDeckTorneio,
         iniciarTorneio, iniciarProximaRodada, publicarRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
-        droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
+        droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, encerrarDay1,
+        listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
         meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,
         criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,

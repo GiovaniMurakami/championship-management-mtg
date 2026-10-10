@@ -118,6 +118,8 @@ export type MetagameAgregado = {
 export type AgregarMetagameInput = {
   formato: string;
   dias: number;
+  /** Inclui torneios que ainda não estão finalizados (ex.: Day 1 encerrado). */
+  permitirNaoFinalizados?: boolean;
   agora: Date;
   intervalo?: { dataInicio: Date; dataFim: Date };
   torneios: Torneio[];
@@ -283,7 +285,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
   const inicio = input.intervalo?.dataInicio ?? new Date(input.agora.getTime() - input.dias * 24 * 60 * 60 * 1000);
 
   const torneios = input.torneios.filter((t) => {
-    if (t.status !== "finalizado") return false;
+    if (!input.permitirNaoFinalizados && t.status !== "finalizado") return false;
     if (t.secreto && !input.permitirSecretos) return false;
     if (normalizarFormatoDeck(t.formato) !== formato) return false;
     return t.horario.getTime() >= inicio.getTime() && (!input.intervalo || t.horario.getTime() <= input.intervalo.dataFim.getTime());

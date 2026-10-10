@@ -1,0 +1,46 @@
+{
+  "store": {
+    "id": 38234,
+    "name": "Mont",
+    "image": "https://repositorio.sbrauble.com/arquivos/up/circuito/logo/38234_1722629104.png"
+  },
+  "about": {
+    "tournamentName": "Etapa #5",
+    "datetime": "2026-10-10 11:00:00",
+    "address": {
+      "id": 255,
+      "street": "Rua Roxo Moreira",
+      "number": "1624",
+      "complement": "Barão Geraldo ",
+      "district": "Cidade Universitária",
+      "city": "Campinas",
+      "state": "São Paulo",
+      "stateAcronym": "SP",
+      "country": "Brasil",
+      "zipCode": "13083592",
+      "residentName": ""
+    },
+    "format": 15,
+    "formatName": "Pauper",
+    "step": 5,
+    "cardGame": "Magic: The Gathering",
+    "startRegistration": "2026-10-10 03:00:00",
+    "endRegistration": "2026-10-10 10:45:00",
+    "playersLimit": 0,
+    "price": 200,
+    "minPlayers": 4,
+    "type": 1,
+    "numberRounds": "Dinâmico com base no número de jogadores inscritos",
+    "tournamentType": 2,
+    "ranking": "Ranking do formato Pauper",
+    "description": "Sejam muito bem-vindos ao maior CLM do Brasil!\n\nPela terceira edição consecutiva, a Mont conquistou o 1º lugar no Ranking Geral do CLM, consolidando-se como uma das principais referências do cenário competitivo nacional.\n\nSe você busca competição de alto nível, uma organização impecável e um ambiente sério e preparado para os maiores desafios, este é o seu lugar.\n\nVenha enfrentar alguns dos melhores jogadores do país, disputar vagas, prêmios e viver uma experiência que só a Mont pode proporcionar.\n\nO melhor do Magic competitivo está aqui. A Mont está esperando por você!\n",
+    "status": 2,
+    "openRegistration": true,
+    "closedRegistration": true,
+    "currentRound": 5,
+    "totalRound": 9,
+    "extraRound": 0,
+    "bestOf": 3,
+    "formatTournamentType": 1
+  }
+}

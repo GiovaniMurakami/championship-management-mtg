@@ -25,6 +25,8 @@ export type CriarTorneioInputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
@@ -50,6 +52,9 @@ export type CriarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado: boolean;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
@@ -100,6 +105,8 @@ export class CriarTorneio
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
+      rodadasDay1: input.rodadasDay1,
+      vagasDay2: input.vagasDay2,
       premio: input.premio,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
@@ -157,6 +164,9 @@ export class CriarTorneio
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      rodadasDay1: torneio.rodadasDay1,
+      vagasDay2: torneio.vagasDay2,
+      day1Encerrado: torneio.day1Encerrado,
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,

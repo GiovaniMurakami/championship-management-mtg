@@ -127,6 +127,19 @@ export class IniciarProximaRodada
       });
     }
 
+    const temDay1Day2 =
+      Number(torneio.rodadasDay1 || 0) > 0 && Number(torneio.vagasDay2 || 0) > 0;
+    if (
+      temDay1Day2 &&
+      !torneio.day1Encerrado &&
+      torneio.rodadaAtual === torneio.rodadasDay1
+    ) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Encerre o Day 1 antes de gerar a próxima rodada (Day 2).",
+        status: StatusErro.erroParametro,
+      });
+    }
+
     const publicar = input.publicar !== false;
 
     const partidasRodadaAtual =

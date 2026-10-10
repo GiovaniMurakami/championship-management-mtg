@@ -22,6 +22,10 @@ type TorneioItem = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado?: boolean;
+  day1EncerradoEm?: string;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
@@ -270,6 +274,10 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      rodadasDay1: torneio.rodadasDay1,
+      vagasDay2: torneio.vagasDay2,
+      day1Encerrado: torneio.day1Encerrado,
+      day1EncerradoEm: torneio.day1EncerradoEm?.toISOString(),
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
@@ -305,6 +313,10 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: item.maxJogadores,
       maxRodadas: item.maxRodadas,
       corteTop: item.corteTop,
+      rodadasDay1: item.rodadasDay1,
+      vagasDay2: item.vagasDay2,
+      day1Encerrado: item.day1Encerrado ?? false,
+      day1EncerradoEm: item.day1EncerradoEm ? new Date(item.day1EncerradoEm) : undefined,
       premio: item.premio,
       linkLive: item.linkLive,
       emCorte: item.emCorte,

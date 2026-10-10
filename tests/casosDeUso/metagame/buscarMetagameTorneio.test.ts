@@ -118,7 +118,7 @@ describe("BuscarMetagameTorneio", () => {
     await expect(uc.executar({ torneioId: "x" })).rejects.toMatchObject({ status: StatusErro.erroNaoEncontrado });
   });
 
-  it("recusa torneio não finalizado", async () => {
+  it("recusa torneio não finalizado sem Day 1 encerrado", async () => {
     const uc = BuscarMetagameTorneio.criar(
       criarMockTorneioGateway({
         buscarPorId: vi.fn().mockResolvedValue(torneio({ status: "em_andamento" })),
@@ -130,5 +130,74 @@ describe("BuscarMetagameTorneio", () => {
     );
 
     await expect(uc.executar({ torneioId: "t1" })).rejects.toMatchObject({ status: StatusErro.erroParametro });
+  });
+
+  it("libera breakdown com Day 1 encerrado e calcula conversão", async () => {
+    const t = torneio({
+      status: "em_andamento",
+      rodadasDay1: 2,
+      vagasDay2: 1,
+      day1Encerrado: true,
+      rodadaAtual: 2,
+    });
+    const uc = BuscarMetagameTorneio.criar(
+      criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(t) }),
+      criarMockInscricaoGateway({
+        listarPorTorneio: vi.fn().mockResolvedValue([
+          new Inscricao({
+            id: "i1", torneioId: "t1", usuarioId: "u1", deckId: "d1",
+            checkInRodada: 2, dropped: false,
+          }),
+          new Inscricao({
+            id: "i2", torneioId: "t1", usuarioId: "u2", deckId: "d2",
+            checkInRodada: 2, dropped: true, droppedRodada: 2,
+          }),
+        ]),
+      }),
+      criarMockPartidaGateway({
+        listarPorTorneio: vi.fn().mockResolvedValue([
+          new Partida({
+            id: "p1",
+            torneioId: "t1",
+            rodada: 1,
+            jogador1Id: "u1",
+            jogador2Id: "u2",
+            deckJogador1Id: "d1",
+            deckJogador2Id: "d2",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+          }),
+          new Partida({
+            id: "p2",
+            torneioId: "t1",
+            rodada: 3,
+            jogador1Id: "u1",
+            jogador2Id: null,
+            deckJogador1Id: "d1",
+            vitoriasJogador1: 2,
+            vitoriasJogador2: 0,
+            status: "finalizada",
+          }),
+        ]),
+      }),
+      criarMockDeckGateway({ buscarVarios: vi.fn().mockResolvedValue([terror, bogles]) }),
+      criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue([alice, bob]) }),
+    );
+
+    const resultado = await uc.executar({ torneioId: "t1" });
+
+    expect(resultado.torneio.day1Encerrado).toBe(true);
+    expect(resultado.conversaoDay2).toEqual({
+      jogadoresDay1: 2,
+      jogadoresDay2: 1,
+      taxaConversao: 0.5,
+      vagasDay2: 1,
+    });
+    expect(resultado.totalDecks).toBeGreaterThanOrEqual(1);
+    const terrorMeta = resultado.arquetipos.find((a) => a.slug.includes("terror") || a.nome.includes("Terror"));
+    expect(terrorMeta?.conversaoDay2).toMatchObject({ day1: 1, day2: 1, taxaConversao: 1 });
+    const boglesMeta = resultado.arquetipos.find((a) => a.slug.includes("bogle") || a.nome.includes("Bogle"));
+    expect(boglesMeta?.conversaoDay2).toMatchObject({ day1: 1, day2: 0, taxaConversao: 0 });
   });
 });

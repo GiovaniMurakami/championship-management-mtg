@@ -578,4 +578,68 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2);
         }
     });
+
+    it("bloqueia avanço da última rodada do Day 1 sem encerrar Day 1", async () => {
+        const torneioDay1 = new Torneio({
+            id: "t-1",
+            nome: "T",
+            horario: new Date(),
+            formato: "f",
+            donoId: "dono",
+            status: "em_andamento",
+            rodadaAtual: 2,
+            totalRodadas: 5,
+            rodadasDay1: 2,
+            vagasDay2: 2,
+            rodadaPublicada: true,
+        });
+        const uc = IniciarProximaRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioDay1) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false }),
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("permite avanço após Day 1 encerrado", async () => {
+        const torneioDay1 = new Torneio({
+            id: "t-1",
+            nome: "T",
+            horario: new Date(),
+            formato: "f",
+            donoId: "dono",
+            status: "em_andamento",
+            rodadaAtual: 2,
+            totalRodadas: 5,
+            rodadasDay1: 2,
+            vagasDay2: 2,
+            day1Encerrado: true,
+            rodadaPublicada: true,
+        });
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(torneioDay1),
+        });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.rodadaAtual).toBe(3);
+        }
+    });
 });

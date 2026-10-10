@@ -24,6 +24,8 @@ export type AlterarTorneioInputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
@@ -49,6 +51,10 @@ export type AlterarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado: boolean;
+  day1EncerradoEm?: string;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
@@ -98,6 +104,32 @@ export class AlterarTorneio
       }
     }
 
+    const tocouDay1 = input.rodadasDay1 !== undefined || input.vagasDay2 !== undefined;
+    const nextRodadasDay1 = input.rodadasDay1 !== undefined ? input.rodadasDay1 : torneio.rodadasDay1;
+    const nextVagasDay2 = input.vagasDay2 !== undefined ? input.vagasDay2 : torneio.vagasDay2;
+    if (tocouDay1 && (nextRodadasDay1 === undefined || nextVagasDay2 === undefined)) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Informe rodadasDay1 e vagasDay2 juntos (ou nenhum dos dois).",
+        status: StatusErro.erroParametro,
+      });
+    }
+    if (torneio.day1Encerrado && (input.rodadasDay1 !== undefined || input.vagasDay2 !== undefined)) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Não é possível alterar a configuração Day 1/Day 2 após o Day 1 encerrado.",
+        status: StatusErro.erroParametro,
+      });
+    }
+    if (
+      torneio.status === "em_andamento" &&
+      nextRodadasDay1 !== undefined &&
+      torneio.rodadaAtual > nextRodadasDay1
+    ) {
+      throw ErroPersonalizado.criar({
+        mensagem: `rodadasDay1 (${nextRodadasDay1}) não pode ser menor que a rodada atual (${torneio.rodadaAtual}).`,
+        status: StatusErro.erroParametro,
+      });
+    }
+
     if (input.nome !== undefined) torneio.nome = input.nome.trim();
     if (input.horario !== undefined) torneio.horario = input.horario;
     if (input.formato !== undefined) torneio.formato = input.formato.toLowerCase().trim();
@@ -111,6 +143,8 @@ export class AlterarTorneio
     if (input.maxJogadores !== undefined) torneio.maxJogadores = input.maxJogadores;
     if (input.maxRodadas !== undefined) torneio.maxRodadas = input.maxRodadas;
     if (input.corteTop !== undefined) torneio.corteTop = input.corteTop;
+    if (input.rodadasDay1 !== undefined) torneio.rodadasDay1 = input.rodadasDay1;
+    if (input.vagasDay2 !== undefined) torneio.vagasDay2 = input.vagasDay2;
     if (input.premio !== undefined) torneio.premio = input.premio;
     if (input.linkLive !== undefined) torneio.linkLive = input.linkLive?.trim();
     if (input.secreto !== undefined) torneio.secreto = input.secreto;
@@ -140,6 +174,10 @@ export class AlterarTorneio
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      rodadasDay1: torneio.rodadasDay1,
+      vagasDay2: torneio.vagasDay2,
+      day1Encerrado: torneio.day1Encerrado,
+      day1EncerradoEm: toBrasiliaISO(torneio.day1EncerradoEm),
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,

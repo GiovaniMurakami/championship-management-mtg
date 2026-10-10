@@ -1,0 +1,325 @@
+{
+  "dry": false,
+  "updated": 179,
+  "created": 123,
+  "deleted": 307,
+  "skipped": [],
+  "r4Rebuilt": 121,
+  "removedMeleeOnly": [
+    {
+      "id": "9dea128c-aad0-51ef-8617-7cbbdc45a12e",
+      "user": "97413e8e-e003-463a-984d-3fdbd6d1637f",
+      "reason": "penalty_bye_not_in_clm_r1"
+    },
+    {
+      "id": "eae4a512-0476-5263-beb4-a0ec68dba307",
+      "user": "7c8fdd70-ca19-4d65-8ac0-4dc217be50d7",
+      "reason": "penalty_bye_not_in_clm_r1"
+    },
+    {
+      "id": "2566dae1-8394-57c1-9f1e-650634cbbec4",
+      "mesa": 9001,
+      "rodada": 1,
+      "reason": "mesa_not_in_clm"
+    },
+    {
+      "id": "9dea128c-aad0-51ef-8617-7cbbdc45a12e",
+      "mesa": 9003,
+      "rodada": 1,
+      "reason": "mesa_not_in_clm"
+    },
+    {
+      "id": "eae4a512-0476-5263-beb4-a0ec68dba307",
+      "mesa": 9002,
+      "rodada": 1,
+      "reason": "mesa_not_in_clm"
+    },
+    {
+      "id": "f3d1a94a-5009-5dd9-b384-726543e4d5f2",
+      "mesa": 9001,
+      "rodada": 3,
+      "reason": "mesa_not_in_clm"
+    }
+  ],
+  "standings": {
+    "compared": 247,
+    "rankMatch": 19,
+    "rankDiffs": 228,
+    "topRankDiffs": [
+      {
+        "name": "Henrique Suenaga",
+        "clm": 127,
+        "fug": 201,
+        "pts": 3,
+        "melee": "hideosuenaga"
+      },
+      {
+        "name": "joão vitor freire de aguiar",
+        "clm": 130,
+        "fug": 203,
+        "pts": 3,
+        "melee": "Jfreire"
+      },
+      {
+        "name": "Gustavo Grings dos Santos",
+        "clm": 131,
+        "fug": 204,
+        "pts": 3,
+        "melee": "summerch1ld"
+      },
+      {
+        "name": "Rafael Venancio Peixoto de Camargo",
+        "clm": 34,
+        "fug": 104,
+        "pts": 6,
+        "melee": "RafaVenancio"
+      },
+      {
+        "name": "Gabriel Castelo",
+        "clm": 126,
+        "fug": 192,
+        "pts": 3,
+        "melee": "Castelo"
+      },
+      {
+        "name": "Guilherme André Araújo Infante",
+        "clm": 121,
+        "fug": 180,
+        "pts": 3,
+        "melee": "guilhermeinfante"
+      },
+      {
+        "name": "guilherme watzko pacher",
+        "clm": 123,
+        "fug": 181,
+        "pts": 3,
+        "melee": "Potatos"
+      },
+      {
+        "name": "Matheus Oliveira",
+        "clm": 125,
+        "fug": 183,
+        "pts": 3,
+        "melee": "mathevs"
+      },
+      {
+        "name": "Fabio Cesar Barbosa",
+        "clm": 27,
+        "fug": 81,
+        "pts": 6,
+        "melee": "FabioBarbosa"
+      },
+      {
+        "name": "Leonardo Fonseca de Lima",
+        "clm": 30,
+        "fug": 82,
+        "pts": 6,
+        "melee": "Minero"
+      },
+      {
+        "name": "Carlos Gustavo Frank Leme",
+        "clm": 152,
+        "fug": 173,
+        "pts": 3,
+        "melee": "Vryxiaz"
+      },
+      {
+        "name": "Willian Nalin Damasceno",
+        "clm": 168,
+        "fug": 147,
+        "pts": 3,
+        "melee": "DG10Will"
+      },
+      {
+        "name": "Joao Octavio Faria e Godoy",
+        "clm": 216,
+        "fug": 237,
+        "pts": 0,
+        "melee": "joaoyodog"
+      },
+      {
+        "name": "ROGERIO NAHAS GRIJO",
+        "clm": 219,
+        "fug": 240,
+        "pts": 0,
+        "melee": "kaylegal"
+      },
+      {
+        "name": "GEORGE WILIAN DE OLIVEIRA BUSTO",
+        "clm": 73,
+        "fug": 53,
+        "pts": 6,
+        "melee": "GeorgeKowalskii"
+      },
+      {
+        "name": "Phelipe Salaroli",
+        "clm": 214,
+        "fug": 234,
+        "pts": 0,
+        "melee": "phemartin"
+      },
+      {
+        "name": "Bruno Simão Bartoli",
+        "clm": 215,
+        "fug": 235,
+        "pts": 0,
+        "melee": "bbartoli"
+      },
+      {
+        "name": "Leonardo Lehmann Barros",
+        "clm": 153,
+        "fug": 172,
+        "pts": 3,
+        "melee": "Leonardolb"
+      },
+      {
+        "name": "Renato Augusto Barbosa",
+        "clm": 72,
+        "fug": 54,
+        "pts": 6,
+        "melee": "TardSir"
+      },
+      {
+        "name": "Flavio Teixeira Neto",
+        "clm": 169,
+        "fug": 151,
+        "pts": 3,
+        "melee": "FlavioTNeto"
+      }
+    ],
+    "top10Fug": [
+      {
+        "rank": 1,
+        "melee": "NicolasLeite",
+        "pts": 9,
+        "omw": 0.6667,
+        "gwp": 0.8571,
+        "ogw": 0.5893
+      },
+      {
+        "rank": 2,
+        "melee": "Erick_Jones",
+        "pts": 9,
+        "omw": 0.6667,
+        "gwp": 0.8333,
+        "ogw": 0.621
+      },
+      {
+        "rank": 3,
+        "melee": "duuuucouto",
+        "pts": 9,
+        "omw": 0.6667,
+        "gwp": 0.75,
+        "ogw": 0.5608
+      },
+      {
+        "rank": 4,
+        "melee": "RodrigoMunhoz",
+        "pts": 9,
+        "omw": 0.5926,
+        "gwp": 1,
+        "ogw": 0.5238
+      },
+      {
+        "rank": 5,
+        "melee": "Lucasoli89",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 1,
+        "ogw": 0.4683
+      },
+      {
+        "rank": 6,
+        "melee": "Gregorio",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 0.8571,
+        "ogw": 0.5397
+      },
+      {
+        "rank": 7,
+        "melee": "OtalDoBilada",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 0.8571,
+        "ogw": 0.5238
+      },
+      {
+        "rank": 8,
+        "melee": "CarlosMachado",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 0.8571,
+        "ogw": 0.5099
+      },
+      {
+        "rank": 9,
+        "melee": "VagaL",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 0.8571,
+        "ogw": 0.5
+      },
+      {
+        "rank": 10,
+        "melee": "kiko2509",
+        "pts": 9,
+        "omw": 0.5556,
+        "gwp": 0.8571,
+        "ogw": 0.4963
+      }
+    ],
+    "top10Clm": [
+      {
+        "standing": 1,
+        "name": "Nicolas Leite",
+        "id": 458467
+      },
+      {
+        "standing": 2,
+        "name": "Érick Esteves Jones",
+        "id": 37532
+      },
+      {
+        "standing": 3,
+        "name": "Eduardo José Couto",
+        "id": 48991
+      },
+      {
+        "standing": 4,
+        "name": "Rodrigo Munhoz",
+        "id": 104088
+      },
+      {
+        "standing": 5,
+        "name": "Gregorio Guerra",
+        "id": 35322
+      },
+      {
+        "standing": 6,
+        "name": "Christopher Estanislau Camargo",
+        "id": 488449
+      },
+      {
+        "standing": 7,
+        "name": "Bruno Ribeiro Guerra",
+        "id": 58313
+      },
+      {
+        "standing": 8,
+        "name": "Rubens Ramalho Neto",
+        "id": 110217
+      },
+      {
+        "standing": 9,
+        "name": "Marcelo Bueno",
+        "id": 54600
+      },
+      {
+        "standing": 10,
+        "name": "Luiz Paulo Feliciano Guedes Pinto",
+        "id": 546256
+      }
+    ]
+  }
+}

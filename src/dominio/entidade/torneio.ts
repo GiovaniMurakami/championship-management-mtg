@@ -24,6 +24,12 @@ export interface TorneioProps {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  /** Última rodada do Day 1 (Swiss). Exige `vagasDay2` quando definido. */
+  rodadasDay1?: number;
+  /** Quantos jogadores avançam ao Day 2 após Encerrar Day 1. */
+  vagasDay2?: number;
+  day1Encerrado?: boolean;
+  day1EncerradoEm?: Date;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte?: boolean;
@@ -58,6 +64,10 @@ export class Torneio {
   public maxJogadores?: number;
   public maxRodadas?: number;
   public corteTop?: number;
+  public rodadasDay1?: number;
+  public vagasDay2?: number;
+  public day1Encerrado: boolean = false;
+  public day1EncerradoEm?: Date;
   public premio?: { playerPoints: number; tix: number };
   public linkLive?: string;
   public emCorte: boolean = false;
@@ -90,6 +100,10 @@ export class Torneio {
     this.maxJogadores = props.maxJogadores;
     this.maxRodadas = props.maxRodadas;
     this.corteTop = props.corteTop;
+    this.rodadasDay1 = props.rodadasDay1;
+    this.vagasDay2 = props.vagasDay2;
+    this.day1Encerrado = props.day1Encerrado ?? false;
+    this.day1EncerradoEm = props.day1EncerradoEm;
     this.premio = props.premio;
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
@@ -162,5 +176,20 @@ export class Torneio {
       throw new Error(`Transição inválida: ${this.status} → finalizado`);
     }
     this.status = "finalizado";
+  }
+
+  public encerrarDay1(): void {
+    if (this.status !== "em_andamento") {
+      throw new Error(`Transição inválida: encerrar Day 1 requer status em_andamento`);
+    }
+    if (this.day1Encerrado) {
+      throw new Error("Day 1 já foi encerrado.");
+    }
+    this.day1Encerrado = true;
+    this.day1EncerradoEm = new Date();
+  }
+
+  public temDay1Day2(): boolean {
+    return Number(this.rodadasDay1 || 0) > 0 && Number(this.vagasDay2 || 0) > 0;
   }
 }

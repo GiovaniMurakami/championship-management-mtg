@@ -109,6 +109,21 @@ export const atualizarDeckSchema = z.object({
   oculto: z.boolean().optional(),
 });
 
+const day1Day2Refine = <T extends { rodadasDay1?: number; vagasDay2?: number }>(
+  data: T,
+  ctx: z.RefinementCtx,
+) => {
+  const temRodadas = data.rodadasDay1 !== undefined;
+  const temVagas = data.vagasDay2 !== undefined;
+  if (temRodadas !== temVagas) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Informe rodadasDay1 e vagasDay2 juntos (ou nenhum dos dois).",
+      path: temRodadas ? ["vagasDay2"] : ["rodadasDay1"],
+    });
+  }
+};
+
 export const criarTorneioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   horario: z.string().min(1, "Horário é obrigatório."),
@@ -123,13 +138,15 @@ export const criarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional(),
   maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
+  rodadasDay1: z.number().int().min(1).max(30).optional(),
+  vagasDay2: z.number().int().min(2).max(512).optional(),
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
   listasPublicas: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
   ligaIds: z.array(uuidCampo("ligaId")).max(50).optional(),
-});
+}).superRefine(day1Day2Refine);
 
 export const alterarTorneioSchema = z.object({
   nome: z.string().min(1).optional(),
@@ -145,6 +162,8 @@ export const alterarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
+  rodadasDay1: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
+  vagasDay2: z.number().int().min(2).max(512).optional().nullable().transform(v => v ?? undefined),
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
