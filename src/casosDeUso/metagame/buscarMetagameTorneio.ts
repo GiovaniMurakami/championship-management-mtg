@@ -15,6 +15,7 @@ import {
   NOME_OUTROS,
 } from "./agregarMetagame";
 import { MetagameGateways } from "./carregarMetagame";
+import { calcularDestaquesDay2, DestaquesDay2 } from "./destaquesDay2";
 
 export type ConversaoDay2Arquetipo = {
   day1: number;
@@ -48,6 +49,7 @@ export type BuscarMetagameTorneioOutputDto = {
     horario: string;
     status: string;
     corteTop?: number;
+    totalRodadas?: number;
     rodadasDay1?: number;
     vagasDay2?: number;
     day1Encerrado: boolean;
@@ -61,6 +63,8 @@ export type BuscarMetagameTorneioOutputDto = {
     vagasDay2?: number;
     cartasMaisPresentes: CartaPresenca[];
   };
+  /** Destaques do Day 2 (meta, desempenho Swiss Day 2, caminho do corte). */
+  destaquesDay2?: DestaquesDay2;
   arquetipos: (ArquetipoResumo &
     Pick<ArquetipoDetalhe, "matchups"> & {
       conversaoDay2?: ConversaoDay2Arquetipo;
@@ -163,6 +167,7 @@ export class BuscarMetagameTorneio
     });
 
     let conversaoDay2: BuscarMetagameTorneioOutputDto["conversaoDay2"];
+    let destaquesDay2: DestaquesDay2 | undefined;
     const conversaoPorSlug = new Map<string, ConversaoDay2Arquetipo>();
 
     if (day1Liberado && Number(torneio.rodadasDay1 || 0) > 0) {
@@ -211,6 +216,18 @@ export class BuscarMetagameTorneio
           taxaConversao: d2 / day1,
         });
       }
+
+      const usuariosPorId = new Map(usuarios.map((u) => [u.id, u]));
+      destaquesDay2 = calcularDestaquesDay2({
+        rodadasDay1,
+        corteTop: torneio.corteTop,
+        totalRodadas: torneio.totalRodadas,
+        inscricoes,
+        partidas: partidasBrutas,
+        decksPorId,
+        usuariosPorId,
+        slugPorDeckId,
+      });
     }
 
     return {
@@ -221,6 +238,7 @@ export class BuscarMetagameTorneio
         horario: toBrasiliaISO(torneio.horario)!,
         status: torneio.status,
         corteTop: torneio.corteTop,
+        totalRodadas: torneio.totalRodadas,
         rodadasDay1: torneio.rodadasDay1,
         vagasDay2: torneio.vagasDay2,
         day1Encerrado: torneio.day1Encerrado,
@@ -228,6 +246,7 @@ export class BuscarMetagameTorneio
       },
       totalDecks: agregado.totalDecks,
       conversaoDay2,
+      destaquesDay2,
       arquetipos: agregado.arquetipos.map((arquetipo) => ({
         ...arquetipo,
         matchups: agregado.porSlug.get(arquetipo.slug)?.matchups ?? [],
