@@ -1,0 +1,789 @@
+{
+  "round": 9,
+  "roundId": 1600354,
+  "meleeTournamentId": 447619,
+  "total": 30,
+  "withResult": 30,
+  "rows": [
+    {
+      "competitors": [
+        {
+          "displayName": "Erick Jones",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4468887,
+          "teamId": 4483551,
+          "username": "Erick_Jones"
+        },
+        {
+          "displayName": "Agnaldo dos Santos Teixeira Junior  Gnarr",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467396,
+          "teamId": 4482060,
+          "username": "Gnarr"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Agnaldo dos Santos Teixeira Junior  Gnarr won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 1
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Lucasoli89",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4465746,
+          "teamId": 4480410,
+          "username": "Lucasoli89"
+        },
+        {
+          "displayName": "batuta35",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4470301,
+          "teamId": 4484965,
+          "username": "batuta35"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Lucasoli89 won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 2
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Daniel Jung",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4465615,
+          "teamId": 4480279,
+          "username": "Inhunkes"
+        },
+        {
+          "displayName": "Shiroya",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4456493,
+          "teamId": 4471157,
+          "username": "Shiroya"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Shiroya won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 3
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "José Renato Paulon",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467438,
+          "teamId": 4482102,
+          "username": "jrpaulon"
+        },
+        {
+          "displayName": "Thyron",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4465866,
+          "teamId": 4480530,
+          "username": "Thyron"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "José Renato Paulon won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 4
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Christopher_Estanislau",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4478123,
+          "teamId": 4492787,
+          "username": "Christopher_Estanislau"
+        },
+        {
+          "displayName": "kiko2509",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4475572,
+          "teamId": 4490236,
+          "username": "kiko2509"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "kiko2509 won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 5
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "LuizGG",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4464216,
+          "teamId": 4478880,
+          "username": "LuizGG"
+        },
+        {
+          "displayName": "Duughs",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4473085,
+          "teamId": 4487749,
+          "username": "Duughs"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "LuizGG won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 6
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Atogue",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4423845,
+          "teamId": 4438509,
+          "username": "Atogue"
+        },
+        {
+          "displayName": "Elvengrillo",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4417670,
+          "teamId": 4432334,
+          "username": "Elvengrillo"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Atogue won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 7
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Vitor Hugo Correa",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4462506,
+          "teamId": 4477170,
+          "username": "VitorH_VH"
+        },
+        {
+          "displayName": "VitorOliveiraTIM",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4464397,
+          "teamId": 4479061,
+          "username": "VitorOliveiraTIM"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "VitorOliveiraTIM won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 8
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Bruno Guerra",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4475816,
+          "teamId": 4490480,
+          "username": "BrunoGuerra"
+        },
+        {
+          "displayName": "Thiago Vieira",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4469211,
+          "teamId": 4483875,
+          "username": "Thieoes"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Bruno Guerra won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 9
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Invictor",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4424381,
+          "teamId": 4439045,
+          "username": "Invictor"
+        },
+        {
+          "displayName": "NicolasLeite",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467555,
+          "teamId": 4482219,
+          "username": "NicolasLeite"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "NicolasLeite won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 10
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Marcelo Bueno",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467101,
+          "teamId": 4481765,
+          "username": "Cless"
+        },
+        {
+          "displayName": "Maher",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4475185,
+          "teamId": 4489849,
+          "username": "Maher"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Marcelo Bueno won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 11
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Pedro Manzoni",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4457806,
+          "teamId": 4472470,
+          "username": "Manzoni"
+        },
+        {
+          "displayName": "Maccheri",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4462617,
+          "teamId": 4477281,
+          "username": "Maccheri"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Maccheri won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 12
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Bruno Ribeiro",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4452629,
+          "teamId": 4467293,
+          "username": "b4ttous4y"
+        },
+        {
+          "displayName": "Vinicius Raymundi",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467444,
+          "teamId": 4482108,
+          "username": "Spock"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Vinicius Raymundi won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 13
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "HugoBenevides",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4469053,
+          "teamId": 4483717,
+          "username": "HugoBenevides"
+        },
+        {
+          "displayName": "Benjamin Soler",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4320622,
+          "teamId": 4335286,
+          "username": "benjamin13"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Benjamin Soler won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 14
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Carlinhos",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4476568,
+          "teamId": 4491232,
+          "username": "Carlinhos"
+        },
+        {
+          "displayName": "JoaoBandeira",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4469199,
+          "teamId": 4483863,
+          "username": "JoaoBandeira"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "JoaoBandeira won 1-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 15
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Camata",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4462404,
+          "teamId": 4477068,
+          "username": "Camata"
+        },
+        {
+          "displayName": "fernandomp85",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4460470,
+          "teamId": 4475134,
+          "username": "fernandomp85"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Camata won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 16
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "eggBR",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4476961,
+          "teamId": 4491625,
+          "username": "eggBR"
+        },
+        {
+          "displayName": "Henrique Hideo Suenaga sunga",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4476245,
+          "teamId": 4490909,
+          "username": "hideosuenaga"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Henrique Hideo Suenaga sunga won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 17
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Felipe Darbello Felipe",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4460467,
+          "teamId": 4475131,
+          "username": "Felove10"
+        },
+        {
+          "displayName": "RodrigoMunhoz",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4462248,
+          "teamId": 4476912,
+          "username": "RodrigoMunhoz"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "RodrigoMunhoz won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 18
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "summerch1ld",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4437141,
+          "teamId": 4451805,
+          "username": "summerch1ld"
+        },
+        {
+          "displayName": "Indiano",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467030,
+          "teamId": 4481694,
+          "username": "Indiano"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Indiano won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 19
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Juan Gaston",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4470259,
+          "teamId": 4484923,
+          "username": "VagaL"
+        },
+        {
+          "displayName": "GilmarSiqueira",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4462888,
+          "teamId": 4477552,
+          "username": "GilmarSiqueira"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Juan Gaston won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 20
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Fernando Flora Filho",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4464940,
+          "teamId": 4479604,
+          "username": "FFFoi"
+        },
+        {
+          "displayName": "MALLAYDER",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4419744,
+          "teamId": 4434408,
+          "username": "MALLAYDER"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Fernando Flora Filho won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 21
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Leshira",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4464318,
+          "teamId": 4478982,
+          "username": "Leshira"
+        },
+        {
+          "displayName": "CecilMonk",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4462927,
+          "teamId": 4477591,
+          "username": "CecilMonk"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "CecilMonk won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 22
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Coreia",
+          "gameWins": null,
+          "isActive": false,
+          "playerId": 4469320,
+          "teamId": 4483984,
+          "username": "Coreia"
+        },
+        {
+          "displayName": "Rubens Neto",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4467035,
+          "teamId": 4481699,
+          "username": "RUBENSNETTO"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Rubens Neto won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 23
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Muxu",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4471180,
+          "teamId": 4485844,
+          "username": "Muxu"
+        },
+        {
+          "displayName": "Rudzilla_Rudson",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4478394,
+          "teamId": 4493058,
+          "username": "Rudzilla_Rudson"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Muxu won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 24
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Arthursantarem",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4475305,
+          "teamId": 4489969,
+          "username": "Arthursantarem"
+        },
+        {
+          "displayName": "Fuinha",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4476545,
+          "teamId": 4491209,
+          "username": "Fuinha"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Fuinha won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 25
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "FJH",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4419102,
+          "teamId": 4433766,
+          "username": "FJH"
+        },
+        {
+          "displayName": "Minero",
+          "gameWins": 0,
+          "isActive": true,
+          "playerId": 4462206,
+          "teamId": 4476870,
+          "username": "Minero"
+        }
+      ],
+      "gameDraws": null,
+      "hasResult": true,
+      "result": "FJH won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 26
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "lucasnin255",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4467696,
+          "teamId": 4482360,
+          "username": "lucasnin255"
+        },
+        {
+          "displayName": "TOGNI007",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4461706,
+          "teamId": 4476370,
+          "username": "TOGNI007"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "TOGNI007 won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 27
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Stamford",
+          "gameWins": null,
+          "isActive": true,
+          "playerId": 4468067,
+          "teamId": 4482731,
+          "username": "Stamford"
+        },
+        {
+          "displayName": "phemartin",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4465438,
+          "teamId": 4480102,
+          "username": "phemartin"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "phemartin won 2-0-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 28
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "CarlosMachado",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4298014,
+          "teamId": 4312678,
+          "username": "CarlosMachado"
+        },
+        {
+          "displayName": "Raphael Dogini Fassizoli",
+          "gameWins": 1,
+          "isActive": true,
+          "playerId": 4474006,
+          "teamId": 4488670,
+          "username": "Dogini"
+        }
+      ],
+      "gameDraws": 1,
+      "hasResult": true,
+      "result": "1-1-1 Draw",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 29
+    },
+    {
+      "competitors": [
+        {
+          "displayName": "Pedro Gomes",
+          "gameWins": 2,
+          "isActive": true,
+          "playerId": 4476644,
+          "teamId": 4491308,
+          "username": "Pigmax"
+        },
+        {
+          "displayName": "VitorDeFariasMetzner",
+          "gameWins": 1,
+          "isActive": false,
+          "playerId": 4426988,
+          "teamId": 4441652,
+          "username": "VitorDeFariasMetzner"
+        }
+      ],
+      "gameDraws": 0,
+      "hasResult": true,
+      "result": "Pedro Gomes won 2-1-0",
+      "roundId": 1600354,
+      "roundNumber": 9,
+      "table": 30
+    }
+  ]
+}

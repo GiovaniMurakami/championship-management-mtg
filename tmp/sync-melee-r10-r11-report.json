@@ -1,0 +1,49 @@
+{
+  "dry": false,
+  "onlyR10": false,
+  "skipped": [],
+  "inscricoes": {
+    "total": 247,
+    "ativos": 64,
+    "dropped": 183
+  },
+  "torneioBefore": {
+    "status": "em_andamento",
+    "rodadaAtual": 10,
+    "day1Encerrado": true,
+    "version": 23
+  },
+  "r10": {
+    "deleted": 29,
+    "created": 29,
+    "updated": 0,
+    "finished": 29,
+    "pending": 0
+  },
+  "r11": {
+    "deleted": 0,
+    "created": 28,
+    "updated": 0,
+    "finished": 1,
+    "pending": 27
+  },
+  "torneio": {
+    "rodadaAtual": 11,
+    "rodadaPublicada": true,
+    "status": "em_andamento",
+    "day1Encerrado": true,
+    "version": 24,
+    "secreto": false
+  },
+  "melee": {
+    "r10": {
+      "total": 29,
+      "withResult": 29
+    },
+    "r11": {
+      "total": 28,
+      "withResult": 1
+    }
+  },
+  "skippedUnmapped": []
+}

@@ -119,8 +119,11 @@ export class AlterarTorneio
         status: StatusErro.erroParametro,
       });
     }
+    // Só valida ao alterar Day 1/Day 2. No Day 2 a rodada atual naturalmente
+    // ultrapassa rodadasDay1 sem que o campo esteja sendo editado.
     if (
-      torneio.status === "em_andamento" &&
+      tocouDay1 &&
+      (torneio.status === "em_andamento" || torneio.status === "pausado") &&
       nextRodadasDay1 !== undefined &&
       torneio.rodadaAtual > nextRodadasDay1
     ) {
