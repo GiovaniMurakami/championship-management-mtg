@@ -9,6 +9,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
+  aplicarAvancoDay2,
   calcularPercentuaisComCongelamentoDrop,
 } from "../../dominio/torneio/swiss";
 import { coresDoArquetipo } from "../../helpers/deck/coresDeck";
@@ -455,6 +456,7 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
     const partidasTorneio = input.partidas.filter((p) => p.torneioId === t.id);
     const stats = calcularEstatisticas(jogadores, partidasTorneio);
     aplicarDesempateFinalPorInscricao(stats, inscricoesTorneio);
+    aplicarAvancoDay2(stats, inscricoesTorneio, t.rodadasDay1);
     const droppedRodadaPorUsuario = new Map(
       inscricoesTorneio.map((i) => [i.usuarioId, i.dropped ? i.droppedRodada : null])
     );

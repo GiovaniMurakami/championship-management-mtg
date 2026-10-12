@@ -418,6 +418,30 @@ describe("Swiss - ordenarPorDesempate", () => {
         expect(comCongelar).toBeGreaterThan(semCongelar);
     });
 
+    it("com mesmos pontos, quem avançou ao Day 2 fica à frente do corte do Day 1", () => {
+        const statsMap = new Map<string, EstatisticasJogador>();
+        const corte: EstatisticasJogador = {
+            usuarioId: "italo", pontosMesa: 12, vitoriasPartida: 4, empatesPartida: 0,
+            derrotasPartida: 3, totalPartidasJogadas: 7, vitoriasJogo: 9,
+            totalJogosJogados: 16, oponentesIds: [], avancouDay2: false,
+            // OMW artificialmente alto via oponentes vazios → MIN; força via sort fields
+        };
+        const day2: EstatisticasJogador = {
+            usuarioId: "vitor", pontosMesa: 12, vitoriasPartida: 4, empatesPartida: 0,
+            derrotasPartida: 5, totalPartidasJogadas: 9, vitoriasJogo: 10,
+            totalJogosJogados: 23, oponentesIds: [], avancouDay2: true,
+        };
+        // Sem Day2 flag, corte com melhor GWP ganharia; com flag, day2 vem primeiro
+        corte.vitoriasJogo = 20;
+        corte.totalJogosJogados = 20;
+        statsMap.set("italo", corte);
+        statsMap.set("vitor", day2);
+
+        const resultado = ordenarPorDesempate([corte, day2], statsMap);
+        expect(resultado[0].usuarioId).toBe("vitor");
+        expect(resultado[1].usuarioId).toBe("italo");
+    });
+
     it("deve desempatar por desempateFinal Asc (Team Id Melee) quando tudo mais empatar", () => {
         const statsMap = new Map<string, EstatisticasJogador>();
         // localeCompare colocaria "aaa" na frente; Team Id Asc coloca quem tem chave menor

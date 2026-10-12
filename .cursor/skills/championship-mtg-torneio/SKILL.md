@@ -31,8 +31,8 @@ Use this helper — never `donoId === usuarioId` alone.
 ## Swiss
 
 - Rounds: `ceil(log2(n))`, optional `maxRodadas` cap
-- Tiebreakers (Melee/WotC): points → OMW% → GW% → OGW% (piso `1/3`) → Team Id Asc (`inscricao.criadoEm`)
-- Drop / Day 1 cut: OMW/OGW congelam na `droppedRodada` (oponentes no Day 2 não alteram quem ficou no Day 1)
+- Tiebreakers (Melee): points → avançou Day 2 → OMW% → GW% → OGW% (piso `1/3`) → Team Id Asc (`inscricao.criadoEm`)
+- Drop / Day 1 cut: OMW/OGW congelam na `droppedRodada`; com mesmos pontos, Day 2 fica acima do Cut
 - Odd players: bye to lowest standing
 - Pairing avoids rematches with backtracking; rematch only if unavoidable
 - Top cut via `corteTop`

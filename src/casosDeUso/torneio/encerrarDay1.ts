@@ -12,6 +12,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
+  aplicarAvancoDay2,
 } from "../../dominio/torneio/swiss";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
@@ -144,6 +145,8 @@ export class EncerrarDay1
     const idsParaStats = Array.from(new Set([...idsComHistorico, ...ativosIds]));
     const statsMap = calcularEstatisticas(idsParaStats, partidasDay1);
     aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
+    // No encerramento todos ainda estão no Day 1 — flag fica false/ausente e não altera a ordem.
+    aplicarAvancoDay2(statsMap, inscricoes, rodadasDay1);
     const ordenados = ordenarPorDesempate(Array.from(statsMap.values()), statsMap);
     const ativosSet = new Set(ativosIds);
     const rankingAtivos = ordenados.filter((s) => ativosSet.has(s.usuarioId));

@@ -11,10 +11,15 @@ export interface EstatisticasJogador {
   totalJogosJogados: number;
   oponentesIds: string[];
   /**
-   * Análogo ao Team Id do Melee (4º desempate, Asc — menor fica à frente).
+   * Análogo ao Team Id do Melee (último desempate, Asc — menor fica à frente).
    * Nos torneios Fuguete: timestamp de inscrição (`criadoEm`).
    */
   desempateFinal?: number;
+  /**
+   * Melee: com mesmos pontos, quem avançou ao Day 2 fica à frente de quem foi
+   * cortado no Day 1 — mesmo com OMW/GW/OGW piores.
+   */
+  avancouDay2?: boolean;
 }
 
 export function calcularEstatisticas(
@@ -178,8 +183,7 @@ export function calcularPercentuaisComCongelamentoDrop(
 }
 
 /**
- * Preenche o 4º desempate Melee (Team Id Asc) com o instante de inscrição.
- * Quem se inscreveu antes fica à frente quando pts/OMW/GW/OGW empatam.
+ * Preenche o último desempate Melee (Team Id Asc) com o instante de inscrição.
  */
 export function aplicarDesempateFinalPorInscricao(
   statsMap: Map<string, EstatisticasJogador>,
@@ -188,6 +192,26 @@ export function aplicarDesempateFinalPorInscricao(
   for (const i of inscricoes) {
     const s = statsMap.get(i.usuarioId);
     if (s) s.desempateFinal = i.criadoEm.getTime();
+  }
+}
+
+/**
+ * Marca quem avançou ao Day 2. Drop no fim do Day 1 (corte) → não avançou.
+ */
+export function aplicarAvancoDay2(
+  statsMap: Map<string, EstatisticasJogador>,
+  inscricoes: Array<{ usuarioId: string; dropped?: boolean; droppedRodada?: number | null }>,
+  rodadasDay1?: number | null
+): void {
+  if (!rodadasDay1 || rodadasDay1 <= 0) return;
+  for (const i of inscricoes) {
+    const s = statsMap.get(i.usuarioId);
+    if (!s) continue;
+    const dropouNoDay1 =
+      Boolean(i.dropped) &&
+      i.droppedRodada != null &&
+      i.droppedRodada <= rodadasDay1;
+    s.avancouDay2 = !dropouNoDay1;
   }
 }
 
@@ -205,13 +229,17 @@ export function ordenarPorDesempate(
 
   return [...jogadores].sort((a, b) => {
     if (b.pontosMesa !== a.pontosMesa) return b.pontosMesa - a.pontosMesa;
+    // Melee: Day 2 > Cut (Day 1), antes de OMW/GW/OGW
+    const day2A = Boolean(a.avancouDay2);
+    const day2B = Boolean(b.avancouDay2);
+    if (day2A !== day2B) return day2A ? -1 : 1;
     const omwpDiff = omwpDe(b) - omwpDe(a);
     if (Math.abs(omwpDiff) > 1e-9) return omwpDiff;
     const gwpDiff = gwpDe(b) - gwpDe(a);
     if (Math.abs(gwpDiff) > 1e-9) return gwpDiff;
     const ogwpDiff = ogwpDe(b) - ogwpDe(a);
     if (Math.abs(ogwpDiff) > 1e-9) return ogwpDiff;
-    // Melee TB4: Team Id Asc
+    // Melee: Team Id Asc
     const da = a.desempateFinal;
     const db = b.desempateFinal;
     if (da != null && db != null && da !== db) return da - db;

@@ -12,6 +12,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
+  aplicarAvancoDay2,
   calcularPercentuaisComCongelamentoDrop,
 } from "../../dominio/torneio/swiss";
 import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
@@ -216,6 +217,7 @@ export class BuscarStandings
 
     const statsMap = calcularEstatisticas(jogadoresIds, partidasConsolidadas);
     aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
+    aplicarAvancoDay2(statsMap, inscricoes, torneio.rodadasDay1);
     const droppedRodadaPorUsuario = new Map(
       inscricoes.map((i) => [i.usuarioId, i.dropped ? i.droppedRodada : null])
     );

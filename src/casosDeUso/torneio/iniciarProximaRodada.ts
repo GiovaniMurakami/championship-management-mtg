@@ -14,6 +14,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
+  aplicarAvancoDay2,
   calcularPercentuaisComCongelamentoDrop,
   parKey,
   gerarPareamentos,
@@ -204,6 +205,7 @@ export class IniciarProximaRodada
 
     const statsMap = calcularEstatisticas(idsParaStats, partidasParaStandings);
     aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
+    aplicarAvancoDay2(statsMap, inscricoes, torneio.rodadasDay1);
     const droppedRodadaPorUsuario = new Map(
       inscricoes.map((i) => [i.usuarioId, i.dropped ? i.droppedRodada : null])
     );
