@@ -390,6 +390,28 @@ describe("Swiss - ordenarPorDesempate", () => {
         // j1 gwp = 2/2 = 1.0, j2 gwp = 2/3 = 0.666
         expect(resultado[0].usuarioId).toBe("j1");
     });
+
+    it("deve desempatar por desempateFinal Asc (Team Id Melee) quando tudo mais empatar", () => {
+        const statsMap = new Map<string, EstatisticasJogador>();
+        // localeCompare colocaria "aaa" na frente; Team Id Asc coloca quem tem chave menor
+        const inscritoDepois: EstatisticasJogador = {
+            usuarioId: "aaa", pontosMesa: 3, vitoriasPartida: 1, empatesPartida: 0,
+            derrotasPartida: 0, totalPartidasJogadas: 1, vitoriasJogo: 2,
+            totalJogosJogados: 2, oponentesIds: [], desempateFinal: 200,
+        };
+        const inscritoAntes: EstatisticasJogador = {
+            usuarioId: "zzz", pontosMesa: 3, vitoriasPartida: 1, empatesPartida: 0,
+            derrotasPartida: 0, totalPartidasJogadas: 1, vitoriasJogo: 2,
+            totalJogosJogados: 2, oponentesIds: [], desempateFinal: 100,
+        };
+        statsMap.set("aaa", inscritoDepois);
+        statsMap.set("zzz", inscritoAntes);
+
+        const resultado = ordenarPorDesempate([inscritoDepois, inscritoAntes], statsMap);
+        expect(resultado[0].usuarioId).toBe("zzz");
+        expect(resultado[0].desempateFinal).toBe(100);
+        expect(resultado[1].usuarioId).toBe("aaa");
+    });
 });
 
 describe("Swiss - parKey", () => {

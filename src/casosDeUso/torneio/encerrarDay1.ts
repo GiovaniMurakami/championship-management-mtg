@@ -8,7 +8,11 @@ import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
-import { calcularEstatisticas, ordenarPorDesempate } from "../../dominio/torneio/swiss";
+import {
+  calcularEstatisticas,
+  ordenarPorDesempate,
+  aplicarDesempateFinalPorInscricao,
+} from "../../dominio/torneio/swiss";
 import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type EncerrarDay1InputDto = {
@@ -139,6 +143,7 @@ export class EncerrarDay1
     const ativosIds = inscricoesAtivas.map((i) => i.usuarioId);
     const idsParaStats = Array.from(new Set([...idsComHistorico, ...ativosIds]));
     const statsMap = calcularEstatisticas(idsParaStats, partidasDay1);
+    aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
     const ordenados = ordenarPorDesempate(Array.from(statsMap.values()), statsMap);
     const ativosSet = new Set(ativosIds);
     const rankingAtivos = ordenados.filter((s) => ativosSet.has(s.usuarioId));

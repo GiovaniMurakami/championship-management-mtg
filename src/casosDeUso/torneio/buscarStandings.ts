@@ -11,6 +11,7 @@ import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
   ordenarPorDesempate,
+  aplicarDesempateFinalPorInscricao,
   mwp,
   omwp,
   gwp,
@@ -217,6 +218,7 @@ export class BuscarStandings
     const inscricaoMap = new Map(inscricoes.map((i) => [i.usuarioId, i]));
 
     const statsMap = calcularEstatisticas(jogadoresIds, partidasConsolidadas);
+    aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
     const ordenados = ordenarPorDesempate(
       Array.from(statsMap.values()),
       statsMap

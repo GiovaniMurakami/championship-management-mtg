@@ -13,6 +13,7 @@ import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import {
   calcularEstatisticas,
   ordenarPorDesempate,
+  aplicarDesempateFinalPorInscricao,
   omwp,
   gwp,
   ogwp,
@@ -204,6 +205,7 @@ export class IniciarProximaRodada
       : todasPartidas;
 
     const statsMap = calcularEstatisticas(idsParaStats, partidasParaStandings);
+    aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
     const statsOrdenados = ordenarPorDesempate(
       Array.from(statsMap.values()),
       statsMap

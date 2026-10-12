@@ -5,7 +5,11 @@ import { Torneio } from "../../dominio/entidade/torneio";
 import { Usuario } from "../../dominio/entidade/usuario";
 import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { toUsuarioPublico } from "../../helpers/torneio/resolverNomeJogador";
-import { calcularEstatisticas, ordenarPorDesempate } from "../../dominio/torneio/swiss";
+import {
+  calcularEstatisticas,
+  ordenarPorDesempate,
+  aplicarDesempateFinalPorInscricao,
+} from "../../dominio/torneio/swiss";
 import { coresDoArquetipo } from "../../helpers/deck/coresDeck";
 
 export const DIAS_METAGAME = [7, 14, 30, 90] as const;
@@ -445,9 +449,11 @@ export function agregarMetagame(input: AgregarMetagameInput): MetagameAgregado {
   const totalDecks = copias.length;
   const colocacaoPorTorneio = new Map<string, Map<string, number>>();
   for (const t of torneios) {
-    const jogadores = inscricoes.filter((i) => i.torneioId === t.id).map((i) => i.usuarioId);
+    const inscricoesTorneio = inscricoes.filter((i) => i.torneioId === t.id);
+    const jogadores = inscricoesTorneio.map((i) => i.usuarioId);
     const partidasTorneio = input.partidas.filter((p) => p.torneioId === t.id);
     const stats = calcularEstatisticas(jogadores, partidasTorneio);
+    aplicarDesempateFinalPorInscricao(stats, inscricoesTorneio);
     const ordenados = ordenarPorDesempate([...stats.values()], stats);
     const mapa = new Map<string, number>();
     ordenados.forEach((s, idx) => mapa.set(s.usuarioId, idx + 1));

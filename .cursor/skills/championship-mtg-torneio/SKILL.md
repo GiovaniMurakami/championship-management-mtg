@@ -31,7 +31,7 @@ Use this helper — never `donoId === usuarioId` alone.
 ## Swiss
 
 - Rounds: `ceil(log2(n))`, optional `maxRodadas` cap
-- Tiebreakers (WotC order): points → OMW% → GW% → OGW%
+- Tiebreakers (Melee/WotC): points → OMW% → GW% → OGW% (piso `1/3`) → Team Id Asc (`inscricao.criadoEm`)
 - Odd players: bye to lowest standing
 - Pairing avoids rematches with backtracking; rematch only if unavoidable
 - Top cut via `corteTop`

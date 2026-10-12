@@ -10,6 +10,11 @@ export interface EstatisticasJogador {
   vitoriasJogo: number;
   totalJogosJogados: number;
   oponentesIds: string[];
+  /**
+   * Análogo ao Team Id do Melee (4º desempate, Asc — menor fica à frente).
+   * Nos torneios Fuguete: timestamp de inscrição (`criadoEm`).
+   */
+  desempateFinal?: number;
 }
 
 export function calcularEstatisticas(
@@ -127,6 +132,20 @@ export function ogwp(
   return soma / s.oponentesIds.length;
 }
 
+/**
+ * Preenche o 4º desempate Melee (Team Id Asc) com o instante de inscrição.
+ * Quem se inscreveu antes fica à frente quando pts/OMW/GW/OGW empatam.
+ */
+export function aplicarDesempateFinalPorInscricao(
+  statsMap: Map<string, EstatisticasJogador>,
+  inscricoes: Array<{ usuarioId: string; criadoEm: Date }>
+): void {
+  for (const i of inscricoes) {
+    const s = statsMap.get(i.usuarioId);
+    if (s) s.desempateFinal = i.criadoEm.getTime();
+  }
+}
+
 export function ordenarPorDesempate(
   jogadores: EstatisticasJogador[],
   statsMap: Map<string, EstatisticasJogador>
@@ -139,7 +158,10 @@ export function ordenarPorDesempate(
     if (Math.abs(gwpDiff) > 1e-9) return gwpDiff;
     const ogwpDiff = ogwp(b, statsMap) - ogwp(a, statsMap);
     if (Math.abs(ogwpDiff) > 1e-9) return ogwpDiff;
-    // Melee usa Team Id como 4º desempate; aqui o ID do usuário é o análogo determinístico.
+    // Melee TB4: Team Id Asc
+    const da = a.desempateFinal;
+    const db = b.desempateFinal;
+    if (da != null && db != null && da !== db) return da - db;
     return a.usuarioId.localeCompare(b.usuarioId);
   });
 }
