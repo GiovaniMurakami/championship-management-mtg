@@ -87,11 +87,11 @@ export function calcularEstatisticas(
 }
 
 /**
- * Piso para MWP/GWP/OMW/OGW.
- * Usa 0.33 (como CLM / várias ferramentas BR) em vez de 1/3 ≈ 0.333… do doc WotC/Melee,
- * para alinhar standings com circuitos que publicam com duas casas decimais.
+ * Piso WotC/Melee para MWP/GWP/OMW/OGW.
+ * Melee (torneio 447619) expõe TiebreakerFallbackPercentage = "1/3".
+ * Usar 0.33 reordena standings (Δ OMW ≈ 0.00111 por oponente no piso).
  */
-export const MIN_PERCENTUAL = 0.33;
+export const MIN_PERCENTUAL = 1 / 3;
 
 export function mwp(s: EstatisticasJogador): number {
   if (s.totalPartidasJogadas === 0) return MIN_PERCENTUAL;
@@ -139,7 +139,7 @@ export function ordenarPorDesempate(
     if (Math.abs(gwpDiff) > 1e-9) return gwpDiff;
     const ogwpDiff = ogwp(b, statsMap) - ogwp(a, statsMap);
     if (Math.abs(ogwpDiff) > 1e-9) return ogwpDiff;
-    // Critério final determinístico: ordem lexicográfica do ID
+    // Melee usa Team Id como 4º desempate; aqui o ID do usuário é o análogo determinístico.
     return a.usuarioId.localeCompare(b.usuarioId);
   });
 }

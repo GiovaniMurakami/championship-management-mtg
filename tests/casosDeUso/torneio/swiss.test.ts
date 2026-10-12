@@ -204,13 +204,44 @@ describe("Swiss - critérios de desempate", () => {
         expect(mwp(s)).toBeCloseTo(2 / 3, 5);
     });
 
-    it("mwp deve respeitar o mínimo de 0.33", () => {
+    it("mwp deve respeitar o piso Melee/WotC de 1/3", () => {
         const s: EstatisticasJogador = {
             usuarioId: "j1", pontosMesa: 0, vitoriasPartida: 0, empatesPartida: 0,
             derrotasPartida: 3, totalPartidasJogadas: 3, vitoriasJogo: 0,
             totalJogosJogados: 6, oponentesIds: [],
         };
         expect(mwp(s)).toBe(MIN_PERCENTUAL);
+        expect(MIN_PERCENTUAL).toBeCloseTo(1 / 3, 10);
+        expect(MIN_PERCENTUAL).not.toBe(0.33);
+    });
+
+    it("omwp com oponente no piso deve usar 1/3 (Melee), não 0.33", () => {
+        const statsMap = new Map<string, EstatisticasJogador>();
+        const forte: EstatisticasJogador = {
+            usuarioId: "forte", pontosMesa: 6, vitoriasPartida: 2, empatesPartida: 0,
+            derrotasPartida: 1, totalPartidasJogadas: 3, vitoriasJogo: 4,
+            totalJogosJogados: 6, oponentesIds: [],
+        };
+        const medio: EstatisticasJogador = {
+            usuarioId: "medio", pontosMesa: 3, vitoriasPartida: 1, empatesPartida: 0,
+            derrotasPartida: 2, totalPartidasJogadas: 3, vitoriasJogo: 2,
+            totalJogosJogados: 6, oponentesIds: [],
+        };
+        const fraco: EstatisticasJogador = {
+            usuarioId: "fraco", pontosMesa: 0, vitoriasPartida: 0, empatesPartida: 0,
+            derrotasPartida: 3, totalPartidasJogadas: 3, vitoriasJogo: 0,
+            totalJogosJogados: 6, oponentesIds: [],
+        };
+        const j1: EstatisticasJogador = {
+            usuarioId: "j1", pontosMesa: 9, vitoriasPartida: 3, empatesPartida: 0,
+            derrotasPartida: 0, totalPartidasJogadas: 3, vitoriasJogo: 6,
+            totalJogosJogados: 6, oponentesIds: ["forte", "medio", "fraco"],
+        };
+        for (const s of [forte, medio, fraco, j1]) statsMap.set(s.usuarioId, s);
+
+        // (2/3 + 1/3 + 1/3) / 3 = 4/9 — com piso 0.33 seria ~0.4433 e reordenaria vs Melee
+        expect(omwp(j1, statsMap)).toBeCloseTo(4 / 9, 10);
+        expect(mwp(fraco)).toBe(1 / 3);
     });
 
     it("gwp deve retornar MIN_PERCENTUAL quando não há jogos", () => {
