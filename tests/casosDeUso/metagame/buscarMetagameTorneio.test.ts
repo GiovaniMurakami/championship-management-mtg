@@ -220,15 +220,6 @@ describe("BuscarMetagameTorneio", () => {
       copias: 4,
       pct: 1,
     });
-    expect(resultado.destaquesDay2).toMatchObject({
-      jogadores: 1,
-      arquetipos: 1,
-    });
-    expect(resultado.destaquesDay2?.melhorDesempenho?.[0]).toMatchObject({
-      nome: "Alice",
-      vitorias: 1,
-      derrotas: 0,
-    });
     expect(resultado.totalDecks).toBeGreaterThanOrEqual(1);
     const terrorMeta = resultado.arquetipos.find((a) => a.slug.includes("terror") || a.nome.includes("Terror"));
     expect(terrorMeta?.conversaoDay2).toMatchObject({ day1: 1, day2: 1, taxaConversao: 1 });

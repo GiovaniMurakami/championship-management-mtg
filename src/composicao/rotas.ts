@@ -42,6 +42,7 @@ import { DroparJogadoresSemCheckinRota } from "../infra/api/express/rotas/tornei
 import { EncerrarDay1Rota } from "../infra/api/express/rotas/torneio/encerrarDay1.express.route";
 import { DesdroparJogadorRota } from "../infra/api/express/rotas/torneio/desdroparJogador.express.route";
 import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTorneios.express.route";
+import { FixarTorneioRota } from "../infra/api/express/rotas/torneio/fixarTorneio.express.route";
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarSeoTorneioRota } from "../infra/api/express/rotas/torneio/buscarSeoTorneio.express.route";
 import { RenderizarCompartilhamentoTorneioRota } from "../infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
@@ -59,6 +60,7 @@ import { CriarLigaRota } from "../infra/api/express/rotas/liga/criarLiga.express
 import { AlterarLigaRota } from "../infra/api/express/rotas/liga/alterarLiga.express.route";
 import { ExcluirLigaRota } from "../infra/api/express/rotas/liga/excluirLiga.express.route";
 import { ListarLigasRota } from "../infra/api/express/rotas/liga/listarLigas.express.route";
+import { FixarLigaRota } from "../infra/api/express/rotas/liga/fixarLiga.express.route";
 import { BuscarLigaRota } from "../infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "../infra/api/express/rotas/liga/rankingLiga.express.route";
 import { CriarTimeRota } from "../infra/api/express/rotas/time/criarTime.express.route";
@@ -163,6 +165,8 @@ export function criarRotas(casos: CasosDeUso) {
         MeuHistoricoTorneioRota.criar(casos.meuHistoricoTorneio),
         ListarPartidasTorneioRota.criar(casos.listarPartidasTorneio),
         AlterarTorneioRota.criar(casos.alterarTorneio),
+        FixarTorneioRota.criar(casos.fixarTorneio, true),
+        FixarTorneioRota.criar(casos.fixarTorneio, false),
         ExcluirTorneioRota.criar(casos.excluirTorneio),
         GerarLinkIngressoRota.criar(casos.gerarLinkIngresso),
         IngressarViaTorneioRota.criar(casos.ingressarViaTorneio),
@@ -172,6 +176,8 @@ export function criarRotas(casos: CasosDeUso) {
         ListarLigasRota.criar(casos.listarLigas),
         BuscarLigaRota.criar(casos.buscarLiga),
         AlterarLigaRota.criar(casos.alterarLiga),
+        FixarLigaRota.criar(casos.fixarLiga, true),
+        FixarLigaRota.criar(casos.fixarLiga, false),
         ExcluirLigaRota.criar(casos.excluirLiga),
         RankingLigaRota.criar(casos.rankingLiga),
         CriarTimeRota.criar(casos.criarTime),

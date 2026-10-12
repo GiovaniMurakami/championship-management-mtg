@@ -10,6 +10,8 @@ export type LigaProps = {
   donoId: string;
   torneioIds?: string[];
   tipo?: TipoLiga;
+  /** Pin global (admin): aparece no topo das listagens para todos. */
+  fixado?: boolean;
   criadoEm?: Date;
 };
 
@@ -21,6 +23,7 @@ export class Liga {
   public donoId: string;
   public torneioIds: string[];
   public tipo: TipoLiga;
+  public fixado: boolean;
   public criadoEm: Date;
 
   constructor(props: LigaProps) {
@@ -31,6 +34,7 @@ export class Liga {
     this.donoId = props.donoId;
     this.torneioIds = props.torneioIds ?? [];
     this.tipo = props.tipo ?? "individual";
+    this.fixado = props.fixado ?? false;
     this.criadoEm = props.criadoEm ?? new Date();
   }
 

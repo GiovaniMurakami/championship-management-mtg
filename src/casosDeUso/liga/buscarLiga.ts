@@ -16,6 +16,7 @@ export type BuscarLigaOutputDto = {
   bannerUrl?: string;
   donoId: string;
   tipo: TipoLiga;
+  fixado: boolean;
   torneioIds: string[];
   torneios: {
     id: string;
@@ -56,6 +57,7 @@ export class BuscarLiga implements CasoDeUso<BuscarLigaInputDto, BuscarLigaOutpu
       bannerUrl: liga.bannerUrl,
       donoId: liga.donoId,
       tipo: liga.tipo,
+      fixado: Boolean(liga.fixado),
       torneioIds: liga.torneioIds,
       torneios: torneios
         .filter((t) => t?.status === "finalizado")

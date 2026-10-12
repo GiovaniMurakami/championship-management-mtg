@@ -34,6 +34,8 @@ export interface TorneioProps {
   linkLive?: string;
   emCorte?: boolean;
   secreto?: boolean;
+  /** Pin global (admin): aparece no topo das listagens para todos. */
+  fixado?: boolean;
   /** Quando true, listas ficam visíveis nos standings como em torneio finalizado. */
   listasPublicas?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
@@ -72,6 +74,7 @@ export class Torneio {
   public linkLive?: string;
   public emCorte: boolean = false;
   public secreto: boolean = false;
+  public fixado: boolean = false;
   public listasPublicas: boolean = false;
   public exibirNomeJogador: ExibirNomeJogador;
   public visualizacoes: number;
@@ -108,6 +111,7 @@ export class Torneio {
     this.linkLive = props.linkLive;
     this.emCorte = props.emCorte ?? false;
     this.secreto = props.secreto ?? false;
+    this.fixado = props.fixado ?? false;
     this.listasPublicas = props.listasPublicas ?? false;
     this.exibirNomeJogador = props.exibirNomeJogador ?? "nome";
     this.visualizacoes = props.visualizacoes ?? 0;

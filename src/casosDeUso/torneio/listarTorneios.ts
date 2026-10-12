@@ -53,6 +53,7 @@ export type ListarTorneiosOutputDto = {
     exibirNomeJogador?: string;
     emCorte: boolean;
     secreto: boolean;
+    fixado: boolean;
     visualizacoes: number;
     criadoEm: string;
     inscrito: boolean;
@@ -174,6 +175,7 @@ export class ListarTorneios
       linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
+        fixado: Boolean(t.fixado),
         exibirNomeJogador: t.exibirNomeJogador,
         visualizacoes: t.visualizacoes,
         criadoEm: toBrasiliaISO(t.criadoEm)!,

@@ -64,6 +64,7 @@ import { BuscarStandings } from "../casosDeUso/torneio/buscarStandings";
 import { MeuHistoricoTorneio } from "../casosDeUso/torneio/meuHistoricoTorneio";
 import { ListarPartidasTorneio } from "../casosDeUso/torneio/listarPartidasTorneio";
 import { AlterarTorneio } from "../casosDeUso/torneio/alterarTorneio";
+import { FixarTorneio } from "../casosDeUso/torneio/fixarTorneio";
 import { ExcluirTorneio } from "../casosDeUso/torneio/excluirTorneio";
 import { GerarLinkIngresso } from "../casosDeUso/torneio/gerarLinkIngresso";
 import { IngressarViaTorneio } from "../casosDeUso/torneio/ingressarViaTorneio";
@@ -71,6 +72,7 @@ import { AjustarResultado } from "../casosDeUso/torneio/ajustarResultado";
 import { DefinirAnfitriaoTorneio } from "../casosDeUso/torneio/definirAnfitriaoTorneio";
 import { CriarLiga } from "../casosDeUso/liga/criarLiga";
 import { AlterarLiga } from "../casosDeUso/liga/alterarLiga";
+import { FixarLiga } from "../casosDeUso/liga/fixarLiga";
 import { ExcluirLiga } from "../casosDeUso/liga/excluirLiga";
 import { ListarLigas } from "../casosDeUso/liga/listarLigas";
 import { BuscarLiga } from "../casosDeUso/liga/buscarLiga";
@@ -190,6 +192,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const encerrarDay1 = EncerrarDay1.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, eventos);
     const desdroparJogador = DesdroparJogador.criar(repos.torneio, repos.inscricao, repos.usuario, repos.partida, eventos);
     const listarTorneios = ListarTorneios.criar(repos.torneio, repos.inscricao, repos.liga);
+    const fixarTorneio = FixarTorneio.criar(repos.torneio, eventos);
     const buscarTorneio = BuscarTorneio.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.liga);
     const buscarSeoTorneio = BuscarSeoTorneio.criar(repos.torneio);
     const buscarStandings = BuscarStandings.criar(repos.torneio, repos.inscricao, repos.partida, repos.usuario, repos.deck, repos.time);
@@ -207,6 +210,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const alterarLiga = AlterarLiga.criar(repos.liga, repos.torneio);
     const excluirLiga = ExcluirLiga.criar(repos.liga);
     const listarLigas = ListarLigas.criar(repos.liga, repos.torneio);
+    const fixarLiga = FixarLiga.criar(repos.liga);
     const buscarLiga = BuscarLiga.criar(repos.liga, repos.torneio);
     const rankingLiga = RankingLiga.criar(repos.liga, repos.partida, repos.inscricao, repos.deck, repos.usuario, repos.time, repos.torneio);
 
@@ -263,9 +267,9 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         iniciarTorneio, iniciarProximaRodada, publicarRodada, refazerRodada, ajustarTotalRodadas, encerrarTorneio, registrarResultado, contestarResultado, confirmarResultado, atualizarMesaPartida, atualizarPareamentosRodada,
         droparJogador, droparJogadoresSemDeck, droparJogadoresSemCheckin, desdroparJogador, encerrarDay1,
         listarTorneios, buscarTorneio, buscarSeoTorneio, buscarStandings,
-        meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, excluirTorneio,
+        meuHistoricoTorneio, listarPartidasTorneio, alterarTorneio, fixarTorneio, excluirTorneio,
         gerarLinkIngresso, ingressarViaTorneio, ajustarResultado, definirAnfitriaoTorneio,
-        criarLiga, alterarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
+        criarLiga, alterarLiga, fixarLiga, excluirLiga, listarLigas, buscarLiga, rankingLiga,
         criarTime, listarTimes, buscarTime, alterarTime, excluirTime, entrarTime, sairTime,
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,

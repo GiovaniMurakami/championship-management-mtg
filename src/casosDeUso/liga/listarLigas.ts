@@ -22,6 +22,7 @@ export type ListarLigasOutputDto = {
     bannerUrl?: string;
     donoId: string;
     tipo: TipoLiga;
+    fixado: boolean;
     totalTorneios: number;
     criadoEm: Date;
   }[];
@@ -61,6 +62,7 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
         bannerUrl: liga.bannerUrl,
         donoId: liga.donoId,
         tipo: liga.tipo,
+        fixado: Boolean(liga.fixado),
         totalTorneios: liga.torneioIds.filter((id) => finalizados.has(id)).length,
         criadoEm: liga.criadoEm,
       })),

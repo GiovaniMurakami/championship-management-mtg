@@ -10,6 +10,7 @@ type LigaItem = {
   donoId: string;
   torneioIds: string[];
   tipo: TipoLiga;
+  fixado?: boolean;
   criadoEm: string;
 };
 
@@ -35,7 +36,11 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
 
   public async listar(filtros: FiltrosListarLigas = {}): Promise<Liga[]> {
     const filtradas = this.filtrar(await this.queryJson<LigaItem>(LIGAS_PK, { consistente: false }), filtros)
-      .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime() || a.id.localeCompare(b.id));
+      .sort((a, b) => {
+        const pinDiff = Number(Boolean(b.fixado)) - Number(Boolean(a.fixado));
+        if (pinDiff !== 0) return pinDiff;
+        return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime() || a.id.localeCompare(b.id);
+      });
     const offset = filtros.offset ?? 0;
     const limite = filtros.limite ?? filtradas.length;
     return filtradas.slice(offset, offset + limite).map((item) => this.itemParaLiga(item));
@@ -122,6 +127,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
       donoId: liga.donoId,
       torneioIds: liga.torneioIds,
       tipo: liga.tipo,
+      fixado: liga.fixado,
       criadoEm: liga.criadoEm.toISOString(),
     };
   }
@@ -135,6 +141,7 @@ export class LigaDynamoRepositorio extends BaseDynamoRepositorio implements Liga
       donoId: item.donoId,
       torneioIds: item.torneioIds,
       tipo: item.tipo,
+      fixado: item.fixado ?? false,
       criadoEm: new Date(item.criadoEm),
     });
   }

@@ -30,6 +30,7 @@ type TorneioItem = {
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  fixado?: boolean;
   listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   visualizacoes: number;
@@ -92,6 +93,8 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     });
     const filtrados = this.filtrar(itens, filtros)
       .sort((a, b) => {
+        const pinDiff = Number(Boolean(b.fixado)) - Number(Boolean(a.fixado));
+        if (pinDiff !== 0) return pinDiff;
         const diff = new Date(a.horario).getTime() - new Date(b.horario).getTime() || a.id.localeCompare(b.id);
         return filtros.horarioDesc ? -diff : diff;
       });
@@ -287,6 +290,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
+      fixado: torneio.fixado,
       listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       visualizacoes: torneio.visualizacoes,
@@ -326,6 +330,7 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       linkLive: item.linkLive,
       emCorte: item.emCorte,
       secreto: item.secreto,
+      fixado: item.fixado ?? false,
       listasPublicas: item.listasPublicas ?? false,
       exibirNomeJogador: item.exibirNomeJogador,
       visualizacoes: item.visualizacoes,
