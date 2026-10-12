@@ -1,6 +1,7 @@
 import {
     calcularEstatisticas,
     ordenarPorDesempate,
+    calcularPercentuaisComCongelamentoDrop,
     mwp,
     gwp,
     omwp,
@@ -389,6 +390,32 @@ describe("Swiss - ordenarPorDesempate", () => {
         const resultado = ordenarPorDesempate([j2, j1], statsMap);
         // j1 gwp = 2/2 = 1.0, j2 gwp = 2/3 = 0.666
         expect(resultado[0].usuarioId).toBe("j1");
+    });
+
+    it("drop no Day 1 não herda queda de MWP do oponente no Day 2", () => {
+        const partidas = [
+            criarPartida({ jogador1Id: "cut", jogador2Id: "adv", vitoriasJogador1: 0, vitoriasJogador2: 2, rodada: 1 }),
+            criarPartida({ jogador1Id: "adv", jogador2Id: "x1", vitoriasJogador1: 2, vitoriasJogador2: 0, rodada: 2 }),
+            criarPartida({ jogador1Id: "adv", jogador2Id: "x2", vitoriasJogador1: 2, vitoriasJogador2: 0, rodada: 3 }),
+            // Day 2: adv loses a lot → MWP final cai
+            criarPartida({ jogador1Id: "adv", jogador2Id: "x3", vitoriasJogador1: 0, vitoriasJogador2: 2, rodada: 8 }),
+            criarPartida({ jogador1Id: "adv", jogador2Id: "x4", vitoriasJogador1: 0, vitoriasJogador2: 2, rodada: 9 }),
+            criarPartida({ jogador1Id: "adv", jogador2Id: "x5", vitoriasJogador1: 0, vitoriasJogador2: 2, rodada: 10 }),
+        ];
+        const ids = ["cut", "adv", "x1", "x2", "x3", "x4", "x5"];
+        const statsMap = calcularEstatisticas(ids, partidas);
+        const semCongelar = omwp(statsMap.get("cut")!, statsMap);
+        const percentuais = calcularPercentuaisComCongelamentoDrop(
+            statsMap,
+            ids,
+            partidas,
+            new Map([["cut", 3], ["adv", null]])
+        );
+        const comCongelar = percentuais.get("cut")!.omwp;
+        // No drop (R3): adv 3-0 → MWP 1; no final adv 2-4 → MWP 0.5 (ainda acima do piso)
+        expect(comCongelar).toBeCloseTo(1, 10);
+        expect(semCongelar).toBeCloseTo(0.5, 10);
+        expect(comCongelar).toBeGreaterThan(semCongelar);
     });
 
     it("deve desempatar por desempateFinal Asc (Team Id Melee) quando tudo mais empatar", () => {

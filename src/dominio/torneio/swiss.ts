@@ -132,6 +132,51 @@ export function ogwp(
   return soma / s.oponentesIds.length;
 }
 
+export type PercentuaisDesempate = {
+  mwp: number;
+  omwp: number;
+  gwp: number;
+  ogwp: number;
+};
+
+/**
+ * Melee (Day 1 → corte → Day 2): OMW/OGW de quem dropou congela na rodada do drop.
+ * Oponentes que seguem no Day 2 não “puxam” o OMW de quem ficou no Day 1.
+ */
+export function calcularPercentuaisComCongelamentoDrop(
+  statsMap: Map<string, EstatisticasJogador>,
+  jogadoresIds: string[],
+  partidas: Partida[],
+  droppedRodadaPorUsuario: Map<string, number | null | undefined>
+): Map<string, PercentuaisDesempate> {
+  const cacheAte = new Map<number, Map<string, EstatisticasJogador>>();
+  const statsAte = (maxRodada: number) => {
+    let cached = cacheAte.get(maxRodada);
+    if (!cached) {
+      cached = calcularEstatisticas(
+        jogadoresIds,
+        partidas.filter((p) => p.rodada <= maxRodada)
+      );
+      cacheAte.set(maxRodada, cached);
+    }
+    return cached;
+  };
+
+  const saida = new Map<string, PercentuaisDesempate>();
+  for (const [id, s] of statsMap) {
+    const drop = droppedRodadaPorUsuario.get(id);
+    const oppMap =
+      drop != null && drop > 0 ? statsAte(drop) : statsMap;
+    saida.set(id, {
+      mwp: mwp(s),
+      gwp: gwp(s),
+      omwp: omwp(s, oppMap),
+      ogwp: ogwp(s, oppMap),
+    });
+  }
+  return saida;
+}
+
 /**
  * Preenche o 4º desempate Melee (Team Id Asc) com o instante de inscrição.
  * Quem se inscreveu antes fica à frente quando pts/OMW/GW/OGW empatam.
@@ -148,15 +193,23 @@ export function aplicarDesempateFinalPorInscricao(
 
 export function ordenarPorDesempate(
   jogadores: EstatisticasJogador[],
-  statsMap: Map<string, EstatisticasJogador>
+  statsMap: Map<string, EstatisticasJogador>,
+  percentuais?: Map<string, PercentuaisDesempate>
 ): EstatisticasJogador[] {
+  const omwpDe = (s: EstatisticasJogador) =>
+    percentuais?.get(s.usuarioId)?.omwp ?? omwp(s, statsMap);
+  const gwpDe = (s: EstatisticasJogador) =>
+    percentuais?.get(s.usuarioId)?.gwp ?? gwp(s);
+  const ogwpDe = (s: EstatisticasJogador) =>
+    percentuais?.get(s.usuarioId)?.ogwp ?? ogwp(s, statsMap);
+
   return [...jogadores].sort((a, b) => {
     if (b.pontosMesa !== a.pontosMesa) return b.pontosMesa - a.pontosMesa;
-    const omwpDiff = omwp(b, statsMap) - omwp(a, statsMap);
+    const omwpDiff = omwpDe(b) - omwpDe(a);
     if (Math.abs(omwpDiff) > 1e-9) return omwpDiff;
-    const gwpDiff = gwp(b) - gwp(a);
+    const gwpDiff = gwpDe(b) - gwpDe(a);
     if (Math.abs(gwpDiff) > 1e-9) return gwpDiff;
-    const ogwpDiff = ogwp(b, statsMap) - ogwp(a, statsMap);
+    const ogwpDiff = ogwpDe(b) - ogwpDe(a);
     if (Math.abs(ogwpDiff) > 1e-9) return ogwpDiff;
     // Melee TB4: Team Id Asc
     const da = a.desempateFinal;

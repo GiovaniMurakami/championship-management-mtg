@@ -12,10 +12,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
-  mwp,
-  omwp,
-  gwp,
-  ogwp,
+  calcularPercentuaisComCongelamentoDrop,
 } from "../../dominio/torneio/swiss";
 import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
 import { CacheGateway } from "../../dominio/gateway/cacheGateway";
@@ -219,9 +216,19 @@ export class BuscarStandings
 
     const statsMap = calcularEstatisticas(jogadoresIds, partidasConsolidadas);
     aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
+    const droppedRodadaPorUsuario = new Map(
+      inscricoes.map((i) => [i.usuarioId, i.dropped ? i.droppedRodada : null])
+    );
+    const percentuais = calcularPercentuaisComCongelamentoDrop(
+      statsMap,
+      jogadoresIds,
+      partidasConsolidadas,
+      droppedRodadaPorUsuario
+    );
     const ordenados = ordenarPorDesempate(
       Array.from(statsMap.values()),
-      statsMap
+      statsMap,
+      percentuais
     );
 
     const saida = {
@@ -235,6 +242,7 @@ export class BuscarStandings
         const inscricao = inscricaoMap.get(s.usuarioId);
         const t = timeByMembro.get(s.usuarioId);
         const u = usuarioMap.get(s.usuarioId);
+        const pct = percentuais.get(s.usuarioId)!;
         return {
           posicao: idx + 1,
           usuario: {
@@ -248,10 +256,10 @@ export class BuscarStandings
           vitoriasPartida: s.vitoriasPartida,
           empatesPartida: s.empatesPartida,
           derrotasPartida: s.derrotasPartida,
-          mwp: mwp(s),
-          omwp: omwp(s, statsMap),
-          gwp: gwp(s),
-          ogwp: ogwp(s, statsMap),
+          mwp: pct.mwp,
+          omwp: pct.omwp,
+          gwp: pct.gwp,
+          ogwp: pct.ogwp,
           checkInRodada: inscricao?.checkInRodada ?? -1,
           deckId: inscricao?.deckId ?? null,
           deckNome: inscricao?.deckId

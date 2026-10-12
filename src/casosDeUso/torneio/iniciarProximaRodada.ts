@@ -14,9 +14,7 @@ import {
   calcularEstatisticas,
   ordenarPorDesempate,
   aplicarDesempateFinalPorInscricao,
-  omwp,
-  gwp,
-  ogwp,
+  calcularPercentuaisComCongelamentoDrop,
   parKey,
   gerarPareamentos,
 } from "../../dominio/torneio/swiss";
@@ -206,9 +204,19 @@ export class IniciarProximaRodada
 
     const statsMap = calcularEstatisticas(idsParaStats, partidasParaStandings);
     aplicarDesempateFinalPorInscricao(statsMap, inscricoes);
+    const droppedRodadaPorUsuario = new Map(
+      inscricoes.map((i) => [i.usuarioId, i.dropped ? i.droppedRodada : null])
+    );
+    const percentuais = calcularPercentuaisComCongelamentoDrop(
+      statsMap,
+      idsParaStats,
+      partidasParaStandings,
+      droppedRodadaPorUsuario
+    );
     const statsOrdenados = ordenarPorDesempate(
       Array.from(statsMap.values()),
-      statsMap
+      statsMap,
+      percentuais
     );
 
     if (estaNaUltimaRodada && torneio.corteTop && !torneio.emCorte) {
@@ -291,14 +299,17 @@ export class IniciarProximaRodada
         totalRodadas: torneio.totalRodadas,
       });
 
-      const classificacao = statsOrdenados.map((s, idx) => ({
-        posicao: idx + 1,
-        usuarioId: s.usuarioId,
-        pontosMesa: s.pontosMesa,
-        omwp: omwp(s, statsMap),
-        gwp: gwp(s),
-        ogwp: ogwp(s, statsMap),
-      }));
+      const classificacao = statsOrdenados.map((s, idx) => {
+        const pct = percentuais.get(s.usuarioId)!;
+        return {
+          posicao: idx + 1,
+          usuarioId: s.usuarioId,
+          pontosMesa: s.pontosMesa,
+          omwp: pct.omwp,
+          gwp: pct.gwp,
+          ogwp: pct.ogwp,
+        };
+      });
 
       return { finalizado: true, classificacao };
     }
