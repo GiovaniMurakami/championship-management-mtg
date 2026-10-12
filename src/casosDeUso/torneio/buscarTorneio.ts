@@ -48,10 +48,16 @@ export type BuscarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado: boolean;
+  day1EncerradoEm?: string;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  fixado: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: string;
   visualizacoes: number;
   totalInscritos: number;
@@ -175,10 +181,16 @@ export class BuscarTorneio
       maxJogadores: torneioAtual.maxJogadores,
       maxRodadas: torneioAtual.maxRodadas,
       corteTop: torneioAtual.corteTop,
+      rodadasDay1: torneioAtual.rodadasDay1,
+      vagasDay2: torneioAtual.vagasDay2,
+      day1Encerrado: torneioAtual.day1Encerrado,
+      day1EncerradoEm: toBrasiliaISO(torneioAtual.day1EncerradoEm),
       premio: torneioAtual.premio,
       linkLive: torneioAtual.linkLive,
       emCorte: torneioAtual.emCorte,
       secreto: torneioAtual.secreto,
+      fixado: Boolean(torneioAtual.fixado),
+      listasPublicas: torneioAtual.listasPublicas,
       exibirNomeJogador: torneioAtual.exibirNomeJogador,
       visualizacoes: torneioAtual.visualizacoes,
       totalInscritos,

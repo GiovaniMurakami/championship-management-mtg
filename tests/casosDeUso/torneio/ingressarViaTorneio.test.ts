@@ -13,6 +13,7 @@ import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Deck } from "../../../src/dominio/entidade/deck";
 import { LinkIngressoData } from "../../../src/dominio/gateway/linkIngressoGateway";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+import "../../../src/infra/socketio/eventoTorneioPublicador";
 
 vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
     eventosTorneio: { emit: vi.fn() },

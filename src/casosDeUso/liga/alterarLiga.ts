@@ -4,7 +4,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CACHE_PK_LIGAS } from "../../helpers/cache/chavesCache";
 
 export type AlterarLigaInputDto = {
@@ -33,13 +33,13 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
   private constructor(
     private readonly ligaGateway: LigaGateway,
     private readonly torneioGateway: TorneioGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
   public static criar(
     ligaGateway: LigaGateway,
     torneioGateway: TorneioGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new AlterarLiga(ligaGateway, torneioGateway, cache);
   }
@@ -62,14 +62,14 @@ export class AlterarLiga implements CasoDeUso<AlterarLigaInputDto, AlterarLigaOu
     }
 
     if (input.torneioIds !== undefined) {
-      for (const torneioId of input.torneioIds) {
-        const torneio = await this.torneioGateway.buscarPorId(torneioId);
-        if (!torneio) {
-          throw ErroPersonalizado.criar({
-            mensagem: `Torneio não encontrado: ${torneioId}`,
-            status: StatusErro.erroNaoEncontrado,
-          });
-        }
+      const encontrados = await this.torneioGateway.buscarVarios(input.torneioIds);
+      const idsEncontrados = new Set(encontrados.map((torneio) => torneio.id));
+      const ausente = input.torneioIds.find((torneioId) => !idsEncontrados.has(torneioId));
+      if (ausente) {
+        throw ErroPersonalizado.criar({
+          mensagem: `Torneio não encontrado: ${ausente}`,
+          status: StatusErro.erroNaoEncontrado,
+        });
       }
       liga.torneioIds = input.torneioIds;
     }

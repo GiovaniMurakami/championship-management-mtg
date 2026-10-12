@@ -195,6 +195,19 @@ describe("schemas de validacao", () => {
                 ligaIds: ["550e8400-e29b-41d4-a716-446655440010"],
             }).ligaIds).toEqual(["550e8400-e29b-41d4-a716-446655440010"]);
         });
+        it("aceita rodadasDay1 e vagasDay2 juntos", () => {
+            const r = criarTorneioSchema.parse({
+                nome: "T", horario: "h", formato: "f",
+                rodadasDay1: 7, vagasDay2: 64,
+            });
+            expect(r.rodadasDay1).toBe(7);
+            expect(r.vagasDay2).toBe(64);
+        });
+        it("rejeita rodadasDay1 sem vagasDay2", () => {
+            expect(criarTorneioSchema.safeParse({
+                nome: "T", horario: "h", formato: "f", rodadasDay1: 7,
+            }).success).toBe(false);
+        });
     });
 
     describe("alterarTorneioSchema", () => {
@@ -206,6 +219,11 @@ describe("schemas de validacao", () => {
         });
         it("aceita objeto vazio", () => {
             expect(() => alterarTorneioSchema.parse({})).not.toThrow();
+        });
+        it("aceita configuração Day 1/Day 2", () => {
+            const r = alterarTorneioSchema.parse({ rodadasDay1: 7, vagasDay2: 64 });
+            expect(r.rodadasDay1).toBe(7);
+            expect(r.vagasDay2).toBe(64);
         });
     });
 

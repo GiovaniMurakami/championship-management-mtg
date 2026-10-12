@@ -8,7 +8,7 @@ import {
     gerarPareamentos,
     MIN_PERCENTUAL,
     EstatisticasJogador,
-} from "../../../src/casosDeUso/torneio/swiss";
+} from "../../../src/dominio/torneio/swiss";
 import { Partida } from "../../../src/dominio/entidade/partida";
 
 function criarPartida(overrides: Partial<Partida> & Pick<Partida, "jogador1Id" | "jogador2Id" | "vitoriasJogador1" | "vitoriasJogador2">): Partida {
@@ -99,9 +99,15 @@ describe("Swiss - calcularEstatisticas", () => {
         expect(s.oponentesIds).toEqual([]);
     });
 
-    it("deve calcular bye de penalidade corretamente (0 pontos, 0-2)", () => {
+    it("deve calcular bye de penalidade corretamente (0 pontos, sem jogos no GWP)", () => {
         const partidas = [
-            criarPartida({ jogador1Id: "j1", jogador2Id: null as unknown as string, vitoriasJogador1: 0, vitoriasJogador2: 2 }),
+            criarPartida({
+                jogador1Id: "j1",
+                jogador2Id: null as unknown as string,
+                vitoriasJogador1: 0,
+                vitoriasJogador2: 2,
+                tipoBye: "penalidade",
+            }),
         ];
 
         const stats = calcularEstatisticas(["j1"], partidas);
@@ -111,7 +117,7 @@ describe("Swiss - calcularEstatisticas", () => {
         expect(s.derrotasPartida).toBe(1);
         expect(s.vitoriasPartida).toBe(0);
         expect(s.vitoriasJogo).toBe(0);
-        expect(s.totalJogosJogados).toBe(2);
+        expect(s.totalJogosJogados).toBe(0);
         expect(s.totalPartidasJogadas).toBe(1);
         expect(s.oponentesIds).toEqual([]);
     });

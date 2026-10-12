@@ -13,11 +13,12 @@ import {
   ogwp,
   omwp,
   ordenarPorDesempate,
-} from "../torneio/swiss";
+} from "../../dominio/torneio/swiss";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_LIGAS, cacheSkRankingLiga } from "../../helpers/cache/chavesCache";
 
 function normalizarNomeCartaRanking(nome: string): string {
@@ -182,7 +183,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     private readonly usuarioGateway: UsuarioGateway,
     private readonly timeGateway: TimeGateway,
     private readonly torneioGateway: TorneioGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
   public static criar(
@@ -193,7 +194,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     usuarioGateway: UsuarioGateway,
     timeGateway: TimeGateway,
     torneioGateway: TorneioGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new RankingLiga(ligaGateway, partidaGateway, inscricaoGateway, deckGateway, usuarioGateway, timeGateway, torneioGateway, cache);
   }
@@ -225,7 +226,7 @@ export class RankingLiga implements CasoDeUso<RankingLigaInputDto, RankingLigaOu
     const inscricoesPorDeck = new Map<string, Set<string>>();
     const timeIdsInscritos = new Set<string>();
 
-    const torneios = await Promise.all(liga.torneioIds.map((id) => this.torneioGateway.buscarPorId(id)));
+    const torneios = await this.torneioGateway.buscarVarios(liga.torneioIds);
     const finalizados = torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id);
 
     // Batch: busca todas as partidas e inscrições de todos os torneios da liga de uma vez (evita N+1)

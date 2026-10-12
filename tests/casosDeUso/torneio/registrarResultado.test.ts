@@ -303,4 +303,28 @@ describe("RegistrarResultado", () => {
         })).rejects.toMatchObject({ status: 400 });
         expect(partidaGw.finalizarAtomicamente).not.toHaveBeenCalled();
     });
+
+    it("rejeita resultado quando torneio está pausado entre Day 1 e Day 2", async () => {
+        const torneioPausado = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "f",
+            donoId: "dono", status: "pausado", rodadaAtual: 2, totalRodadas: 5,
+            rodadasDay1: 2, vagasDay2: 2, day1Encerrado: true,
+        });
+        const partidaGw = criarMockPartidaGateway({
+            buscarPorId: vi.fn().mockResolvedValue({ ...partida }),
+        });
+        const uc = RegistrarResultado.criar(
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioPausado) }),
+            partidaGw,
+        );
+
+        await expect(uc.executar({
+            partidaId: "p-1", usuarioId: "j1", isAdmin: false,
+            vitoriasJogador1: 2, vitoriasJogador2: 0,
+        })).rejects.toMatchObject({
+            status: 400,
+            message: "Torneio pausado entre Day 1 e Day 2.",
+        });
+        expect(partidaGw.finalizarAtomicamente).not.toHaveBeenCalled();
+    });
 });

@@ -10,7 +10,8 @@ import { toBrasiliaISO } from "../../helpers/data/brasilia";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { aplicarPublicacaoRodada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
+import { persistirTorneioComPartidas } from "./persistirTorneioComPartidas";
 
 export type IniciarTorneioInputDto = {
   torneioId: string;
@@ -42,16 +43,18 @@ export class IniciarTorneio
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
-  ) { }
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
-  ) {
-    return new IniciarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway);
+    usuarioGateway: UsuarioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new IniciarTorneio(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, eventos);
   }
 
   public async executar(
@@ -130,8 +133,8 @@ export class IniciarTorneio
       );
     }
 
-    await this.torneioGateway.atualizarECriarPartidas(torneio, partidas);
-    eventosTorneio.emit("torneio_iniciado", {
+    await persistirTorneioComPartidas(this.torneioGateway, this.partidaGateway, torneio, partidas);
+    this.eventos.publicar("torneio_iniciado", {
       torneioId: torneio.id,
       rodadaAtual: torneio.rodadaAtual,
       totalRodadas: torneio.totalRodadas,

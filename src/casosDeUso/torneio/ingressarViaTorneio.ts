@@ -9,8 +9,9 @@ import { LinkIngressoGateway } from "../../dominio/gateway/linkIngressoGateway";
 import { DeckGateway } from "../../dominio/gateway/deckGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 import { clonarDeckParaTorneio } from "./clonarDeckParaTorneio";
 
@@ -38,7 +39,8 @@ export class IngressarViaTorneio
         private readonly partidaGateway: PartidaGateway,
         private readonly usuarioGateway: UsuarioGateway,
         private readonly linkIngressoGateway: LinkIngressoGateway,
-        private readonly deckGateway: DeckGateway
+        private readonly deckGateway: DeckGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
@@ -47,7 +49,8 @@ export class IngressarViaTorneio
         partidaGateway: PartidaGateway,
         usuarioGateway: UsuarioGateway,
         linkIngressoGateway: LinkIngressoGateway,
-        deckGateway: DeckGateway
+        deckGateway: DeckGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
         return new IngressarViaTorneio(
             torneioGateway,
@@ -55,8 +58,9 @@ export class IngressarViaTorneio
             partidaGateway,
             usuarioGateway,
             linkIngressoGateway,
-            deckGateway
-        );
+            deckGateway,
+      eventos,
+    );
     }
 
     public async executar(
@@ -79,12 +83,13 @@ export class IngressarViaTorneio
         }
 
         const torneio = await this.torneioGateway.buscarPorId(linkData.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Torneio não está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(torneio, "Torneio não está em andamento.");
 
         if (torneio.emCorte) {
             throw ErroPersonalizado.criar({
@@ -171,7 +176,7 @@ export class IngressarViaTorneio
                 torneio.totalRodadas = totalComCap;
                 await this.torneioGateway.atualizar(torneio);
 
-                eventosTorneio.emit("total_rodadas_alterado", {
+                this.eventos.publicar("total_rodadas_alterado", {
                     torneioId: torneio.id,
                     totalRodadasAnterior: totalAnterior,
                     totalRodadas: totalComCap,
@@ -203,7 +208,7 @@ export class IngressarViaTorneio
 
         const usuarioNome = resolverNomeJogador(usuario, torneio.exibirNomeJogador);
 
-        eventosTorneio.emit("jogador_ingressou", {
+        this.eventos.publicar("jogador_ingressou", {
             torneioId: torneio.id,
             usuarioId: input.usuarioId,
             usuarioNome,

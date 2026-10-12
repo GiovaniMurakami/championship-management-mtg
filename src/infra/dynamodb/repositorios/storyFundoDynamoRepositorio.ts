@@ -31,7 +31,7 @@ export class StoryFundoDynamoRepositorio extends BaseDynamoRepositorio implement
   }
 
   public async listar(): Promise<StoryFundo[]> {
-    const itens = await this.queryJson<StoryFundoItem>(STORY_PK);
+    const itens = await this.queryJson<StoryFundoItem>(STORY_PK, { consistente: false });
     return itens
       .map((item) => this.itemParaFundo(item))
       .sort((a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id));

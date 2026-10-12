@@ -4,7 +4,7 @@ import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 import { formatarDataHoraBrasilia } from "../../helpers/data/brasilia";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
 
@@ -28,14 +28,18 @@ export class CheckInTorneio
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly usuarioGateway: UsuarioGateway,
-  ) { }
+
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     usuarioGateway: UsuarioGateway,
-  ) {
-    return new CheckInTorneio(torneioGateway, inscricaoGateway, usuarioGateway);
+
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new CheckInTorneio(torneioGateway, inscricaoGateway, usuarioGateway, eventos);
   }
 
   public async executar(
@@ -101,7 +105,7 @@ export class CheckInTorneio
       : (input.usuarioNome ?? input.usuarioId);
 
     if (!checkinJaRealizado) {
-      eventosTorneio.emit("checkin_realizado", {
+      this.eventos.publicar("checkin_realizado", {
         torneioId: inscricao.torneioId,
         usuarioId: inscricao.usuarioId,
         usuarioNome,

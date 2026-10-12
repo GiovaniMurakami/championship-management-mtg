@@ -3,7 +3,7 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AjustarTotalRodadasInputDto = {
   torneioId: string;
@@ -25,10 +25,12 @@ const MAX_TOTAL_RODADAS = 30;
 export class AjustarTotalRodadas
   implements CasoDeUso<AjustarTotalRodadasInputDto, AjustarTotalRodadasOutputDto>
 {
-  private constructor(private readonly torneioGateway: TorneioGateway) {}
+  private constructor(private readonly torneioGateway: TorneioGateway,
+    private readonly eventos: EventoTorneioGateway,) {}
 
-  public static criar(torneioGateway: TorneioGateway) {
-    return new AjustarTotalRodadas(torneioGateway);
+  public static criar(torneioGateway: TorneioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao()) {
+    return new AjustarTotalRodadas(torneioGateway, eventos);
   }
 
   public async executar(
@@ -91,7 +93,7 @@ export class AjustarTotalRodadas
     const totalAnterior = torneio.totalRodadas;
     torneio.totalRodadas = novoTotal;
     await this.torneioGateway.atualizar(torneio);
-    eventosTorneio.emit("total_rodadas_alterado", {
+    this.eventos.publicar("total_rodadas_alterado", {
       torneioId: torneio.id,
       totalRodadasAnterior: totalAnterior,
       totalRodadas: torneio.totalRodadas,

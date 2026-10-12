@@ -44,7 +44,8 @@ describe("IniciarTorneio", () => {
         expect(resultado.totalRodadas).toBe(2); // ceil(log2(4)) = 2
         expect(resultado.partidas).toHaveLength(2);
         expect(resultado.partidas[0].jogador1Nome).toBeDefined();
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalledTimes(1);
+        expect(partidaGw.reconciliarRodada).toHaveBeenCalledTimes(1);
+        expect(torneioGw.atualizar).toHaveBeenCalledTimes(1);
         expect(resultado.rodadaPublicada).toBe(true);
     });
 

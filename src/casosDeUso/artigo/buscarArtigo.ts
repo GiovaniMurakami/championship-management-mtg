@@ -1,3 +1,4 @@
+import { Artigo } from "../../dominio/entidade/artigo";
 import { ArtigoGateway, ConteudoArtigoGateway } from "../../dominio/gateway/artigoGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
@@ -12,6 +13,13 @@ export type BuscarArtigoInputDto = {
   role?: string;
   registrarVisualizacao?: boolean;
 };
+
+export async function buscarArtigoPorIdOuSlug(gateway: ArtigoGateway, id: string): Promise<Artigo | null> {
+  const direto = await gateway.buscarPorId(id);
+  if (direto) return direto;
+  if (/^[a-z0-9]{5}-/i.test(id)) return gateway.buscarPorPrefixo(id.slice(0, 5));
+  return null;
+}
 
 export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<string, unknown>> {
   private constructor(
@@ -29,7 +37,7 @@ export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<stri
   }
 
   public async executar(input: BuscarArtigoInputDto) {
-    const artigo = await this.artigoGateway.buscarPorId(input.id);
+    const artigo = await buscarArtigoPorIdOuSlug(this.artigoGateway, input.id);
     if (!artigo) {
       throw ErroPersonalizado.criar({
         mensagem: "Artigo não encontrado.",
@@ -60,16 +68,24 @@ export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<stri
       artigo.visualizacoes = await this.artigoGateway.incrementarVisualizacoes(artigo.id);
     }
 
-    const [autor, comentarios, curtidas] = await Promise.all([
+    const [autor, comentarios, curtidas, curtidasComentarios] = await Promise.all([
       this.usuarioGateway.buscarPorId(artigo.autorId),
       this.artigoGateway.listarComentarios(artigo.id),
       this.artigoGateway.listarCurtidas(artigo.id),
+      this.artigoGateway.listarCurtidasComentarios(artigo.id),
     ]);
 
     const autoresComentario = await this.usuarioGateway.buscarVarios(
       [...new Set(comentarios.map((c) => c.autorId))]
     );
     const autorPorId = new Map(autoresComentario.map((u) => [u.id, u]));
+
+    const curtidasPorComentario = new Map<string, string[]>();
+    for (const curtida of curtidasComentarios) {
+      const lista = curtidasPorComentario.get(curtida.comentarioId) ?? [];
+      lista.push(curtida.usuarioId);
+      curtidasPorComentario.set(curtida.comentarioId, lista);
+    }
 
     return {
       id: artigo.id,
@@ -92,15 +108,21 @@ export class BuscarArtigo implements CasoDeUso<BuscarArtigoInputDto, Record<stri
       },
       totalCurtidas: curtidas.length,
       curtidoPorMim: Boolean(input.requisitanteId && curtidas.includes(input.requisitanteId)),
-      comentarios: comentarios.map((c) => ({
-        id: c.id,
-        texto: c.texto,
-        criadoEm: c.criadoEm.toISOString(),
-        autor: {
-          ...toUsuarioPublico(autorPorId.get(c.autorId), c.autorId, "nome"),
-          fotoUrl: autorPorId.get(c.autorId)?.excluido ? undefined : autorPorId.get(c.autorId)?.fotoUrl,
-        },
-      })),
+      comentarios: comentarios.map((c) => {
+        const curtidasDoComentario = curtidasPorComentario.get(c.id) ?? [];
+        return {
+          id: c.id,
+          texto: c.texto,
+          comentarioPaiId: c.comentarioPaiId,
+          criadoEm: c.criadoEm.toISOString(),
+          totalCurtidas: curtidasDoComentario.length,
+          curtidoPorMim: Boolean(input.requisitanteId && curtidasDoComentario.includes(input.requisitanteId)),
+          autor: {
+            ...toUsuarioPublico(autorPorId.get(c.autorId), c.autorId, "nome"),
+            fotoUrl: autorPorId.get(c.autorId)?.excluido ? undefined : autorPorId.get(c.autorId)?.fotoUrl,
+          },
+        };
+      }),
     };
   }
 }

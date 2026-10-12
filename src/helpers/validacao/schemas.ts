@@ -109,6 +109,21 @@ export const atualizarDeckSchema = z.object({
   oculto: z.boolean().optional(),
 });
 
+const day1Day2Refine = <T extends { rodadasDay1?: number; vagasDay2?: number }>(
+  data: T,
+  ctx: z.RefinementCtx,
+) => {
+  const temRodadas = data.rodadasDay1 !== undefined;
+  const temVagas = data.vagasDay2 !== undefined;
+  if (temRodadas !== temVagas) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Informe rodadasDay1 e vagasDay2 juntos (ou nenhum dos dois).",
+      path: temRodadas ? ["vagasDay2"] : ["rodadasDay1"],
+    });
+  }
+};
+
 export const criarTorneioSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório."),
   horario: z.string().min(1, "Horário é obrigatório."),
@@ -123,12 +138,15 @@ export const criarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional(),
   maxRodadas: z.number().int().min(1).max(30).optional(),
   corteTop: z.number().int().min(2).optional(),
+  rodadasDay1: z.number().int().min(1).max(30).optional(),
+  vagasDay2: z.number().int().min(2).max(512).optional(),
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  listasPublicas: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
   ligaIds: z.array(uuidCampo("ligaId")).max(50).optional(),
-});
+}).superRefine(day1Day2Refine);
 
 export const alterarTorneioSchema = z.object({
   nome: z.string().min(1).optional(),
@@ -144,9 +162,12 @@ export const alterarTorneioSchema = z.object({
   maxJogadores: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
   maxRodadas: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
   corteTop: z.number().int().min(2).optional().nullable().transform(v => v ?? undefined),
+  rodadasDay1: z.number().int().min(1).max(30).optional().nullable().transform(v => v ?? undefined),
+  vagasDay2: z.number().int().min(2).max(512).optional().nullable().transform(v => v ?? undefined),
   premio: z.object({ playerPoints: z.number().int().nonnegative(), tix: z.number().nonnegative() }).optional(),
   linkLive: z.string().optional(),
   secreto: z.boolean().optional(),
+  listasPublicas: z.boolean().optional(),
   exibirNomeJogador: z.enum(["nome", "nickMOL", "nickArena"]).optional(),
 });
 
@@ -252,6 +273,14 @@ export const artigoIdParamSchema = z.object({
   artigoId: uuidCampo("artigoId"),
 });
 
+export const artigoIdOuSlugParamSchema = z.object({
+  artigoId: z.string().trim().regex(/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i, "artigoId inválido"),
+});
+
+export const artigoComentarioParamSchema = artigoIdParamSchema.extend({
+  comentarioId: uuidCampo("comentarioId"),
+});
+
 export const criarArtigoSchema = z.object({
   titulo: z.string().trim().min(1, "Título é obrigatório.").max(200),
   chamada: z.string().trim().max(300).optional(),
@@ -276,7 +305,9 @@ export const aprovarArtigoSchema = z.object({
   aprovar: z.boolean(),
 });
 
-export const comentarArtigoSchema = comentarPostSchema;
+export const comentarArtigoSchema = comentarPostSchema.extend({
+  comentarioPaiId: uuidCampo("comentarioPaiId").optional(),
+});
 
 export const listarArtigosQuerySchema = z.object({
   pendentes: z.enum(["true", "false"]).optional(),
@@ -320,6 +351,7 @@ export const torneioRodadaParamSchema = z.object({
 export const listarUsuariosQuerySchema = z.object({
   nome: z.string().max(200).optional(),
   jogador: z.string().max(200).optional(),
+  role: z.enum(["user", "admin", "editor"]).optional(),
   bloqueadoTorneios: z
     .enum(["true", "false"])
     .optional()
@@ -352,7 +384,7 @@ export const listarDecksQuerySchema = z.object({
 const dataQueryCampo = z.string().optional();
 
 export const listarTorneiosQuerySchema = z.object({
-  status: z.enum(["inscricoes_abertas", "em_andamento", "finalizado"]).optional(),
+  status: z.enum(["inscricoes_abertas", "em_andamento", "pausado", "finalizado"]).optional(),
   nome: z.string().max(200).optional(),
   dataInicio: dataQueryCampo,
   dataFim: dataQueryCampo,

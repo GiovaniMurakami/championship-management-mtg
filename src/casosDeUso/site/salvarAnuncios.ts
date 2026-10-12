@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { AnuncioSite, SiteConfigGateway, TipoAnuncioSite } from "../../dominio/gateway/siteConfigGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CACHE_PK_SITE } from "../../helpers/cache/chavesCache";
 
 type AnuncioInput = Partial<AnuncioSite>;
@@ -28,10 +28,10 @@ const normalizarTipo = (tipo: unknown): TipoAnuncioSite => (
 export class SalvarAnuncios {
   private constructor(
     private readonly siteConfigGateway: SiteConfigGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheGateway) {
     return new SalvarAnuncios(siteConfigGateway, cache);
   }
 

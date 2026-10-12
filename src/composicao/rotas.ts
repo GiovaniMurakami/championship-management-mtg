@@ -39,12 +39,15 @@ import { AtualizarPareamentosRodadaRota } from "../infra/api/express/rotas/torne
 import { DroparJogadorRota } from "../infra/api/express/rotas/torneio/droparJogador.express.route";
 import { DroparJogadoresSemDeckRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemDeck.express.route";
 import { DroparJogadoresSemCheckinRota } from "../infra/api/express/rotas/torneio/droparJogadoresSemCheckin.express.route";
+import { EncerrarDay1Rota } from "../infra/api/express/rotas/torneio/encerrarDay1.express.route";
 import { DesdroparJogadorRota } from "../infra/api/express/rotas/torneio/desdroparJogador.express.route";
 import { ListarTorneiosRota } from "../infra/api/express/rotas/torneio/listarTorneios.express.route";
+import { FixarTorneioRota } from "../infra/api/express/rotas/torneio/fixarTorneio.express.route";
 import { BuscarTorneioRota } from "../infra/api/express/rotas/torneio/buscarTorneio.express.route";
 import { BuscarSeoTorneioRota } from "../infra/api/express/rotas/torneio/buscarSeoTorneio.express.route";
 import { RenderizarCompartilhamentoTorneioRota } from "../infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
 import { BuscarStandingsRota } from "../infra/api/express/rotas/torneio/buscarStandings.express.route";
+import { BuscarMetagameTorneioRota } from "../infra/api/express/rotas/torneio/buscarMetagameTorneio.express.route";
 import { MeuHistoricoTorneioRota } from "../infra/api/express/rotas/torneio/meuHistoricoTorneio.express.route";
 import { ListarPartidasTorneioRota } from "../infra/api/express/rotas/torneio/listarPartidasTorneio.express.route";
 import { AlterarTorneioRota } from "../infra/api/express/rotas/torneio/alterarTorneio.express.route";
@@ -57,6 +60,7 @@ import { CriarLigaRota } from "../infra/api/express/rotas/liga/criarLiga.express
 import { AlterarLigaRota } from "../infra/api/express/rotas/liga/alterarLiga.express.route";
 import { ExcluirLigaRota } from "../infra/api/express/rotas/liga/excluirLiga.express.route";
 import { ListarLigasRota } from "../infra/api/express/rotas/liga/listarLigas.express.route";
+import { FixarLigaRota } from "../infra/api/express/rotas/liga/fixarLiga.express.route";
 import { BuscarLigaRota } from "../infra/api/express/rotas/liga/buscarLiga.express.route";
 import { RankingLigaRota } from "../infra/api/express/rotas/liga/rankingLiga.express.route";
 import { CriarTimeRota } from "../infra/api/express/rotas/time/criarTime.express.route";
@@ -102,8 +106,11 @@ import {
   AprovarArtigoRota,
   ComentarArtigoRota,
   CurtirArtigoRota,
+  CurtirComentarioArtigoRota,
   ExcluirArtigoRota,
 } from "../infra/api/express/rotas/artigo/artigoRotas.express.route";
+import { BuscarSeoArtigoRota } from "../infra/api/express/rotas/artigo/buscarSeoArtigo.express.route";
+import { RenderizarCompartilhamentoArtigoRota } from "../infra/api/express/rotas/artigo/renderizarCompartilhamentoArtigo.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
@@ -136,6 +143,7 @@ export function criarRotas(casos: CasosDeUso) {
         DroparJogadoresSemDeckRota.criar(casos.droparJogadoresSemDeck),
         DroparJogadoresSemCheckinRota.criar(casos.droparJogadoresSemCheckin),
         DesdroparJogadorRota.criar(casos.desdroparJogador),
+        EncerrarDay1Rota.criar(casos.encerrarDay1),
         IniciarTorneioRota.criar(casos.iniciarTorneio),
         IniciarProximaRodadaRota.criar(casos.iniciarProximaRodada),
         PublicarRodadaRota.criar(casos.publicarRodada),
@@ -153,9 +161,12 @@ export function criarRotas(casos: CasosDeUso) {
         RenderizarCompartilhamentoTorneioRota.criar(casos.buscarSeoTorneio, "/torneio/share/:torneioId"),
         BuscarTorneioRota.criar(casos.buscarTorneio),
         BuscarStandingsRota.criar(casos.buscarStandings),
+        BuscarMetagameTorneioRota.criar(casos.buscarMetagameTorneio),
         MeuHistoricoTorneioRota.criar(casos.meuHistoricoTorneio),
         ListarPartidasTorneioRota.criar(casos.listarPartidasTorneio),
         AlterarTorneioRota.criar(casos.alterarTorneio),
+        FixarTorneioRota.criar(casos.fixarTorneio, true),
+        FixarTorneioRota.criar(casos.fixarTorneio, false),
         ExcluirTorneioRota.criar(casos.excluirTorneio),
         GerarLinkIngressoRota.criar(casos.gerarLinkIngresso),
         IngressarViaTorneioRota.criar(casos.ingressarViaTorneio),
@@ -165,6 +176,8 @@ export function criarRotas(casos: CasosDeUso) {
         ListarLigasRota.criar(casos.listarLigas),
         BuscarLigaRota.criar(casos.buscarLiga),
         AlterarLigaRota.criar(casos.alterarLiga),
+        FixarLigaRota.criar(casos.fixarLiga, true),
+        FixarLigaRota.criar(casos.fixarLiga, false),
         ExcluirLigaRota.criar(casos.excluirLiga),
         RankingLigaRota.criar(casos.rankingLiga),
         CriarTimeRota.criar(casos.criarTime),
@@ -201,11 +214,16 @@ export function criarRotas(casos: CasosDeUso) {
         CriarArtigoRota.criar(casos.criarArtigo),
         ListarArtigosRota.criar(casos.listarArtigos),
         BuscarArtigoRota.criar(casos.buscarArtigo),
+        BuscarSeoArtigoRota.criar(casos.buscarSeoArtigo),
+        RenderizarCompartilhamentoArtigoRota.criar(casos.buscarSeoArtigo),
+        RenderizarCompartilhamentoArtigoRota.criar(casos.buscarSeoArtigo, "/artigo/share/:artigoId"),
         EditarArtigoRota.criar(casos.editarArtigo),
         AprovarArtigoRota.criar(casos.aprovarArtigo),
         ComentarArtigoRota.criar(casos.comentarArtigo),
         CurtirArtigoRota.criar(casos.curtirArtigo, true),
         CurtirArtigoRota.criar(casos.curtirArtigo, false),
+        CurtirComentarioArtigoRota.criar(casos.curtirComentarioArtigo, true),
+        CurtirComentarioArtigoRota.criar(casos.curtirComentarioArtigo, false),
         ExcluirArtigoRota.criar(casos.excluirArtigo),
         ProxyImagemRota.criar(),
         ListarStoryFundosRota.criar(casos.listarStoryFundos),

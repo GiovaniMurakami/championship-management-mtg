@@ -4,7 +4,8 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { ArquetipoDetalhe } from "./agregarMetagame";
 import { carregarEAgregarMetagame, MetagameGateways } from "./carregarMetagame";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_METAGAME, cacheSkMetagameArquetipo } from "../../helpers/cache/chavesCache";
 
 export type BuscarArquetipoMetagameInputDto = IntervaloDatas & {
@@ -63,7 +64,7 @@ export class BuscarArquetipoMetagame
 {
   private constructor(
     private readonly gateways: MetagameGateways,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
   public static criar(
@@ -72,7 +73,7 @@ export class BuscarArquetipoMetagame
     partida: MetagameGateways["partida"],
     deck: MetagameGateways["deck"],
     usuario: MetagameGateways["usuario"],
-    cache?: CacheDynamoDbServico,
+    cache?: CacheGateway,
     siteConfig?: MetagameGateways["siteConfig"]
   ) {
     return new BuscarArquetipoMetagame({ torneio, inscricao, partida, deck, usuario, siteConfig }, cache);

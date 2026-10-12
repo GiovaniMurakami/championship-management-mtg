@@ -7,7 +7,7 @@ import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type DroparJogadorInputDto = {
   torneioId: string;
@@ -30,16 +30,18 @@ export class DroparJogador
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly usuarioGateway: UsuarioGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) { }
+    private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     usuarioGateway: UsuarioGateway,
-    partidaGateway: PartidaGateway
-  ) {
-    return new DroparJogador(torneioGateway, inscricaoGateway, usuarioGateway, partidaGateway);
+    partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new DroparJogador(torneioGateway, inscricaoGateway, usuarioGateway, partidaGateway, eventos);
   }
 
   public async executar(
@@ -98,7 +100,7 @@ export class DroparJogador
     if (torneio.status === "inscricoes_abertas") {
       await this.inscricaoGateway.excluir(inscricao.id);
 
-      eventosTorneio.emit("jogador_dropou", {
+      this.eventos.publicar("jogador_dropou", {
         torneioId: input.torneioId,
         jogadorId: input.jogadorId,
         jogadorNome,
@@ -115,7 +117,7 @@ export class DroparJogador
       };
     }
 
-    // Auto-resolve pending matches: give WO (2-0) to the opponent
+    // Auto-resolve pending matches: give WO (2-0) to the opponent (não há mesas ativas na pausa)
     if (torneio.status === "em_andamento") {
       const partidas = await this.partidaGateway.listarPorTorneio(input.torneioId);
       const pendentes = partidas.filter(
@@ -152,11 +154,14 @@ export class DroparJogador
     }
 
     inscricao.dropped = true;
-    inscricao.droppedRodada = torneio.status === "em_andamento" ? torneio.rodadaAtual : null;
+    inscricao.droppedRodada =
+      torneio.status === "em_andamento" || torneio.status === "pausado"
+        ? torneio.rodadaAtual
+        : null;
     inscricao.dropPartidaIds = partidasResolvidas.map((p) => p.partidaId);
     await this.inscricaoGateway.atualizar(inscricao);
 
-    eventosTorneio.emit("jogador_dropou", {
+    this.eventos.publicar("jogador_dropou", {
       torneioId: input.torneioId,
       jogadorId: input.jogadorId,
       jogadorNome,

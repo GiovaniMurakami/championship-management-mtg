@@ -2,7 +2,8 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { cachePkTorneio, cacheSkSeoTorneio } from "../../helpers/cache/chavesCache";
 
 export type BuscarSeoTorneioInputDto = {
@@ -47,10 +48,10 @@ export class BuscarSeoTorneio
   implements CasoDeUso<BuscarSeoTorneioInputDto, BuscarSeoTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
-  public static criar(torneioGateway: TorneioGateway, cache?: CacheDynamoDbServico) {
+  public static criar(torneioGateway: TorneioGateway, cache?: CacheGateway) {
     return new BuscarSeoTorneio(torneioGateway, cache);
   }
 

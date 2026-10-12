@@ -29,6 +29,7 @@ describe("ListarTorneiosRota", () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(servico.executar).toHaveBeenCalledWith(expect.objectContaining({
             usuarioId: undefined,
+            isAdmin: false,
         }));
     });
 
@@ -41,8 +42,20 @@ describe("ListarTorneiosRota", () => {
         expect(res.json).toHaveBeenCalledWith(saida);
         expect(servico.executar).toHaveBeenCalledWith(expect.objectContaining({
             usuarioId: "u-1",
+            isAdmin: false,
             limite: undefined,
             offset: undefined,
+        }));
+    });
+
+    it("passa isAdmin=true quando usuario é admin", async () => {
+        servico.executar.mockResolvedValue({ torneios: [], total: 0, limite: 20, offset: 0 });
+        const { req, res, next } = makeReqRes();
+        req.usuario.role = "admin";
+        await rota.getHandler()(req, res, next);
+        expect(servico.executar).toHaveBeenCalledWith(expect.objectContaining({
+            usuarioId: "u-1",
+            isAdmin: true,
         }));
     });
 

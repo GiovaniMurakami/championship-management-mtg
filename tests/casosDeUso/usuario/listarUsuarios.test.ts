@@ -40,12 +40,14 @@ describe("ListarUsuarios", () => {
         });
         expect(listar).toHaveBeenCalledWith({
             nome: undefined,
+            role: undefined,
             bloqueadoTorneios: undefined,
             limite: 20,
             offset: 0,
         });
         expect(listarTotal).toHaveBeenCalledWith({
             nome: undefined,
+            role: undefined,
             bloqueadoTorneios: undefined,
         });
     });
@@ -59,6 +61,7 @@ describe("ListarUsuarios", () => {
 
         await uc.executar({
             nome: "  alice  ",
+            role: "editor",
             bloqueadoTorneios: true,
             limite: 10,
             offset: 5,
@@ -66,12 +69,14 @@ describe("ListarUsuarios", () => {
 
         expect(listar).toHaveBeenCalledWith({
             nome: "alice",
+            role: "editor",
             bloqueadoTorneios: true,
             limite: 10,
             offset: 5,
         });
         expect(listarTotal).toHaveBeenCalledWith({
             nome: "alice",
+            role: "editor",
             bloqueadoTorneios: true,
         });
     });

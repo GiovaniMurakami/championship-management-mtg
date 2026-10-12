@@ -5,6 +5,7 @@ import { Inscricao } from "../../../src/dominio/entidade/inscricao";
 import { Usuario } from "../../../src/dominio/entidade/usuario";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+import "../../../src/infra/socketio/eventoTorneioPublicador";
 
 vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
     eventosTorneio: { emit: vi.fn() },

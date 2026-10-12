@@ -86,6 +86,10 @@ export class NotificacaoAbly {
       this.publicar(payload.torneioId, "corte_iniciado", payload);
     });
 
+    eventosTorneio.on("day1_encerrado", (payload: Record<string, unknown> & { torneioId: string }) => {
+      this.publicar(payload.torneioId, "day1_encerrado", payload);
+    });
+
     eventosTorneio.on("jogador_ingressou", (payload: Record<string, unknown> & { torneioId: string }) => {
       this.publicar(payload.torneioId, "jogador_ingressou", payload);
     });

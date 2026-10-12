@@ -57,7 +57,7 @@ function criarUsuarioGatewayMemoria(): UsuarioGateway {
     };
 }
 
-function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): TorneioGateway {
+function criarTorneioGatewayMemoria(): TorneioGateway {
     const store = new Map<string, Torneio>();
     return {
         salvar: async (t) => { store.set(t.id, t); },
@@ -71,10 +71,6 @@ function criarTorneioGatewayMemoria(partidaStoreRef: Map<string, Partida>): Torn
             torneio.visualizacoes = (torneio.visualizacoes ?? 0) + 1;
             store.set(id, torneio);
             return torneio;
-        },
-        atualizarECriarPartidas: async (t, partidas) => {
-            store.set(t.id, t);
-            for (const p of partidas) partidaStoreRef.set(p.id, p);
         },
         excluir: async (id) => { store.delete(id); },
     };
@@ -147,6 +143,9 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
             store.set(id, p);
             return p;
         },
+        reconciliarRodada: async (_torneioId, _rodada, partidas) => {
+            for (const p of partidas) store.set(p.id, p);
+        },
         excluirPorTorneioERodada: async (torneioId, rodada) => {
             const partidas = Array.from(store.values()).filter(
                 (p) => p.torneioId === torneioId && p.rodada === rodada,
@@ -182,7 +181,7 @@ function criarPartidaGatewayMemoria(store: Map<string, Partida>): PartidaGateway
 describe("Integração - Fluxo completo de torneio", () => {
     const usuarioGw = criarUsuarioGatewayMemoria();
     const partidaStore = new Map<string, Partida>();
-    const torneioGw = criarTorneioGatewayMemoria(partidaStore);
+    const torneioGw = criarTorneioGatewayMemoria();
     const inscricaoGw = criarInscricaoGatewayMemoria();
     const partidaGw = criarPartidaGatewayMemoria(partidaStore);
 
@@ -392,7 +391,7 @@ describe("Integração - Fluxo completo de torneio", () => {
 describe("Integração - Encerrar torneio antecipadamente", () => {
     const usuarioGw = criarUsuarioGatewayMemoria();
     const partidaStore = new Map<string, Partida>();
-    const torneioGw = criarTorneioGatewayMemoria(partidaStore);
+    const torneioGw = criarTorneioGatewayMemoria();
     const inscricaoGw = criarInscricaoGatewayMemoria();
     const partidaGw = criarPartidaGatewayMemoria(partidaStore);
 
@@ -473,7 +472,7 @@ describe("Integração - Encerrar torneio antecipadamente", () => {
 describe("Integração - Torneio 3 jogadores (BYE + drop)", () => {
     const usuarioGw2 = criarUsuarioGatewayMemoria();
     const partidaStore2 = new Map<string, Partida>();
-    const torneioGw2 = criarTorneioGatewayMemoria(partidaStore2);
+    const torneioGw2 = criarTorneioGatewayMemoria();
     const inscricaoGw2 = criarInscricaoGatewayMemoria();
     const partidaGw2 = criarPartidaGatewayMemoria(partidaStore2);
 

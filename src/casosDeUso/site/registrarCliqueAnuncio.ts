@@ -1,6 +1,6 @@
 import { SiteConfigGateway } from "../../dominio/gateway/siteConfigGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CACHE_PK_SITE, cacheSkAnunciosSite } from "../../helpers/cache/chavesCache";
 
 type RegistrarCliqueAnuncioInput = {
@@ -10,10 +10,10 @@ type RegistrarCliqueAnuncioInput = {
 export class RegistrarCliqueAnuncio {
   private constructor(
     private readonly siteConfigGateway: SiteConfigGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheGateway) {
     return new RegistrarCliqueAnuncio(siteConfigGateway, cache);
   }
 

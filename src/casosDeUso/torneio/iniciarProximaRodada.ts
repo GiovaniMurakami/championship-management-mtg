@@ -18,8 +18,9 @@ import {
   ogwp,
   parKey,
   gerarPareamentos,
-} from "./swiss";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+} from "../../dominio/torneio/swiss";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
+import { persistirTorneioComPartidas } from "./persistirTorneioComPartidas";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
   const corte = Number(corteTop || 0);
@@ -73,20 +74,23 @@ export class IniciarProximaRodada
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
-  ) { }
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
-  ) {
+    usuarioGateway: UsuarioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
     return new IniciarProximaRodada(
       torneioGateway,
       inscricaoGateway,
       partidaGateway,
-      usuarioGateway
+      usuarioGateway,
+      eventos,
     );
   }
 
@@ -108,7 +112,7 @@ export class IniciarProximaRodada
       });
     }
 
-    if (torneio.status !== "em_andamento") {
+    if (torneio.status !== "em_andamento" && torneio.status !== "pausado") {
       throw ErroPersonalizado.criar({
         mensagem:
           "O torneio não está em andamento. Use POST /torneio/:id/iniciar primeiro.",
@@ -119,6 +123,19 @@ export class IniciarProximaRodada
     if (!rodadaEstaPublicada(torneio)) {
       throw ErroPersonalizado.criar({
         mensagem: "Publique a rodada atual antes de avançar.",
+        status: StatusErro.erroParametro,
+      });
+    }
+
+    const temDay1Day2 =
+      Number(torneio.rodadasDay1 || 0) > 0 && Number(torneio.vagasDay2 || 0) > 0;
+    if (
+      temDay1Day2 &&
+      !torneio.day1Encerrado &&
+      torneio.rodadaAtual === torneio.rodadasDay1
+    ) {
+      throw ErroPersonalizado.criar({
+        mensagem: "Encerre o Day 1 antes de gerar a próxima rodada (Day 2).",
         status: StatusErro.erroParametro,
       });
     }
@@ -232,9 +249,9 @@ export class IniciarProximaRodada
 
       torneio.entrarEmCorte(proximaRodada, proximaRodada + rodadasCorte - 1);
       aplicarPublicacaoRodada(torneio, publicar);
-      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      await persistirTorneioComPartidas(this.torneioGateway, this.partidaGateway, torneio, novasPartidas);
       if (publicar) {
-        eventosTorneio.emit("rodada_iniciada", {
+        this.eventos.publicar("rodada_iniciada", {
           torneioId: torneio.id,
           rodadaAtual: proximaRodada,
           totalRodadas: torneio.totalRodadas,
@@ -266,7 +283,7 @@ export class IniciarProximaRodada
       const top8Ids = statsOrdenados.slice(0, 8).map((s) => s.usuarioId);
       await this.usuarioGateway.incrementarResultadosExpressivos(top8Ids, 1);
       await this.torneioGateway.atualizar(torneio);
-      eventosTorneio.emit("torneio_finalizado", {
+      this.eventos.publicar("torneio_finalizado", {
         torneioId: torneio.id,
         rodadaAtual: torneio.rodadaAtual,
         totalRodadas: torneio.totalRodadas,
@@ -323,9 +340,9 @@ export class IniciarProximaRodada
 
       torneio.avancarRodada(proximaRodada);
       aplicarPublicacaoRodada(torneio, publicar);
-      await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+      await persistirTorneioComPartidas(this.torneioGateway, this.partidaGateway, torneio, novasPartidas);
       if (publicar) {
-        eventosTorneio.emit("rodada_iniciada", {
+        this.eventos.publicar("rodada_iniciada", {
           torneioId: torneio.id,
           rodadaAtual: proximaRodada,
           totalRodadas: torneio.totalRodadas,
@@ -384,9 +401,9 @@ export class IniciarProximaRodada
 
     torneio.avancarRodada(proximaRodada);
     aplicarPublicacaoRodada(torneio, publicar);
-    await this.torneioGateway.atualizarECriarPartidas(torneio, novasPartidas);
+    await persistirTorneioComPartidas(this.torneioGateway, this.partidaGateway, torneio, novasPartidas);
     if (publicar) {
-      eventosTorneio.emit("rodada_iniciada", {
+      this.eventos.publicar("rodada_iniciada", {
         torneioId: torneio.id,
         rodadaAtual: proximaRodada,
         totalRodadas: torneio.totalRodadas,

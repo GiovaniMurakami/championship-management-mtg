@@ -4,8 +4,9 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { rejeitarResultadoSeRodadaNaoPublicada } from "../../helpers/torneio/filtrarPartidasNaoPublicadas";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type RegistrarResultadoInputDto = {
   partidaId: string;
@@ -33,14 +34,16 @@ export class RegistrarResultado
   CasoDeUso<RegistrarResultadoInputDto, RegistrarResultadoOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly partidaGateway: PartidaGateway
-  ) { }
+    private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
-    partidaGateway: PartidaGateway
-  ) {
-    return new RegistrarResultado(torneioGateway, partidaGateway);
+    partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
+    return new RegistrarResultado(torneioGateway, partidaGateway, eventos);
   }
 
   public async executar(
@@ -55,13 +58,16 @@ export class RegistrarResultado
     }
 
     const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-
-    if (!torneio || torneio.status !== "em_andamento") {
+    if (!torneio) {
       throw ErroPersonalizado.criar({
         mensagem: "Resultados só podem ser registrados enquanto o torneio está em andamento.",
         status: StatusErro.erroParametro,
       });
     }
+    assertStatusEmAndamento(
+      torneio,
+      "Resultados só podem ser registrados enquanto o torneio está em andamento.",
+    );
     const ehJogador =
       input.usuarioId === partida.jogador1Id ||
       input.usuarioId === partida.jogador2Id;
@@ -109,7 +115,7 @@ export class RegistrarResultado
         status: StatusErro.erroParametro,
       });
     }
-    eventosTorneio.emit("resultado_registrado", {
+    this.eventos.publicar("resultado_registrado", {
       torneioId: partidaAtualizada.torneioId,
       partidaId: partidaAtualizada.id,
       rodada: partidaAtualizada.rodada,

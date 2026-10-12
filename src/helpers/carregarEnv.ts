@@ -4,6 +4,10 @@ import path from "node:path";
 const AMBIENTES = ["local", "homolog", "production"] as const;
 export type AmbienteApp = (typeof AMBIENTES)[number];
 
+function ambienteConhecido(valor: string): valor is AmbienteApp {
+  return (AMBIENTES as readonly string[]).includes(valor);
+}
+
 const ALIASES: Record<string, AmbienteApp> = {
   local: "local",
   development: "local",
@@ -16,7 +20,8 @@ const ALIASES: Record<string, AmbienteApp> = {
 
 export function resolverAmbienteApp(valor = process.env.APP_ENV): AmbienteApp {
   const chave = String(valor || "local").trim().toLowerCase();
-  return ALIASES[chave] || "local";
+  const resolvido = ALIASES[chave] || "local";
+  return ambienteConhecido(resolvido) ? resolvido : "local";
 }
 
 export function caminhoEnv(ambiente = resolverAmbienteApp()): string {

@@ -195,6 +195,65 @@ describe("AlterarTorneio", () => {
         expect(gateway.atualizar).toHaveBeenCalledTimes(1);
     });
 
+    it("permite editar campos no Day 2 mesmo com rodadasDay1 menor que a rodada atual", async () => {
+        const torneio = new Torneio({
+            ...torneioExistente,
+            status: "em_andamento",
+            rodadaAtual: 11,
+            totalRodadas: 13,
+            rodadasDay1: 7,
+            vagasDay2: 64,
+            day1Encerrado: true,
+        });
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(torneio),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+
+        const resultado = await uc.executar({
+            id: "torneio-1",
+            requisitanteId: "user-1",
+            isAdmin: false,
+            linkLive: "https://twitch.tv/day2",
+            descricao: "Day 2 ao vivo",
+        });
+
+        expect(resultado.linkLive).toBe("https://twitch.tv/day2");
+        expect(resultado.descricao).toBe("Day 2 ao vivo");
+        expect(resultado.rodadasDay1).toBe(7);
+        expect(torneio.rodadaAtual).toBe(11);
+        expect(gateway.atualizar).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejeita reduzir rodadasDay1 abaixo da rodada atual enquanto o Day 1 não encerrou", async () => {
+        const torneio = new Torneio({
+            ...torneioExistente,
+            status: "em_andamento",
+            rodadaAtual: 5,
+            totalRodadas: 13,
+            rodadasDay1: 7,
+            vagasDay2: 64,
+            day1Encerrado: false,
+        });
+        const gateway = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(torneio),
+        });
+        const uc = AlterarTorneio.criar(gateway);
+
+        await expect(
+            uc.executar({
+                id: "torneio-1",
+                requisitanteId: "user-1",
+                isAdmin: false,
+                rodadasDay1: 3,
+                vagasDay2: 64,
+            })
+        ).rejects.toMatchObject({
+            status: 400,
+            message: expect.stringContaining("rodadasDay1 (3) não pode ser menor que a rodada atual (5)"),
+        });
+    });
+
     it("deve limpar campos textuais opcionais quando receber null em runtime", async () => {
         const gateway = criarMockTorneioGateway({
             buscarPorId: vi.fn().mockResolvedValue({

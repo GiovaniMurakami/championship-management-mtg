@@ -63,6 +63,7 @@ provider:
             - dynamodb:PutItem
             - dynamodb:DeleteItem
             - dynamodb:Query
+            - dynamodb:BatchGetItem
             - dynamodb:BatchWriteItem
             - dynamodb:UpdateItem
             - dynamodb:TransactWriteItems

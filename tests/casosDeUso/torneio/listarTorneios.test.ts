@@ -161,7 +161,7 @@ describe("ListarTorneios", () => {
         }));
     });
 
-    it("nÃ£o deve incluir torneios secretos na listagem pÃºblica", async () => {
+    it("não deve incluir torneios secretos na listagem pública", async () => {
         const torneioSecreto = new Torneio({ id: "ts", nome: "Secreto", horario: new Date(), formato: "modern", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0, secreto: true });
         const listarMock = vi.fn().mockResolvedValue([torneios[0]]);
         const listarTotalMock = vi.fn().mockResolvedValue(1);
@@ -173,8 +173,24 @@ describe("ListarTorneios", () => {
 
         expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
         expect(listarTotalMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: false }));
-        // torneio secreto nÃ£o estÃ¡ na lista retornada pelo gateway (filtrado no nÃ­vel do repositÃ³rio)
+        // torneio secreto não está na lista retornada pelo gateway (filtrado no nível do repositório)
         void torneioSecreto;
         expect(resultado.torneios).toHaveLength(1);
+    });
+
+    it("deve incluir torneios secretos quando isAdmin=true", async () => {
+        const torneioSecreto = new Torneio({ id: "ts", nome: "Secreto", horario: new Date(), formato: "modern", donoId: "u1", status: "inscricoes_abertas", rodadaAtual: 0, totalRodadas: 0, secreto: true });
+        const listarMock = vi.fn().mockResolvedValue([torneios[0], torneioSecreto]);
+        const listarTotalMock = vi.fn().mockResolvedValue(2);
+        const torneioGateway = criarMockTorneioGateway({ listar: listarMock, listarTotal: listarTotalMock });
+        const inscricaoGateway = criarMockInscricaoGateway();
+        const uc = ListarTorneios.criar(torneioGateway, inscricaoGateway);
+
+        const resultado = await uc.executar({ usuarioId: "admin", isAdmin: true });
+
+        expect(listarMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: true }));
+        expect(listarTotalMock).toHaveBeenCalledWith(expect.objectContaining({ incluirSecretos: true }));
+        expect(resultado.torneios).toHaveLength(2);
+        expect(resultado.torneios.some((t) => t.secreto)).toBe(true);
     });
 });

@@ -21,6 +21,7 @@ export type ArtigoResumoDto = {
   capaUrl?: string;
   status: string;
   visualizacoes: number;
+  totalComentarios: number;
   publicadoEm: string | null;
   criadoEm: string;
   atualizadoEm: string;
@@ -62,6 +63,11 @@ export class ListarArtigos implements CasoDeUso<ListarArtigosInputDto, { artigos
 
     const autores = await this.usuarioGateway.buscarVarios([...new Set(artigos.map((a) => a.autorId))]);
     const porId = new Map(autores.map((u) => [u.id, u]));
+    const contagens = await Promise.all(artigos.map(async (a) => [
+      a.id,
+      (await this.artigoGateway.listarComentarios(a.id)).length,
+    ] as const));
+    const comentariosPorArtigo = new Map(contagens);
 
     const saida = artigos.map((a) => ({
       id: a.id,
@@ -72,6 +78,7 @@ export class ListarArtigos implements CasoDeUso<ListarArtigosInputDto, { artigos
       capaUrl: a.capaUrl,
       status: a.status,
       visualizacoes: a.visualizacoes,
+      totalComentarios: comentariosPorArtigo.get(a.id) ?? 0,
       publicadoEm: a.publicadoEm ? a.publicadoEm.toISOString() : null,
       criadoEm: a.criadoEm.toISOString(),
       atualizadoEm: a.atualizadoEm.toISOString(),

@@ -2,7 +2,7 @@ import { LigaGateway } from "../../dominio/gateway/ligaGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CACHE_PK_LIGAS } from "../../helpers/cache/chavesCache";
 
 export type ExcluirLigaInputDto = {
@@ -18,10 +18,10 @@ export type ExcluirLigaOutputDto = {
 export class ExcluirLiga implements CasoDeUso<ExcluirLigaInputDto, ExcluirLigaOutputDto> {
   private constructor(
     private readonly ligaGateway: LigaGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
-  public static criar(ligaGateway: LigaGateway, cache?: CacheDynamoDbServico) {
+  public static criar(ligaGateway: LigaGateway, cache?: CacheGateway) {
     return new ExcluirLiga(ligaGateway, cache);
   }
 

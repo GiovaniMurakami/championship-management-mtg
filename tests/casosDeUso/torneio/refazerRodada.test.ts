@@ -3,6 +3,7 @@ import { Torneio, TorneioProps } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { criarMockTorneioGateway, criarMockPartidaGateway } from "../../mocks/gateways";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+import "../../../src/infra/socketio/eventoTorneioPublicador";
 
 vi.mock("../../../src/infra/socketio/eventosTorneio", () => ({
     eventosTorneio: { emit: vi.fn() },

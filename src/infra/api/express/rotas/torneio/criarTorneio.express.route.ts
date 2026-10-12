@@ -40,7 +40,8 @@ export class CriarTorneioRota implements Rotas {
         const {
           nome, horario, formato, descricao, regras,
           bannerUrl, linkBanner, somRodada, storyFundoUrl, storyFundoTextoRodape,
-          maxJogadores, maxRodadas, corteTop, premio, linkLive, secreto, exibirNomeJogador,
+          maxJogadores, maxRodadas, corteTop, rodadasDay1, vagasDay2,
+          premio, linkLive, secreto, listasPublicas, exibirNomeJogador,
           ligaIds,
         } = dados;
 
@@ -59,9 +60,12 @@ export class CriarTorneioRota implements Rotas {
           maxJogadores,
           maxRodadas,
           corteTop,
+          rodadasDay1,
+          vagasDay2,
           premio,
           linkLive,
           secreto,
+          listasPublicas,
           exibirNomeJogador,
           ligaIds,
         });

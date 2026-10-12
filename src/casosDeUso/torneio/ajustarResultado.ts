@@ -2,9 +2,10 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type AjustarResultadoInputDto = {
     partidaId: string;
@@ -30,14 +31,16 @@ export class AjustarResultado
     implements CasoDeUso<AjustarResultadoInputDto, AjustarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new AjustarResultado(torneioGateway, partidaGateway);
+        return new AjustarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -59,12 +62,16 @@ export class AjustarResultado
         }
 
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Ajustes só são permitidos enquanto o torneio está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(
+            torneio,
+            "Ajustes só são permitidos enquanto o torneio está em andamento.",
+        );
 
         if (!podeGerenciarTorneio(torneio, input.requisitanteId, input.isAdmin)) {
             throw ErroPersonalizado.criar({
@@ -101,7 +108,7 @@ export class AjustarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_ajustado", {
+        this.eventos.publicar("resultado_ajustado", {
             torneioId: partidaAjustada.torneioId,
             partidaId: partidaAjustada.id,
             rodada: partidaAjustada.rodada,

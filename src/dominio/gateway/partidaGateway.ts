@@ -25,6 +25,8 @@ export interface PartidaGateway {
   excluirPorTorneioERodada(torneioId: string, rodada: number): Promise<number>;
   /** Remove partidas pendentes por id (ex.: edição manual de pareamentos). */
   excluirPorIds(ids: string[]): Promise<number>;
+  /** Grava partidas novas da rodada sem sobrescrever resultado já persistido. */
+  reconciliarRodada(torneioId: string, rodada: number, partidas: Partida[]): Promise<void>;
   /** Busca a partida BYE (jogador2Id=null) de uma rodada específica de um torneio, se existir. */
   buscarByePartidaRodada(torneioId: string, rodada: number): Promise<Partida | null>;
   /** Adiciona userId ao array confirmadoPor — retorna null se já confirmado ou partida não existe. */

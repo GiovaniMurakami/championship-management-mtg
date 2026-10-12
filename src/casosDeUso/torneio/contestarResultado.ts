@@ -2,9 +2,10 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type ContestarResultadoInputDto = {
     partidaId: string;
@@ -30,14 +31,16 @@ export class ContestarResultado
     implements CasoDeUso<ContestarResultadoInputDto, ContestarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new ContestarResultado(torneioGateway, partidaGateway);
+        return new ContestarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -67,12 +70,16 @@ export class ContestarResultado
         }
 
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Contestações só são permitidas enquanto o torneio está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(
+            torneio,
+            "Contestações só são permitidas enquanto o torneio está em andamento.",
+        );
 
         // Impedir contestação se já existem rodadas posteriores geradas
         const existeRodadaPosterior = await this.partidaGateway.existePartidaRodadaPosterior(
@@ -108,7 +115,7 @@ export class ContestarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_contestado", {
+        this.eventos.publicar("resultado_contestado", {
             torneioId: partidaContestada.torneioId,
             partidaId: partidaContestada.id,
             rodada: partidaContestada.rodada,

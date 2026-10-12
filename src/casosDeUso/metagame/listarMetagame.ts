@@ -2,7 +2,8 @@ import { IntervaloDatas, resolverIntervaloDatas } from "../../helpers/data/inter
 import { CasoDeUso } from "../casoDeUso";
 import { ArquetipoDetalhe, ArquetipoResumo, RecenteTorneio } from "./agregarMetagame";
 import { carregarEAgregarMetagame, MetagameGateways } from "./carregarMetagame";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_METAGAME, cacheSkMetagameLista } from "../../helpers/cache/chavesCache";
 
 export type ListarMetagameInputDto = IntervaloDatas & {
@@ -51,7 +52,7 @@ export function recortarArquetiposMetagame(
 export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarMetagameOutputDto> {
   private constructor(
     private readonly gateways: MetagameGateways,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
   public static criar(
@@ -60,7 +61,7 @@ export class ListarMetagame implements CasoDeUso<ListarMetagameInputDto, ListarM
     partida: MetagameGateways["partida"],
     deck: MetagameGateways["deck"],
     usuario: MetagameGateways["usuario"],
-    cache?: CacheDynamoDbServico,
+    cache?: CacheGateway,
     siteConfig?: MetagameGateways["siteConfig"]
   ) {
     return new ListarMetagame({ torneio, inscricao, partida, deck, usuario, siteConfig }, cache);

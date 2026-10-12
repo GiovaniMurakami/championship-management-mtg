@@ -35,9 +35,10 @@ export class ListarUsuariosRota implements Rotas {
       next: NextFunction
     ): Promise<void> => {
       try {
-        const { nome, bloqueadoTorneios, limite, offset } = request.queryValidados as ListarUsuariosQuery;
+        const { nome, role, bloqueadoTorneios, limite, offset } = request.queryValidados as ListarUsuariosQuery;
         const resultado = await this.listarUsuariosServico.executar({
           nome,
+          role,
           bloqueadoTorneios,
           limite,
           offset,

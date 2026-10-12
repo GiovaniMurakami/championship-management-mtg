@@ -2,8 +2,9 @@ import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type ConfirmarResultadoInputDto = {
     partidaId: string;
@@ -29,14 +30,16 @@ export class ConfirmarResultado
     implements CasoDeUso<ConfirmarResultadoInputDto, ConfirmarResultadoOutputDto> {
     private constructor(
         private readonly torneioGateway: TorneioGateway,
-        private readonly partidaGateway: PartidaGateway
+        private readonly partidaGateway: PartidaGateway,
+    private readonly eventos: EventoTorneioGateway,
     ) { }
 
     public static criar(
         torneioGateway: TorneioGateway,
-        partidaGateway: PartidaGateway
+        partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
     ) {
-        return new ConfirmarResultado(torneioGateway, partidaGateway);
+        return new ConfirmarResultado(torneioGateway, partidaGateway, eventos);
     }
 
     public async executar(
@@ -76,12 +79,16 @@ export class ConfirmarResultado
         }
 
         const torneio = await this.torneioGateway.buscarPorId(partida.torneioId);
-        if (!torneio || torneio.status !== "em_andamento") {
+        if (!torneio) {
             throw ErroPersonalizado.criar({
                 mensagem: "Confirmações só são permitidas enquanto o torneio está em andamento.",
                 status: StatusErro.erroParametro,
             });
         }
+        assertStatusEmAndamento(
+            torneio,
+            "Confirmações só são permitidas enquanto o torneio está em andamento.",
+        );
 
         const partidaAtualizada = await this.partidaGateway.confirmarResultado(
             input.partidaId,
@@ -94,7 +101,7 @@ export class ConfirmarResultado
                 status: StatusErro.erroParametro,
             });
         }
-        eventosTorneio.emit("resultado_confirmado", {
+        this.eventos.publicar("resultado_confirmado", {
             torneioId: partidaAtualizada.torneioId,
             partidaId: partidaAtualizada.id,
             usuarioId: input.usuarioId,

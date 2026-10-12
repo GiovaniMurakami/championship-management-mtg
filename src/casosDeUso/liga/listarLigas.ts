@@ -22,6 +22,7 @@ export type ListarLigasOutputDto = {
     bannerUrl?: string;
     donoId: string;
     tipo: TipoLiga;
+    fixado: boolean;
     totalTorneios: number;
     criadoEm: Date;
   }[];
@@ -51,7 +52,7 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
       this.ligaGateway.listarTotal({ tipo, nome }),
     ]);
 
-    const torneios = await Promise.all([...new Set(ligas.flatMap((liga) => liga.torneioIds))].map((id) => this.torneioGateway.buscarPorId(id)));
+    const torneios = await this.torneioGateway.buscarVarios([...new Set(ligas.flatMap((liga) => liga.torneioIds))]);
     const finalizados = new Set(torneios.filter((t) => t?.status === "finalizado").map((t) => t!.id));
     return {
       ligas: ligas.map((liga) => ({
@@ -61,6 +62,7 @@ export class ListarLigas implements CasoDeUso<ListarLigasInputDto, ListarLigasOu
         bannerUrl: liga.bannerUrl,
         donoId: liga.donoId,
         tipo: liga.tipo,
+        fixado: Boolean(liga.fixado),
         totalTorneios: liga.torneioIds.filter((id) => finalizados.has(id)).length,
         criadoEm: liga.criadoEm,
       })),

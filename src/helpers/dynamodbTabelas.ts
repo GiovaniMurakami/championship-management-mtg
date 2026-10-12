@@ -1,11 +1,13 @@
 import { logger } from "./logger";
 
 const ESTAGIOS = ["local", "dev", "prod", "test"] as const;
+type EstagioTabela = (typeof ESTAGIOS)[number];
 
 /** Extrai o estágio (local|dev|prod|test) de nomes `…-{stage}-data|cache`. */
-export function extrairEstagioTabelaDynamo(nome: string): (typeof ESTAGIOS)[number] | null {
+export function extrairEstagioTabelaDynamo(nome: string): EstagioTabela | null {
   const match = String(nome || "").trim().match(/-(local|dev|prod|test)-(?:data|cache)$/i);
-  return (match?.[1]?.toLowerCase() as (typeof ESTAGIOS)[number] | undefined) ?? null;
+  const estagio = match?.[1]?.toLowerCase();
+  return ESTAGIOS.find((item) => item === estagio) ?? null;
 }
 
 /** Deriva `…-cache` a partir de `…-data`. */

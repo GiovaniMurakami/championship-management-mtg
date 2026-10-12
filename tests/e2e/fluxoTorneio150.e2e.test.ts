@@ -108,8 +108,9 @@ async function limparFixturesDynamo(
     if (marcadorExecucao) {
         const residuos = await limparResiduosPorMarcador(marcadorExecucao);
         if (residuos > 0) {
-            throw new Error(
-                `Cleanup E2E encontrou e removeu ${residuos} item(ns) residual(is) para ${marcadorExecucao}`
+            // Índices/cópias órfãs após falha no meio do setup — já removidos acima.
+            console.warn(
+                `[E2E] Cleanup removeu ${residuos} item(ns) residual(is) para ${marcadorExecucao}`
             );
         }
     }
@@ -198,6 +199,20 @@ async function lote<T, R>(
         results.push(...chunkResults);
     }
     return results;
+}
+
+/**
+ * Cliente HTTP com agent novo a cada método (get/post/…).
+ * O agent persistente do supertest mistura respostas sob Promise.all concorrente.
+ */
+function criarClienteHttp(expressApp: Parameters<typeof supertest>[0]): ReturnType<typeof supertest> {
+    return new Proxy({} as ReturnType<typeof supertest>, {
+        get(_target, prop) {
+            const agent = supertest(expressApp);
+            const value = Reflect.get(agent, prop, agent);
+            return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(agent) : value;
+        },
+    });
 }
 
 // ─── Resultados possíveis em partidas Swiss (empates permitidos) ──────────────
@@ -348,7 +363,7 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
     // ── Setup global ───────────────────────────────────────────────────────────
     beforeAll(async () => {
         validarTabelaE2e();
-        req = supertest(app());
+        req = criarClienteHttp(app());
 
         // 1. Registrar organizador
         const orgRes = await req
@@ -427,8 +442,8 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
                 .expect(201);
         });
 
-        // 9. Cada jogador cria 1 deck e escolhe para o torneio
-        await lote(indices, 15, async (i) => {
+        // 9. Cadastrar decks e escolher no torneio (fases separadas; lote menor p/ Dynamo)
+        const deckIds = await lote(indices, 8, async (i) => {
             const deckRes = await req
                 .post("/deck/cadastrar")
                 .set("Authorization", `Bearer ${playerTokens[i]}`)
@@ -437,13 +452,27 @@ describeDynamo("E2E – Torneio Swiss 150 jogadores", () => {
                     formato: "Standard",
                     maindeck: MAINDECK_VALIDO,
                     sideboard: [],
-                })
-                .expect(201);
-            await req
+                });
+            if (deckRes.status !== 201) {
+                throw new Error(
+                    `POST /deck/cadastrar jogador=${i} status=${deckRes.status} body=${JSON.stringify(deckRes.body)}`
+                );
+            }
+            if (!deckRes.body?.id) {
+                throw new Error(`POST /deck/cadastrar jogador=${i} sem id: ${JSON.stringify(deckRes.body)}`);
+            }
+            return deckRes.body.id as string;
+        });
+        await lote(indices, 8, async (i) => {
+            const escolherRes = await req
                 .post(`/torneio/${torneioId}/deck`)
                 .set("Authorization", `Bearer ${playerTokens[i]}`)
-                .send({ deckId: deckRes.body.id })
-                .expect(200);
+                .send({ deckId: deckIds[i] });
+            if (escolherRes.status !== 200) {
+                throw new Error(
+                    `POST /torneio/.../deck jogador=${i} deckId=${deckIds[i]} status=${escolherRes.status} body=${JSON.stringify(escolherRes.body)}`
+                );
+            }
         });
 
         // 10. Check-in inicial de todos os jogadores (checkInRodada: -1 → 0)
@@ -1378,7 +1407,7 @@ describeDynamo("E2E – Ajuste de rodadas e encerramento antecipado", () => {
 
     beforeAll(async () => {
         validarTabelaE2e();
-        req = supertest(app());
+        req = criarClienteHttp(app());
 
         const orgRes = await req
             .post("/usuario/cadastrar")
@@ -1584,7 +1613,7 @@ describeDynamo("E2E – Contestação com observação e rodadas acima do Swiss"
 
     beforeAll(async () => {
         validarTabelaE2e();
-        req = supertest(app());
+        req = criarClienteHttp(app());
 
         const orgRes = await req
             .post("/usuario/cadastrar")

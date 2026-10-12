@@ -3,6 +3,7 @@ import { criarMockPartidaGateway, criarMockTorneioGateway, criarMockUsuarioGatew
 import { Torneio } from "../../../src/dominio/entidade/torneio";
 import { Partida } from "../../../src/dominio/entidade/partida";
 import { eventosTorneio } from "../../../src/infra/socketio/eventosTorneio";
+import "../../../src/infra/socketio/eventoTorneioPublicador";
 
 describe("PublicarRodada", () => {
   it("publica a rodada e emite rodada_iniciada", async () => {

@@ -190,6 +190,41 @@ describe("BuscarStandings", () => {
         expect(resultado.standings[1].pontosMesa).toBe(3);
     });
 
+    it("deve incluir a última rodada do Day 1 nos standings após encerrar a etapa", async () => {
+        const torneioDay1Encerrado = new Torneio({
+            id: "t-1", nome: "T", horario: new Date(), formato: "pauper",
+            donoId: "d", status: "pausado", rodadaAtual: 2, totalRodadas: 5,
+            rodadasDay1: 2, vagasDay2: 2, day1Encerrado: true,
+        });
+        const inscricoes = [
+            new Inscricao({ id: "i1", torneioId: "t-1", usuarioId: "u-1", checkInRodada: 2, dropped: false }),
+            new Inscricao({ id: "i2", torneioId: "t-1", usuarioId: "u-2", checkInRodada: 2, dropped: true, droppedRodada: 2 }),
+        ];
+        const partidas = [
+            new Partida({ id: "p1", torneioId: "t-1", rodada: 1, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+            new Partida({ id: "p2", torneioId: "t-1", rodada: 2, jogador1Id: "u-1", jogador2Id: "u-2", vitoriasJogador1: 2, vitoriasJogador2: 0, status: "finalizada" }),
+        ];
+        const usuarios = [
+            new Usuario({ id: "u-1", nome: "Alice", email: "a@e.com", senha: "s" }),
+            new Usuario({ id: "u-2", nome: "Bob", email: "b@e.com", senha: "s" }),
+        ];
+
+        const uc = BuscarStandings.criar(
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioDay1Encerrado) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({ listarPorTorneio: vi.fn().mockResolvedValue(partidas) }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(usuarios) }),
+            criarMockDeckGateway(),
+            criarMockTimeGateway(),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1" });
+        const alice = resultado.standings.find((s) => s.usuario.id === "u-1")!;
+
+        expect(alice.pontosMesa).toBe(6);
+        expect(alice.vitoriasPartida).toBe(2);
+    });
+
     it("deve ignorar partidas do corte ao calcular standings do suíço", async () => {
         const torneioFinalizadoComCorte = new Torneio({
             id: "t-1", nome: "T", horario: new Date(), formato: "legacy",

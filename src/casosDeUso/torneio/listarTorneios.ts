@@ -5,7 +5,8 @@ import { StatusTorneio } from "../../dominio/entidade/torneio";
 import { CasoDeUso } from "../casoDeUso";
 import { normalizarPaginacaoOffset } from "../../helpers/paginacao";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { CACHE_PK_TORNEIOS, cacheSkListarTorneios } from "../../helpers/cache/chavesCache";
 
 const LIMITE_MAXIMO_TORNEIOS = 100;
@@ -14,6 +15,8 @@ const LIMITE_PADRAO_TORNEIOS = 20;
 export type ListarTorneiosInputDto = {
   /** Ausente para visitante sem login — todos os torneios saem com inscrito=false. */
   usuarioId?: string;
+  /** Admin vê torneios secretos na listagem. */
+  isAdmin?: boolean;
   limite?: number;
   offset?: number;
   status?: StatusTorneio;
@@ -42,11 +45,15 @@ export type ListarTorneiosOutputDto = {
     maxJogadores?: number;
     maxRodadas?: number;
     corteTop?: number;
+    rodadasDay1?: number;
+    vagasDay2?: number;
+    day1Encerrado: boolean;
     premio?: { playerPoints: number; tix: number };
   linkLive?: string;
     exibirNomeJogador?: string;
     emCorte: boolean;
     secreto: boolean;
+    fixado: boolean;
     visualizacoes: number;
     criadoEm: string;
     inscrito: boolean;
@@ -64,20 +71,21 @@ export class ListarTorneios
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly ligaGateway?: LigaGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     ligaGateway?: LigaGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new ListarTorneios(torneioGateway, inscricaoGateway, ligaGateway, cache);
   }
 
   public async executar({
     usuarioId,
+    isAdmin,
     limite,
     offset,
     status,
@@ -91,8 +99,10 @@ export class ListarTorneios
       LIMITE_PADRAO_TORNEIOS,
       LIMITE_MAXIMO_TORNEIOS
     );
+    const incluirSecretos = isAdmin === true;
     const cacheKey = cacheSkListarTorneios({
       usuarioId: usuarioId ?? null,
+      incluirSecretos,
       limite: paginacao.limite,
       offset: paginacao.offset,
       status: status ?? null,
@@ -108,14 +118,14 @@ export class ListarTorneios
       this.torneioGateway.listar({
         limite: paginacao.limite,
         offset: paginacao.offset,
-        incluirSecretos: false,
+        incluirSecretos,
         status,
         nome,
         dataInicio,
         dataFim,
         horarioDesc: status === "finalizado",
       }),
-      this.torneioGateway.listarTotal({ incluirSecretos: false, status, nome, dataInicio, dataFim }),
+      this.torneioGateway.listarTotal({ incluirSecretos, status, nome, dataInicio, dataFim }),
       usuarioId ? this.inscricaoGateway.listarPorUsuario(usuarioId) : Promise.resolve([]),
     ]);
 
@@ -158,10 +168,14 @@ export class ListarTorneios
         maxJogadores: t.maxJogadores,
         maxRodadas: t.maxRodadas,
         corteTop: t.corteTop,
+        rodadasDay1: t.rodadasDay1,
+        vagasDay2: t.vagasDay2,
+        day1Encerrado: t.day1Encerrado,
         premio: t.premio,
       linkLive: t.linkLive,
         emCorte: t.emCorte,
         secreto: t.secreto,
+        fixado: Boolean(t.fixado),
         exibirNomeJogador: t.exibirNomeJogador,
         visualizacoes: t.visualizacoes,
         criadoEm: toBrasiliaISO(t.criadoEm)!,

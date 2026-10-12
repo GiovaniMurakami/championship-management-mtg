@@ -43,14 +43,16 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
   }
 
   public async buscarPorPrefixo(prefixo: string): Promise<Deck | null> {
-    const itens = await this.queryJson<DeckItem>(DECKS_PK);
+    const itens = await this.queryJson<DeckItem>(DECKS_PK, { consistente: false });
     const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
     return encontrados.length === 1 ? this.itemParaDeck(encontrados[0]) : null;
   }
 
   public async buscarVarios(ids: string[]): Promise<Deck[]> {
-    const decks = await Promise.all(Array.from(new Set(ids)).map((id) => this.buscarPorId(id)));
-    return decks.filter((deck): deck is Deck => deck !== null);
+    const unicos = [...new Set(ids.filter(Boolean))];
+    if (unicos.length === 0) return [];
+    const itens = await this.batchGetJson<DeckItem>(unicos.map((id) => ({ pk: `DECK#${id}`, sk: "DATA" })));
+    return itens.filter((item) => item?.id).map((item) => this.itemParaDeck(item));
   }
 
   public async listarPorUsuario(usuarioId: string): Promise<Deck[]> {
@@ -138,7 +140,7 @@ export class DeckDynamoRepositorio extends BaseDynamoRepositorio implements Deck
       const listas = await Promise.all(filtros.usuarioIds.map((usuarioId) => this.queryJson<DeckItem>(`USER#${usuarioId}`)));
       return listas.flat().filter((item) => item.id && item.formato);
     }
-    return this.queryJson<DeckItem>(DECKS_PK);
+    return this.queryJson<DeckItem>(DECKS_PK, { consistente: false });
   }
 
   private filtrar(

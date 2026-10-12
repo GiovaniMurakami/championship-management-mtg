@@ -6,7 +6,7 @@ import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 const CORTES_VALIDOS = [2, 4, 8, 16];
 
@@ -25,9 +25,12 @@ export type CriarTorneioInputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto?: boolean;
+  listasPublicas?: boolean;
   exibirNomeJogador?: ExibirNomeJogador;
   ligaIds?: string[];
 };
@@ -49,9 +52,13 @@ export type CriarTorneioOutputDto = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado: boolean;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   secreto: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   ligaIds: string[];
   criadoEm: string;
@@ -61,11 +68,16 @@ export class CriarTorneio
   implements CasoDeUso<CriarTorneioInputDto, CriarTorneioOutputDto> {
   private constructor(
     private readonly torneioGateway: TorneioGateway,
-    private readonly ligaGateway?: LigaGateway,
+    private readonly ligaGateway: LigaGateway | undefined,
+    private readonly eventos: EventoTorneioGateway,
   ) { }
 
-  public static criar(torneioGateway: TorneioGateway, ligaGateway?: LigaGateway) {
-    return new CriarTorneio(torneioGateway, ligaGateway);
+  public static criar(
+    torneioGateway: TorneioGateway,
+    ligaGateway?: LigaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+  ) {
+    return new CriarTorneio(torneioGateway, ligaGateway, eventos);
   }
 
   public async executar(
@@ -93,9 +105,12 @@ export class CriarTorneio
       maxJogadores: input.maxJogadores,
       maxRodadas: input.maxRodadas,
       corteTop: input.corteTop,
+      rodadasDay1: input.rodadasDay1,
+      vagasDay2: input.vagasDay2,
       premio: input.premio,
       linkLive: input.linkLive?.trim(),
       secreto: input.secreto ?? false,
+      listasPublicas: input.listasPublicas ?? false,
       exibirNomeJogador: input.exibirNomeJogador ?? "nome",
     });
 
@@ -128,7 +143,7 @@ export class CriarTorneio
       }
     }
 
-    eventosTorneio.emit("torneio_criado", {
+    this.eventos.publicar("torneio_criado", {
       torneioId: torneio.id,
     });
 
@@ -149,9 +164,13 @@ export class CriarTorneio
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      rodadasDay1: torneio.rodadasDay1,
+      vagasDay2: torneio.vagasDay2,
+      day1Encerrado: torneio.day1Encerrado,
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       secreto: torneio.secreto,
+      listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       ligaIds,
       criadoEm: toBrasiliaISO(torneio.criadoEm)!,

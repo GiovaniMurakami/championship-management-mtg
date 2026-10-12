@@ -15,9 +15,10 @@ import {
   omwp,
   gwp,
   ogwp,
-} from "./swiss";
+} from "../../dominio/torneio/swiss";
 import { resolverNomeJogador as resolverNome } from "../../helpers/torneio/resolverNomeJogador";
-import { CacheDynamoDbServico, getCacheTtlSegundos } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { getCacheTtlSegundos } from "../../helpers/cache/ttlCache";
 import { cachePkTorneio, cacheSkStandings } from "../../helpers/cache/chavesCache";
 
 function obterPrimeiraRodadaCorte(corteTop?: number, totalRodadas?: number): number | null {
@@ -69,7 +70,7 @@ export class BuscarStandings
     private readonly usuarioGateway: UsuarioGateway,
     private readonly deckGateway: DeckGateway,
     private readonly timeGateway: TimeGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) { }
 
   public static criar(
@@ -79,7 +80,7 @@ export class BuscarStandings
     usuarioGateway: UsuarioGateway,
     deckGateway: DeckGateway,
     timeGateway: TimeGateway,
-    cache?: CacheDynamoDbServico
+    cache?: CacheGateway
   ) {
     return new BuscarStandings(torneioGateway, inscricaoGateway, partidaGateway, usuarioGateway, deckGateway, timeGateway, cache);
   }
@@ -183,9 +184,18 @@ export class BuscarStandings
     const partidasElegiveisParaStandings = primeiraRodadaCorte
       ? todasPartidas.filter((p) => p.rodada < primeiraRodadaCorte)
       : todasPartidas;
-    const partidasConsolidadas = torneio.status === "finalizado"
-      ? partidasElegiveisParaStandings
-      : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
+    // Em andamento, a rodada vigente fica de fora até avançar — exceto após Encerrar Day 1
+    // (`pausado` / day1Encerrado), que consolida a última rodada do Day 1 nos standings.
+    const day1EtapaEncerrada =
+      (torneio.status === "pausado" || torneio.day1Encerrado) &&
+      Number(torneio.rodadasDay1 || 0) > 0 &&
+      torneio.rodadaAtual <= Number(torneio.rodadasDay1);
+    const partidasConsolidadas =
+      torneio.status === "finalizado"
+        ? partidasElegiveisParaStandings
+        : day1EtapaEncerrada
+          ? partidasElegiveisParaStandings.filter((p) => p.rodada <= torneio.rodadaAtual)
+          : partidasElegiveisParaStandings.filter((p) => p.rodada < torneio.rodadaAtual);
 
     // Incluir TODOS os jogadores com check-in E todos que possuem histórico de partidas
     // para que omwp/ogwp use o MWP real de oponentes dropados

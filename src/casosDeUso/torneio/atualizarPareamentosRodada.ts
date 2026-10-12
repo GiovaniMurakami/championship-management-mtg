@@ -5,10 +5,11 @@ import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { UsuarioGateway } from "../../dominio/gateway/usuarioGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
 import { resolverNomeJogador } from "../../helpers/torneio/resolverNomeJogador";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 type PartidaAtualizadaInput = {
   id?: string | null;
@@ -54,20 +55,23 @@ export class AtualizarPareamentosRodada
     private readonly torneioGateway: TorneioGateway,
     private readonly inscricaoGateway: InscricaoGateway,
     private readonly partidaGateway: PartidaGateway,
-    private readonly usuarioGateway: UsuarioGateway
-  ) { }
+    private readonly usuarioGateway: UsuarioGateway,
+    private readonly eventos: EventoTorneioGateway,
+    ) { }
 
   public static criar(
     torneioGateway: TorneioGateway,
     inscricaoGateway: InscricaoGateway,
     partidaGateway: PartidaGateway,
-    usuarioGateway: UsuarioGateway
-  ) {
+    usuarioGateway: UsuarioGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao(),
+    ) {
     return new AtualizarPareamentosRodada(
       torneioGateway,
       inscricaoGateway,
       partidaGateway,
-      usuarioGateway
+      usuarioGateway,
+      eventos,
     );
   }
 
@@ -82,12 +86,10 @@ export class AtualizarPareamentosRodada
       });
     }
 
-    if (torneio.status !== "em_andamento") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Pareamentos só podem ser alterados enquanto o torneio está em andamento.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    assertStatusEmAndamento(
+      torneio,
+      "Pareamentos só podem ser alterados enquanto o torneio está em andamento.",
+    );
 
     if (input.rodada !== torneio.rodadaAtual) {
       throw ErroPersonalizado.criar({
@@ -306,7 +308,7 @@ export class AtualizarPareamentosRodada
     const partidasOrdenadas = [...resultadoPartidas].sort(
       (a, b) => (a.mesa ?? Number.MAX_SAFE_INTEGER) - (b.mesa ?? Number.MAX_SAFE_INTEGER)
     );
-    eventosTorneio.emit("pareamentos_atualizados", {
+    this.eventos.publicar("pareamentos_atualizados", {
       torneioId: torneio.id,
       rodada: input.rodada,
     });

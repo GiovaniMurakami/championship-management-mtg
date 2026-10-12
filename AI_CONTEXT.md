@@ -1,7 +1,7 @@
 # AI Context — championship-management-mtg
 
 > Documento de contexto para assistentes de IA. Leia antes de modificar o projeto.
-> Versão da API: **1.1.33** | Idioma da API e mensagens: **português (BR)**
+> Versão da API: **1.1.34** | Idioma da API e mensagens: **português (BR)**
 
 **Frontend pareado:** repositório `championship-management-mtg-front`, atualmente em React 19 + Vite 7 + Tailwind CSS 4, com TanStack Query, Radix UI e Ably. Contratos REST documentados em `docs/`.
 
@@ -18,7 +18,7 @@ API **Node.js + TypeScript** para **gerenciamento de torneios de Magic: The Gath
 - Ligas (rankings consolidados) e times (convites/solicitações)
 - Metagame público por formato; admin define arte do arquétipo via override em `SITE_CONFIG` (`PUT /metagame/:formato/:slug/carta-representativa`)
 - Upload de imagens via presigned URL (S3)
-- **Blog/artigos** (`/artigos`) — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; assinatura do autor (foto, nome, `descricaoAssinatura`); comentários/curtidas/visualizações (`docs/artigos.md`)
+- **Blog/artigos** (`/artigos`) — markup Cards Realm no S3; papéis `admin`/`editor`; aprovação de publicação; assinatura do autor (foto, nome, `descricaoAssinatura`); comentários/curtidas/visualizações (`docs/artigos.md`). URL pública `/artigos/{5 primeiros do id}-{slug}`; Open Graph da capa em `GET /artigo/share/:artigoId`
 - Anúncios do site + anúncio diário em carrossel + estatísticas
 - Newsletter semanal de metagame (opt-in; Lambda agendada; descadastro one-click; admin lista assinantes)
 - Notificações em tempo real via **Ably**
@@ -60,7 +60,8 @@ src/
 │   └── rotas.ts                # Registro das rotas Express
 ├── dominio/
 │   ├── entidade/               # Torneio, Deck, Usuario, Partida, etc.
-│   └── gateway/                # Interfaces dos repositórios
+│   ├── torneio/swiss.ts        # Pareamento, estatística e desempate
+│   └── gateway/                # Interfaces dos repositórios, cache e eventos
 ├── casosDeUso/                 # Regras de negócio por domínio
 │   ├── usuario/
 │   ├── deck/
@@ -76,7 +77,7 @@ src/
 │   ├── cache/                  # Invalidação compartilhada por evento
 │   ├── ably/                   # NotificacaoAbly
 │   ├── s3/, email/
-│   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably
+│   └── socketio/eventosTorneio.ts  # EventEmitter interno → Ably; casos de uso usam EventoTorneioGateway
 ├── middlewares/express/        # autenticarJwt, rateLimiter, sanitização
 └── helpers/
     ├── validacao/              # schemas.ts, validarBody/Params/Query
@@ -89,7 +90,7 @@ docs/                           # Documentação por entidade (usuario, torneio,
 tests/                          # Vitest (unitários + E2E DynamoDB opt-in)
 ```
 
-**Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container).
+**Arquitetura:** Clean Architecture + DDD, composição manual (sem DI container). Casos de uso dependem de `CacheGateway` e `EventoTorneioGateway`, não das classes de infra. Access patterns do DynamoDB: `docs/dynamodb-access-patterns.md`.
 
 ---
 
@@ -149,7 +150,7 @@ POST /usuario/cadastrar, /login, /refresh-token, /logout
 POST /usuario/reset-senha/solicitar, /confirmar
 PUT  /usuario/atualizar
 DELETE /usuario/conta                   (auth — body: { confirmacao } = nome do perfil; soft-delete/anonimiza; preserva decks e inscrições; marca excluido)
-GET  /usuario/listar                    (admin — busca por nome/email; query bloqueadoTorneios; omite excluídos por padrão)
+GET  /usuario/listar                    (admin — busca por nome/email; query role e bloqueadoTorneios; omite excluídos por padrão)
 PUT  /usuario/:usuarioId/bloqueio-torneios (admin — body: { bloqueado }; remove inscricoes abertas)
 ```
 
@@ -256,7 +257,7 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ## 9. Torneio — lógica de negócio
 
 ### Status
-`inscricoes_abertas` → `em_andamento` → `finalizado`
+`inscricoes_abertas` → `em_andamento` → (`pausado` após Encerrar Day 1) → `em_andamento` (Day 2) → `finalizado`
 
 ### Swiss
 - Rodadas: `ceil(log₂(n))` com teto opcional `maxRodadas`
@@ -269,6 +270,7 @@ Testes de schemas: `tests/helpers/validacao/schemas.test.ts`
 ### Campos notáveis
 - `somRodada` — URL de áudio ao iniciar rodada (evento Ably + front toca)
 - `secreto` — excluído de listagens públicas
+- `listasPublicas` — decks visíveis nos standings (mesmo UX de torneio finalizado)
 - `corteTop`, `maxJogadores`, `exibirNomeJogador`
 - `anfitriaoId` + objeto `anfitriao` populado em `buscarTorneio`
 
@@ -335,19 +337,19 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 
 | Limiter | Máx/15min | Uso |
 |---|---|---|
-| `auth` | 50 | login, cadastro, reset senha (mesmo bucket) |
-| `refresh` | 50 | refresh token |
-| `account` | 15 | logout, perfil |
-| `deck` | 40 | criar deck |
-| `inscricao` | 400 | inscrever, check-in, escolher deck |
-| `resultado` | 600 | resultado/confirmação/contestação |
-| `mutation` | 60 | demais mutações autenticadas (fora de torneio) |
-| `torneio-mutation` | 500 | mutações de torneio (rodada, drop, mesa…) |
-| `public-read` | 100 | listagens/buscas públicas (fora de torneio) |
-| `torneio-read` | 800 | detalhe/listar/standings/partidas de torneio |
-| `heavy-read` | 40 | metagame e ranking de liga |
-| `public-action` | 30 | POST público (clique anúncio) |
-| `upload` | 20 | presigned URL S3 |
+| `auth` | 60 | login, cadastro, reset senha (mesmo bucket) |
+| `refresh` | 60 | refresh token |
+| `account` | 18 | logout, perfil |
+| `deck` | 48 | criar deck |
+| `inscricao` | 480 | inscrever, check-in, escolher deck |
+| `resultado` | 720 | resultado/confirmação/contestação |
+| `mutation` | 72 | demais mutações autenticadas (fora de torneio) |
+| `torneio-mutation` | 600 | mutações de torneio (rodada, drop, mesa…) |
+| `public-read` | 120 | listagens/buscas públicas (fora de torneio) |
+| `torneio-read` | 960 | detalhe/listar/standings/partidas de torneio |
+| `heavy-read` | 48 | metagame e ranking de liga |
+| `public-action` | 36 | POST público (clique anúncio) |
+| `upload` | 24 | presigned URL S3 |
 
 `GET /health` sem limiter. Em rotas caras o limiter vem **antes** da validação, para contar spam de payload inválido.
 
@@ -436,7 +438,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 4. **`nomeConsolidado` / carta representativa do arquétipo** — nome do arquétipo (admin altera nos decks). Arte do metagame: override por `formato#slug` em SITE_CONFIG; sem override, maioria das `cartaRepresentativa` dos decks; depois carta mais jogada. `cartaRepresentativa: null` no PUT do arquétipo remove o override.
 5. **Comparar IDs** — sempre UUID string; use `uuidCampo` no Zod.
 6. **Alterar torneio** — só em `inscricoes_abertas`; dono ou admin.
-7. **Torneios secretos** — filtrados em `listarTorneios`, acessíveis por UUID direto.
+7. **Torneios secretos** — filtrados em `listarTorneios` (exceto para admin), acessíveis por UUID direto.
 8. **Não alterar contratos da API** sem alinhar com o front (`backendApi.js`).
 9. **Eventos Ably** — incluir `torneioId` no payload; front assina `torneio-{id}`.
 10. **Não criar commits** a menos que o usuário peça.

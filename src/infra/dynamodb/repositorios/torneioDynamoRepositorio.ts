@@ -1,8 +1,6 @@
 import { ExibirNomeJogador, StatusTorneio, StoryFundoTextoRodape, Torneio } from "../../../dominio/entidade/torneio";
-import { Partida } from "../../../dominio/entidade/partida";
 import { FiltrosListarTorneios, TorneioGateway } from "../../../dominio/gateway/torneioGateway";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
-import { PartidaDynamoRepositorio } from "./partidaDynamoRepositorio";
 
 type TorneioItem = {
   id: string;
@@ -24,10 +22,16 @@ type TorneioItem = {
   maxJogadores?: number;
   maxRodadas?: number;
   corteTop?: number;
+  rodadasDay1?: number;
+  vagasDay2?: number;
+  day1Encerrado?: boolean;
+  day1EncerradoEm?: string;
   premio?: { playerPoints: number; tix: number };
   linkLive?: string;
   emCorte: boolean;
   secreto: boolean;
+  fixado?: boolean;
+  listasPublicas: boolean;
   exibirNomeJogador: ExibirNomeJogador;
   visualizacoes: number;
   criadoEm: string;
@@ -68,16 +72,29 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return item ? this.itemParaTorneio(item) : null;
   }
 
+  public async buscarVarios(ids: string[]): Promise<Torneio[]> {
+    const unicos = [...new Set(ids.filter(Boolean))];
+    if (unicos.length === 0) return [];
+    const itens = await this.batchGetJson<TorneioItem>(unicos.map((id) => ({ pk: `TORNEIO#${id}`, sk: "METADATA" })));
+    return itens.filter((item) => item?.id).map((item) => this.itemParaTorneio(item));
+  }
+
   public async buscarPorPrefixo(prefixo: string): Promise<Torneio | null> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, { consistente: false });
     const encontrados = itens.filter((item) => item.id.toLowerCase().startsWith(prefixo.toLowerCase()));
     return encontrados.length === 1 ? this.itemParaTorneio(encontrados[0]) : null;
   }
 
   public async listar(filtros: FiltrosListarTorneios = {}): Promise<Torneio[]> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, {
+      consistente: false,
+      ...this.limitesHorario(filtros),
+      ordemDesc: filtros.horarioDesc,
+    });
     const filtrados = this.filtrar(itens, filtros)
       .sort((a, b) => {
+        const pinDiff = Number(Boolean(b.fixado)) - Number(Boolean(a.fixado));
+        if (pinDiff !== 0) return pinDiff;
         const diff = new Date(a.horario).getTime() - new Date(b.horario).getTime() || a.id.localeCompare(b.id);
         return filtros.horarioDesc ? -diff : diff;
       });
@@ -90,7 +107,10 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
   public async listarTotal(
     filtros: Pick<FiltrosListarTorneios, "incluirSecretos" | "status" | "nome" | "dataInicio" | "dataFim"> = {}
   ): Promise<number> {
-    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK);
+    const itens = await this.queryJson<TorneioItem>(TORNEIOS_PK, {
+      consistente: false,
+      ...this.limitesHorario(filtros),
+    });
     return this.filtrar(itens, filtros).length;
   }
 
@@ -151,27 +171,6 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return this.buscarPorId(id);
   }
 
-  public async atualizarECriarPartidas(torneio: Torneio, partidas: Partida[]): Promise<void> {
-    const partidaRepositorio = PartidaDynamoRepositorio.criar();
-    if (partidas.length === 0) {
-      await this.atualizar(torneio);
-      return;
-    }
-
-    const partidasPorRodada = new Map<string, Partida[]>();
-    for (const partida of partidas) {
-      const chave = `${partida.torneioId}|${partida.rodada}`;
-      partidasPorRodada.set(chave, [...(partidasPorRodada.get(chave) ?? []), partida]);
-    }
-
-    for (const rodadaPartidas of partidasPorRodada.values()) {
-      const primeira = rodadaPartidas[0];
-      await partidaRepositorio.reconciliarRodada(primeira.torneioId, primeira.rodada, rodadaPartidas);
-    }
-
-    await this.atualizar(torneio);
-  }
-
   public async excluir(id: string): Promise<void> {
     const torneio = await this.buscarPorId(id);
     if (!torneio) return;
@@ -192,6 +191,13 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     return torneios.length;
   }
 
+  private limitesHorario(filtros: Pick<FiltrosListarTorneios, "dataInicio" | "dataFim">) {
+    return {
+      skInicio: filtros.dataInicio ? `TORNEIO#${filtros.dataInicio.toISOString()}` : undefined,
+      skFim: filtros.dataFim ? `TORNEIO#${filtros.dataFim.toISOString()}#\uffff` : undefined,
+    };
+  }
+
   private filtrar(
     itens: TorneioItem[],
     filtros: Pick<FiltrosListarTorneios, "incluirSecretos" | "status" | "nome" | "dataInicio" | "dataFim">
@@ -199,7 +205,12 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
     const termo = filtros.nome?.trim().toLowerCase();
     return itens.filter((item) => {
       if (!filtros.incluirSecretos && item.secreto) return false;
-      if (filtros.status && item.status !== filtros.status) return false;
+      // Filtro "em_andamento" inclui intervalo Day 1→Day 2 (`pausado`) para listagens "ao vivo".
+      if (filtros.status === "em_andamento") {
+        if (item.status !== "em_andamento" && item.status !== "pausado") return false;
+      } else if (filtros.status && item.status !== filtros.status) {
+        return false;
+      }
       if (termo && !item.nome.toLowerCase().includes(termo)) return false;
       const horario = new Date(item.horario).getTime();
       if (filtros.dataInicio && horario < filtros.dataInicio.getTime()) return false;
@@ -271,10 +282,16 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: torneio.maxJogadores,
       maxRodadas: torneio.maxRodadas,
       corteTop: torneio.corteTop,
+      rodadasDay1: torneio.rodadasDay1,
+      vagasDay2: torneio.vagasDay2,
+      day1Encerrado: torneio.day1Encerrado,
+      day1EncerradoEm: torneio.day1EncerradoEm?.toISOString(),
       premio: torneio.premio,
       linkLive: torneio.linkLive,
       emCorte: torneio.emCorte,
       secreto: torneio.secreto,
+      fixado: torneio.fixado,
+      listasPublicas: torneio.listasPublicas,
       exibirNomeJogador: torneio.exibirNomeJogador,
       visualizacoes: torneio.visualizacoes,
       criadoEm: torneio.criadoEm.toISOString(),
@@ -305,10 +322,16 @@ export class TorneioDynamoRepositorio extends BaseDynamoRepositorio implements T
       maxJogadores: item.maxJogadores,
       maxRodadas: item.maxRodadas,
       corteTop: item.corteTop,
+      rodadasDay1: item.rodadasDay1,
+      vagasDay2: item.vagasDay2,
+      day1Encerrado: item.day1Encerrado ?? false,
+      day1EncerradoEm: item.day1EncerradoEm ? new Date(item.day1EncerradoEm) : undefined,
       premio: item.premio,
       linkLive: item.linkLive,
       emCorte: item.emCorte,
       secreto: item.secreto,
+      fixado: item.fixado ?? false,
+      listasPublicas: item.listasPublicas ?? false,
       exibirNomeJogador: item.exibirNomeJogador,
       visualizacoes: item.visualizacoes,
       criadoEm: new Date(item.criadoEm),

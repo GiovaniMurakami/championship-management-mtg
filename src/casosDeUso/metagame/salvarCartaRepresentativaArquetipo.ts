@@ -3,7 +3,7 @@ import { normalizarFormatoDeck } from "../../dominio/regras/formatoDeck";
 import { CACHE_PK_METAGAME } from "../../helpers/cache/chavesCache";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../helpers/error/statusErro";
-import { CacheDynamoDbServico } from "../../infra/services/cacheDynamoDbServico";
+import { CacheGateway } from "../../dominio/gateway/cacheGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { chaveCartaRepresentativaMetagame } from "./agregarMetagame";
 
@@ -24,10 +24,10 @@ export class SalvarCartaRepresentativaArquetipo
 {
   private constructor(
     private readonly siteConfigGateway: SiteConfigGateway,
-    private readonly cache?: CacheDynamoDbServico
+    private readonly cache?: CacheGateway
   ) {}
 
-  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheDynamoDbServico) {
+  public static criar(siteConfigGateway: SiteConfigGateway, cache?: CacheGateway) {
     return new SalvarCartaRepresentativaArquetipo(siteConfigGateway, cache);
   }
 

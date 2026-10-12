@@ -55,7 +55,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2);
             expect(resultado.partidas[0].jogador1Nome).toBeDefined();
         }
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve lanÃ§ar erro se nÃ£o for o dono e nÃ£o for admin", async () => {
@@ -214,7 +214,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.rodadaAtual).toBe(2);
             expect(resultado.partidas.length).toBeGreaterThan(0);
         }
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve iniciar o corte top 4 ao fim do Swiss", async () => {
@@ -260,7 +260,7 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.partidas).toHaveLength(2); // top4 = 2 partidas
         }
         // totalRodadas deve ser estendido: rodada 3 (semis) + rodada 4 (final)
-        expect(torneioGw.atualizarECriarPartidas).toHaveBeenCalled();
+        expect(torneioGw.atualizar).toHaveBeenCalled();
     });
 
     it("deve gerar prÃ³xima rodada de corte com os vencedores", async () => {
@@ -577,5 +577,70 @@ describe("IniciarProximaRodada", () => {
             expect(resultado.rodadaAtual).toBe(3);
             expect(resultado.partidas).toHaveLength(2);
         }
+    });
+
+    it("bloqueia avanço da última rodada do Day 1 sem encerrar Day 1", async () => {
+        const torneioDay1 = new Torneio({
+            id: "t-1",
+            nome: "T",
+            horario: new Date(),
+            formato: "f",
+            donoId: "dono",
+            status: "em_andamento",
+            rodadaAtual: 2,
+            totalRodadas: 5,
+            rodadasDay1: 2,
+            vagasDay2: 2,
+            rodadaPublicada: true,
+        });
+        const uc = IniciarProximaRodada.criar(
+            criarMockTorneioGateway({ buscarPorId: vi.fn().mockResolvedValue(torneioDay1) }),
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        await expect(
+            uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false }),
+        ).rejects.toMatchObject({ status: 400 });
+    });
+
+    it("permite avanço após Day 1 encerrado (status pausado → em_andamento)", async () => {
+        const torneioDay1 = new Torneio({
+            id: "t-1",
+            nome: "T",
+            horario: new Date(),
+            formato: "f",
+            donoId: "dono",
+            status: "pausado",
+            rodadaAtual: 2,
+            totalRodadas: 5,
+            rodadasDay1: 2,
+            vagasDay2: 2,
+            day1Encerrado: true,
+            rodadaPublicada: true,
+        });
+        const torneioGw = criarMockTorneioGateway({
+            buscarPorId: vi.fn().mockResolvedValue(torneioDay1),
+        });
+        const uc = IniciarProximaRodada.criar(
+            torneioGw,
+            criarMockInscricaoGateway({ listarPorTorneio: vi.fn().mockResolvedValue(inscricoes) }),
+            criarMockPartidaGateway({
+                listarPorTorneioERodada: vi.fn().mockResolvedValue(partidasRodada1),
+                listarPorTorneio: vi.fn().mockResolvedValue(partidasRodada1),
+            }),
+            criarMockUsuarioGateway({ buscarVarios: vi.fn().mockResolvedValue(quatroUsuarios) }),
+        );
+
+        const resultado = await uc.executar({ torneioId: "t-1", donoId: "dono", isAdmin: false });
+        expect(resultado.finalizado).toBe(false);
+        if (!resultado.finalizado) {
+            expect(resultado.rodadaAtual).toBe(3);
+        }
+        expect(torneioDay1.status).toBe("em_andamento");
     });
 });

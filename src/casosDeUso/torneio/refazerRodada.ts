@@ -2,9 +2,10 @@ import { CasoDeUso } from "../casoDeUso";
 import { PartidaGateway } from "../../dominio/gateway/partidaGateway";
 import { TorneioGateway } from "../../dominio/gateway/torneioGateway";
 import { ErroPersonalizado } from "../../helpers/error/ErroPersonalizado";
+import { assertStatusEmAndamento } from "../../helpers/torneio/assertStatusEmAndamento";
 import { StatusErro } from "../../helpers/error/statusErro";
 import { podeGerenciarTorneio } from "../../helpers/torneio/podeGerenciarTorneio";
-import { eventosTorneio } from "../../infra/socketio/eventosTorneio";
+import { EventoTorneioGateway, eventoTorneioPadrao } from "../../dominio/gateway/eventoTorneioGateway";
 
 export type RefazerRodadaInputDto = {
   torneioId: string;
@@ -44,10 +45,13 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
   private constructor(
     private readonly torneioGateway: TorneioGateway,
     private readonly partidaGateway: PartidaGateway,
-  ) {}
 
-  public static criar(torneioGateway: TorneioGateway, partidaGateway: PartidaGateway) {
-    return new RefazerRodada(torneioGateway, partidaGateway);
+    private readonly eventos: EventoTorneioGateway,
+    ) {}
+
+  public static criar(torneioGateway: TorneioGateway, partidaGateway: PartidaGateway,
+    eventos: EventoTorneioGateway = eventoTorneioPadrao()) {
+    return new RefazerRodada(torneioGateway, partidaGateway, eventos);
   }
 
   public async executar(input: RefazerRodadaInputDto): Promise<RefazerRodadaOutputDto> {
@@ -66,12 +70,10 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
       });
     }
 
-    if (torneio.status !== "em_andamento") {
-      throw ErroPersonalizado.criar({
-        mensagem: "Somente torneios em andamento podem refazer rodada.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    assertStatusEmAndamento(
+      torneio,
+      "Somente torneios em andamento podem refazer rodada.",
+    );
 
     if (torneio.rodadaAtual <= 1) {
       throw ErroPersonalizado.criar({
@@ -105,7 +107,7 @@ export class RefazerRodada implements CasoDeUso<RefazerRodadaInputDto, RefazerRo
 
     torneio.voltarRodada(rodadaAnterior, estadoAnterior.totalRodadas, estadoAnterior.emCorte);
     await this.torneioGateway.atualizar(torneio);
-    eventosTorneio.emit("rodada_refeita", {
+    this.eventos.publicar("rodada_refeita", {
       torneioId: torneio.id,
       rodadaAtual: rodadaAnterior,
       rodadaRemovida,
