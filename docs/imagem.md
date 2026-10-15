@@ -5,7 +5,8 @@
 Fluxo de upload de imagens diretamente para o AWS S3 via **presigned URL**. A API gera uma URL temporária assinada que permite o cliente fazer o upload diretamente ao S3 sem passar pelo servidor.
 
 Tipos aceitos: `image/jpeg`, `image/png`, `image/gif`, `image/webp`  
-Tamanho máximo: **5 MB**  
+Tamanho máximo do arquivo enviado ao S3: **5 MB** (usuário) / **25 MB** (admin)  
+No frontend, admin pode selecionar originais maiores; as imagens são otimizadas no cliente antes do upload.  
 Validade da URL: **5 minutos**
 
 ---
@@ -50,7 +51,7 @@ Authorization: Bearer {token}
 | Campo        | Tipo   | Obrigatório | Descrição                                                      |
 | ------------ | ------ | ----------- | -------------------------------------------------------------- |
 | contentType  | string | Sim         | Tipo MIME da imagem: `image/jpeg`, `image/png`, `image/gif`, `image/webp` |
-| tamanhoBytes | number | Sim         | Tamanho exato do arquivo em bytes. Mínimo: 1. Máximo: 5242880 (5 MB) |
+| tamanhoBytes | number | Sim         | Tamanho exato do arquivo (já otimizado) em bytes. Mín. 1. Máx. 5 MB (user) / 25 MB (admin) |
 
 **Response 200:**
 
@@ -74,7 +75,7 @@ Authorization: Bearer {token}
 | ------ | --------------------------------------------------------------------- | --------------------------------- |
 | 400    | contentType deve ser image/jpeg, image/png, image/gif ou image/webp  | Tipo MIME inválido                |
 | 400    | tamanhoBytes deve ser maior que 0                                     | Tamanho zero ou negativo          |
-| 400    | tamanhoBytes não pode exceder 5 MB                                    | Arquivo maior que 5 MB            |
+| 400    | tamanhoBytes não pode exceder 5 MB / 25 MB                            | Acima do limite do papel do usuário |
 | 401    | Token não informado / Token inválido ou expirado                      | Sem autenticação                  |
 | 429    | Limite de uploads atingido. Tente novamente em 15 minutos            | Rate limit: 8 uploads / 15 min    |
 

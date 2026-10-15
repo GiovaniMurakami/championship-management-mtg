@@ -40,9 +40,69 @@ npm run test:e2e:torneio-cache
 
 # Fluxo completo Swiss com 150 jogadores, late entry, drops e Top 8
 npm run test:e2e:torneio150
+
+# Campeonato multi-dia (Day 1 → pausado → Day 2) com personas mapeadas
+npm run test:e2e:campeonato-multidia
+
+# Suíte leve usada no gate de deploy homolog (publicar-rodada + multi-dia)
+npm run test:e2e:ci
 ```
 
 `npm run test:watch` e `npm run test:coverage` executam somente testes unitarios.
+
+## E2E no deploy (homolog)
+
+O workflow `.github/workflows/deployHomolog.yml` roda unitários e `npm run test:e2e:ci` **antes** do deploy. O job E2E usa OIDC no Environment `homolog` e grava só em tabelas de teste.
+
+Configure no GitHub → Settings → Environments → **homolog** → Variables:
+
+| Variable | Exemplo | Regra |
+|---|---|---|
+| `E2E_DYNAMODB_DATA_TABLE` | `championship-management-mtg-local-data` | nome deve conter `local` ou `test` |
+| `E2E_DYNAMODB_CACHE_TABLE` | `championship-management-mtg-local-cache` | idem |
+
+Secrets já usados: `JWT_SECRET`, `AWS_ROLE_TO_ASSUME`.
+
+A role OIDC precisa de DynamoDB (leitura/escrita/scan/batch) nessas tabelas E2E. **Não** aponte para `*-dev-data` / `*-prod-data`.
+
+O `torneio150` (~15 min) fica fora do gate; rode localmente ou em workflow manual se necessário.
+
+## E2E multi-dia e personas
+
+Arquivos:
+
+- `tests/e2e/support/personasCampeonato.ts` — personas, roteiro de mesas e pontos esperados
+- `tests/e2e/fluxoCampeonatoMultiDia.e2e.test.ts` — fluxo HTTP contra DynamoDB
+
+### Personas (8 jogadores + organizador)
+
+| Chave | Nome | Papel | Day 2? | Comportamento |
+|---|---|---|---|---|
+| `org` | Org MultiDia E2E | organizador/admin | — | cria torneio, força pareamentos, ajusta contestação, encerra Day 1 |
+| `ana_campea` | Ana Campeã | campeã | sim | vence Day 1 e Day 2; confirma resultados |
+| `bruno_vice` | Bruno Vice | vice | sim | avança; empata na R3; perde a “final” R4 para Ana |
+| `carla_empate` | Carla Empate | empatadora | sim | avança; empata R3 com Bruno; perde R4 |
+| `diego_contesta` | Diego Contesta | contestador | sim | na R3 reporta placar errado; Ana contesta; admin ajusta |
+| `elena_corte` | Elena Corte | corte Day 1 | não | perde Day 1 e é dropada no `encerrar-day1` |
+| `fabio_corte` | Fábio Corte | corte Day 1 | não | idem |
+| `gabi_corte` | Gabi Corte | corte Day 1 | não | idem |
+| `hugo_corte` | Hugo Corte | corte Day 1 | não | idem |
+
+### Roteiro de rodadas
+
+Config: `maxRodadas=4`, `rodadasDay1=2`, `vagasDay2=4`.
+
+| Rodada | Fase | Mesas (forçadas) | Resultado |
+|---|---|---|---|
+| 1 | Day 1 | Ana×Hugo, Bruno×Gabi, Carla×Fábio, Diego×Elena | 4 vitórias dos favoritos (3 pts) |
+| 2 | Day 1 | Ana×Elena, Bruno×Fábio, Carla×Gabi, Diego×Hugo | favoritos 6 pts; cortes 0 |
+| — | Corte | `POST .../encerrar-day1` | status `pausado`; 4 classificados; 4 dropados |
+| 3 | Day 2 | Diego×Ana (contesta→ajuste Ana vence), Bruno×Carla (empate 1-1) | Ana 9; Bruno/Carla 7; Diego 6 |
+| 4 | Day 2 | Ana×Bruno (Ana vence), Diego×Carla (Diego vence) | Ana 12 → campeã; Diego 9 |
+
+Pareamentos são reescritos com `PUT /torneio/:id/rodada/:r/pareamentos` para o teste ser determinístico (Swiss aleatório da R1 não influencia o mapa).
+
+**Standings:** com torneio `em_andamento`, a rodada vigente só entra nos pontos depois de `proxima-rodada` (ou após `encerrar-day1` / `finalizado`). O E2E valida placares na rodada corrente via `/partidas` e pontos consolidados nos momentos certos.
 
 ## Coverage
 

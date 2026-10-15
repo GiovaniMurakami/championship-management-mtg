@@ -258,11 +258,12 @@ export const gerarUrlUploadImagemSchema = z.object({
   contentType: z.enum(["image/jpeg", "image/png", "image/gif", "image/webp"], {
     error: "contentType deve ser image/jpeg, image/png, image/gif ou image/webp.",
   }),
+  // Teto Zod alinhado ao limite admin; o caso de uso aplica 5 MB para não-admin.
   tamanhoBytes: z
     .number()
     .int()
     .min(1, "tamanhoBytes deve ser maior que 0.")
-    .max(5 * 1024 * 1024, "tamanhoBytes não pode exceder 5 MB."),
+    .max(25 * 1024 * 1024, "tamanhoBytes não pode exceder 25 MB."),
 });
 
 export const criarPostSchema = z.object({

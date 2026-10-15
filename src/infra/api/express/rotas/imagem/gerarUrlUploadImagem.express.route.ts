@@ -50,6 +50,7 @@ export class GerarUrlUploadImagemRota implements Rotas {
                     contentType: dados.contentType,
                     tamanhoBytes: dados.tamanhoBytes,
                     usuarioId,
+                    isAdmin: request.usuario!.role === "admin",
                 });
 
                 response.status(200).json(resultado);

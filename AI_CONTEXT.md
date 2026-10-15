@@ -319,7 +319,7 @@ MongoDB não é dependência do runtime. O driver `mongodb` existe somente em `d
 | AWS DynamoDB | Persistência principal e cache compartilhado |
 | MongoDB Atlas | Somente origem temporária da migração |
 | AWS SSM | Chaves JWT (prod) |
-| AWS S3 | Presigned upload (5 min, max 5 MB, image/*) |
+| AWS S3 | Presigned upload (5 min; máx. 5 MB user / 25 MB admin no arquivo enviado; image/*) |
 | Ably | Realtime |
 | Gmail/Nodemailer | Boas-vindas, reset senha, lockout |
 
@@ -425,7 +425,7 @@ Cobertura forte em `casosDeUso/` (inclui `metagame/`), `dominio/`, `helpers/`, `
 | Validação API | `helpers/validacao/schemas.ts` |
 | Eventos realtime | emit em use case/rota + `infra/ably/notificacaoAbly.ts` |
 | Auth JWT | `helpers/jwt.ts`, `middlewares/express/autenticarJwt.ts` |
-| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (OIDC `homolog`→stage `dev`), `deployProd.yml` (OIDC `production`→stage `prod`), `esbuild.config.js`, `handler.ts` |
+| Deploy | `serverless.yaml`, `.github/workflows/deployHomolog.yml` (unit + `test:e2e:ci` → OIDC `homolog`→stage `dev`), `deployProd.yml` (OIDC `production`→stage `prod`), `esbuild.config.js`, `handler.ts` |
 | Docs API | `docs/*.md`, `docs/INDEX.md` |
 
 ---

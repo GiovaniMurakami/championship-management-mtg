@@ -14,12 +14,15 @@ export const TIPOS_IMAGEM_PERMITIDOS: TipoConteudoImagem[] = [
     "image/webp",
 ];
 
-export const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024; // 5 MB
+export const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024; // 5 MB (usuário comum)
+/** Limite do arquivo já otimizado no cliente; admin pode selecionar originais maiores. */
+export const TAMANHO_MAXIMO_ADMIN_BYTES = 25 * 1024 * 1024; // 25 MB
 
 export type GerarUrlUploadImagemInputDto = {
     contentType: string;
     tamanhoBytes: number;
     usuarioId: string;
+    isAdmin?: boolean;
 };
 
 export type GerarUrlUploadImagemOutputDto = {
@@ -46,9 +49,10 @@ export class GerarUrlUploadImagem
             });
         }
 
-        if (input.tamanhoBytes <= 0 || input.tamanhoBytes > TAMANHO_MAXIMO_BYTES) {
+        const limiteBytes = input.isAdmin ? TAMANHO_MAXIMO_ADMIN_BYTES : TAMANHO_MAXIMO_BYTES;
+        if (input.tamanhoBytes <= 0 || input.tamanhoBytes > limiteBytes) {
             throw ErroPersonalizado.criar({
-                mensagem: `Tamanho da imagem inválido. O limite é ${TAMANHO_MAXIMO_BYTES / 1024 / 1024} MB.`,
+                mensagem: `Tamanho da imagem inválido. O limite é ${limiteBytes / 1024 / 1024} MB.`,
                 status: StatusErro.erroParametro,
             });
         }

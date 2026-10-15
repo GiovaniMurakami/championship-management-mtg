@@ -1,4 +1,9 @@
-import { GerarUrlUploadImagem, TAMANHO_MAXIMO_BYTES, TIPOS_IMAGEM_PERMITIDOS } from "../../../src/casosDeUso/imagem/gerarUrlUploadImagem";
+import {
+    GerarUrlUploadImagem,
+    TAMANHO_MAXIMO_ADMIN_BYTES,
+    TAMANHO_MAXIMO_BYTES,
+    TIPOS_IMAGEM_PERMITIDOS,
+} from "../../../src/casosDeUso/imagem/gerarUrlUploadImagem";
 import { criarMockImagemGateway } from "../../mocks/gateways";
 
 describe("GerarUrlUploadImagem", () => {
@@ -88,7 +93,7 @@ describe("GerarUrlUploadImagem", () => {
         ).rejects.toMatchObject({ status: 400 });
     });
 
-    it("deve lançar erro 400 se tamanhoBytes exceder 5 MB", async () => {
+    it("deve lançar erro 400 se tamanhoBytes exceder 5 MB para usuário comum", async () => {
         const gateway = criarMockImagemGateway();
         const uc = GerarUrlUploadImagem.criar(gateway);
 
@@ -111,6 +116,39 @@ describe("GerarUrlUploadImagem", () => {
         await expect(
             uc.executar({ contentType: "image/png", tamanhoBytes: TAMANHO_MAXIMO_BYTES, usuarioId })
         ).resolves.toBeDefined();
+    });
+
+    it("deve aceitar até 25 MB para admin", async () => {
+        const gateway = criarMockImagemGateway({
+            gerarUrlUpload: vi.fn().mockResolvedValue({
+                uploadUrl: "https://bucket.s3.amazonaws.com/imagens/user-1/file.png",
+                urlPublica: "https://bucket.s3.amazonaws.com/imagens/user-1/file.png",
+            }),
+        });
+        const uc = GerarUrlUploadImagem.criar(gateway);
+
+        await expect(
+            uc.executar({
+                contentType: "image/png",
+                tamanhoBytes: TAMANHO_MAXIMO_ADMIN_BYTES,
+                usuarioId,
+                isAdmin: true,
+            })
+        ).resolves.toBeDefined();
+    });
+
+    it("deve lançar erro 400 se admin exceder 25 MB", async () => {
+        const gateway = criarMockImagemGateway();
+        const uc = GerarUrlUploadImagem.criar(gateway);
+
+        await expect(
+            uc.executar({
+                contentType: "image/png",
+                tamanhoBytes: TAMANHO_MAXIMO_ADMIN_BYTES + 1,
+                usuarioId,
+                isAdmin: true,
+            })
+        ).rejects.toMatchObject({ status: 400 });
     });
 
     it("deve gerar chave única por chamada", async () => {
