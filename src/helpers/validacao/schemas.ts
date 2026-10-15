@@ -27,7 +27,7 @@ export const cadastrarStoryFundoSchema = z.object({
 });
 
 export const listarFotosGaleriaQuerySchema = z.object({
-  limite: z.coerce.number().int().min(1).max(100).optional().default(50),
+  limite: z.coerce.number().int().min(1).max(100).optional().default(20),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
