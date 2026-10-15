@@ -1,5 +1,6 @@
-import { DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 import { NextFunction, Request, Response } from "express";
+import { criarClienteDynamo } from "../../../../helpers/dynamodbCliente";
 import { HttpMethod, Rotas } from "./rotas";
 
 export class HealthRota implements Rotas {
@@ -24,7 +25,7 @@ export class HealthRota implements Rotas {
         ): Promise<void> => {
             const tabela = process.env.DYNAMODB_DATA_TABLE || "";
             const region = process.env.DYNAMODB_DATA_REGION || process.env.AWS_REGION || "us-east-1";
-            const cliente = new DynamoDBClient({ region });
+            const cliente = criarClienteDynamo(region);
             let dynamodb = "disconnected";
 
             try {

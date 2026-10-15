@@ -52,18 +52,29 @@ npm run test:e2e:ci
 
 ## E2E no deploy (homolog)
 
-O workflow `.github/workflows/deployHomolog.yml` roda unitários e `npm run test:e2e:ci` **antes** do deploy. O job E2E usa OIDC no Environment `homolog` e grava só em tabelas de teste.
+O workflow `.github/workflows/deployHomolog.yml` roda unitários e `npm run test:e2e:ci` **antes** do deploy.
 
-Configure no GitHub → Settings → Environments → **homolog** → Variables:
+O job E2E sobe **DynamoDB Local** (`amazon/dynamodb-local`) no runner, cria tabelas `…-ci-test-data/cache` e não usa tabelas AWS de homolog/prod. Só precisa do secret `JWT_SECRET` no Environment `homolog`.
 
-| Variable | Exemplo | Regra |
-|---|---|---|
-| `E2E_DYNAMODB_DATA_TABLE` | `championship-management-mtg-local-data` | nome deve conter `local` ou `test` |
-| `E2E_DYNAMODB_CACHE_TABLE` | `championship-management-mtg-local-cache` | idem |
+Variáveis relevantes no job:
 
-Secrets já usados: `JWT_SECRET`, `AWS_ROLE_TO_ASSUME`.
+| Env | Valor |
+|---|---|
+| `DYNAMODB_ENDPOINT` | `http://127.0.0.1:8000` |
+| `DYNAMODB_DATA_TABLE` | `championship-management-mtg-ci-test-data` |
+| `DYNAMODB_CACHE_TABLE` | `championship-management-mtg-ci-test-cache` |
 
-A role OIDC precisa de DynamoDB (leitura/escrita/scan/batch) nessas tabelas E2E. **Não** aponte para `*-dev-data` / `*-prod-data`.
+Localmente (opcional):
+
+```bash
+docker run -d -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -inMemory
+export DYNAMODB_ENDPOINT=http://127.0.0.1:8000
+export DYNAMODB_DATA_TABLE=championship-management-mtg-ci-test-data
+export DYNAMODB_CACHE_TABLE=championship-management-mtg-ci-test-cache
+export AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local JWT_SECRET=dev
+npm run test:e2e:ci:tables
+npm run test:e2e:ci
+```
 
 O `torneio150` (~15 min) fica fora do gate; rode localmente ou em workflow manual se necessário.
 

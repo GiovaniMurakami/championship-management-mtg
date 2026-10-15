@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import { dependenciasCache, dominioParticao } from "../../helpers/cache/dependenciasCache";
 import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
 import { CacheGateway } from "../../dominio/gateway/cacheGateway";
+import { criarClienteDynamo } from "../../helpers/dynamodbCliente";
 import { logger } from "../../helpers/logger";
 import { comRetry } from "../../helpers/retry";
 
@@ -27,7 +28,7 @@ export class CacheDynamoDbServico implements CacheGateway {
     private readonly habilitado: boolean,
     region?: string
   ) {
-    this.cliente = new DynamoDBClient(region ? { region } : {});
+    this.cliente = criarClienteDynamo(region);
   }
 
   public static criar(): CacheDynamoDbServico {

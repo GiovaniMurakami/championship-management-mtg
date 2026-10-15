@@ -34,24 +34,25 @@ jobs:
         run: npm run test:unit
 
   e2e:
-    name: E2E campeonato (DynamoDB teste)
+    name: E2E campeonato (DynamoDB Local)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: homolog
     env:
       AWS_REGION: us-east-1
-      # APP_ENV=local → JWT_SECRET (HS256) e evita carregar .env.homolog ausente no CI
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
       APP_ENV: local
       NODE_ENV: development
       IS_LOCAL: "true"
       LOG_LEVEL: silent
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      DYNAMODB_ENDPOINT: http://127.0.0.1:8000
       DYNAMODB_CACHE_ENABLED: "true"
       DYNAMODB_DATA_REGION: us-east-1
       DYNAMODB_CACHE_REGION: us-east-1
-      # Prefer vars do Environment; fallback para tabelas *-local-* (nunca *-dev-* / *-prod-*).
-      DYNAMODB_DATA_TABLE: ${{ vars.E2E_DYNAMODB_DATA_TABLE != '' && vars.E2E_DYNAMODB_DATA_TABLE || 'championship-management-mtg-local-data' }}
-      DYNAMODB_CACHE_TABLE: ${{ vars.E2E_DYNAMODB_CACHE_TABLE != '' && vars.E2E_DYNAMODB_CACHE_TABLE || 'championship-management-mtg-local-cache' }}
+      DYNAMODB_DATA_TABLE: championship-management-mtg-ci-test-data
+      DYNAMODB_CACHE_TABLE: championship-management-mtg-ci-test-cache
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,22 +72,27 @@ jobs:
             echo "::error::Secret JWT_SECRET ausente no Environment homolog."
             exit 1
           fi
-          if ! echo "$DYNAMODB_DATA_TABLE" | grep -Eqi 'local|test'; then
-            echo "::error::DYNAMODB_DATA_TABLE deve conter 'local' ou 'test' (recebido: $DYNAMODB_DATA_TABLE). Não use tabelas de homolog/prod."
-            exit 1
-          fi
-          if ! echo "$DYNAMODB_CACHE_TABLE" | grep -Eqi 'local|test'; then
-            echo "::error::DYNAMODB_CACHE_TABLE deve conter 'local' ou 'test' (recebido: $DYNAMODB_CACHE_TABLE)."
-            exit 1
-          fi
-          echo "E2E data=$DYNAMODB_DATA_TABLE cache=$DYNAMODB_CACHE_TABLE"
+          echo "E2E endpoint=$DYNAMODB_ENDPOINT data=$DYNAMODB_DATA_TABLE cache=$DYNAMODB_CACHE_TABLE"
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: gha-championship-homolog-e2e
+      - name: Start DynamoDB Local
+        run: |
+          set -euo pipefail
+          docker run -d --name dynamodb-local -p 8000:8000 \
+            amazon/dynamodb-local:2.5.2 \
+            -jar DynamoDBLocal.jar -sharedDb -inMemory
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:8000; then
+              echo "DynamoDB Local pronto"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::DynamoDB Local não respondeu em 30s"
+          docker logs dynamodb-local || true
+          exit 1
+
+      - name: Criar tabelas no DynamoDB Local
+        run: node scripts/criarTabelasE2eLocal.mjs
 
       - name: Run E2E leves (publicar-rodada + multi-dia)
         run: npm run test:e2e:ci

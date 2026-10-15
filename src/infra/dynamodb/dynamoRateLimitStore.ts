@@ -5,6 +5,7 @@ import {
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import type { IncrementResponse, Options, Store } from "express-rate-limit";
+import { criarClienteDynamo } from "../../helpers/dynamodbCliente";
 import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
 
 export class DynamoRateLimitStore implements Store {
@@ -18,7 +19,7 @@ export class DynamoRateLimitStore implements Store {
     this.prefix = `rate-limit:${prefix}:`;
     this.tabela = resolverTabelaCacheDynamo();
     const region = process.env.DYNAMODB_CACHE_REGION || process.env.AWS_REGION || "us-east-1";
-    this.cliente = new DynamoDBClient({ region });
+    this.cliente = criarClienteDynamo(region);
   }
 
   public init(options: Options): void {

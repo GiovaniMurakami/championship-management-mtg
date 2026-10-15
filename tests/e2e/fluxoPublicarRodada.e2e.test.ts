@@ -134,8 +134,13 @@ describeCloud("E2E - publicar rodada com e sem atraso", () => {
 
     const admin = await req
       .post("/usuario/cadastrar")
-      .send({ nome: "Organizador Publicar E2E", email: `${prefix}org@test.com`, senha })
-      .expect(201);
+      .send({ nome: "Organizador Publicar E2E", email: `${prefix}org@test.com`, senha });
+    if (admin.status !== 201) {
+      throw new Error(
+        `POST /usuario/cadastrar falhou: ${admin.status} ${JSON.stringify(admin.body)} ` +
+          `(DYNAMODB_DATA_TABLE=${process.env.DYNAMODB_DATA_TABLE} ENDPOINT=${process.env.DYNAMODB_ENDPOINT || "aws"})`
+      );
+    }
     adminId = admin.body.id;
     const usuarioAdmin = await repositorios.usuario.buscarPorId(adminId);
     if (!usuarioAdmin) throw new Error("Usuario administrador do E2E nao encontrado");

@@ -14,6 +14,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { CacheDynamoDbServico } from "../../services/cacheDynamoDbServico";
 import { DominioCache } from "../../../helpers/cache/dependenciasCache";
+import { criarClienteDynamo } from "../../../helpers/dynamodbCliente";
 import { logger } from "../../../helpers/logger";
 
 type DynamoItem = Record<string, AttributeValue>;
@@ -30,7 +31,7 @@ export abstract class BaseDynamoRepositorio {
   protected constructor(private readonly dominioCache?: DominioCache) {
     this.tabela = process.env.DYNAMODB_DATA_TABLE || "";
     const region = process.env.DYNAMODB_DATA_REGION || process.env.AWS_REGION || process.env.AWS_S3_REGION;
-    this.cliente = new DynamoDBClient(region ? { region } : {});
+    this.cliente = criarClienteDynamo(region);
   }
 
   private async invalidarCacheAposEscrita(dominio: DominioCache | null | undefined): Promise<void> {
