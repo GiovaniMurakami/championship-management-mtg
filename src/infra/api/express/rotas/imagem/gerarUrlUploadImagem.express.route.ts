@@ -31,7 +31,8 @@ export class GerarUrlUploadImagemRota implements Rotas {
     }
 
     public getMiddlewares(): RequestHandler[] {
-        return [uploadImagemRateLimiter, autenticarJwt];
+        // JWT antes do rate limit para `skipRateLimitSeAdmin` usar req.usuario
+        return [autenticarJwt, uploadImagemRateLimiter];
     }
 
     public getHandler() {

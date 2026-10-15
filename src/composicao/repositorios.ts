@@ -6,6 +6,7 @@ import { ResetSenhaDynamoRepositorio } from "../infra/dynamodb/repositorios/rese
 import { LinkIngressoDynamoRepositorio } from "../infra/dynamodb/repositorios/linkIngressoDynamoRepositorio";
 import { SiteConfigDynamoRepositorio } from "../infra/dynamodb/repositorios/siteConfigDynamoRepositorio";
 import { StoryFundoDynamoRepositorio } from "../infra/dynamodb/repositorios/storyFundoDynamoRepositorio";
+import { GaleriaDynamoRepositorio } from "../infra/dynamodb/repositorios/galeriaDynamoRepositorio";
 import { UsuarioDynamoRepositorio } from "../infra/dynamodb/repositorios/usuarioDynamoRepositorio";
 import { TorneioDynamoRepositorio } from "../infra/dynamodb/repositorios/torneioDynamoRepositorio";
 import { InscricaoDynamoRepositorio } from "../infra/dynamodb/repositorios/inscricaoDynamoRepositorio";
@@ -33,6 +34,7 @@ export function criarRepositorios() {
         time: TimeDynamoRepositorio.criar(),
         siteConfig: SiteConfigDynamoRepositorio.criar(),
         storyFundo: StoryFundoDynamoRepositorio.criar(),
+        galeria: GaleriaDynamoRepositorio.criar(),
         post: PostDynamoRepositorio.criar(),
         artigo: ArtigoDynamoRepositorio.criar(),
     };

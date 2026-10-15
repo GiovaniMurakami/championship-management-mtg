@@ -446,6 +446,22 @@ functions:
             headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
             allowCredentials: true
       - http:
+          path: /galeria
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
+          path: /galeria/{proxy+}
+          method: any
+          cors:
+            origins: *corsOrigins
+            methods: [OPTIONS, GET, POST, PUT, PATCH, DELETE]
+            headers: [Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent]
+            allowCredentials: true
+      - http:
           path: /post
           method: any
           cors:

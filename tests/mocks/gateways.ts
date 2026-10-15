@@ -221,3 +221,13 @@ export function criarMockStoryFundoGateway(overrides: Partial<import("../../src/
         ...overrides,
     };
 }
+
+export function criarMockGaleriaGateway(overrides: Partial<import("../../src/dominio/gateway/galeriaGateway").GaleriaGateway> = {}) {
+    return {
+        salvar: vi.fn(),
+        listar: vi.fn().mockResolvedValue([]),
+        buscarPorId: vi.fn().mockResolvedValue(null),
+        excluir: vi.fn().mockResolvedValue(false),
+        ...overrides,
+    };
+}

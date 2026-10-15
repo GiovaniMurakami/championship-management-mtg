@@ -102,6 +102,10 @@ import { SalvarAnuncioDiario } from "../casosDeUso/site/salvarAnuncioDiario";
 import { CadastrarStoryFundo } from "../casosDeUso/storyFundo/cadastrarStoryFundo";
 import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
 import { ExcluirStoryFundo } from "../casosDeUso/storyFundo/excluirStoryFundo";
+import { CadastrarFotoGaleria } from "../casosDeUso/galeria/cadastrarFotoGaleria";
+import { ListarFotosGaleria } from "../casosDeUso/galeria/listarFotosGaleria";
+import { ExcluirFotoGaleria } from "../casosDeUso/galeria/excluirFotoGaleria";
+import { ExcluirFotosGaleriaLote } from "../casosDeUso/galeria/excluirFotosGaleriaLote";
 import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
 import { BuscarMetagameTorneio } from "../casosDeUso/metagame/buscarMetagameTorneio";
@@ -242,6 +246,11 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const listarStoryFundos = ListarStoryFundos.criar(repos.storyFundo);
     const excluirStoryFundo = ExcluirStoryFundo.criar(repos.storyFundo);
 
+    const cadastrarFotoGaleria = CadastrarFotoGaleria.criar(repos.galeria);
+    const listarFotosGaleria = ListarFotosGaleria.criar(repos.galeria);
+    const excluirFotoGaleria = ExcluirFotoGaleria.criar(repos.galeria, servicos.s3);
+    const excluirFotosGaleriaLote = ExcluirFotosGaleriaLote.criar(repos.galeria, servicos.s3);
+
     const listarMetagame = ListarMetagame.criar(
         repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache, repos.siteConfig
     );
@@ -275,6 +284,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
+        cadastrarFotoGaleria, listarFotosGaleria, excluirFotoGaleria, excluirFotosGaleriaLote,
         listarMetagame, buscarArquetipoMetagame, buscarMetagameTorneio, salvarCartaRepresentativaArquetipo,
     };
 }

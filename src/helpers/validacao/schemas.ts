@@ -26,6 +26,18 @@ export const cadastrarStoryFundoSchema = z.object({
   textoRodape: z.enum(["claro", "escuro"]).optional().default("claro"),
 });
 
+export const cadastrarFotoGaleriaSchema = z.object({
+  url: s3ImagemUrl(),
+  titulo: z.string().trim().max(200, "Título pode ter no máximo 200 caracteres.").optional().default(""),
+});
+
+export const excluirFotosGaleriaLoteSchema = z.object({
+  ids: z
+    .array(uuidCampo("id"))
+    .min(1, "Informe ao menos uma foto para excluir.")
+    .max(100, "Exclua no máximo 100 fotos por vez."),
+});
+
 /** Query de GET /imagem/proxy — só URLs do bucket S3 configurado (anti-SSRF). */
 export const proxyImagemQuerySchema = z.object({
   url: s3ImagemUrl(),

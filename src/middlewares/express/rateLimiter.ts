@@ -1,10 +1,25 @@
+import type { Request } from "express";
 import rateLimit, { type Options } from "express-rate-limit";
 import { DynamoRateLimitStore } from "../../infra/dynamodb/dynamoRateLimitStore";
 import { resolverTabelaCacheDynamo } from "../../helpers/dynamodbTabelas";
+import { verifyToken } from "../../helpers/jwt";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 const MSG_TENTATIVAS = { mensagem: "Muitas tentativas. Tente novamente em 15 minutos." };
 const MSG_REQUISICOES = { mensagem: "Muitas requisições. Tente novamente em 15 minutos." };
+
+/** Admin não conta no rate limit (útil p.ex. upload em massa na galeria). */
+export function skipRateLimitSeAdmin(req: Request): boolean {
+  if (req.usuario?.role === "admin") return true;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return false;
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : authHeader.trim();
+  if (!token) return false;
+
+  const payload = verifyToken(token);
+  return payload?.role === "admin";
+}
 
 function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
   const store = resolverTabelaCacheDynamo()
@@ -17,6 +32,7 @@ function criarOpcoesRateLimit(max: number, prefix: string): Partial<Options> {
     legacyHeaders: false,
     ipv6Subnet: 56,
     message: MSG_TENTATIVAS,
+    skip: (req) => skipRateLimitSeAdmin(req as Request),
     ...(store ? { store } : {}),
   };
 

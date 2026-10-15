@@ -92,6 +92,10 @@ import {
 import { CadastrarStoryFundoRota } from "../infra/api/express/rotas/storyFundo/cadastrarStoryFundo.express.route";
 import { ListarStoryFundosRota } from "../infra/api/express/rotas/storyFundo/listarStoryFundos.express.route";
 import { ExcluirStoryFundoRota } from "../infra/api/express/rotas/storyFundo/excluirStoryFundo.express.route";
+import { CadastrarFotoGaleriaRota } from "../infra/api/express/rotas/galeria/cadastrarFotoGaleria.express.route";
+import { ListarFotosGaleriaRota } from "../infra/api/express/rotas/galeria/listarFotosGaleria.express.route";
+import { ExcluirFotoGaleriaRota } from "../infra/api/express/rotas/galeria/excluirFotoGaleria.express.route";
+import { ExcluirFotosGaleriaLoteRota } from "../infra/api/express/rotas/galeria/excluirFotosGaleriaLote.express.route";
 import { HealthRota } from "../infra/api/express/rotas/health.express.route";
 import { ListarMetagameRota } from "../infra/api/express/rotas/metagame/listarMetagame.express.route";
 import { BuscarArquetipoMetagameRota } from "../infra/api/express/rotas/metagame/buscarArquetipoMetagame.express.route";
@@ -229,6 +233,10 @@ export function criarRotas(casos: CasosDeUso) {
         ListarStoryFundosRota.criar(casos.listarStoryFundos),
         CadastrarStoryFundoRota.criar(casos.cadastrarStoryFundo),
         ExcluirStoryFundoRota.criar(casos.excluirStoryFundo),
+        ListarFotosGaleriaRota.criar(casos.listarFotosGaleria),
+        CadastrarFotoGaleriaRota.criar(casos.cadastrarFotoGaleria),
+        ExcluirFotoGaleriaRota.criar(casos.excluirFotoGaleria),
+        ExcluirFotosGaleriaLoteRota.criar(casos.excluirFotosGaleriaLote),
         ListarMetagameRota.criar(casos.listarMetagame),
         BuscarArquetipoMetagameRota.criar(casos.buscarArquetipoMetagame),
         SalvarCartaRepresentativaArquetipoRota.criar(casos.salvarCartaRepresentativaArquetipo),

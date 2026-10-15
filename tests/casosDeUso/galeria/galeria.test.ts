@@ -1,0 +1,116 @@
+import { CadastrarFotoGaleria } from "../../../src/casosDeUso/galeria/cadastrarFotoGaleria";
+import { ListarFotosGaleria } from "../../../src/casosDeUso/galeria/listarFotosGaleria";
+import { ExcluirFotoGaleria } from "../../../src/casosDeUso/galeria/excluirFotoGaleria";
+import { ExcluirFotosGaleriaLote } from "../../../src/casosDeUso/galeria/excluirFotosGaleriaLote";
+import { FotoGaleria } from "../../../src/dominio/entidade/fotoGaleria";
+import { criarMockGaleriaGateway, criarMockImagemGateway } from "../../mocks/gateways";
+
+describe("Galeria use cases", () => {
+  it("cadastra foto webp", async () => {
+    const gateway = criarMockGaleriaGateway();
+    const uc = CadastrarFotoGaleria.criar(gateway);
+
+    const resultado = await uc.executar({
+      url: "https://cdn.example.com/imagens/admin/foto.webp",
+      titulo: "  Top 8  ",
+      usuarioId: "user-1",
+    });
+
+    expect(resultado.url).toContain(".webp");
+    expect(resultado.titulo).toBe("Top 8");
+    expect(resultado.criadoPorId).toBe("user-1");
+    expect(gateway.salvar).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejeita url vazia", async () => {
+    const uc = CadastrarFotoGaleria.criar(criarMockGaleriaGateway());
+    await expect(uc.executar({ url: "  ", usuarioId: "user-1" })).rejects.toMatchObject({
+      message: expect.stringMatching(/URL da imagem/i),
+      status: 400,
+    });
+  });
+
+  it("rejeita imagem que não é webp", async () => {
+    const uc = CadastrarFotoGaleria.criar(criarMockGaleriaGateway());
+    await expect(
+      uc.executar({ url: "https://cdn.example.com/imagens/admin/foto.jpg", usuarioId: "user-1" }),
+    ).rejects.toMatchObject({
+      message: expect.stringMatching(/WebP/i),
+      status: 400,
+    });
+  });
+
+  it("lista fotos cadastradas", async () => {
+    const gateway = criarMockGaleriaGateway();
+    gateway.listar.mockResolvedValue([
+      new FotoGaleria({
+        id: "1",
+        url: "https://cdn.example.com/a.webp",
+        titulo: "A",
+        criadoPorId: "admin",
+        criadoEm: new Date("2026-01-01T12:00:00Z"),
+      }),
+    ]);
+    const uc = ListarFotosGaleria.criar(gateway);
+    const resultado = await uc.executar();
+    expect(resultado.fotos).toHaveLength(1);
+    expect(resultado.fotos[0].titulo).toBe("A");
+  });
+
+  it("exclui foto e remove do S3", async () => {
+    const gateway = criarMockGaleriaGateway();
+    const imagem = criarMockImagemGateway();
+    const foto = new FotoGaleria({
+      id: "1",
+      url: "https://cdn.example.com/a.webp",
+      criadoPorId: "admin",
+    });
+    gateway.buscarPorId.mockResolvedValue(foto);
+    gateway.excluir.mockResolvedValue(true);
+    const uc = ExcluirFotoGaleria.criar(gateway, imagem);
+
+    await expect(uc.executar({ id: "1" })).resolves.toEqual({ id: "1", excluido: true });
+    expect(imagem.excluirPorUrl).toHaveBeenCalledWith(foto.url);
+  });
+
+  it("falha ao excluir foto inexistente", async () => {
+    const gateway = criarMockGaleriaGateway();
+    gateway.buscarPorId.mockResolvedValue(null);
+    const uc = ExcluirFotoGaleria.criar(gateway, criarMockImagemGateway());
+    await expect(uc.executar({ id: "missing" })).rejects.toMatchObject({
+      message: expect.stringMatching(/não encontrada/i),
+      status: 404,
+    });
+  });
+
+  it("conclui exclusão mesmo se S3 falhar", async () => {
+    const gateway = criarMockGaleriaGateway();
+    const imagem = criarMockImagemGateway();
+    gateway.buscarPorId.mockResolvedValue(
+      new FotoGaleria({ id: "1", url: "https://cdn.example.com/a.webp", criadoPorId: "admin" }),
+    );
+    gateway.excluir.mockResolvedValue(true);
+    imagem.excluirPorUrl.mockRejectedValue(new Error("s3 down"));
+    const uc = ExcluirFotoGaleria.criar(gateway, imagem);
+
+    await expect(uc.executar({ id: "1" })).resolves.toEqual({ id: "1", excluido: true });
+  });
+
+  it("exclui fotos em lote", async () => {
+    const gateway = criarMockGaleriaGateway();
+    const imagem = criarMockImagemGateway();
+    gateway.buscarPorId.mockImplementation(async (id: string) =>
+      id === "missing"
+        ? null
+        : new FotoGaleria({ id, url: `https://cdn.example.com/${id}.webp`, criadoPorId: "admin" }),
+    );
+    gateway.excluir.mockResolvedValue(true);
+    const uc = ExcluirFotosGaleriaLote.criar(gateway, imagem);
+
+    await expect(uc.executar({ ids: ["1", "2", "missing", "1"] })).resolves.toEqual({
+      excluidos: ["1", "2"],
+      total: 2,
+    });
+    expect(imagem.excluirPorUrl).toHaveBeenCalledTimes(2);
+  });
+});
