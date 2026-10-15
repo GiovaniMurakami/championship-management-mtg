@@ -228,6 +228,8 @@ export function criarMockGaleriaGateway(overrides: Partial<import("../../src/dom
         listar: vi.fn().mockResolvedValue([]),
         buscarPorId: vi.fn().mockResolvedValue(null),
         excluir: vi.fn().mockResolvedValue(false),
+        incrementarVisualizacoesPagina: vi.fn().mockResolvedValue({ visualizacoes: 1 }),
+        buscarEstatisticas: vi.fn().mockResolvedValue({ visualizacoes: 0 }),
         ...overrides,
     };
 }

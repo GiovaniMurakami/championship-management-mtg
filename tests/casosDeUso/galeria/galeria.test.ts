@@ -2,6 +2,8 @@ import { CadastrarFotoGaleria } from "../../../src/casosDeUso/galeria/cadastrarF
 import { ListarFotosGaleria } from "../../../src/casosDeUso/galeria/listarFotosGaleria";
 import { ExcluirFotoGaleria } from "../../../src/casosDeUso/galeria/excluirFotoGaleria";
 import { ExcluirFotosGaleriaLote } from "../../../src/casosDeUso/galeria/excluirFotosGaleriaLote";
+import { RegistrarVisualizacaoGaleria } from "../../../src/casosDeUso/galeria/registrarVisualizacaoGaleria";
+import { BuscarEstatisticasGaleria } from "../../../src/casosDeUso/galeria/buscarEstatisticasGaleria";
 import { FotoGaleria } from "../../../src/dominio/entidade/fotoGaleria";
 import { criarMockGaleriaGateway, criarMockImagemGateway } from "../../mocks/gateways";
 
@@ -112,5 +114,19 @@ describe("Galeria use cases", () => {
       total: 2,
     });
     expect(imagem.excluirPorUrl).toHaveBeenCalledTimes(2);
+  });
+
+  it("registra visualização da página", async () => {
+    const gateway = criarMockGaleriaGateway();
+    gateway.incrementarVisualizacoesPagina.mockResolvedValue({ visualizacoes: 42 });
+    const uc = RegistrarVisualizacaoGaleria.criar(gateway);
+    await expect(uc.executar()).resolves.toEqual({ visualizacoes: 42 });
+  });
+
+  it("busca estatísticas da galeria", async () => {
+    const gateway = criarMockGaleriaGateway();
+    gateway.buscarEstatisticas.mockResolvedValue({ visualizacoes: 10 });
+    const uc = BuscarEstatisticasGaleria.criar(gateway);
+    await expect(uc.executar()).resolves.toEqual({ visualizacoes: 10 });
   });
 });

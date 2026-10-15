@@ -1,5 +1,6 @@
+import { GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { FotoGaleria } from "../../../dominio/entidade/fotoGaleria";
-import { GaleriaGateway } from "../../../dominio/gateway/galeriaGateway";
+import { EstatisticasGaleria, GaleriaGateway } from "../../../dominio/gateway/galeriaGateway";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 
 type FotoGaleriaItem = {
@@ -11,6 +12,7 @@ type FotoGaleriaItem = {
 };
 
 const GALERIA_PK = "GALERIA";
+const GALERIA_STATS_SK = "STATS";
 
 export class GaleriaDynamoRepositorio extends BaseDynamoRepositorio implements GaleriaGateway {
   private constructor() {
@@ -33,6 +35,7 @@ export class GaleriaDynamoRepositorio extends BaseDynamoRepositorio implements G
   public async listar(): Promise<FotoGaleria[]> {
     const itens = await this.queryJson<FotoGaleriaItem>(GALERIA_PK, { consistente: false });
     return itens
+      .filter((item) => Boolean(item?.id && item?.url))
       .map((item) => this.itemParaFoto(item))
       .sort((a, b) => b.criadoEm.getTime() - a.criadoEm.getTime() || a.id.localeCompare(b.id));
   }
@@ -47,6 +50,43 @@ export class GaleriaDynamoRepositorio extends BaseDynamoRepositorio implements G
     if (!existente) return false;
     await this.delete(GALERIA_PK, `ITEM#${id}`);
     return true;
+  }
+
+  public async incrementarVisualizacoesPagina(): Promise<EstatisticasGaleria> {
+    this.assertTabelaConfigurada();
+    const resposta = await this.cliente.send(new UpdateItemCommand({
+      TableName: this.tabela,
+      Key: {
+        pk: { S: GALERIA_PK },
+        sk: { S: GALERIA_STATS_SK },
+      },
+      UpdateExpression:
+        "SET visualizacoes = if_not_exists(visualizacoes, :zero) + :um, entity = if_not_exists(entity, :entity)",
+      ExpressionAttributeValues: {
+        ":zero": { N: "0" },
+        ":um": { N: "1" },
+        ":entity": { S: "GALERIA_STATS" },
+      },
+      ReturnValues: "UPDATED_NEW",
+    }));
+    return {
+      visualizacoes: Number(resposta.Attributes?.visualizacoes?.N || 0),
+    };
+  }
+
+  public async buscarEstatisticas(): Promise<EstatisticasGaleria> {
+    this.assertTabelaConfigurada();
+    const resposta = await this.cliente.send(new GetItemCommand({
+      TableName: this.tabela,
+      Key: {
+        pk: { S: GALERIA_PK },
+        sk: { S: GALERIA_STATS_SK },
+      },
+      ConsistentRead: true,
+    }));
+    return {
+      visualizacoes: Number(resposta.Item?.visualizacoes?.N || 0),
+    };
   }
 
   private fotoParaItem(foto: FotoGaleria): FotoGaleriaItem {

@@ -106,6 +106,8 @@ import { CadastrarFotoGaleria } from "../casosDeUso/galeria/cadastrarFotoGaleria
 import { ListarFotosGaleria } from "../casosDeUso/galeria/listarFotosGaleria";
 import { ExcluirFotoGaleria } from "../casosDeUso/galeria/excluirFotoGaleria";
 import { ExcluirFotosGaleriaLote } from "../casosDeUso/galeria/excluirFotosGaleriaLote";
+import { RegistrarVisualizacaoGaleria } from "../casosDeUso/galeria/registrarVisualizacaoGaleria";
+import { BuscarEstatisticasGaleria } from "../casosDeUso/galeria/buscarEstatisticasGaleria";
 import { ListarMetagame } from "../casosDeUso/metagame/listarMetagame";
 import { BuscarArquetipoMetagame } from "../casosDeUso/metagame/buscarArquetipoMetagame";
 import { BuscarMetagameTorneio } from "../casosDeUso/metagame/buscarMetagameTorneio";
@@ -250,6 +252,8 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const listarFotosGaleria = ListarFotosGaleria.criar(repos.galeria);
     const excluirFotoGaleria = ExcluirFotoGaleria.criar(repos.galeria, servicos.s3);
     const excluirFotosGaleriaLote = ExcluirFotosGaleriaLote.criar(repos.galeria, servicos.s3);
+    const registrarVisualizacaoGaleria = RegistrarVisualizacaoGaleria.criar(repos.galeria);
+    const buscarEstatisticasGaleria = BuscarEstatisticasGaleria.criar(repos.galeria);
 
     const listarMetagame = ListarMetagame.criar(
         repos.torneio, repos.inscricao, repos.partida, repos.deck, repos.usuario, servicos.cache, repos.siteConfig
@@ -285,6 +289,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
         cadastrarFotoGaleria, listarFotosGaleria, excluirFotoGaleria, excluirFotosGaleriaLote,
+        registrarVisualizacaoGaleria, buscarEstatisticasGaleria,
         listarMetagame, buscarArquetipoMetagame, buscarMetagameTorneio, salvarCartaRepresentativaArquetipo,
     };
 }
