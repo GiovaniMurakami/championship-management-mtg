@@ -2,7 +2,7 @@ import { GaleriaGateway } from "../../dominio/gateway/galeriaGateway";
 import { CasoDeUso } from "../casoDeUso";
 import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
-export const GALERIA_LIMITE_PADRAO = 20;
+export const GALERIA_LIMITE_PADRAO = 24;
 
 export type ListarFotosGaleriaInputDto = {
   limite?: number;
