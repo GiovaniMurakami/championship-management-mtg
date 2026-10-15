@@ -57,6 +57,35 @@ describe("Galeria use cases", () => {
     const resultado = await uc.executar();
     expect(resultado.fotos).toHaveLength(1);
     expect(resultado.fotos[0].titulo).toBe("A");
+    expect(resultado.total).toBe(1);
+    expect(resultado.limite).toBe(50);
+    expect(resultado.offset).toBe(0);
+  });
+
+  it("pagina fotos com limite e offset", async () => {
+    const gateway = criarMockGaleriaGateway();
+    gateway.listar.mockResolvedValue(
+      Array.from({ length: 55 }, (_, i) =>
+        new FotoGaleria({
+          id: String(i + 1),
+          url: `https://cdn.example.com/${i + 1}.webp`,
+          titulo: `F${i + 1}`,
+          criadoPorId: "admin",
+          criadoEm: new Date(2026, 0, 1, 12, i),
+        }),
+      ),
+    );
+    const uc = ListarFotosGaleria.criar(gateway);
+
+    const pagina1 = await uc.executar({ limite: 50, offset: 0 });
+    expect(pagina1.fotos).toHaveLength(50);
+    expect(pagina1.total).toBe(55);
+    expect(pagina1.fotos[0].id).toBe("1");
+
+    const pagina2 = await uc.executar({ limite: 50, offset: 50 });
+    expect(pagina2.fotos).toHaveLength(5);
+    expect(pagina2.offset).toBe(50);
+    expect(pagina2.fotos[0].id).toBe("51");
   });
 
   it("exclui foto e remove do S3", async () => {

@@ -26,6 +26,11 @@ export const cadastrarStoryFundoSchema = z.object({
   textoRodape: z.enum(["claro", "escuro"]).optional().default("claro"),
 });
 
+export const listarFotosGaleriaQuerySchema = z.object({
+  limite: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
 export const cadastrarFotoGaleriaSchema = z.object({
   url: s3ImagemUrl(),
   titulo: z.string().trim().max(200, "Título pode ter no máximo 200 caracteres.").optional().default(""),
