@@ -35,7 +35,20 @@ describe("GerarUrlUploadImagemRota", () => {
             contentType: "image/jpeg",
             tamanhoBytes: 1024,
             usuarioId: "user-1",
+            isAdmin: false,
         });
+    });
+
+    it("repassa isAdmin=true quando o usuário é admin", async () => {
+        servico.executar.mockResolvedValue({
+            uploadUrl: "https://bucket.s3.amazonaws.com/key?sig=x",
+            urlPublica: "https://bucket.s3.amazonaws.com/key",
+            chave: "imagens/admin-1/abc.jpeg",
+        });
+        const { req, res, next } = makeReqRes({ contentType: "image/jpeg", tamanhoBytes: 1024 });
+        req.usuario.role = "admin";
+        await rota.getHandler()(req, res, next);
+        expect(servico.executar).toHaveBeenCalledWith(expect.objectContaining({ isAdmin: true }));
     });
 
     it("retorna 400 se contentType ausente", async () => {
@@ -59,14 +72,29 @@ describe("GerarUrlUploadImagemRota", () => {
         expect(servico.executar).not.toHaveBeenCalled();
     });
 
-    it("retorna 400 se tamanhoBytes exceder 5 MB no schema", async () => {
+    it("retorna 400 se tamanhoBytes exceder 25 MB no schema", async () => {
         const { req, res, next } = makeReqRes({
             contentType: "image/png",
-            tamanhoBytes: 5 * 1024 * 1024 + 1,
+            tamanhoBytes: 25 * 1024 * 1024 + 1,
         });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(400);
         expect(servico.executar).not.toHaveBeenCalled();
+    });
+
+    it("aceita no schema tamanho entre 5 e 25 MB (limite user fica no caso de uso)", async () => {
+        servico.executar.mockResolvedValue({
+            uploadUrl: "https://bucket.s3.amazonaws.com/key?sig=x",
+            urlPublica: "https://bucket.s3.amazonaws.com/key",
+            chave: "imagens/user-1/abc.png",
+        });
+        const { req, res, next } = makeReqRes({
+            contentType: "image/png",
+            tamanhoBytes: 6 * 1024 * 1024,
+        });
+        await rota.getHandler()(req, res, next);
+        expect(servico.executar).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(200);
     });
 
     it("retorna 400 se tamanhoBytes for 0", async () => {

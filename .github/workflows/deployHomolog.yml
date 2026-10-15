@@ -49,9 +49,9 @@ jobs:
       DYNAMODB_CACHE_ENABLED: "true"
       DYNAMODB_DATA_REGION: us-east-1
       DYNAMODB_CACHE_REGION: us-east-1
-      # Tabelas dedicadas de teste (nome deve conter local ou test). Nunca apontar para *-dev-* / *-prod-*.
-      DYNAMODB_DATA_TABLE: ${{ vars.E2E_DYNAMODB_DATA_TABLE }}
-      DYNAMODB_CACHE_TABLE: ${{ vars.E2E_DYNAMODB_CACHE_TABLE }}
+      # Prefer vars do Environment; fallback para tabelas *-local-* (nunca *-dev-* / *-prod-*).
+      DYNAMODB_DATA_TABLE: ${{ vars.E2E_DYNAMODB_DATA_TABLE != '' && vars.E2E_DYNAMODB_DATA_TABLE || 'championship-management-mtg-local-data' }}
+      DYNAMODB_CACHE_TABLE: ${{ vars.E2E_DYNAMODB_CACHE_TABLE != '' && vars.E2E_DYNAMODB_CACHE_TABLE || 'championship-management-mtg-local-cache' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,10 +69,6 @@ jobs:
           set -euo pipefail
           if [ -z "${JWT_SECRET:-}" ]; then
             echo "::error::Secret JWT_SECRET ausente no Environment homolog."
-            exit 1
-          fi
-          if [ -z "${DYNAMODB_DATA_TABLE:-}" ] || [ -z "${DYNAMODB_CACHE_TABLE:-}" ]; then
-            echo "::error::Defina as variables E2E_DYNAMODB_DATA_TABLE e E2E_DYNAMODB_CACHE_TABLE no Environment homolog (ex.: championship-management-mtg-local-data / …-local-cache)."
             exit 1
           fi
           if ! echo "$DYNAMODB_DATA_TABLE" | grep -Eqi 'local|test'; then

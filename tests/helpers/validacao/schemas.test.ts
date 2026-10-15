@@ -339,8 +339,11 @@ describe("schemas de validacao", () => {
         it("rejeita contentType invalido", () => {
             expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/bmp", tamanhoBytes: 100 }).success).toBe(false);
         });
-        it("rejeita tamanho acima de 5MB", () => {
-            expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/png", tamanhoBytes: 6 * 1024 * 1024 }).success).toBe(false);
+        it("aceita tamanho entre 5MB e 25MB (limite admin no caso de uso)", () => {
+            expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/png", tamanhoBytes: 6 * 1024 * 1024 }).success).toBe(true);
+        });
+        it("rejeita tamanho acima de 25MB no schema", () => {
+            expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/png", tamanhoBytes: 25 * 1024 * 1024 + 1 }).success).toBe(false);
         });
         it("rejeita tamanho zero", () => {
             expect(gerarUrlUploadImagemSchema.safeParse({ contentType: "image/png", tamanhoBytes: 0 }).success).toBe(false);
