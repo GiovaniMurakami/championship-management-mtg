@@ -14,11 +14,13 @@ describe("Galeria use cases", () => {
 
     const resultado = await uc.executar({
       url: "https://cdn.example.com/imagens/admin/foto.webp",
+      urlThumb: "https://cdn.example.com/imagens/admin/foto-thumb.webp",
       titulo: "  Top 8  ",
       usuarioId: "user-1",
     });
 
     expect(resultado.url).toContain(".webp");
+    expect(resultado.urlThumb).toContain("thumb");
     expect(resultado.titulo).toBe("Top 8");
     expect(resultado.criadoPorId).toBe("user-1");
     expect(gateway.salvar).toHaveBeenCalledTimes(1);
@@ -57,6 +59,7 @@ describe("Galeria use cases", () => {
     const resultado = await uc.executar();
     expect(resultado.fotos).toHaveLength(1);
     expect(resultado.fotos[0].titulo).toBe("A");
+    expect(resultado.fotos[0].urlThumb).toBe("https://cdn.example.com/a.webp");
     expect(resultado.total).toBe(1);
     expect(resultado.limite).toBe(20);
     expect(resultado.offset).toBe(0);

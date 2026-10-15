@@ -7,6 +7,7 @@ import { toBrasiliaISO } from "../../helpers/data/brasilia";
 
 export type CadastrarFotoGaleriaInputDto = {
   url: string;
+  urlThumb?: string;
   titulo?: string;
   usuarioId: string;
 };
@@ -14,10 +15,20 @@ export type CadastrarFotoGaleriaInputDto = {
 export type CadastrarFotoGaleriaOutputDto = {
   id: string;
   url: string;
+  urlThumb: string;
   titulo: string;
   criadoPorId: string;
   criadoEm: string;
 };
+
+function assertWebp(url: string, rotulo: string) {
+  if (!url.toLowerCase().includes(".webp")) {
+    throw ErroPersonalizado.criar({
+      mensagem: `${rotulo} da galeria deve estar em WebP.`,
+      status: StatusErro.erroParametro,
+    });
+  }
+}
 
 export class CadastrarFotoGaleria
   implements CasoDeUso<CadastrarFotoGaleriaInputDto, CadastrarFotoGaleriaOutputDto> {
@@ -35,16 +46,14 @@ export class CadastrarFotoGaleria
         status: StatusErro.erroParametro,
       });
     }
+    assertWebp(url, "A foto");
 
-    if (!url.toLowerCase().includes(".webp")) {
-      throw ErroPersonalizado.criar({
-        mensagem: "A foto da galeria deve estar em WebP.",
-        status: StatusErro.erroParametro,
-      });
-    }
+    const urlThumb = (input.urlThumb || "").trim();
+    if (urlThumb) assertWebp(urlThumb, "A miniatura");
 
     const foto = FotoGaleria.criar({
       url,
+      urlThumb: urlThumb || undefined,
       titulo: input.titulo,
       criadoPorId: input.usuarioId,
     });
@@ -54,6 +63,7 @@ export class CadastrarFotoGaleria
     return {
       id: foto.id,
       url: foto.url,
+      urlThumb: foto.urlThumb || foto.url,
       titulo: foto.titulo,
       criadoPorId: foto.criadoPorId,
       criadoEm: toBrasiliaISO(foto.criadoEm)!,

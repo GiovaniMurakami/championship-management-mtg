@@ -6,6 +6,7 @@ import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
 type FotoGaleriaItem = {
   id: string;
   url: string;
+  urlThumb?: string;
   titulo?: string;
   criadoPorId: string;
   criadoEm: string;
@@ -93,6 +94,7 @@ export class GaleriaDynamoRepositorio extends BaseDynamoRepositorio implements G
     return {
       id: foto.id,
       url: foto.url,
+      urlThumb: foto.urlThumb || undefined,
       titulo: foto.titulo || undefined,
       criadoPorId: foto.criadoPorId,
       criadoEm: foto.criadoEm.toISOString(),
@@ -103,6 +105,7 @@ export class GaleriaDynamoRepositorio extends BaseDynamoRepositorio implements G
     return new FotoGaleria({
       id: item.id,
       url: item.url,
+      urlThumb: item.urlThumb,
       titulo: item.titulo,
       criadoPorId: item.criadoPorId,
       criadoEm: new Date(item.criadoEm),

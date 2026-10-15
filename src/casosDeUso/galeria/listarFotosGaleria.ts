@@ -13,6 +13,7 @@ export type ListarFotosGaleriaOutputDto = {
   fotos: Array<{
     id: string;
     url: string;
+    urlThumb: string;
     titulo: string;
     criadoPorId: string;
     criadoEm: string;
@@ -43,6 +44,7 @@ export class ListarFotosGaleria
       fotos: pagina.map((f) => ({
         id: f.id,
         url: f.url,
+        urlThumb: f.urlThumb || f.url,
         titulo: f.titulo,
         criadoPorId: f.criadoPorId,
         criadoEm: toBrasiliaISO(f.criadoEm)!,

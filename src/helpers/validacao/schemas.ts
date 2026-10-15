@@ -33,6 +33,7 @@ export const listarFotosGaleriaQuerySchema = z.object({
 
 export const cadastrarFotoGaleriaSchema = z.object({
   url: s3ImagemUrl(),
+  urlThumb: s3ImagemUrl().optional(),
   titulo: z.string().trim().max(200, "Título pode ter no máximo 200 caracteres.").optional().default(""),
 });
 

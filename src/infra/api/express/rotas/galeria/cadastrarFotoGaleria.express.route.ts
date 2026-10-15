@@ -33,6 +33,7 @@ export class CadastrarFotoGaleriaRota implements Rotas {
 
         const resultado = await this.cadastrarFotoGaleriaServico.executar({
           url: dados.url,
+          urlThumb: dados.urlThumb,
           titulo: dados.titulo,
           usuarioId: request.usuario!.id,
         });

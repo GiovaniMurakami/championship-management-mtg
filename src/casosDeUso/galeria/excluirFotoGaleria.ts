@@ -42,10 +42,13 @@ export class ExcluirFotoGaleria
       });
     }
 
-    try {
-      await this.imagemGateway.excluirPorUrl(foto.url);
-    } catch (erro) {
-      logger.warn({ erro, fotoId: foto.id, url: foto.url }, "Falha ao excluir imagem da galeria no S3");
+    const urlsS3 = [...new Set([foto.url, foto.urlThumb].filter(Boolean))];
+    for (const url of urlsS3) {
+      try {
+        await this.imagemGateway.excluirPorUrl(url);
+      } catch (erro) {
+        logger.warn({ erro, fotoId: foto.id, url }, "Falha ao excluir imagem da galeria no S3");
+      }
     }
 
     return { id: input.id, excluido: true };
