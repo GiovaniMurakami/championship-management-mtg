@@ -20,6 +20,14 @@ function criarGateway(
       atual = config;
       return config;
     }),
+    buscarSlidesHome: vi.fn().mockResolvedValue(null),
+    salvarSlidesHome: vi.fn(async (config) => config),
+    buscarParceiros: vi.fn().mockResolvedValue(null),
+    salvarParceiros: vi.fn(async (config) => config),
+    buscarConteudoHome: vi.fn().mockResolvedValue(null),
+    salvarConteudoHome: vi.fn(async (config) => config),
+    buscarSobreMim: vi.fn().mockResolvedValue(null),
+    salvarSobreMim: vi.fn(async (config) => config),
     ...overrides,
   };
 }

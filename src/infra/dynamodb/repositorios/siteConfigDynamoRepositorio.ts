@@ -4,8 +4,14 @@ import {
   AnuncioDiarioSite,
   AnuncioSite,
   AnunciosSiteConfig,
+  ConteudoHomeConfig,
   MetagameOverridesConfig,
+  ParceiroSite,
+  ParceirosSiteConfig,
   SiteConfigGateway,
+  SlideHomeSite,
+  SlidesHomeConfig,
+  SobreMimConfig,
   TipoAnuncioSite,
 } from "../../../dominio/gateway/siteConfigGateway";
 import { BaseDynamoRepositorio } from "./baseDynamoRepositorio";
@@ -14,6 +20,10 @@ const ANUNCIOS_PK = "SITE_CONFIG";
 const ANUNCIOS_SK = "ANUNCIOS";
 const ANUNCIO_DIARIO_SK = "ANUNCIO_DIARIO";
 const METAGAME_OVERRIDES_SK = "METAGAME_OVERRIDES";
+const SLIDES_HOME_SK = "HOME_SLIDES";
+const PARCEIROS_SK = "PARCEIROS";
+const CONTEUDO_HOME_SK = "HOME_CONTEUDO";
+const SOBRE_MIM_SK = "SOBRE_MIM";
 
 /** UUID estável para migrar o anúncio diário legado (formato single-slot). */
 const LEGACY_ANUNCIO_DIARIO_ID = "00000000-0000-4000-8000-000000000001";
@@ -41,6 +51,22 @@ type AnuncioDiarioItemRaw = {
   link?: string;
   visualizacoes?: number;
   cliques?: number;
+  atualizadoEm?: string;
+};
+
+type SobreMimPersistido = {
+  tituloHistoria?: string;
+  historia?: string;
+  fotoUrl?: string;
+  apoiaTitulo?: string;
+  apoiaTexto?: string;
+  apoiaImagemUrl?: string;
+  apoiaUrl?: string;
+  galeriaTitulo?: string;
+  galeriaUrls?: string[];
+  agradecimentoTitulo?: string;
+  agradecimentoTexto?: string;
+  apoiadores?: string;
   atualizadoEm?: string;
 };
 
@@ -189,6 +215,199 @@ export class SiteConfigDynamoRepositorio extends BaseDynamoRepositorio implement
     };
     await this.putJson(ANUNCIOS_PK, METAGAME_OVERRIDES_SK, item, { entity: "SITE_CONFIG" });
     return this.itemParaMetagameOverrides(item);
+  }
+
+  public async buscarSlidesHome(): Promise<SlidesHomeConfig | null> {
+    const item = await this.getJson<{ slides?: SlideHomeSite[]; atualizadoEm?: string }>(
+      ANUNCIOS_PK,
+      SLIDES_HOME_SK,
+    );
+    if (!item) return null;
+    return this.itemParaSlidesHome(item);
+  }
+
+  public async salvarSlidesHome(config: SlidesHomeConfig): Promise<SlidesHomeConfig> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const item = {
+      slides: config.slides,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, SLIDES_HOME_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaSlidesHome(item);
+  }
+
+  public async buscarParceiros(): Promise<ParceirosSiteConfig | null> {
+    const item = await this.getJson<{
+      parceiros?: ParceiroSite[];
+      cupomGlobal?: string;
+      paginaTitulo?: string;
+      paginaTexto?: string;
+      ctaTitulo?: string;
+      ctaTexto?: string;
+      contatoEmail?: string;
+      atualizadoEm?: string;
+    }>(ANUNCIOS_PK, PARCEIROS_SK);
+    if (!item) return null;
+    return this.itemParaParceiros(item);
+  }
+
+  public async salvarParceiros(config: ParceirosSiteConfig): Promise<ParceirosSiteConfig> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const item = {
+      parceiros: config.parceiros,
+      cupomGlobal: config.cupomGlobal || undefined,
+      paginaTitulo: config.paginaTitulo || undefined,
+      paginaTexto: config.paginaTexto || undefined,
+      ctaTitulo: config.ctaTitulo || undefined,
+      ctaTexto: config.ctaTexto || undefined,
+      contatoEmail: config.contatoEmail || undefined,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, PARCEIROS_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaParceiros(item);
+  }
+
+  public async buscarSobreMim(): Promise<SobreMimConfig | null> {
+    const item = await this.getJson<SobreMimPersistido>(ANUNCIOS_PK, SOBRE_MIM_SK);
+    if (!item) return null;
+    return this.itemParaSobreMim(item);
+  }
+
+  public async salvarSobreMim(config: SobreMimConfig): Promise<SobreMimConfig> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const item: SobreMimPersistido = {
+      tituloHistoria: config.tituloHistoria,
+      historia: config.historia,
+      fotoUrl: config.fotoUrl,
+      apoiaTitulo: config.apoiaTitulo,
+      apoiaTexto: config.apoiaTexto,
+      apoiaImagemUrl: config.apoiaImagemUrl,
+      apoiaUrl: config.apoiaUrl,
+      galeriaTitulo: config.galeriaTitulo,
+      galeriaUrls: config.galeriaUrls,
+      agradecimentoTitulo: config.agradecimentoTitulo,
+      agradecimentoTexto: config.agradecimentoTexto,
+      apoiadores: config.apoiadores,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, SOBRE_MIM_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaSobreMim(item);
+  }
+
+  public async buscarConteudoHome(): Promise<ConteudoHomeConfig | null> {
+    const item = await this.getJson<{
+      youtube?: { titulo?: string; texto?: string };
+      twitch?: { titulo?: string; texto?: string };
+      artigos?: { titulo?: string; texto?: string };
+      parceiros?: { titulo?: string; texto?: string };
+      fugueteUsuarioId?: string;
+      atualizadoEm?: string;
+    }>(ANUNCIOS_PK, CONTEUDO_HOME_SK);
+    if (!item) return null;
+    return this.itemParaConteudoHome(item);
+  }
+
+  public async salvarConteudoHome(config: ConteudoHomeConfig): Promise<ConteudoHomeConfig> {
+    const atualizadoEm = config.atualizadoEm ?? new Date();
+    const item = {
+      youtube: config.youtube,
+      twitch: config.twitch,
+      artigos: config.artigos,
+      parceiros: config.parceiros,
+      fugueteUsuarioId: config.fugueteUsuarioId || undefined,
+      atualizadoEm: atualizadoEm.toISOString(),
+    };
+    await this.putJson(ANUNCIOS_PK, CONTEUDO_HOME_SK, item, { entity: "SITE_CONFIG" });
+    return this.itemParaConteudoHome(item);
+  }
+
+  private itemParaSlidesHome(item: {
+    slides?: SlideHomeSite[];
+    atualizadoEm?: string;
+  }): SlidesHomeConfig {
+    return {
+      slides: (item.slides ?? []).map((slide, index) => ({
+        id: slide.id || uuidv4(),
+        imagemUrl: slide.imagemUrl ?? "",
+        titulo: slide.titulo ?? "",
+        texto: slide.texto || undefined,
+        ctaTexto: slide.ctaTexto || undefined,
+        ctaUrl: slide.ctaUrl || undefined,
+        ordem: Number.isFinite(slide.ordem) ? Number(slide.ordem) : index,
+        ativo: slide.ativo !== false,
+      })),
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
+  }
+
+  private itemParaConteudoHome(item: {
+    youtube?: { titulo?: string; texto?: string };
+    twitch?: { titulo?: string; texto?: string };
+    artigos?: { titulo?: string; texto?: string };
+    parceiros?: { titulo?: string; texto?: string };
+    fugueteUsuarioId?: string;
+    atualizadoEm?: string;
+  }): ConteudoHomeConfig {
+    const secao = (valor?: { titulo?: string; texto?: string }) => ({
+      titulo: valor?.titulo ?? "",
+      texto: valor?.texto ?? "",
+    });
+    return {
+      youtube: secao(item.youtube),
+      twitch: secao(item.twitch),
+      artigos: secao(item.artigos),
+      parceiros: secao(item.parceiros),
+      fugueteUsuarioId: item.fugueteUsuarioId || undefined,
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
+  }
+
+  private itemParaParceiros(item: {
+    parceiros?: ParceiroSite[];
+    cupomGlobal?: string;
+    paginaTitulo?: string;
+    paginaTexto?: string;
+    ctaTitulo?: string;
+    ctaTexto?: string;
+    contatoEmail?: string;
+    atualizadoEm?: string;
+  }): ParceirosSiteConfig {
+    return {
+      parceiros: (item.parceiros ?? []).map((parceiro, index) => ({
+        id: parceiro.id || uuidv4(),
+        nome: parceiro.nome ?? "",
+        logoUrl: parceiro.logoUrl ?? "",
+        linkUrl: parceiro.linkUrl ?? "",
+        cupom: parceiro.cupom || undefined,
+        ordem: Number.isFinite(parceiro.ordem) ? Number(parceiro.ordem) : index,
+        ativo: parceiro.ativo !== false,
+      })),
+      cupomGlobal: item.cupomGlobal || undefined,
+      paginaTitulo: item.paginaTitulo || undefined,
+      paginaTexto: item.paginaTexto || undefined,
+      ctaTitulo: item.ctaTitulo || undefined,
+      ctaTexto: item.ctaTexto || undefined,
+      contatoEmail: item.contatoEmail || undefined,
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
+  }
+
+  private itemParaSobreMim(item: SobreMimPersistido): SobreMimConfig {
+    return {
+      tituloHistoria: item.tituloHistoria ?? "",
+      historia: item.historia ?? "",
+      fotoUrl: item.fotoUrl ?? "",
+      apoiaTitulo: item.apoiaTitulo ?? "",
+      apoiaTexto: item.apoiaTexto ?? "",
+      apoiaImagemUrl: item.apoiaImagemUrl ?? "",
+      apoiaUrl: item.apoiaUrl ?? "",
+      galeriaTitulo: item.galeriaTitulo ?? "",
+      galeriaUrls: Array.isArray(item.galeriaUrls) ? item.galeriaUrls.filter(Boolean) : [],
+      agradecimentoTitulo: item.agradecimentoTitulo ?? "",
+      agradecimentoTexto: item.agradecimentoTexto ?? "",
+      apoiadores: item.apoiadores ?? "",
+      atualizadoEm: item.atualizadoEm ? new Date(item.atualizadoEm) : undefined,
+    };
   }
 
   private itemParaMetagameOverrides(item: {

@@ -83,6 +83,24 @@ import { BuscarEstatisticasSiteRota } from "../infra/api/express/rotas/site/busc
 import { RegistrarCliqueAnuncioRota } from "../infra/api/express/rotas/site/registrarCliqueAnuncio.express.route";
 import { SalvarAnunciosRota } from "../infra/api/express/rotas/site/salvarAnuncios.express.route";
 import {
+  BuscarConteudoHomeRota,
+  BuscarParceirosAdminRota,
+  BuscarParceirosRota,
+  BuscarSlidesHomeAdminRota,
+  BuscarSlidesHomeRota,
+  BuscarSobreMimRota,
+  SalvarConteudoHomeRota,
+  SalvarParceirosRota,
+  SalvarSlidesHomeRota,
+  SalvarSobreMimRota,
+} from "../infra/api/express/rotas/site/homeParceiros.express.route";
+import {
+  AtualizarHallTop8Rota,
+  CadastrarHallTop8Rota,
+  ExcluirHallTop8Rota,
+  ListarHallTop8Rota,
+} from "../infra/api/express/rotas/hall/hallTop8.express.route";
+import {
   BuscarAnuncioDiarioRota,
   BuscarAnuncioDiarioAdminRota,
   SalvarAnuncioDiarioRota,
@@ -203,6 +221,20 @@ export function criarRotas(casos: CasosDeUso) {
         BuscarEstatisticasSiteRota.criar(casos.buscarEstatisticasSite),
         RegistrarCliqueAnuncioRota.criar(casos.registrarCliqueAnuncio),
         SalvarAnunciosRota.criar(casos.salvarAnuncios),
+        BuscarSlidesHomeRota.criar(casos.buscarSlidesHome),
+        BuscarSlidesHomeAdminRota.criar(casos.buscarSlidesHome),
+        SalvarSlidesHomeRota.criar(casos.salvarSlidesHome),
+        BuscarParceirosRota.criar(casos.buscarParceiros),
+        BuscarParceirosAdminRota.criar(casos.buscarParceiros),
+        SalvarParceirosRota.criar(casos.salvarParceiros),
+        BuscarSobreMimRota.criar(casos.buscarSobreMim),
+        SalvarSobreMimRota.criar(casos.salvarSobreMim),
+        BuscarConteudoHomeRota.criar(casos.buscarConteudoHome),
+        SalvarConteudoHomeRota.criar(casos.salvarConteudoHome),
+        ListarHallTop8Rota.criar(casos.listarHallTop8),
+        CadastrarHallTop8Rota.criar(casos.cadastrarHallTop8),
+        AtualizarHallTop8Rota.criar(casos.atualizarHallTop8),
+        ExcluirHallTop8Rota.criar(casos.excluirHallTop8),
         BuscarAnuncioDiarioRota.criar(casos.buscarAnuncioDiario),
         BuscarAnuncioDiarioAdminRota.criar(casos.buscarAnuncioDiario),
         SalvarAnuncioDiarioRota.criar(casos.salvarAnuncioDiario),

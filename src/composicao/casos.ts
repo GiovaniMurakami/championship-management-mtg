@@ -98,6 +98,18 @@ import {
   RegistrarVisualizacaoAnuncioDiario,
 } from "../casosDeUso/site/registrarMetricasAnuncioDiario";
 import { SalvarAnuncios } from "../casosDeUso/site/salvarAnuncios";
+import { BuscarSlidesHome } from "../casosDeUso/site/buscarSlidesHome";
+import { SalvarSlidesHome } from "../casosDeUso/site/salvarSlidesHome";
+import { BuscarParceiros } from "../casosDeUso/site/buscarParceiros";
+import { SalvarParceiros } from "../casosDeUso/site/salvarParceiros";
+import { BuscarSobreMim } from "../casosDeUso/site/buscarSobreMim";
+import { SalvarSobreMim } from "../casosDeUso/site/salvarSobreMim";
+import { BuscarConteudoHome } from "../casosDeUso/site/buscarConteudoHome";
+import { SalvarConteudoHome } from "../casosDeUso/site/salvarConteudoHome";
+import { CadastrarHallTop8 } from "../casosDeUso/hall/cadastrarHallTop8";
+import { ListarHallTop8 } from "../casosDeUso/hall/listarHallTop8";
+import { ExcluirHallTop8 } from "../casosDeUso/hall/excluirHallTop8";
+import { AtualizarHallTop8 } from "../casosDeUso/hall/atualizarHallTop8";
 import { SalvarAnuncioDiario } from "../casosDeUso/site/salvarAnuncioDiario";
 import { CadastrarStoryFundo } from "../casosDeUso/storyFundo/cadastrarStoryFundo";
 import { ListarStoryFundos } from "../casosDeUso/storyFundo/listarStoryFundos";
@@ -243,6 +255,19 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const salvarAnuncioDiario = SalvarAnuncioDiario.criar(repos.siteConfig);
     const registrarVisualizacaoAnuncioDiario = RegistrarVisualizacaoAnuncioDiario.criar(repos.siteConfig);
     const registrarCliqueAnuncioDiario = RegistrarCliqueAnuncioDiario.criar(repos.siteConfig);
+    const buscarSlidesHome = BuscarSlidesHome.criar(repos.siteConfig, servicos.cache);
+    const salvarSlidesHome = SalvarSlidesHome.criar(repos.siteConfig, servicos.cache);
+    const buscarParceiros = BuscarParceiros.criar(repos.siteConfig, servicos.cache);
+    const salvarParceiros = SalvarParceiros.criar(repos.siteConfig, servicos.cache);
+    const buscarSobreMim = BuscarSobreMim.criar(repos.siteConfig, servicos.cache);
+    const salvarSobreMim = SalvarSobreMim.criar(repos.siteConfig, servicos.cache);
+    const buscarConteudoHome = BuscarConteudoHome.criar(repos.siteConfig, servicos.cache);
+    const salvarConteudoHome = SalvarConteudoHome.criar(repos.siteConfig, servicos.cache);
+
+    const cadastrarHallTop8 = CadastrarHallTop8.criar(repos.hallTop8, repos.torneio);
+    const listarHallTop8 = ListarHallTop8.criar(repos.hallTop8);
+    const excluirHallTop8 = ExcluirHallTop8.criar(repos.hallTop8, servicos.s3);
+    const atualizarHallTop8 = AtualizarHallTop8.criar(repos.hallTop8);
 
     const cadastrarStoryFundo = CadastrarStoryFundo.criar(repos.storyFundo);
     const listarStoryFundos = ListarStoryFundos.criar(repos.storyFundo);
@@ -287,6 +312,10 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         gerarConviteTime, entrarPorConviteTime, solicitarEntradaTime, aprovarSolicitacaoTime, rejeitarSolicitacaoTime,
         buscarAnuncios, buscarEstatisticasSite, registrarCliqueAnuncio, salvarAnuncios,
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
+        buscarSlidesHome, salvarSlidesHome, buscarParceiros, salvarParceiros,
+        buscarSobreMim, salvarSobreMim,
+        buscarConteudoHome, salvarConteudoHome,
+        cadastrarHallTop8, listarHallTop8, excluirHallTop8, atualizarHallTop8,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
         cadastrarFotoGaleria, listarFotosGaleria, excluirFotoGaleria, excluirFotosGaleriaLote,
         registrarVisualizacaoGaleria, buscarEstatisticasGaleria,

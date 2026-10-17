@@ -4,6 +4,7 @@ build/
 .env*
 !.env.example
 dist/
+tmp/
 *.js.map
 package-lock.json
 .claude

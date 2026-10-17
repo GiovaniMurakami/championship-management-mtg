@@ -25,7 +25,7 @@
     "test": "npm run test:unit && npm run test:e2e",
     "test:cache": "vitest run --reporter=verbose tests/infra/cache",
     "test:unit": "vitest run --reporter=verbose --exclude \"tests/e2e/**\"",
-    "test:e2e": "npm run test:e2e:cache && npm run test:e2e:dynamodb && npm run test:e2e:publicar-rodada && npm run test:e2e:campeonato-multidia && npm run test:e2e:torneio150",
+    "test:e2e": "npm run test:e2e:cache && npm run test:e2e:dynamodb && npm run test:e2e:publicar-rodada && npm run test:e2e:campeonato-multidia && npm run test:e2e:torneio150 && npm run test:e2e:site-hall",
     "test:e2e:ci": "npm run test:e2e:publicar-rodada && npm run test:e2e:campeonato-multidia",
     "test:e2e:ci:tables": "node scripts/criarTabelasE2eLocal.mjs",
     "test:e2e:cache": "node scripts/run-vitest-e2e.mjs tests/e2e/cacheDynamoDb.e2e.test.ts RUN_DYNAMODB_CACHE_E2E=true E2E_ALLOW_NONLOCAL_CACHE=true",
@@ -34,6 +34,7 @@
     "test:e2e:campeonato-multidia": "node scripts/run-vitest-e2e.mjs tests/e2e/fluxoCampeonatoMultiDia.e2e.test.ts RUN_CAMPEONATO_MULTIDIA_E2E=true",
     "test:e2e:publicar-rodada": "node scripts/run-vitest-e2e.mjs tests/e2e/fluxoPublicarRodada.e2e.test.ts RUN_TORNEIO_PUBLICAR_E2E=true",
     "test:e2e:dynamodb": "node scripts/run-vitest-e2e.mjs tests/e2e/dynamoDataPaginacao.e2e.test.ts RUN_DYNAMODB_DATA_E2E=true",
+    "test:e2e:site-hall": "node scripts/run-vitest-e2e.mjs tests/e2e/siteHallParceiros.e2e.test.ts RUN_SITE_HALL_E2E=true",
     "test:watch": "vitest --exclude \"tests/e2e/**\"",
     "test:coverage": "vitest run --coverage --exclude \"tests/e2e/**\""
   },

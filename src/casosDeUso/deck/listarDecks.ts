@@ -26,6 +26,9 @@ export type ListarDecksOutputDto = {
     nome: string;
     formato: string;
     linkLigaMagic: string | null;
+    cartaRepresentativa: string | null;
+    /** Capa para UI (representativa → commander → 1ª do main). */
+    cartaFundo: string | null;
     maindeck: Carta[];
     sideboard: Carta[];
     commander: Carta[];
@@ -83,19 +86,28 @@ export class ListarDecks
     const usuarioMap = new Map(usuarios.map((u) => [u.id, u]));
 
     return {
-      decks: decks.map((deck) => ({
-        id: deck.id,
-        nome: deck.nome,
-        formato: deck.formato,
-        linkLigaMagic: deck.linkLigaMagic,
-        maindeck: deck.maindeck,
-        sideboard: deck.sideboard,
-        commander: deck.commander,
-        usuario: toUsuarioPublico(usuarioMap.get(deck.usuarioId), deck.usuarioId),
-        visualizacoes: deck.visualizacoes,
-        criadoEm: deck.criadoEm,
-        oculto: deck.oculto,
-      })),
+      decks: decks.map((deck) => {
+        const cartaRepresentativa = deck.cartaRepresentativa || null;
+        const cartaFundo = cartaRepresentativa
+          || deck.commander?.[0]?.nome
+          || deck.maindeck?.[0]?.nome
+          || null;
+        return {
+          id: deck.id,
+          nome: deck.nome,
+          formato: deck.formato,
+          linkLigaMagic: deck.linkLigaMagic,
+          cartaRepresentativa,
+          cartaFundo,
+          maindeck: deck.maindeck,
+          sideboard: deck.sideboard,
+          commander: deck.commander,
+          usuario: toUsuarioPublico(usuarioMap.get(deck.usuarioId), deck.usuarioId),
+          visualizacoes: deck.visualizacoes,
+          criadoEm: deck.criadoEm,
+          oculto: deck.oculto,
+        };
+      }),
       total,
       limite,
       offset,

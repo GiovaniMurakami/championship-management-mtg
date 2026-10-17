@@ -474,6 +474,131 @@ export const salvarAnunciosSchema = z.object({
   anuncios: z.array(anuncioSiteSchema).max(20, "Informe no máximo 20 anúncios."),
 });
 
+export const slideHomeSchema = z.object({
+  id: z.string().max(180).optional(),
+  imagemUrl: s3ImagemUrlOuVazio().optional().default(""),
+  titulo: z.string().trim().max(160).optional().default(""),
+  texto: z.string().trim().max(500).optional().default(""),
+  ctaTexto: z.string().trim().max(80).optional().default(""),
+  ctaUrl: z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine((valor) => !valor || /^https?:\/\//i.test(valor) || valor.startsWith("/"), {
+      message: "ctaUrl deve ser URL http(s) ou caminho interno.",
+    }),
+  ativo: z.boolean().optional().default(true),
+  ordem: z.number().int().optional(),
+});
+
+export const salvarSlidesHomeSchema = z.object({
+  slides: z.array(slideHomeSchema).max(12, "Informe no máximo 12 slides."),
+});
+
+export const parceiroSiteSchema = z.object({
+  id: z.string().max(180).optional(),
+  nome: z.string().trim().min(1, "Nome do parceiro é obrigatório.").max(120),
+  logoUrl: s3ImagemUrlOuVazio().optional().default(""),
+  linkUrl: z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine((valor) => !valor || /^https?:\/\//i.test(valor), {
+      message: "O link deve começar com http:// ou https://.",
+    }),
+  cupom: z.string().trim().max(40).optional().default(""),
+  ativo: z.boolean().optional().default(true),
+  ordem: z.number().int().optional(),
+});
+
+/** URL S3 do bucket, caminho local /images/... ou vazio. */
+function imagemSiteUrlOuVazio() {
+  return z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine(
+      (url) => {
+        if (!url) return true;
+        if (url.startsWith("/images/")) return true;
+        if (!/^https?:\/\//i.test(url)) return false;
+        const base = getS3BaseUrl();
+        return base ? url.startsWith(base + "/") : true;
+      },
+      { message: "Use imagem do S3 autorizado ou caminho /images/..." },
+    );
+}
+
+export const salvarParceirosSchema = z.object({
+  parceiros: z.array(parceiroSiteSchema).max(60, "Informe no máximo 60 parceiros."),
+  cupomGlobal: z.string().trim().max(40).optional().default(""),
+  paginaTitulo: z.string().trim().max(200).optional().default(""),
+  paginaTexto: z.string().trim().max(800).optional().default(""),
+  ctaTitulo: z.string().trim().max(160).optional().default(""),
+  ctaTexto: z.string().trim().max(400).optional().default(""),
+  contatoEmail: z.string().trim().max(120).optional().default(""),
+});
+
+export const salvarSobreMimSchema = z.object({
+  tituloHistoria: z.string().trim().max(160).optional().default(""),
+  historia: z.string().trim().max(8000).optional().default(""),
+  fotoUrl: imagemSiteUrlOuVazio(),
+  apoiaTitulo: z.string().trim().max(160).optional().default(""),
+  apoiaTexto: z.string().trim().max(800).optional().default(""),
+  apoiaImagemUrl: imagemSiteUrlOuVazio(),
+  apoiaUrl: z
+    .string()
+    .max(800)
+    .optional()
+    .default("")
+    .refine((valor) => !valor || /^https?:\/\//i.test(valor), {
+      message: "O link do Apoia-se deve começar com http:// ou https://.",
+    }),
+  galeriaTitulo: z.string().trim().max(160).optional().default(""),
+  galeriaUrls: z.array(imagemSiteUrlOuVazio()).max(20).optional().default([]),
+  agradecimentoTitulo: z.string().trim().max(160).optional().default(""),
+  agradecimentoTexto: z.string().trim().max(400).optional().default(""),
+  apoiadores: z.string().trim().max(12000).optional().default(""),
+});
+
+export const secaoTextoHomeSchema = z.object({
+  titulo: z.string().trim().max(160).optional().default(""),
+  texto: z.string().trim().max(500).optional().default(""),
+});
+
+export const salvarConteudoHomeSchema = z.object({
+  youtube: secaoTextoHomeSchema.optional(),
+  twitch: secaoTextoHomeSchema.optional(),
+  artigos: secaoTextoHomeSchema.optional(),
+  parceiros: secaoTextoHomeSchema.optional(),
+  fugueteUsuarioId: z.union([z.string().uuid(), z.literal("")]).optional(),
+});
+
+export const cadastrarHallTop8Schema = z.object({
+  torneioId: uuidCampo("torneioId"),
+  imagemUrl: s3ImagemUrl(),
+  torneioNome: z.string().trim().max(200).optional().default(""),
+});
+
+export const atualizarHallTop8Schema = z.object({
+  ativo: z.boolean().optional(),
+  dataTorneio: z.string().min(1).optional(),
+}).refine((v) => v.ativo !== undefined || v.dataTorneio !== undefined, {
+  message: "Informe ativo e/ou dataTorneio.",
+});
+
+export const hallTop8IdParamSchema = z.object({
+  id: uuidCampo("id"),
+});
+
+export const listarHallTop8QuerySchema = z.object({
+  limite: z.coerce.number().int().min(1).max(100).optional().default(24),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
 export const anuncioDiarioItemSchema = z.object({
   id: z.string().max(180).optional(),
   imagemUrl: s3ImagemUrlOuVazio().optional().default(""),
