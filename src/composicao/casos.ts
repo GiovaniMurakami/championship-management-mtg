@@ -106,6 +106,7 @@ import { BuscarSobreMim } from "../casosDeUso/site/buscarSobreMim";
 import { SalvarSobreMim } from "../casosDeUso/site/salvarSobreMim";
 import { BuscarConteudoHome } from "../casosDeUso/site/buscarConteudoHome";
 import { SalvarConteudoHome } from "../casosDeUso/site/salvarConteudoHome";
+import { GerarSitemap } from "../casosDeUso/site/gerarSitemap";
 import { CadastrarHallTop8 } from "../casosDeUso/hall/cadastrarHallTop8";
 import { ListarHallTop8 } from "../casosDeUso/hall/listarHallTop8";
 import { ExcluirHallTop8 } from "../casosDeUso/hall/excluirHallTop8";
@@ -263,6 +264,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
     const salvarSobreMim = SalvarSobreMim.criar(repos.siteConfig, servicos.cache);
     const buscarConteudoHome = BuscarConteudoHome.criar(repos.siteConfig, servicos.cache);
     const salvarConteudoHome = SalvarConteudoHome.criar(repos.siteConfig, servicos.cache);
+    const gerarSitemap = GerarSitemap.criar(repos.torneio, repos.artigo);
 
     const cadastrarHallTop8 = CadastrarHallTop8.criar(repos.hallTop8, repos.torneio);
     const listarHallTop8 = ListarHallTop8.criar(repos.hallTop8);
@@ -314,7 +316,7 @@ export function criarCasosDeUso(repos: Repositorios, servicos: Servicos) {
         buscarAnuncioDiario, salvarAnuncioDiario, registrarVisualizacaoAnuncioDiario, registrarCliqueAnuncioDiario,
         buscarSlidesHome, salvarSlidesHome, buscarParceiros, salvarParceiros,
         buscarSobreMim, salvarSobreMim,
-        buscarConteudoHome, salvarConteudoHome,
+        buscarConteudoHome, salvarConteudoHome, gerarSitemap,
         cadastrarHallTop8, listarHallTop8, excluirHallTop8, atualizarHallTop8,
         cadastrarStoryFundo, listarStoryFundos, excluirStoryFundo,
         cadastrarFotoGaleria, listarFotosGaleria, excluirFotoGaleria, excluirFotosGaleriaLote,
