@@ -21,10 +21,12 @@ describe("env helpers", () => {
         expect(getFrontendUrl()).toBe("http://localhost:5173");
         expect(getCorsOrigin()).toBe("http://localhost:5173");
         expect(getCorsOrigins()).toEqual([
-            "https://app.tiagofuguete.com.br",
-            "https://www.app.tiagofuguete.com.br",
             "https://tiagofuguete.com.br",
             "https://www.tiagofuguete.com.br",
+            "https://homolog.tiagofuguete.com.br",
+            "https://www.homolog.tiagofuguete.com.br",
+            "https://app.tiagofuguete.com.br",
+            "https://www.app.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -42,7 +44,7 @@ describe("env helpers", () => {
     it("ignora FRONTEND_URL no CORS quando CORS_ORIGIN não foi definido", () => {
         process.env.FRONTEND_URL = "https://app.exemplo.com";
 
-        expect(getCorsOrigin()).toBe("https://app.tiagofuguete.com.br");
+        expect(getCorsOrigin()).toBe("https://tiagofuguete.com.br");
         expect(getCorsOrigins()).not.toContain("https://app.exemplo.com");
     });
 
@@ -54,23 +56,27 @@ describe("env helpers", () => {
         expect(getCorsOrigins()).toEqual([
             "https://web.exemplo.com",
             "https://admin.exemplo.com",
-            "https://app.tiagofuguete.com.br",
-            "https://www.app.tiagofuguete.com.br",
             "https://tiagofuguete.com.br",
             "https://www.tiagofuguete.com.br",
+            "https://homolog.tiagofuguete.com.br",
+            "https://www.homolog.tiagofuguete.com.br",
+            "https://app.tiagofuguete.com.br",
+            "https://www.app.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
 
-    it("usa app de produção como frontend padrão fora do ambiente local", () => {
+    it("usa apex de produção como frontend padrão fora do ambiente local", () => {
         process.env.IS_LOCAL = "false";
 
-        expect(getFrontendUrl()).toBe("https://app.tiagofuguete.com.br");
+        expect(getFrontendUrl()).toBe("https://tiagofuguete.com.br");
         expect(getCorsOrigins()).toEqual([
-            "https://app.tiagofuguete.com.br",
-            "https://www.app.tiagofuguete.com.br",
             "https://tiagofuguete.com.br",
             "https://www.tiagofuguete.com.br",
+            "https://homolog.tiagofuguete.com.br",
+            "https://www.homolog.tiagofuguete.com.br",
+            "https://app.tiagofuguete.com.br",
+            "https://www.app.tiagofuguete.com.br",
             "http://localhost:5173",
         ]);
     });
@@ -79,7 +85,7 @@ describe("env helpers", () => {
         process.env.IS_LOCAL = "false";
         process.env.FRONTEND_URL = "http://localhost:5173";
 
-        expect(getFrontendUrl()).toBe("https://app.tiagofuguete.com.br");
+        expect(getFrontendUrl()).toBe("https://tiagofuguete.com.br");
     });
 
     it("monta link local direto no ambiente de desenvolvimento sem FRONTEND_URL", () => {
@@ -93,28 +99,28 @@ describe("env helpers", () => {
 
     it("usa FRONTEND_URL no link mesmo com IS_LOCAL=true", () => {
         process.env.IS_LOCAL = "true";
-        process.env.FRONTEND_URL = "https://app.tiagofuguete.com.br";
+        process.env.FRONTEND_URL = "https://tiagofuguete.com.br";
 
         expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
-            "https://app.tiagofuguete.com.br?appPath=%2Freset-senha%3Ftoken%3Dabc123",
+            "https://tiagofuguete.com.br/reset-senha?token=abc123",
         );
     });
 
-    it("monta link externo com appPath fora do ambiente local", () => {
+    it("monta link externo com path direto fora do ambiente local", () => {
         process.env.IS_LOCAL = "false";
         delete process.env.FRONTEND_URL;
 
         expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
-            "https://app.tiagofuguete.com.br?appPath=%2Freset-senha%3Ftoken%3Dabc123",
+            "https://tiagofuguete.com.br/reset-senha?token=abc123",
         );
     });
 
-    it("usa FRONTEND_URL configurado como base do appPath", () => {
+    it("usa FRONTEND_URL configurado como base do path", () => {
         process.env.IS_LOCAL = "false";
-        process.env.FRONTEND_URL = "https://app.tiagofuguete.com.br";
+        process.env.FRONTEND_URL = "https://homolog.tiagofuguete.com.br";
 
         expect(buildFrontendAppLink("/reset-senha?token=abc123")).toBe(
-            "https://app.tiagofuguete.com.br?appPath=%2Freset-senha%3Ftoken%3Dabc123",
+            "https://homolog.tiagofuguete.com.br/reset-senha?token=abc123",
         );
     });
 

@@ -1,5 +1,6 @@
 const FRONTEND_LOCAL_URL = "http://localhost:5173";
-const FRONTEND_PROD_URL = "https://app.tiagofuguete.com.br";
+const FRONTEND_PROD_URL = "https://tiagofuguete.com.br";
+const FRONTEND_HOMOLOG_URL = "https://homolog.tiagofuguete.com.br";
 
 function parseOrigins(value?: string): string[] {
     return (value || "")
@@ -36,7 +37,7 @@ function normalizeBaseUrl(value: string): string {
     return value.replace(/\/+$/, "");
 }
 
-/** Monta URL compartilhável do app (WordPress com appPath fora do ambiente local). */
+/** Monta URL compartilhável do app (path direto no SPA). */
 export function buildFrontendAppLink(internalPath: string): string {
     const normalizedPath = internalPath.startsWith("/") ? internalPath : `/${internalPath}`;
 
@@ -50,7 +51,7 @@ export function buildFrontendAppLink(internalPath: string): string {
     }
 
     const baseUrl = normalizeBaseUrl(getFrontendAppBaseUrl());
-    return `${baseUrl}?appPath=${encodeURIComponent(normalizedPath)}`;
+    return `${baseUrl}${normalizedPath}`;
 }
 
 function getFrontendAppBaseUrl(): string {
@@ -61,12 +62,16 @@ function getFrontendAppBaseUrl(): string {
 
     return FRONTEND_PROD_URL;
 }
+
 function getDefaultCorsOrigins(): string[] {
     return [
         FRONTEND_PROD_URL,
-        "https://www.app.tiagofuguete.com.br",
-        "https://tiagofuguete.com.br",
         "https://www.tiagofuguete.com.br",
+        FRONTEND_HOMOLOG_URL,
+        "https://www.homolog.tiagofuguete.com.br",
+        // Transição: Amplify ainda pode servir em app. até o cutover DNS
+        "https://app.tiagofuguete.com.br",
+        "https://www.app.tiagofuguete.com.br",
         FRONTEND_LOCAL_URL,
     ];
 }

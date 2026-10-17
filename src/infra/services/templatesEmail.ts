@@ -4,7 +4,7 @@ const cores = {
 };
 
 /** Mesma arte do rodapé das imagens de deck (`public/images/top8/rodape.png.png`). */
-const LOGO_TIAGO_FUGUETE_URL = "https://app.tiagofuguete.com.br/images/top8/rodape.png.png";
+const LOGO_TIAGO_FUGUETE_URL = "https://tiagofuguete.com.br/images/top8/rodape.png.png";
 
 function escaparHtml(valor: string): string {
     return valor.replace(/[&<>'"]/g, (caractere) => ({
@@ -36,8 +36,8 @@ export function criarEmailBoasVindas(nome: string): { html: string; texto: strin
 <h1 style="margin:0 0 16px;font-size:28px;line-height:36px;color:${cores.texto};">Bem-vindo, ${nomeSeguro}! 👋</h1>
 <p style="margin:0 0 16px;font-size:16px;line-height:25px;color:${cores.suave};">Sua conta foi criada com sucesso. Agora você já pode viver seus campeonatos de Magic em um só lugar.</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#110a22;border-radius:10px;"><tr><td style="padding:20px;color:${cores.suave};font-size:15px;line-height:24px;">• Inscreva-se em torneios<br>• Organize e acompanhe seus decks<br>• Consulte resultados, rankings e metagame</td></tr></table>
-<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:8px;background:${cores.botao};"><a href="https://app.tiagofuguete.com.br" style="display:inline-block;padding:14px 24px;color:#fff;text-decoration:none;font-size:15px;font-weight:700;">Acessar minha conta</a></td></tr></table>`, "Sua conta Fuguete está pronta para jogar."),
-        texto: `Bem-vindo, ${nome}!\n\nSua conta Fuguete foi criada com sucesso.\n\nAcesse: https://app.tiagofuguete.com.br\n\nFuguete — Magic: The Gathering, torneios e comunidade.`,
+<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:8px;background:${cores.botao};"><a href="https://tiagofuguete.com.br" style="display:inline-block;padding:14px 24px;color:#fff;text-decoration:none;font-size:15px;font-weight:700;">Acessar minha conta</a></td></tr></table>`, "Sua conta Fuguete está pronta para jogar."),
+        texto: `Bem-vindo, ${nome}!\n\nSua conta Fuguete foi criada com sucesso.\n\nAcesse: https://tiagofuguete.com.br\n\nFuguete — Magic: The Gathering, torneios e comunidade.`,
     };
 }
 

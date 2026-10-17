@@ -36,7 +36,7 @@ Two git repos, one product:
 
 - Feature branch from `homolog`, merge back to `homolog`, push.
 - API deploy stage for homolog is AWS stage `dev` (`deploy:homolog`).
-- Front Amplify app `d32mjk9mbam2cb`, branch `homolog`, domain `app.tiagofuguete.com.br`.
+- Front Amplify app `d32mjk9mbam2cb`: prod `tiagofuguete.com.br`, homolog `homolog.tiagofuguete.com.br`.
 - Keep unrelated refactors off the same PR as product features when possible.
 
 ## Cross-cutting rules

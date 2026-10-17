@@ -45,7 +45,7 @@ describe("artigo por slug e compartilhamento", () => {
       description: artigo.chamada,
       image: artigo.capaUrl!,
       imageType: "image/jpeg",
-    }, undefined, "https://app.tiagofuguete.com.br");
+    }, undefined, "https://tiagofuguete.com.br");
     expect(html).toContain('property="og:image" content="https://cdn.example.com/capa.jpg"');
     expect(html).toContain("/artigos/abc12-pauper-de-sexta");
     expect(html).toContain('name="twitter:card" content="summary_large_image"');

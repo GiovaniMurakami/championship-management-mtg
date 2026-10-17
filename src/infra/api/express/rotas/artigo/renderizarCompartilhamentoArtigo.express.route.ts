@@ -57,14 +57,18 @@ export class RenderizarCompartilhamentoArtigoRota implements Rotas {
         const forwardedHost = String(request.headers["x-forwarded-host"] || "").split(",")[0].trim().toLowerCase();
         const requestHost = forwardedHost || request.hostname.toLowerCase();
         const amplifyAppId = process.env.AMPLIFY_APP_ID || "d32mjk9mbam2cb";
-        const hostPermitido = requestHost === "app.tiagofuguete.com.br"
+        const hostPermitido = requestHost === "tiagofuguete.com.br"
+          || requestHost === "www.tiagofuguete.com.br"
+          || requestHost === "homolog.tiagofuguete.com.br"
+          || requestHost === "www.homolog.tiagofuguete.com.br"
+          || requestHost === "app.tiagofuguete.com.br"
           || requestHost === "www.app.tiagofuguete.com.br"
           || requestHost === `${amplifyAppId}.amplifyapp.com`
           || requestHost.endsWith(`.${amplifyAppId}.amplifyapp.com`);
         const frontendUrl = hostPermitido ? `https://${requestHost}` : getFrontendUrl();
-        const homolog = requestHost === "app.tiagofuguete.com.br"
-          || requestHost === "www.app.tiagofuguete.com.br"
-          || requestHost.startsWith("homolog.");
+        const homolog = requestHost.startsWith("homolog.")
+          || requestHost === "app.tiagofuguete.com.br"
+          || requestHost === "www.app.tiagofuguete.com.br";
         const artigoId = String(request.params.artigoId);
         const pareceArtigo = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[a-z0-9]{5}-[a-z0-9-]+)$/i.test(artigoId);
         const homologApiUrl = (process.env.SEO_HOMOLOG_API_URL || "https://ol5gj7iduc.execute-api.us-east-1.amazonaws.com/dev").replace(/\/+$/, "");

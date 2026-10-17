@@ -1,4 +1,9 @@
-import { montarHtmlCompartilhamentoTorneio, RenderizarCompartilhamentoTorneioRota, scriptBootstrapSpa } from "../../../../../../src/infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
+import {
+  HTML_SHELL_COMPARTILHAMENTO as HTML_SHELL,
+  montarHtmlCompartilhamentoTorneio,
+  RenderizarCompartilhamentoTorneioRota,
+  scriptBootstrapSpa,
+} from "../../../../../../src/infra/api/express/rotas/torneio/renderizarCompartilhamentoTorneio.express.route";
 
 const SEO = {
   torneioId: "d99cb000-0000-4000-8000-000000000000",
@@ -9,7 +14,7 @@ const SEO = {
   url: null,
 };
 
-function makeReqRes(host = "app.tiagofuguete.com.br") {
+function makeReqRes(host = "tiagofuguete.com.br") {
   const headers: Record<string, string> = { "x-forwarded-host": host, "user-agent": "Mozilla/5.0" };
   const req = {
     params: { torneioId: "d99cb-tropical-pauper-296" },
@@ -39,9 +44,9 @@ describe("RenderizarCompartilhamentoTorneioRota", () => {
     const html = montarHtmlCompartilhamentoTorneio(
       SEO,
       '<html><head><title>Genérico</title><meta property="og:title" content="Genérico"><meta name="twitter:image" content="antiga"><script type="module" src="/assets/index-OLDHASH.js"></script><link rel="stylesheet" href="/assets/index-OLD.css"></head><body></body></html>',
-      "https://app.tiagofuguete.com.br",
+      "https://tiagofuguete.com.br",
     );
-    expect(html).toContain('property="og:title" content="Tropical Pauper 296 | Fuguete Liga Magic"');
+    expect(html).toContain('property="og:title" content="Tropical Pauper 296 | Tiago Fuguete"');
     expect(html).toContain('property="og:image" content="https://cdn.example.com/banner.jpg"');
     expect(html).toContain("/torneios/d99cb-tropical-pauper-296");
     expect(html).not.toContain("Genérico");
@@ -49,7 +54,16 @@ describe("RenderizarCompartilhamentoTorneioRota", () => {
     expect(html).not.toContain("/assets/index-OLDHASH.js");
     expect(html).not.toContain("/assets/index-OLD.css");
     expect(html).toContain('data-ssr-bootstrap="spa"');
-    expect(html).toContain(scriptBootstrapSpa("https://app.tiagofuguete.com.br"));
+    expect(html).toContain(scriptBootstrapSpa("https://tiagofuguete.com.br"));
+  });
+
+  it("usa imagem OG padrão quando o torneio não tem banner", () => {
+    const html = montarHtmlCompartilhamentoTorneio(
+      { ...SEO, image: null, imageType: null },
+      HTML_SHELL,
+      "https://tiagofuguete.com.br",
+    );
+    expect(html).toContain('property="og:image" content="https://tiagofuguete.com.br/images/seo/og-default.jpg"');
   });
 
   it("expõe uma rota pública de compartilhamento", () => {
@@ -59,23 +73,20 @@ describe("RenderizarCompartilhamentoTorneioRota", () => {
   });
 
   it("responde HTML com bootstrap e sem cache para o browser", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => SEO,
-    }) as typeof fetch;
-
-    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar: vi.fn() } as any);
+    const executar = vi.fn().mockResolvedValue(SEO);
+    const rota = RenderizarCompartilhamentoTorneioRota.criar({ executar } as any);
     const { req, res, next, headersSet, removed } = makeReqRes();
 
     await rota.getHandler()(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
+    expect(executar).toHaveBeenCalledWith({ torneioId: "d99cb-tropical-pauper-296" });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(headersSet["Cache-Control"]).toBe("private, no-store, must-revalidate");
     expect(removed).toEqual(expect.arrayContaining(["Content-Security-Policy", "X-Frame-Options"]));
     const html = res.send.mock.calls[0][0] as string;
     expect(html).toContain('data-ssr-bootstrap="spa"');
     expect(html).not.toMatch(/\/assets\/index-[^"']+\.js/);
-    expect(html).toContain("Tropical Pauper 296 | Fuguete Liga Magic");
+    expect(html).toContain("Tropical Pauper 296 | Tiago Fuguete");
   });
 });

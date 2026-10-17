@@ -135,6 +135,7 @@ import {
 } from "../infra/api/express/rotas/artigo/artigoRotas.express.route";
 import { BuscarSeoArtigoRota } from "../infra/api/express/rotas/artigo/buscarSeoArtigo.express.route";
 import { RenderizarCompartilhamentoArtigoRota } from "../infra/api/express/rotas/artigo/renderizarCompartilhamentoArtigo.express.route";
+import { RenderizarCompartilhamentoLandingRota } from "../infra/api/express/rotas/site/renderizarCompartilhamentoLanding.express.route";
 
 export function criarRotas(casos: CasosDeUso) {
     return [
@@ -231,6 +232,8 @@ export function criarRotas(casos: CasosDeUso) {
         SalvarSobreMimRota.criar(casos.salvarSobreMim),
         BuscarConteudoHomeRota.criar(casos.buscarConteudoHome),
         SalvarConteudoHomeRota.criar(casos.salvarConteudoHome),
+        RenderizarCompartilhamentoLandingRota.criar("/site/share"),
+        RenderizarCompartilhamentoLandingRota.criar("/site/share/:pagina"),
         ListarHallTop8Rota.criar(casos.listarHallTop8),
         CadastrarHallTop8Rota.criar(casos.cadastrarHallTop8),
         AtualizarHallTop8Rota.criar(casos.atualizarHallTop8),

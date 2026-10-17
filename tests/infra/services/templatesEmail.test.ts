@@ -12,11 +12,11 @@ describe("templatesEmail", () => {
     expect(email.html).not.toContain("<script>");
     expect(email.html).toContain("/images/top8/rodape.png.png");
     expect(email.html).toContain('alt="Tiago Fuguete"');
-    expect(email.texto).toContain("app.tiagofuguete.com.br");
+    expect(email.texto).toContain("tiagofuguete.com.br");
   });
 
   it("gera reset com link acionável no HTML e no texto", () => {
-    const link = "https://app.tiagofuguete.com.br/reset-senha?token=preview";
+    const link = "https://tiagofuguete.com.br/reset-senha?token=preview";
     const email = criarEmailResetSenha("Jogador", link);
     expect(email.html).toContain(link.replace("&", "&amp;"));
     expect(email.texto).toContain(link);
@@ -27,14 +27,14 @@ describe("templatesEmail", () => {
   it("gera newsletter com seções, preferências e descadastro", () => {
     const email = criarEmailNewsletterMetagame({
       nome: 'Ana <b>"x"</b>',
-      linkPreferencias: "https://app.tiagofuguete.com.br/?newsletter=preferencias",
-      linkDescadastro: "https://app.tiagofuguete.com.br/newsletter/descadastrar?token=abc.def",
+      linkPreferencias: "https://tiagofuguete.com.br/?newsletter=preferencias",
+      linkDescadastro: "https://tiagofuguete.com.br/newsletter/descadastrar?token=abc.def",
       secoes: [{
         formato: "pauper",
         label: "Pauper",
         totalTorneios: 3,
         totalDecks: 12,
-        link: "https://app.tiagofuguete.com.br/metagame?formato=pauper&dias=7",
+        link: "https://tiagofuguete.com.br/metagame?formato=pauper&dias=7",
         arquetipos: [{ nome: "Affinity", metaPercentual: 18.5, winrate: 52.2, totalDecks: 4 }],
       }],
     });

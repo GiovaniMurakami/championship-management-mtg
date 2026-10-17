@@ -40,10 +40,15 @@ export function montarHtmlCompartilhamento(input: {
   imageType: string | null;
   fallbackDescription: string;
   mensagemErro?: string;
+  siteName?: string;
 }, indexHtml = HTML_SHELL_COMPARTILHAMENTO, frontendUrl = getFrontendUrl()): string {
   const appUrl = frontendUrl.replace(/\/+$/, "");
-  const canonical = `${appUrl}${input.canonicalPath}`;
-  const title = escapeHtml(`${input.title} | Fuguete Liga Magic`);
+  const siteName = input.siteName || "Fuguete Liga Magic";
+  const canonical = `${appUrl}${input.canonicalPath === "/" ? "/" : input.canonicalPath}`;
+  const rawTitle = String(input.title || "").trim();
+  const title = escapeHtml(
+    !rawTitle || rawTitle === siteName ? siteName : `${rawTitle} | ${siteName}`,
+  );
   const description = escapeHtml(input.description || input.fallbackDescription);
   const image = input.image ? escapeHtml(input.image) : "";
   const imageTags = image ? `
@@ -54,7 +59,7 @@ export function montarHtmlCompartilhamento(input: {
   <meta name="twitter:image" content="${image}">` : "";
   const metaTags = `<meta data-ssr-origin="${escapeHtml(appUrl)}"><title>${title}</title><meta name="description" content="${description}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
-  <meta property="og:type" content="website"><meta property="og:site_name" content="Fuguete Liga Magic">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="${escapeHtml(siteName)}">
   <meta property="og:title" content="${title}"><meta property="og:description" content="${description}">
   <meta property="og:url" content="${escapeHtml(canonical)}">${imageTags}
   <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${title}">
@@ -73,18 +78,22 @@ export function montarHtmlCompartilhamentoTorneio(
   indexHtml = HTML_SHELL_COMPARTILHAMENTO,
   frontendUrl = getFrontendUrl(),
 ): string {
+  const appUrl = frontendUrl.replace(/\/+$/, "");
+  const image = seo.image || `${appUrl}/images/seo/og-default.jpg`;
+  const imageType = seo.imageType || (seo.image ? null : "image/jpeg") || "image/jpeg";
   return montarHtmlCompartilhamento({
     canonicalPath: `/torneios/${seo.torneioId.slice(0, 5)}-${slugify(seo.title)}`,
     title: seo.title,
     description: seo.description,
-    image: seo.image,
-    imageType: seo.imageType,
+    image,
+    imageType,
     fallbackDescription: "Acompanhe inscrições, rodadas e resultados deste torneio.",
+    siteName: "Tiago Fuguete",
   }, indexHtml, frontendUrl);
 }
 
 function removerCabecalhosDaApi(response: Response) {
-  // Helmet da API quebra o SPA: CSP, iframe do WordPress e assets em outro path.
+  // Helmet da API quebra o SPA: CSP e assets em outro path.
   response.removeHeader("Content-Security-Policy");
   response.removeHeader("X-Frame-Options");
   response.removeHeader("Cross-Origin-Resource-Policy");
@@ -107,14 +116,18 @@ export class RenderizarCompartilhamentoTorneioRota implements Rotas {
         const forwardedHost = String(request.headers["x-forwarded-host"] || "").split(",")[0].trim().toLowerCase();
         const requestHost = forwardedHost || request.hostname.toLowerCase();
         const amplifyAppId = process.env.AMPLIFY_APP_ID || "d32mjk9mbam2cb";
-        const hostPermitido = requestHost === "app.tiagofuguete.com.br"
+        const hostPermitido = requestHost === "tiagofuguete.com.br"
+          || requestHost === "www.tiagofuguete.com.br"
+          || requestHost === "homolog.tiagofuguete.com.br"
+          || requestHost === "www.homolog.tiagofuguete.com.br"
+          || requestHost === "app.tiagofuguete.com.br"
           || requestHost === "www.app.tiagofuguete.com.br"
           || requestHost === `${amplifyAppId}.amplifyapp.com`
           || requestHost.endsWith(`.${amplifyAppId}.amplifyapp.com`);
         const frontendUrl = hostPermitido ? `https://${requestHost}` : getFrontendUrl();
-        const homolog = requestHost === "app.tiagofuguete.com.br"
-          || requestHost === "www.app.tiagofuguete.com.br"
-          || requestHost.startsWith("homolog.");
+        const homolog = requestHost.startsWith("homolog.")
+          || requestHost === "app.tiagofuguete.com.br"
+          || requestHost === "www.app.tiagofuguete.com.br";
         const torneioId = request.params.torneioId as string;
         const homologApiUrl = (process.env.SEO_HOMOLOG_API_URL || "https://ol5gj7iduc.execute-api.us-east-1.amazonaws.com/dev").replace(/\/+$/, "");
         const seo = homolog
