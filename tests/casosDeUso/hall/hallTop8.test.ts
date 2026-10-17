@@ -77,6 +77,27 @@ describe("Hall da Fama Top 8", () => {
     expect(saida.itens.map((i: { id: string }) => i.id)).toEqual(["c", "a"]);
   });
 
+  it("inclui inativos quando solicitado (visão admin)", async () => {
+    const hall = criarHallGateway({
+      listar: vi.fn().mockResolvedValue([
+        item({ id: "c", dataTorneio: new Date("2026-10-10T00:00:00.000Z"), ativo: true }),
+        item({ id: "b", dataTorneio: new Date("2026-10-01T00:00:00.000Z"), ativo: false }),
+      ]),
+    });
+
+    const saida = await ListarHallTop8.criar(hall).executar({
+      limite: 10,
+      offset: 0,
+      incluirInativos: true,
+    });
+
+    expect(saida.total).toBe(2);
+    expect(saida.itens.map((i: { id: string; ativo: boolean }) => [i.id, i.ativo])).toEqual([
+      ["c", true],
+      ["b", false],
+    ]);
+  });
+
   it("atualiza ativo e exclui imagem do S3 ao remover", async () => {
     const hall = criarHallGateway({
       buscarPorId: vi.fn().mockResolvedValue(item()),

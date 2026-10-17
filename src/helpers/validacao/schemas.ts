@@ -598,6 +598,10 @@ export const hallTop8IdParamSchema = z.object({
 export const listarHallTop8QuerySchema = z.object({
   limite: z.coerce.number().int().min(1).max(100).optional().default(24),
   offset: z.coerce.number().int().min(0).optional().default(0),
+  incluirInativos: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((valor) => (valor === undefined ? false : valor === "true")),
 });
 
 export const anuncioDiarioItemSchema = z.object({

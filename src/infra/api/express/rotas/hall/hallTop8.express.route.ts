@@ -14,6 +14,7 @@ import { validarBody } from "../../../../../helpers/validacao/validarBody";
 import { validarParamsMiddleware } from "../../../../../helpers/validacao/validarParams";
 import { validarQueryMiddleware } from "../../../../../helpers/validacao/validarQuery";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
+import { autenticarJwtOpcional } from "../../../../../middlewares/express/autenticarJwtOpcional";
 import { autorizarAdmin } from "../../../../../middlewares/express/autorizarAdmin";
 import { mutationRateLimiter, publicReadRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { HttpMethod, Rotas } from "../rotas";
@@ -26,13 +27,26 @@ export class ListarHallTop8Rota implements Rotas {
   public getCaminho() { return "/hall-da-fama"; }
   public getMetodo() { return HttpMethod.GET; }
   public getMiddlewares(): RequestHandler[] {
-    return [publicReadRateLimiter, validarQueryMiddleware(listarHallTop8QuerySchema)];
+    return [
+      publicReadRateLimiter,
+      autenticarJwtOpcional,
+      validarQueryMiddleware(listarHallTop8QuerySchema),
+    ];
   }
   public getHandler() {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const query = req.queryValidados as { limite: number; offset: number };
-        res.json(await this.caso.executar(query));
+        const query = req.queryValidados as {
+          limite: number;
+          offset: number;
+          incluirInativos: boolean;
+        };
+        const isAdmin = (req.usuario?.role ?? "user") === "admin";
+        res.json(await this.caso.executar({
+          limite: query.limite,
+          offset: query.offset,
+          incluirInativos: Boolean(query.incluirInativos) && isAdmin,
+        }));
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
           res.status(error.status).json({ mensagem: error.message, erros: error.erros });

@@ -43,12 +43,47 @@ describe("Hall da Fama rotas Express", () => {
       executar: vi.fn().mockResolvedValue({ itens: [], total: 0, limite: 24, offset: 0 }),
     };
     const rota = ListarHallTop8Rota.criar(caso as never);
-    const { req, res, next } = makeReqRes({ queryValidados: { limite: 10, offset: 0 } });
+    const { req, res, next } = makeReqRes({
+      queryValidados: { limite: 10, offset: 0, incluirInativos: false },
+    });
 
     await rota.getHandler()(req, res, next);
 
-    expect(caso.executar).toHaveBeenCalledWith({ limite: 10, offset: 0 });
+    expect(caso.executar).toHaveBeenCalledWith({
+      limite: 10,
+      offset: 0,
+      incluirInativos: false,
+    });
     expect(res.json).toHaveBeenCalledWith({ itens: [], total: 0, limite: 24, offset: 0 });
+  });
+
+  it("GET só inclui inativos para admin autenticado", async () => {
+    const caso = {
+      executar: vi.fn().mockResolvedValue({ itens: [], total: 0, limite: 24, offset: 0 }),
+    };
+    const rota = ListarHallTop8Rota.criar(caso as never);
+
+    const anon = makeReqRes({
+      queryValidados: { limite: 10, offset: 0, incluirInativos: true },
+    });
+    await rota.getHandler()(anon.req, anon.res, anon.next);
+    expect(caso.executar).toHaveBeenCalledWith({
+      limite: 10,
+      offset: 0,
+      incluirInativos: false,
+    });
+
+    caso.executar.mockClear();
+    const admin = makeReqRes({
+      queryValidados: { limite: 10, offset: 0, incluirInativos: true },
+    });
+    admin.req.usuario = { id: "a", email: "a@b.c", nome: "Admin", role: "admin" };
+    await rota.getHandler()(admin.req, admin.res, admin.next);
+    expect(caso.executar).toHaveBeenCalledWith({
+      limite: 10,
+      offset: 0,
+      incluirInativos: true,
+    });
   });
 
   it("POST cadastra e retorna 201", async () => {
