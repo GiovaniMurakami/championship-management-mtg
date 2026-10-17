@@ -66,6 +66,9 @@ describe("schemas de validacao", () => {
         it("aceita token valido", () => {
             expect(() => refreshTokenSchema.parse({ refreshToken: "token-abc" })).not.toThrow();
         });
+        it("aceita body vazio (cookie HttpOnly)", () => {
+            expect(refreshTokenSchema.parse({})).toEqual({});
+        });
         it("rejeita token vazio", () => {
             expect(refreshTokenSchema.safeParse({ refreshToken: "" }).success).toBe(false);
         });

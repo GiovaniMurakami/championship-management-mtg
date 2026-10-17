@@ -4,9 +4,18 @@ import { LogoutUsuarioRota } from "../../../../../../src/infra/api/express/rotas
 import { ErroPersonalizado } from "../../../../../../src/helpers/error/ErroPersonalizado";
 import { StatusErro } from "../../../../../../src/helpers/error/statusErro";
 
-function makeReqRes(body: Record<string, unknown> = {}, headers: Record<string, string> = {}) {
-    const req = { body, headers, usuario: undefined } as any;
-    const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
+function makeReqRes(
+    body: Record<string, unknown> = {},
+    headers: Record<string, string> = {},
+    cookies: Record<string, string> = {},
+) {
+    const req = { body, headers, cookies, usuario: undefined } as any;
+    const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+        cookie: vi.fn().mockReturnThis(),
+        clearCookie: vi.fn().mockReturnThis(),
+    } as any;
     const next = vi.fn();
     return { req, res, next };
 }
@@ -63,13 +72,26 @@ describe("LoginUsuarioRota", () => {
         expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it("retorna 200 com token em login bem-sucedido", async () => {
-        const saida = { token: "jwt-token" };
+    it("retorna 200 com token em login bem-sucedido e seta cookie de refresh", async () => {
+        const saida = {
+            token: "jwt-token",
+            refreshToken: "refresh-abc",
+            usuario: { id: "u-1", nome: "Joao", email: "j@j.com", role: "user" },
+        };
         servico.executar.mockResolvedValue(saida);
         const { req, res, next } = makeReqRes({ email: "j@j.com", senha: "senha1234" });
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith(saida);
+        expect(res.cookie).toHaveBeenCalledWith(
+            "cmmtg_rt",
+            "refresh-abc",
+            expect.objectContaining({ httpOnly: true, sameSite: "lax", path: "/" }),
+        );
+        expect(res.json).toHaveBeenCalledWith({
+            token: "jwt-token",
+            usuario: saida.usuario,
+        });
+        expect(res.json.mock.calls[0][0]).not.toHaveProperty("refreshToken");
     });
 
     it("retorna 401 em credenciais invalidas", async () => {
@@ -96,6 +118,10 @@ describe("LogoutUsuarioRota", () => {
         await rota.getHandler()(req, res, next);
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(saida);
+        expect(res.clearCookie).toHaveBeenCalledWith(
+            "cmmtg_rt",
+            expect.objectContaining({ httpOnly: true, sameSite: "lax", path: "/" }),
+        );
         expect(servico.executar).toHaveBeenCalledWith({ token: "valid-token", usuarioId: "u-1" });
     });
 

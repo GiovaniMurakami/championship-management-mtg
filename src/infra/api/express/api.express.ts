@@ -1,5 +1,6 @@
 import { Api } from "../api";
 import express, { Express, Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -44,6 +45,7 @@ export class ApiExpress implements Api {
       credentials: true,
     }));
     this.app.use(compression());
+    this.app.use(cookieParser());
     this.app.use(express.json({ limit: "100kb" }));
     this.app.use(express.urlencoded({ extended: true, limit: "100kb" }));
     this.app.use(sanitizarEntrada);

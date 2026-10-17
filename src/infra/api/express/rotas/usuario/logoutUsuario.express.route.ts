@@ -2,6 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { LogoutUsuario } from "../../../../../casosDeUso/usuario/logoutUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { clearRefreshCookie } from "../../../../../helpers/auth/refreshCookie";
 import { autenticarJwt } from "../../../../../middlewares/express/autenticarJwt";
 import { accountRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 
@@ -29,6 +30,7 @@ export class LogoutUsuarioRota implements Rotas {
           token,
           usuarioId: request.usuario!.id,
         });
+        clearRefreshCookie(response);
         response.status(200).json(resultado);
       } catch (error) {
         if (error instanceof ErroPersonalizado) {

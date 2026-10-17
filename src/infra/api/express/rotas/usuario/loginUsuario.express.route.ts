@@ -4,6 +4,7 @@ import {
 } from "../../../../../casosDeUso/usuario/loginUsuario";
 import { HttpMethod, Rotas } from "../rotas";
 import { ErroPersonalizado } from "../../../../../helpers/error/ErroPersonalizado";
+import { setRefreshCookie } from "../../../../../helpers/auth/refreshCookie";
 import { authRateLimiter } from "../../../../../middlewares/express/rateLimiter";
 import { loginUsuarioSchema } from "../../../../../helpers/validacao/schemas";
 import { validarBody } from "../../../../../helpers/validacao/validarBody";
@@ -52,7 +53,11 @@ export class LoginUsuarioRota implements Rotas {
           senha,
         });
 
-        response.status(200).json(resultado);
+        setRefreshCookie(response, resultado.refreshToken);
+        response.status(200).json({
+          token: resultado.token,
+          usuario: resultado.usuario,
+        });
       } catch (error) {
         if (error instanceof ErroPersonalizado) {
           response.status(error.status).json({

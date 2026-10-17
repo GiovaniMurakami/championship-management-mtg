@@ -200,13 +200,14 @@ Health: GET /health
 
 | Middleware | Uso |
 |---|---|
-| `autenticarJwt` | JWT obrigatório no header `Authorization: Bearer` |
+| `autenticarJwt` | JWT obrigatório no header `Authorization: Bearer` (access token) |
+| Refresh cookie | Login/refresh setam cookie HttpOnly `cmmtg_rt` (SameSite=Lax); body `refreshToken` opcional só na migração |
 | `autenticarJwtOpcional` | `GET /deck/:id` — deck oculto só para dono autenticado |
 | `autorizarAdmin` | Criar torneio/liga, salvar anúncios, listar usuários, definir anfitrião |
 
 **JWT:** RS256 em produção (chaves no SSM ou Base64); HS256 só dev local (`JWT_SECRET`).
 
-**Refresh:** rotacionado a cada uso; blacklist de access token no logout.
+**Refresh:** rotacionado a cada uso via cookie HttpOnly `cmmtg_rt` (host da API, ex. `api.tiagofuguete.com.br`); blacklist de access token no logout.
 
 **Lockout login:** 5 falhas → bloqueio 15 min + e-mail.
 

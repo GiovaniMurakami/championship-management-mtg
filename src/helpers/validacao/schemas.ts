@@ -91,8 +91,9 @@ export const excluirContaSchema = z.object({
   confirmacao: z.string().min(1, "Confirmação é obrigatória."),
 });
 
+/** Body opcional: preferir cookie HttpOnly; body ainda aceito na migração legada. */
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, "refreshToken é obrigatório."),
+  refreshToken: z.string().min(1).optional(),
 });
 
 export const cadastrarDeckSchema = z.object({
